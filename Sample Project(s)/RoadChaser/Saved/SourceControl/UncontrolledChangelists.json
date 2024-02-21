@@ -5,9 +5,10 @@
 			"guid": "00000000000000000000000000000000",
 			"description": "Default Uncontrolled Changelist",
 			"files": [
-				"C:/Users/ej651/source/repos/Game-Programmer-Portfolio/Game-Programming-Portfolio/Sample Project(s)/RoadChaser/Content/RacingGame/Framework/GameManager.uasset",
 				"C:/Users/ej651/source/repos/Game-Programmer-Portfolio/Game-Programming-Portfolio/Sample Project(s)/RoadChaser/Content/RacingGame/Framework/GM_Racing_Game.uasset",
 				"C:/Users/ej651/source/repos/Game-Programmer-Portfolio/Game-Programming-Portfolio/Sample Project(s)/RoadChaser/Content/ProjectRacing.umap",
+				"C:/Users/ej651/source/repos/Game-Programmer-Portfolio/Game-Programming-Portfolio/Sample Project(s)/RoadChaser/Content/RacingGame/Checkpoints/BP_checkpoint.uasset",
+				"C:/Users/ej651/source/repos/Game-Programmer-Portfolio/Game-Programming-Portfolio/Sample Project(s)/RoadChaser/Content/RacingGame/Framework/GameManager.uasset",
 				"D:/School/Game Programmer Portfolio/Game-Programming-Portfolio/Sample Project(s)/RoadChaser/Content/StarterContent/Blueprints/Blueprint_CeilingLight.uasset",
 				"D:/School/Game Programmer Portfolio/Game-Programming-Portfolio/Sample Project(s)/RoadChaser/Content/__ExternalActors__/ProjectRacing/2/5V/H8SHEH3LXCI3R3DMV0KBAT.uasset",
 				"D:/School/Game Programmer Portfolio/Game-Programming-Portfolio/Sample Project(s)/RoadChaser/Content/__ExternalActors__/ProjectRacing/0/AU/DL9OY69UOD79A18RP7FRQR.uasset",
