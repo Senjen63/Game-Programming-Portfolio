@@ -5,10 +5,6 @@
 			"guid": "00000000000000000000000000000000",
 			"description": "Default Uncontrolled Changelist",
 			"files": [
-				"C:/Users/ej651/source/repos/Game-Programmer-Portfolio/Game-Programming-Portfolio/Sample Project(s)/RoadChaser/Content/RacingGame/Framework/GM_Racing_Game.uasset",
-				"C:/Users/ej651/source/repos/Game-Programmer-Portfolio/Game-Programming-Portfolio/Sample Project(s)/RoadChaser/Content/ProjectRacing.umap",
-				"C:/Users/ej651/source/repos/Game-Programmer-Portfolio/Game-Programming-Portfolio/Sample Project(s)/RoadChaser/Content/RacingGame/Checkpoints/BP_checkpoint.uasset",
-				"C:/Users/ej651/source/repos/Game-Programmer-Portfolio/Game-Programming-Portfolio/Sample Project(s)/RoadChaser/Content/RacingGame/Framework/GameManager.uasset",
 				"D:/School/Game Programmer Portfolio/Game-Programming-Portfolio/Sample Project(s)/RoadChaser/Content/StarterContent/Blueprints/Blueprint_CeilingLight.uasset",
 				"D:/School/Game Programmer Portfolio/Game-Programming-Portfolio/Sample Project(s)/RoadChaser/Content/__ExternalActors__/ProjectRacing/2/5V/H8SHEH3LXCI3R3DMV0KBAT.uasset",
 				"D:/School/Game Programmer Portfolio/Game-Programming-Portfolio/Sample Project(s)/RoadChaser/Content/__ExternalActors__/ProjectRacing/0/AU/DL9OY69UOD79A18RP7FRQR.uasset",
@@ -52,7 +48,21 @@
 				"D:/School/Game Programmer Portfolio/Game-Programming-Portfolio/Sample Project(s)/RoadChaser/Content/__ExternalObjects__/ProjectRacing/D/8A/6SKMQYRQHPF2VYMID6958Y.uasset",
 				"D:/School/Game Programmer Portfolio/Game-Programming-Portfolio/Sample Project(s)/RoadChaser/Content/__ExternalObjects__/ProjectRacing/D/MD/N49M9M07GZTM8RCICKDOK3.uasset",
 				"D:/School/Game Programmer Portfolio/Game-Programming-Portfolio/Sample Project(s)/RoadChaser/Content/__ExternalObjects__/ProjectRacing/D/EQ/HQVEA32RHOCM3C7MB66RZR.uasset",
-				"D:/School/Game Programmer Portfolio/Game-Programming-Portfolio/Sample Project(s)/RoadChaser/Content/ProjectRacing.umap"
+				"D:/School/Game Programmer Portfolio/Game-Programming-Portfolio/Sample Project(s)/RoadChaser/Content/ProjectRacing.umap",
+				"D:/School/Game Programmer Portfolio/Game-Programming-Portfolio/Sample Project(s)/RoadChaser/Content/RacingGame/Checkpoints/BP_checkpoint.uasset",
+				"D:/School/Game Programmer Portfolio/Game-Programming-Portfolio/Sample Project(s)/RoadChaser/Content/RacingGame/Framework/GM_Racing_Game.uasset",
+				"D:/School/Game Programmer Portfolio/Game-Programming-Portfolio/Sample Project(s)/RoadChaser/Content/VehicleTemplate/Blueprints/SportsCar/SportsCar_WheelsFront.uasset",
+				"D:/School/Game Programmer Portfolio/Game-Programming-Portfolio/Sample Project(s)/RoadChaser/Content/VehicleTemplate/Blueprints/SportsCar/SportsCar_WheelsRear.uasset",
+				"D:/School/Game Programmer Portfolio/Game-Programming-Portfolio/Sample Project(s)/RoadChaser/Content/VehicleTemplate/Blueprints/SportsCar/SportsCar_Pawn.uasset",
+				"D:/School/Game Programmer Portfolio/Game-Programming-Portfolio/Sample Project(s)/RoadChaser/Content/VehicleTemplate/Blueprints/VehicleAdvPawn.uasset",
+				"D:/School/Game Programmer Portfolio/Game-Programming-Portfolio/Sample Project(s)/RoadChaser/Content/RacingGame/CameraShakes/CS_FastVehicle.uasset",
+				"D:/School/Game Programmer Portfolio/Game-Programming-Portfolio/Sample Project(s)/RoadChaser/Content/VehicleTemplate/Blueprints/VehicleUI.uasset",
+				"D:/School/Game Programmer Portfolio/Game-Programming-Portfolio/Sample Project(s)/RoadChaser/Content/__ExternalActors__/ProjectRacing/B/K7/GBEM7I2OBBI9SGHT8735EF.uasset",
+				"D:/School/Game Programmer Portfolio/Game-Programming-Portfolio/Sample Project(s)/RoadChaser/Content/__ExternalActors__/ProjectRacing/D/WG/8YMOUDZAJKWKA7G3529IKX.uasset",
+				"C:/Users/ej651/source/repos/Game-Programmer-Portfolio/Game-Programming-Portfolio/Sample Project(s)/RoadChaser/Content/RacingGame/Framework/GM_Racing_Game.uasset",
+				"C:/Users/ej651/source/repos/Game-Programmer-Portfolio/Game-Programming-Portfolio/Sample Project(s)/RoadChaser/Content/ProjectRacing.umap",
+				"C:/Users/ej651/source/repos/Game-Programmer-Portfolio/Game-Programming-Portfolio/Sample Project(s)/RoadChaser/Content/RacingGame/Checkpoints/BP_checkpoint.uasset",
+				"C:/Users/ej651/source/repos/Game-Programmer-Portfolio/Game-Programming-Portfolio/Sample Project(s)/RoadChaser/Content/RacingGame/Framework/GameManager.uasset"
 			]
 		}
 	]
