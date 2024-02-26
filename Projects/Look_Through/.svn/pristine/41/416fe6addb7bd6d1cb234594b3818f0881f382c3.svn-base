@@ -1,0 +1,101 @@
+#include "UnitManager.h"
+
+void UnitManager::addUnit(Animation* anim1, Animation* anim2, Vector2D location)
+{
+	Unit* pUnit = new Unit(anim1, anim2, location);
+
+	mpUnits.push_back(pUnit);
+}
+
+void UnitManager::cleanUp()
+{
+	for (vector<Unit*>::iterator iter = mpUnits.begin(); iter != mpUnits.end(); ++iter)
+	{
+		Unit* pUnit = *iter;
+		delete pUnit;
+	}
+
+	mpUnits.clear();
+}
+
+void UnitManager::deleteArea(Vector2D mousePos)
+{
+	for (vector<Unit*>::iterator iter = mpUnits.begin(); iter != mpUnits.end(); ++iter)
+	{
+		Unit* pUnit = *iter;
+		if (pUnit->getLocationX() > (mousePos.getX() - 30) && pUnit->getLocationX() < (mousePos.getX() + 30) && pUnit->getLocationY() > (mousePos.getY() - 30) && pUnit->getLocationY() < (mousePos.getY() + 30))
+		{
+			deleteUnit(pUnit);
+			break;
+		}
+	}
+}
+
+void UnitManager::deleteUnit(Unit* pUnitDestroy)
+{
+	for (int i = 0; i < mpUnits.size(); i++)
+	{
+		Unit* pUnit = mpUnits[i];
+
+		if (pUnit == pUnitDestroy)
+		{
+			delete pUnit;
+			mpUnits.erase(mpUnits.begin() + i);
+			break;
+		}
+	}
+}
+
+void UnitManager::drawAll(GraphicsSystem* display)
+{
+	for (vector<Unit*>::iterator iter = mpUnits.begin(); iter != mpUnits.end(); ++iter)
+	{
+		Unit* pUnit = *iter;
+		display->drawPart(pUnit->draw()->getLocation(), pUnit->draw(), pUnit->getLocationX() - 30, pUnit->getLocationY() - 30);
+	}
+}
+
+Unit* UnitManager::getUnit()
+{
+	if (mpUnits.size() > 0)
+	{
+		Unit* pUnit = mpUnits[0];
+		for (int i = 0; i < mpUnits.size(); i++)
+		{
+			pUnit = mpUnits[i];
+		}
+
+		return pUnit;
+	}
+	else
+	{
+		return nullptr;
+	}
+}
+
+void UnitManager::setShouldUpdate()
+{
+	for (vector<Unit*>::iterator iter = mpUnits.begin(); iter != mpUnits.end(); ++iter)
+	{
+		Unit* pUnit = *iter;
+		pUnit->setShouldUpdate();
+	}
+}
+
+UnitManager::UnitManager()
+{
+
+}
+
+UnitManager::~UnitManager()
+{
+}
+
+void UnitManager::updateAll(double dt)
+{
+	for (vector<Unit*>::iterator iter = mpUnits.begin(); iter != mpUnits.end(); ++iter)
+	{
+		Unit* pUnit = *iter;
+		pUnit->Update(dt);
+	}
+}

@@ -1,0 +1,389 @@
+#include "Game.h"
+
+Game* Game::mpsInstance = nullptr;
+
+void Game::createInstance(int width, int height)
+{
+	if (mpsInstance == nullptr)
+	{
+		mpsInstance = new Game;
+		mpsInstance->init(width, height);
+	}
+}
+
+void Game::destroyInstance()
+{
+	delete mpsInstance;
+	mpsInstance = nullptr;
+}
+
+Game*Game::getGame()
+{
+	return mpsInstance;
+}
+
+Game::Game()
+{
+	mpDisplay = nullptr;
+	mInputSystem.init();
+	mpEventSystem = nullptr;
+}
+
+Game::~Game()
+{
+	cleanup();
+}
+
+void Game::init(int width, int height)
+{
+	mpEventSystem = EventSystem::getInstance();
+	mpEventSystem->init();
+
+	mpEventSystem->getInstance()->addListener((EventType)INPUT_EVENT, this);
+
+	mpDisplay = new GraphicsSystem(width, height);
+
+	readSprites();
+
+	mBufferManager.addBuffer(WALL_KEY, SPRITE_PATH + mWallFile);
+	mBufferManager.addBuffer(SNAKE_KEY, SPRITE_PATH + mSnakeFile);
+	mBufferManager.addBuffer(FOOD_KEY, SPRITE_PATH + mFoodFile);
+	mBufferManager.addBuffer(POINTS_KEY, SPRITE_PATH + mPointsFile);
+	mBufferManager.addBuffer(SPEEDUP_KEY, SPRITE_PATH + mUpFile);
+	mBufferManager.addBuffer(SPEEDDOWN_KEY, SPRITE_PATH + mDownFile);
+
+	mpFont = new Font((DEAN_PATH + FONT_FILENAME), FONT_SIZE);
+	mHUD.init(mpFont);
+
+	readData();
+}
+
+void Game::cleanup()
+{
+	//do in reverse order of init
+	mLevelManager.clear();
+	mSnakeManager.clear();
+
+	mBufferManager.clear();
+	mHUD.cleanup();
+	delete mpFont;
+
+	mpDisplay->cleanup();
+	delete mpDisplay;
+
+	mpEventSystem->cleanup();
+}
+
+void Game::readData()
+{
+	//Initial snake head and first body, required
+	Unit* newUnit = new Unit(SNAKE_KEY, Vector2D(425, 325));
+	mSnakeManager.addUnit(newUnit);
+
+	newUnit = new Unit(SNAKE_KEY, Vector2D(375, 325));
+	mSnakeManager.addUnit(newUnit);
+
+	ifstream fin("level" + to_string(mCurrentLevel) + ".txt");
+	if (fin.good())
+	{
+		string key;
+		int tmp;
+
+		while (!fin.eof())
+		{
+			fin >> key;
+			if (key == "Walls")
+			{
+				//16x12 wall blocks needed
+				for (int height = 0; height < 12; height++)
+				{
+					for (int width = 0; width < 16; width++)
+					{
+						fin >> tmp;
+						if (tmp == 1)
+						{							
+							Unit* newWall = new Unit(WALL_KEY, Vector2D((width * 50) + (WALL_WIDTH / 2), (height * 50) + (WALL_HEIGHT / 2)));
+							mLevelManager.addWall(newWall);
+						}
+					}
+				}
+			}
+			if (key == "Normal")
+			{
+				fin >> tmp;
+				mSnakeManager.setNormalSpeed(tmp);
+				mSnakeManager.changeSpeed(tmp);
+			}
+			if (key == "Slow")
+			{
+				fin >> tmp;
+				mSnakeManager.setSlowSpeed(tmp);
+			}
+			if (key == "Fast")
+			{
+				fin >> tmp;
+				mSnakeManager.setFastSpeed(tmp);
+			}
+			if (key == "PointChance")
+			{
+				fin >> tmp;
+				mLevelManager.setPointChance(tmp);
+			}
+			if (key == "SUpChance")
+			{
+				fin >> tmp;
+				mLevelManager.setSUpChance(tmp);
+			}
+			if (key == "SDownChance")
+			{
+				fin >> tmp;
+				mLevelManager.setSDownChance(tmp);
+			}
+			if (key == "Win")
+				fin >> mWinLength;
+			if (key == "Points")
+				fin >> mPointsToAdd;
+			if (key == "StartLength")
+			{
+				fin >> tmp;
+				for (int i = 0; i < tmp; i++)
+				{
+					Unit* newUnit = new Unit(SNAKE_KEY, mSnakeManager.getUnit(mSnakeManager.getSize() - 1)->getPos() - Vector2D(50,0));
+					mSnakeManager.addUnit(newUnit);
+				}
+			}
+			if (key == "PowerUpTime")
+			{
+				fin >> tmp;
+				mSnakeManager.setPowerUpTIme(tmp);
+			}
+		}
+	}
+	fin.close();
+
+	mLevelManager.spawnItem(FOOD_KEY, mSnakeManager);
+	//Initial food and snake bits needed
+}
+
+void Game::readSprites()
+{
+	ifstream fin(SPRITE_TXT_FILENAME);
+
+	if (fin.good())
+	{
+		string key;
+		while (!fin.eof())
+		{
+			fin >> key;
+
+			if (key == "Wall")
+				fin >> mWallFile;
+			if (key == "Snake")
+				fin >> mSnakeFile;
+			if (key == "Food")
+				fin >> mFoodFile;
+			if (key == "Points")
+				fin >> mPointsFile;
+			if (key == "Up")
+				fin >> mUpFile;
+			if (key == "Down")
+				fin >> mDownFile;
+		}
+	}
+
+	fin.close();
+}
+
+void Game::collisions()
+{
+	int i;
+	Vector2D tmp;
+
+	//Food
+	for (i = 0; i < mLevelManager.getFoodSize(); i++)
+	{
+		if (tmp.getDistanceBetween(mSnakeManager.getHead()->getPos(), mLevelManager.getFood(i)->getPos()) <= HIT_DISTANCE)
+		{
+			mPoints += mPointsToAdd / 2;
+			Unit* newSnake = new Unit(SNAKE_KEY, mSnakeManager.getUnit(mSnakeManager.getSize() - 1)->getPos());
+			mSnakeManager.addUnit(newSnake);
+			mLevelManager.removeFood(mLevelManager.getFood(i));
+			mLevelManager.spawnItem(FOOD_KEY, mSnakeManager);
+		}
+	}
+
+	//walls
+	for (i = 0; i < mLevelManager.getWallSize(); i++)
+	{
+		if (tmp.getDistanceBetween(mSnakeManager.getHead()->getPos(), mLevelManager.getWall(i)->getPos()) <= HIT_DISTANCE)
+		{
+			failGame();
+		}
+	}
+
+	//SpeedUp
+	for (i = 0; i < mLevelManager.getSUpSize(); i++)
+	{
+		if (tmp.getDistanceBetween(mSnakeManager.getHead()->getPos(), mLevelManager.getSUp(i)->getPos()) <= HIT_DISTANCE)
+		{
+			mLevelManager.removeSUp(mLevelManager.getSUp(i));
+			mSnakeManager.changeSpeed(mSnakeManager.getFastSpeed());
+		}
+	}
+
+	//SpeedDown
+	for (i = 0; i < mLevelManager.getSDownSize(); i++)
+	{
+		if (tmp.getDistanceBetween(mSnakeManager.getHead()->getPos(), mLevelManager.getSDOwn(i)->getPos()) <= HIT_DISTANCE)
+		{
+			mLevelManager.removeSDown(mLevelManager.getSDOwn(i));
+			mSnakeManager.changeSpeed(mSnakeManager.getSlowSpeed());
+		}
+	}
+
+	//Points
+	for (i = 0; i < mLevelManager.getPointSize(); i++)
+	{
+		if (tmp.getDistanceBetween(mSnakeManager.getHead()->getPos(), mLevelManager.getPointPickup(i)->getPos()) <= HIT_DISTANCE)
+		{
+			mLevelManager.removePoint(mLevelManager.getPointPickup(i));
+			mPoints += mPointsToAdd;
+		}
+	}
+
+	//Snake Body, start at 1 to avoid head
+	for (i = 1; i < mSnakeManager.getSize(); i++)
+	{
+		if (tmp.getDistanceBetween(mSnakeManager.getHead()->getPos(), mSnakeManager.getUnit(i)->getPos()) <= HIT_DISTANCE)
+		{
+			failGame();
+		}
+	}
+}
+
+void Game::menuScreen()
+{
+	mpDisplay->clearToBlack();
+	if (mFailGame)
+	{
+		mpDisplay->writeText(DISP_WIDTH / 2, DISP_HEIGHT / 2 - 25, mpFont, Color(255, 255, 255), "You Failed");
+		mpDisplay->writeText(DISP_WIDTH / 2, DISP_HEIGHT / 2 + 25, mpFont, Color(255, 255, 255), "Press Space to Play, or ESC to Exit");
+	}
+	else
+	{
+		mpDisplay->writeText(DISP_WIDTH / 2, DISP_HEIGHT / 2 - 25, mpFont, Color(255, 255, 255), "Level " + to_string(mCurrentLevel));
+		mpDisplay->writeText(DISP_WIDTH / 2, DISP_HEIGHT / 2 + 25, mpFont, Color(255, 255, 255), "Press Space to Play, or ESC to Exit");
+	}
+}
+
+void Game::checkWinState()
+{
+	if (mSnakeManager.getSize() == mWinLength)
+	{
+		mStartGame = false;
+		mCurrentLevel++;
+		if (mCurrentLevel > 3)
+			mCurrentLevel = 1;
+		resetData();
+	}
+}
+
+void Game::failGame()
+{
+	mFailGame = true;
+	mStartGame = false;
+	mCurrentLevel = 1;
+	resetData();
+}
+
+void Game::resetData()
+{
+	mPoints = 0;
+	mFPS = 0;
+	mTime = 0;
+	mSnakeManager.clear();
+	mLevelManager.clear();
+	mDir = Direction::RIGHT;
+	mSnakeManager.setDirection(mDir);
+	readData();
+}
+
+void Game::hudData(float time)
+{
+	mTime += time / 1000.0;
+	mFPS = 1000.0 / time;
+}
+
+//Sam Fox helps with this in class
+void Game::handleEvent(const Event& event)
+{
+	if (event.getType() == INPUT_EVENT)
+	{
+		const InputEvent& inputEvent = static_cast<const InputEvent&>(event);
+		if (inputEvent.getKeyCode() == (int)KeyCode::DOWN)
+			mDir = Direction::DOWN;
+		if (inputEvent.getKeyCode() == (int)KeyCode::UP)
+			mDir = Direction::UP;
+		if (inputEvent.getKeyCode() == (int)KeyCode::LEFT)
+			mDir = Direction::LEFT;
+		if (inputEvent.getKeyCode() == (int)KeyCode::RIGHT)
+			mDir = Direction::RIGHT;
+		if (inputEvent.getKeyCode() == (int)KeyCode::ESCAPE)
+			mKeepGoing = false;
+		if (inputEvent.getKeyCode() == (int)KeyCode::SPACE)
+		{
+			mStartGame = true;
+			mFailGame = false;
+		}
+	}
+}
+
+void Game::doLoop()
+{
+	PerformanceTracker* pTracker = new PerformanceTracker;
+
+	Timer loopTimer;
+
+	Vector2D mousePos = Vector2D((DISP_WIDTH / 2) + (SPRITE_WIDTH / 2), (DISP_HEIGHT / 2) + (SPRITE_HEIGHT / 2));
+
+	while (mKeepGoing)
+	{
+		//start loop
+		pTracker->clearTracker("loop");
+		pTracker->startTracking("loop");
+		loopTimer.start();	
+
+		mInputSystem.getKeyEvent();
+
+		if (!mStartGame && mKeepGoing)
+		{
+			menuScreen();
+		}
+		else if (mKeepGoing)
+		{
+			//cout << loopTimer.getElapsedTime() << endl;
+			mSnakeManager.updateSnake(mDir, SLEEP_MS);
+			mLevelManager.updateAll(SLEEP_MS,mSnakeManager);
+		
+			collisions();
+
+			//draw
+			mpDisplay->clearToBlack();
+			mSnakeManager.drawAll(mpDisplay);
+			mLevelManager.drawAll(mpDisplay);
+			mHUD.drawHUD(mpDisplay);		
+		}
+		mpDisplay->flip();
+
+		checkWinState();
+		//sleep
+		loopTimer.sleepUntilElapsed(SLEEP_MS);
+		hudData(loopTimer.getElapsedTime());
+
+		pTracker->stopTracking("loop");
+		
+		//cout << "Frame Took:" << pTracker->getElapsedTime("loop") << " ms" << endl;
+	}
+
+	delete pTracker;
+}

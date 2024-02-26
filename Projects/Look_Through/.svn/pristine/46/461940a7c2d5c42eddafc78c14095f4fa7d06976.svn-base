@@ -1,0 +1,190 @@
+#include "Menu.h"
+#include "Game.h"
+#include <assert.h>
+
+using namespace std;
+
+Menu::Menu(MenuType type)
+{
+	mType = type;
+	mpFont = new Font(FONT_ASSET_PATH);
+	mCurrentHighlight = 3;
+	
+	int lines;
+	if (mType == OPTIONS) { lines = OPTIONS_NUM_LINES; }
+	else { lines = MENU_NUM_LINES; }
+
+	for (int i = 0; i < lines; i++)
+	{
+		mpTexts.push_back(new Text(MENU_FONT_SIZE,mpFont,""));
+		mpTexts[i]->setColor(MENU_COLOR);
+		mpTexts[i]->setPosition(MENU_OFFSET, MENU_OFFSET + (MENU_SPACING*i));
+	}
+
+	resetTexts();
+	resetHighlight();
+}
+
+Menu::~Menu()
+{
+	for (size_t i = 0; i < mpTexts.size(); i++) { delete mpTexts[i]; }
+
+	delete mpFont;
+}
+
+void Menu::resetTexts(string state)
+{
+	Game* pGame = Game::getInstance();
+
+	if (pGame->getLanguage() == ENGLISH)
+	{
+		switch (mType)
+		{
+		case MAIN:
+			if (state == "dead") { mpTexts[0]->setText("YOU DIED!!!!"); }
+			else if (state == "victory") { mpTexts[0]->setText("YOU WON!!!!!!!!"); }
+			else { mpTexts[0]->setText("Welcome to DEAN IN A DUNGEON"); }
+			mpTexts[1]->setText("Use up/down to choose option");
+			mpTexts[2]->setText("Press spacebar to select");
+			mpTexts[3]->setText("Start game");
+			mpTexts[4]->setText("Load From Save");
+			mpTexts[5]->setText("Options");
+			mpTexts[6]->setText("Quit");
+			break;
+		case OPTIONS:
+			mpTexts[0]->setText("-- OPTIONS MENU --");
+			mpTexts[1]->setText("Use up/down to choose option");
+			mpTexts[2]->setText("Press spacebar to select");
+
+			if (pGame->getSoundOn()) { mpTexts[3]->setText("Sound: ON"); }
+			else { mpTexts[3]->setText("Sound: OFF"); }
+
+			if (pGame->getMusicOn()) { mpTexts[4]->setText("Music: ON"); }
+			else { mpTexts[4]->setText("Music: OFF"); }
+
+			if (pGame->getDifficulty() == EASY) { mpTexts[5]->setText("Current Difficulty: EASY"); }
+			else if (pGame->getDifficulty() == NORMAL) { mpTexts[5]->setText("Current Difficulty: NORMAL"); }
+			else { mpTexts[5]->setText("Current Difficulty: HARD"); }
+
+			if (pGame->getLanguage() == ENGLISH) { mpTexts[6]->setText("Current Language: ENGLISH"); }
+			else if (pGame->getLanguage() == SPANISH) { mpTexts[6]->setText("Current Language: SPANISH"); }
+			else { mpTexts[6]->setText("Current Language: PIG LATIN"); }
+
+			mpTexts[7]->setText("Return to the menu");
+			break;
+		}
+	}
+	else if (pGame->getLanguage() == SPANISH)
+	{
+		switch (mType)
+		{
+		case MAIN:
+			if (state == "dead") { mpTexts[0]->setText("MORISTE!!!!"); }
+			else if (state == "victory") { mpTexts[0]->setText("GANASTE!!!!!!!!"); }
+			else { mpTexts[0]->setText("Bienvenidos a DEAN EN UN CALABOZO"); }
+			mpTexts[1]->setText("Usa arriba/abajo para elegir la opcion");
+			mpTexts[2]->setText("Pulse la barra espaciadora para seleccionar");
+			mpTexts[3]->setText("Empieza juego");
+			mpTexts[4]->setText("Cargar desde un archivo guardado");
+			mpTexts[5]->setText("Opciones");
+			mpTexts[6]->setText("Dejar Juego");
+			break;
+		case OPTIONS:
+			mpTexts[0]->setText("-- MENU DE OPCIONES --");
+			mpTexts[1]->setText("Usa arriba/abajo para elegir la opcion");
+			mpTexts[2]->setText("Pulse la barra espaciadora para seleccionar");
+
+			if (pGame->getSoundOn()) { mpTexts[3]->setText("Sonido: ON"); }
+			else { mpTexts[3]->setText("Sonido: OFF"); }
+
+			if (pGame->getMusicOn()) { mpTexts[4]->setText("Musica: ON"); }
+			else { mpTexts[4]->setText("Musica: OFF"); }
+
+			if (pGame->getDifficulty() == EASY) { mpTexts[5]->setText("Actual Dificultad: FACIL"); }
+			else if (pGame->getDifficulty() == NORMAL) { mpTexts[5]->setText("Actual Dificultad: NORMAL"); }
+			else { mpTexts[5]->setText("Actual Dificultad: DIFICIL"); }
+
+			if (pGame->getLanguage() == ENGLISH) { mpTexts[6]->setText("Actual Idioma: INGLES"); }
+			else if (pGame->getLanguage() == SPANISH) { mpTexts[6]->setText("Actual Idioma: ESPANOL"); }
+			else { mpTexts[6]->setText("Actual Idioma: PIG LATIN"); }
+
+			mpTexts[7]->setText("Retornar al menu");
+			break;
+		}
+	}
+	else if (pGame->getLanguage() == PIG_LATIN)
+	{
+		switch (mType)
+		{
+		case MAIN:
+			if (state == "dead") { mpTexts[0]->setText("OU-YAY IED-DAY!!!!"); }
+			else if (state == "victory") { mpTexts[0]->setText("OU-YAY ON-WAY!!!!!!!!"); }
+			else { mpTexts[0]->setText("Elcome-way to EAN-DAY IN AN UNGEON-DAY"); }
+			mpTexts[1]->setText("Use up/own-day to oose-chay option-yay");
+			mpTexts[2]->setText("Ess-pray acebar-spay o-tay elect-say");
+			mpTexts[3]->setText("Art-stay Ame-gay");
+			mpTexts[4]->setText("Oad-lay om-fray ave-say");
+			mpTexts[5]->setText("Options-yay");
+			mpTexts[6]->setText("It-quay");
+			break;
+		case OPTIONS:
+			mpTexts[0]->setText("-- OPTIONS-YAY ENU-MAY --");
+			mpTexts[1]->setText("Use-yay up/own-day to oose-chay option-yay");
+			mpTexts[2]->setText("Ess-pray acebar-spay to elect-say");
+
+			if (pGame->getSoundOn()) { mpTexts[3]->setText("Ound-say: ON"); }
+			else { mpTexts[3]->setText("Ound-say: OFF"); }
+
+			if (pGame->getMusicOn()) { mpTexts[4]->setText("Usic-may: ON"); }
+			else { mpTexts[4]->setText("Usic-may: OFF"); }
+
+			if (pGame->getDifficulty() == EASY) { mpTexts[5]->setText("Urrent-cay Ifficulty-day: EASY-YAY"); }
+			else if (pGame->getDifficulty() == NORMAL) { mpTexts[5]->setText("Urrent-cay Ifficulty-day: ORMAL-NAY"); }
+			else { mpTexts[5]->setText("Urrent-cay Ifficulty-day: ARD-HAY"); }
+
+			if (pGame->getLanguage() == ENGLISH) { mpTexts[6]->setText("Urrent-cay Anguage-lay: ENGLISH-YAY"); }
+			else if (pGame->getLanguage() == SPANISH) { mpTexts[6]->setText("Urrent-cay Anguage-lay: ANISH-SPAY"); }
+			else { mpTexts[6]->setText("Urrent-cay Anguage-lay: IG-PAY ATIN-LAY"); }
+
+			mpTexts[7]->setText("Eturn-ray to the enu-may");
+			break;
+		}
+	}
+}
+
+void Menu::resetHighlight()
+{
+	mpTexts[mCurrentHighlight]->setColor(MENU_COLOR);
+	mCurrentHighlight = 3;
+	mpTexts[mCurrentHighlight]->setColor(HIGHLIGHT_COLOR);
+}
+
+void Menu::draw()
+{
+	for (size_t i = 0; i < mpTexts.size(); i++)
+	{
+		Game::getInstance()->getGraphics()->draw(mpTexts[i]);
+	}
+}
+
+void Menu::goDown()
+{
+	mpTexts[mCurrentHighlight]->setColor(MENU_COLOR);
+
+	//select the option below
+	mCurrentHighlight++;
+	if (mCurrentHighlight > int(mpTexts.size() - 1)) { mCurrentHighlight = 3; }
+
+	mpTexts[mCurrentHighlight]->setColor(HIGHLIGHT_COLOR);
+}
+
+void Menu::goUp()
+{
+	mpTexts[mCurrentHighlight]->setColor(MENU_COLOR);
+
+	//select the option above
+	mCurrentHighlight--;
+	if (mCurrentHighlight < 3) { mCurrentHighlight = mpTexts.size() - 1; }
+
+	mpTexts[mCurrentHighlight]->setColor(HIGHLIGHT_COLOR);
+}

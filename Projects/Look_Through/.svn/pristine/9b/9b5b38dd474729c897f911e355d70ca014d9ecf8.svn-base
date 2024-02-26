@@ -1,0 +1,56 @@
+#include "Unit.h"
+
+Unit::Unit(Animation smurfAnimation, Animation deanAnimation)
+{
+	// push Animations into vector
+	mAnimations.push_back(deanAnimation);
+	mAnimations.push_back(smurfAnimation);
+	
+	// set smurf animation first
+	mCurrentAnimation = 0;
+
+	// set animation location to center of the screen
+	// mLocation = Vector2D(400, 300);
+}
+
+Unit::~Unit() {}
+
+void Unit::update(double dt, bool playAnimation)
+{
+	// update the current animation
+	mAnimations[mCurrentAnimation].update(dt, playAnimation);
+}
+
+void Unit::draw(GraphicsSystem* graphSys)
+{
+	// draw the animation to the screen
+	graphSys->draw(mLocation.getX(), mLocation.getY(), mAnimations[mCurrentAnimation].getCurrentSprite(), 1);
+}
+
+void Unit::setAnimation()
+{
+	// switch between the two animations
+	if (mCurrentAnimation == 1)
+		mCurrentAnimation = 0;
+	else
+		mCurrentAnimation = 1;
+}
+
+void Unit::setLocation(Vector2D loc)
+{
+	// set the mouse location to the unit's location
+	mLocation = loc;
+}
+
+Vector2D Unit::getLocation()
+{
+	return mLocation;
+}
+
+//void Unit::setAnimationSpeed(int opt)
+//{
+//	if (opt == 0)
+//		mAnimations[mCurrentAnimation].speedUp();
+//	else
+//		mAnimations[mCurrentAnimation].slowDown();
+//}

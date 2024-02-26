@@ -1,0 +1,20 @@
+#pragma once
+
+#include "Unit.h"
+
+class Projectile : public Unit
+{
+public:
+	Projectile(std::pair<float, float> targetPosition, std::pair<float, float>location, std::pair<float, float>scale, int damage, std::string creatorTag, std::string animationDataFilePath);
+	virtual ~Projectile();
+
+	virtual void update(float deltaTime);
+
+private:
+	std::pair<float, float> mCurrentVelocity;
+	std::string mCreatorTag;
+	float mDamage;
+
+	float mTimeBeforeDeletion = 1000;
+	float mCurrentTimeAlive = 0;
+};

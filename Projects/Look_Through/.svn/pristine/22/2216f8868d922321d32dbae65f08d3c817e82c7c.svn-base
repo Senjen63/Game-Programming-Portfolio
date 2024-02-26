@@ -1,0 +1,22 @@
+#pragma once
+
+#include "Trackable.h"
+
+class Color;
+class Sprite;
+
+class Walls : public Trackable 
+{
+	private:
+		Sprite* mpWallSprite;
+		Color* mpWallColor;
+
+		int mWallWidth, mWallHeight;
+	public:
+		Walls();
+		~Walls();
+
+		void createWallSprite();
+
+		void drawAllWalls();
+};

@@ -1,0 +1,99 @@
+#include "UnitManager.h"
+#include "Unit.h"
+#include "EventSystem.h"
+#include "SnakeEvents.h"
+
+UnitManager::~UnitManager()
+{
+	clearAll();
+}
+
+void UnitManager::createUnit( int x, int y, UnitTypes type, float targetTime, GraphicsBuffer* anim1 )
+{
+	Unit* aUnit = new Unit( x, y, type );
+	aUnit->addAnim( anim1, targetTime);
+	mpUnits.push_back( aUnit );
+}
+
+void UnitManager::createUnit( int x, int y, int r, int c, UnitTypes type, float targetTime, GraphicsBuffer* anim, bool isSnake )
+{
+	Unit* aUnit = new Unit( x, y, type );
+	aUnit->addAnim( r, c, anim, targetTime, isSnake );
+	mpUnits.push_back( aUnit );
+
+}
+
+void UnitManager::addUnit( Unit* unit )
+{
+	mpUnits.push_back( unit );
+}
+
+void UnitManager::deleteUnit( Unit* unit )
+{
+	for ( int i = 0; i < mpUnits.size(); i++ )
+	{
+		Unit* pUnit = mpUnits[ i ];
+		if ( pUnit == unit )
+		{
+			delete pUnit;
+			mpUnits.erase( mpUnits.begin() + i );
+			break;
+		}
+	}
+}
+
+void UnitManager::clearAll()
+{
+	for (int i = 0; i < mpUnits.size(); i++)
+	{
+		delete mpUnits[i];
+	}
+	mpUnits.clear();
+}
+
+void UnitManager::updateAll( float deltaTime )
+{
+	for (int i = 0; i < mpUnits.size(); i++)
+	{
+		mpUnits[i]->update( deltaTime );
+	}
+}
+
+void UnitManager::checkCollision( Unit* unit )
+{
+	for (int i = 0; i < mpUnits.size(); i++)
+	{
+		if (mpUnits[i] != unit)
+		{
+			if (mpUnits[i]->getX() == unit->getX() && mpUnits[i]->getY() == unit->getY())
+			{
+				EventSystem::getInstance()->fireEvent(CollisionEvent(COLLISION_EVENT, mpUnits[i]));
+				break;
+			}
+		}
+	}
+}
+
+void UnitManager::drawAll()
+{
+	for (int i = 0; i < mpUnits.size(); i++)
+	{
+		mpUnits[i]->draw( 1 );
+	}
+}
+
+Unit* UnitManager::getLastUnit()
+{
+	if ( mpUnits.size() > 0 )
+		return mpUnits[ mpUnits.size() - 1 ];
+	else
+		return nullptr;
+}
+
+Unit* UnitManager::getFirstUnit()
+{
+	if ( mpUnits.size() > 0 )
+		return mpUnits[0];
+	else
+		return nullptr;
+}

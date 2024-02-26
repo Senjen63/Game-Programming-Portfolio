@@ -1,0 +1,61 @@
+#include "CollisionManager.h"
+
+#include <cassert>
+
+const Collider* CollisionManager::detectCollision(CollisionTag tag, const Collider* colliderToCheck) const
+{
+    std::pair<std::multimap<CollisionTag, const Collider*>::const_iterator, std::multimap<CollisionTag, const Collider*>::const_iterator> ret;
+    ret = mCollisionMap.equal_range(tag);
+
+   std::multimap<CollisionTag, const Collider*>::const_iterator iter;
+    for (iter = ret.first; iter != ret.second; iter++)
+    {
+        if (colliderToCheck->collides(*iter->second))
+        {
+            return iter->second;
+        }
+    }
+
+    return nullptr;
+}
+
+const Collider* CollisionManager::testAddPosition(CollisionTag tag, Collider* colliderToCheck, const Vector2D& addPosition) const
+{
+    colliderToCheck->addPosition(addPosition);
+
+    const Collider* hit = detectCollision(tag, colliderToCheck);
+
+    colliderToCheck->resetPosition();
+
+    return hit;
+}
+
+void CollisionManager::addCollider(const Collider* collider)
+{
+    assert(collider->getCollisionTag() != CollisionTag::INVALID);
+    assert(collider);
+    mCollisionMap.insert(std::pair<CollisionTag, const Collider*>(collider->getCollisionTag(), collider));
+}
+
+void CollisionManager::removeCollider(const Collider* colliderToRemove)
+{
+    // Find iterator for collider then erase it 
+    std::multimap<CollisionTag, const Collider*>::const_iterator iterToRemove;
+
+    assert(colliderToRemove->getCollisionTag() != CollisionTag::INVALID);
+
+    std::pair<std::multimap<CollisionTag, const Collider*>::const_iterator, std::multimap<CollisionTag, const Collider*>::const_iterator> ret;
+    ret = mCollisionMap.equal_range(colliderToRemove->getCollisionTag());
+
+    for (iterToRemove = ret.first; iterToRemove != ret.second; ++iterToRemove)
+    {
+        if (iterToRemove->second == colliderToRemove)
+        {
+            mCollisionMap.erase(iterToRemove);
+            return;
+        }
+    }
+
+    printf("Collider pointer not found! \n");
+    assert(false);
+}

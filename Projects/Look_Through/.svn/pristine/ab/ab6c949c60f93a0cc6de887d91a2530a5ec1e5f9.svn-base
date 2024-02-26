@@ -1,0 +1,44 @@
+/*******************************************************
+* Author: Aven Presseisen
+* Class: GPR-250-02
+* Assignment: Assignment 3
+* Certification of Authenticity:
+* I certify that this assignment is entirely my own work.
+************/
+
+#include <string>
+
+#include <PerformanceTracker.h>
+#include <MemoryTracker.h>
+#include <Timer.h>
+
+#include "Game.h"
+
+using namespace std;
+
+int main()
+{
+	PerformanceTracker * pPerformanceTracker = new PerformanceTracker;
+
+	pPerformanceTracker->startTracking( "loop" );
+
+	Game & gameInstance = Game::getInstance();
+
+	gameInstance.init();
+	gameInstance.doLoop();
+
+	bool keepRunning = true;
+
+	gameInstance.cleanup();
+
+	pPerformanceTracker->stopTracking( "loop" );
+	cout << "Frame Took:" << pPerformanceTracker->getElapsedTime("loop") << " ms" << endl;
+
+	pPerformanceTracker->clearTracker( "loop" );
+	delete pPerformanceTracker;
+
+	MemoryTracker::getInstance()->reportAllocations( cout );
+
+	system( "pause" );
+	return 0;
+}

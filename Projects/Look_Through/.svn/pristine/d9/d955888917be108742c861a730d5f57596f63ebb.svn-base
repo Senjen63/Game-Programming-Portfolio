@@ -1,0 +1,24 @@
+#pragma once
+
+#include <Vector2D.h>
+#include "Color.h"
+
+class SnakePart final : public Trackable
+{
+    Color mColor = Color( 0, 0, 0 );
+
+    Vector2D mPosition;
+
+    SnakePart * mpChild;
+public:
+    SnakePart();
+    SnakePart( int children, Color color );
+    ~SnakePart();
+
+    void addChild();
+    [[nodiscard]] SnakePart * getChild() const;
+    [[nodiscard]] Color getColor() const;
+    [[nodiscard]] Vector2D getPosition() const;
+    void setColor( Color color );
+    void setPosition( const Vector2D & newPos );
+};

@@ -1,0 +1,157 @@
+#include "AssetManager.h"
+
+using namespace std;
+
+AssetManager::AssetManager()
+{
+
+}
+
+void AssetManager::cleanup()
+{
+	vector<TextureKey> texKeys;
+	vector<SpriteKey> sprKeys;
+	vector<AnimationKey> anmKeys;
+	vector<SoundKey> sndKeys;
+
+	texKeys.reserve(mTextureMap.size());
+	sprKeys.reserve(mSpriteMap.size());
+	anmKeys.reserve(mAnimationMap.size());
+	sndKeys.reserve(mSoundMap.size());
+
+	// fill out vectors with sprites, anims, sounds
+	for (auto i : mTextureMap) { texKeys.push_back(i.first); }
+	for (auto i : mSpriteMap) { sprKeys.push_back(i.first); }
+	for (auto i : mAnimationMap) { anmKeys.push_back(i.first); }
+	for (auto i : mSoundMap) { sndKeys.push_back(i.first); }
+
+	// delete all objects
+	for (size_t i = 0; i < texKeys.size(); i++) { delete mTextureMap.at(texKeys[i]); }
+	for (size_t i = 0; i < sprKeys.size(); i++) { delete mSpriteMap.at(sprKeys[i]); }
+	for (size_t i = 0; i < anmKeys.size(); i++) { delete mAnimationMap.at(anmKeys[i]); }
+	for (size_t i = 0; i < sndKeys.size(); i++) 
+	{ 
+		delete mSoundMap.at(sndKeys[i]);
+		delete mSoundBufferMap.at(sndKeys[i]);
+	}
+
+	mTextureMap.clear();
+	mSpriteMap.clear();
+	mAnimationMap.clear();
+	mSoundMap.clear();
+	mSoundBufferMap.clear();
+}
+
+// CREATION FUNCTIONS
+void AssetManager::createTexture(string filename, const TextureKey& key)
+{
+	if (mTextureMap.find(key) != mTextureMap.end()) { return; }
+
+	Texture* tex = new Texture(filename);
+
+	mTextureMap.emplace(make_pair(key, tex));
+}
+
+void AssetManager::createSprite(Texture* tex, const SpriteKey& key, int xPos, int yPos, float xScale, float yScale)
+{
+	if (mSpriteMap.find(key) != mSpriteMap.end()) { return; }
+
+	Sprite* spr = new Sprite(tex, xPos, yPos, xScale, yScale);
+
+	mSpriteMap.emplace(make_pair(key, spr));
+}
+
+void AssetManager::createSprite(Texture* tex, const SpriteKey& key, int x, int y, int width, int height, int xPos, int yPos, float xScale, float yScale)
+{
+	if (mSpriteMap.find(key) != mSpriteMap.end()) { return; }
+
+	Sprite* spr = new Sprite(tex, x, y, width, height, xPos, yPos, xScale, yScale);
+
+	mSpriteMap.emplace(make_pair(key, spr));
+}
+
+void AssetManager::createAnimation(const AnimationKey& key, bool isLooping)
+{
+	if (mAnimationMap.find(key) != mAnimationMap.end()) { return; }
+
+	AnimationBase* anm = new AnimationBase(isLooping);
+
+	mAnimationMap.emplace(make_pair(key, anm));
+}
+
+void AssetManager::createSound(string filename, const SoundKey& key)
+{
+	if (mSoundMap.find(key) != mSoundMap.end()) { return; }
+
+	SoundBuffer* bSnd = new SoundBuffer(filename);
+	Sound* snd = new Sound(bSnd);
+
+	mSoundBufferMap.emplace(make_pair(key, bSnd));
+	mSoundMap.emplace(make_pair(key, snd));
+}
+
+// DESTRUCTION FUNCTIONS
+void AssetManager::deleteTexture(const TextureKey& key)
+{
+	if (mTextureMap.find(key) != mTextureMap.end())
+	{
+		delete mTextureMap.at(key);
+		mTextureMap.erase(key);
+	}
+}
+
+void AssetManager::deleteSprite(const SpriteKey& key)
+{
+	if (mSpriteMap.find(key) != mSpriteMap.end())
+	{
+		delete mSpriteMap.at(key);
+		mSpriteMap.erase(key);
+	}
+}
+
+void AssetManager::deleteAnimation(const AnimationKey& key)
+{
+	if (mAnimationMap.find(key) != mAnimationMap.end())
+	{
+		delete mAnimationMap.at(key);
+		mAnimationMap.erase(key);
+	}
+}
+
+void AssetManager::deleteSound(const SoundKey& key)
+{
+	if (mSoundMap.find(key) != mSoundMap.end())
+	{
+		delete mSoundMap.at(key);
+		mSoundMap.erase(key);
+	}
+}
+
+// ACCESSOR FUNCTIONS
+Texture* AssetManager::getTexture(const TextureKey& key) const
+{
+	if (mTextureMap.find(key) != mTextureMap.end()) { return mTextureMap.at(key); }
+
+	return nullptr;
+}
+
+Sprite* AssetManager::getSprite(const SpriteKey& key) const
+{
+	if (mSpriteMap.find(key) != mSpriteMap.end()) { return mSpriteMap.at(key); }
+
+	return nullptr;
+}
+
+AnimationBase* AssetManager::getAnimation(const AnimationKey& key) const
+{
+	if (mAnimationMap.find(key) != mAnimationMap.end()) { return mAnimationMap.at(key); }
+
+	return nullptr;
+}
+
+Sound* AssetManager::getSound(const SoundKey& key) const
+{
+	if (mSoundMap.find(key) != mSoundMap.end()) { return mSoundMap.at(key); }
+
+	return nullptr;
+}

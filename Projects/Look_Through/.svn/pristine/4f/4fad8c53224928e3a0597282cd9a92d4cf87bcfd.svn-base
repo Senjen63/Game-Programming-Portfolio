@@ -1,0 +1,11 @@
+#include "InputEvent.h"
+
+InputEvent::InputEvent(const InputType inputType):GameEvent(INPUT_EVENT), mInputType(inputType)
+{
+
+}
+
+InputEvent::~InputEvent()
+{
+
+}

@@ -1,0 +1,18 @@
+#pragma once
+
+#include <vector>
+
+#include "Level.h"
+
+class LevelManager final : public Trackable
+{
+    std::vector< Level > mLevels;
+
+public:
+    LevelManager();
+    ~LevelManager();
+
+    bool addLevels( const char * pathToLevels );
+    Level & getLevel( size_t level );
+    int getLevelAmount() const;
+};

@@ -1,0 +1,14 @@
+#pragma once
+#pragma once
+#include "Button.h"
+
+class LoadGameButton : public Button
+{
+public:
+	LoadGameButton(std::pair<float, float>location, std::pair<float, float>scale, string text, string animationDataFilePath);
+	virtual ~LoadGameButton();
+
+	virtual void onClicked();
+
+private:
+};

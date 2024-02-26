@@ -1,0 +1,10 @@
+//BP
+#include "FoodCreation.h"
+
+FoodCreation::FoodCreation() : SpawnEvents((SpawnEventVariations)FOOD_SPAWN)
+{
+}
+
+FoodCreation::~FoodCreation()
+{
+}

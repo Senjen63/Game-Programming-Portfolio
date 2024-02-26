@@ -1,0 +1,11 @@
+#include "PowerUpEvent.h"
+
+PowerUpEvent::PowerUpEvent(const string& input)
+	:GameEvent(POWER_UP_EVENT)
+	, mInputString(input)
+{
+}
+
+PowerUpEvent::~PowerUpEvent()
+{
+}

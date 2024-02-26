@@ -1,0 +1,86 @@
+#include "GraphicsBufferManager.h"
+#include "GraphicsBuffer.h"
+
+GraphicsBufferManager::GraphicsBufferManager()
+{
+
+}
+
+GraphicsBufferManager::~GraphicsBufferManager()
+{
+	cleanup();
+}
+
+void GraphicsBufferManager::cleanup()
+{
+	for (auto iter : mMap)
+	{
+		GraphicsBuffer* pBuffer = iter.second;
+		delete pBuffer;
+		pBuffer = nullptr;
+	}
+	mMap.clear();
+}
+
+GraphicsBuffer* GraphicsBufferManager::addBuffer(string key, string fileName)
+{
+	GraphicsBuffer* pBuffer = NULL;
+	auto iter = mMap.find(key);
+	if (iter == mMap.end())
+	{
+		pBuffer = new GraphicsBuffer(fileName);
+		mMap[key] = pBuffer;
+	}
+
+	return pBuffer;
+}
+
+GraphicsBuffer* GraphicsBufferManager::addBuffer(string key, string fileName, int width, int height)
+{
+	GraphicsBuffer* pBuffer = NULL;
+	auto iter = mMap.find(key);
+	if (iter == mMap.end())
+	{
+		pBuffer = new GraphicsBuffer(width, height);
+		mMap[key] = pBuffer;
+	}
+
+	return pBuffer;
+}
+
+void GraphicsBufferManager::deleteBuffer(string key)
+{
+	auto iter = mMap.find(key);
+
+	if (iter != mMap.end())
+	{
+		delete iter->second;
+		mMap.erase(iter);
+	}
+}
+
+void GraphicsBufferManager::deleteBuffer(GraphicsBuffer* pBuffer)
+{
+	for (auto iter : mMap)
+	{
+		if (pBuffer = iter.second)
+		{
+			delete pBuffer;
+			mMap.erase(iter.first);
+			return;
+		}
+	}
+}
+
+GraphicsBuffer* GraphicsBufferManager::getBuffer(string key)
+{
+	auto iter = mMap.find(key);
+	if (iter != mMap.end())
+	{
+		return iter->second;
+	}
+	else
+	{
+		return NULL;
+	}
+}

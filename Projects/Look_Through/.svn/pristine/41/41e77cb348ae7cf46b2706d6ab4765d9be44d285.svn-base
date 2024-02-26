@@ -1,0 +1,36 @@
+﻿//     -------------------------------------------------------------------------
+//     Final Project
+//         EntityCommandBuffer.hpp
+//     
+//             Created:
+//                 13-04-2022
+//             Author(s):
+//                 Aven Presseisen
+//     -------------------------------------------------------------------------
+
+#pragma once
+
+#include "Archetype.hpp"
+
+class EntityCommandBuffer
+{
+    friend class World;
+
+    std::weak_ptr< EntityManager > mpEntityManager;
+
+    std::vector< std::pair< Entity, Component * > > mComponentsToAdd;
+    std::vector< std::vector< Component * > > mEntitiesToCreate;
+    std::vector< Entity > mEntitiesToDelete;
+    bool mSwitchScene;
+public:
+    void addComponent( Entity entity, Component * pComponent );
+    void createEntity( const std::vector< Component * > & components );
+    void deleteEntity( Entity entity );
+
+    bool doChangeScene();
+
+    [[nodiscard]] bool hasStructuralChanges() const;
+
+    void execute();
+    void switchScene();
+};

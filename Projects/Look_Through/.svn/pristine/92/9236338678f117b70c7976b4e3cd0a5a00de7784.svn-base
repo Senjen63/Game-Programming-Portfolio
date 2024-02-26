@@ -1,0 +1,11 @@
+#include "PowerUpEvent.h"
+
+PowerUpEvent::PowerUpEvent(Unit* powerUpObject, Unit* snakeObject, int powerUpType) : GameEvent(POWER_UP_EVENT), mpPowerUpObject(powerUpObject), mpSnakeObject(snakeObject), mPowerUpType(powerUpType)
+{
+
+}
+
+PowerUpEvent::~PowerUpEvent()
+{
+
+}

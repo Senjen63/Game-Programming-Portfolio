@@ -1,0 +1,203 @@
+#include "LevelManager.h"
+#include "Game.h"
+
+#include <iostream>
+#include <fstream>
+#include <assert.h>
+#include <EventSystem.h>
+#include "LevelEvent.h"
+
+using namespace std;
+
+LevelManager::LevelManager(int numLevels)
+{
+	mIDLevel = 0;
+
+	mCurrentLevel = 0;
+	mWallAnimation = nullptr;
+	mPenguinAnimation = nullptr;
+	mSolicitorAnimation = nullptr;
+	mPuffleAnimation = nullptr;
+	mBulletAnimation = nullptr;
+
+	for (int i = 0; i < numLevels; i++)
+	{
+		mpLevels.push_back(new Level(i));
+	}
+
+	EventSystem* mpEvents = EventSystem::getInstance();
+	mpEvents->addListener((EventType)NEXT_LEVEL_EVENT, this);
+}
+
+LevelManager::~LevelManager()
+{
+	for (size_t i = 0; i < mpLevels.size(); i++) { delete mpLevels[i]; }
+	for (size_t i = 0; i < mpWalls.size(); i++) { delete mpWalls[i]; }
+	for (size_t i = 0; i < mpEnemies.size(); i++) { delete mpEnemies[i]; }
+}
+
+void LevelManager::init()
+{
+	ifstream levelFile;
+
+	for (size_t i = 0; i < mpLevels.size(); i++) 
+	{
+		int currentLine = 0;
+		string currentVar;
+		levelFile.open(ASSET_PATH + to_string(i) + ".txt");
+		assert(levelFile.is_open());
+
+		levelFile >> currentVar; //skipping the first line
+
+		while (currentLine < 3) //set level info
+		{
+			switch (currentLine)
+			{
+			case 0:
+				levelFile >> currentVar;
+				mpLevels[i]->setWidth(stof(currentVar));
+				levelFile >> currentVar;
+				mpLevels[i]->setHeight(stof(currentVar));
+				break;
+
+			case 1:
+				levelFile >> currentVar;
+				mpLevels[i]->setStartX(stof(currentVar));
+				levelFile >> currentVar;
+				mpLevels[i]->setStartY(stof(currentVar));
+				break;
+			}
+
+			currentLine++;
+		}
+
+		levelFile.close();
+	}
+
+	//loadLevel();
+}
+
+void LevelManager::setAnimation(AnimationBase* anim, string type)
+{
+	if (type == "wall") { mWallAnimation = anim; }
+	if (type == "penguin") { mPenguinAnimation = anim; }
+	if (type == "chaser") { mSolicitorAnimation = anim; }
+	if (type == "puffle") { mPuffleAnimation = anim; }
+	if (type == "bullet") { mBulletAnimation = anim; }
+}
+
+void LevelManager::update(double elapsedTime)
+{
+	if (mCurrentLevel < (int)(mpLevels.size()))
+	{
+		mpLevels[mCurrentLevel]->update(elapsedTime);
+
+		for (size_t i = 0; i < mpWalls.size(); i++) { mpWalls[i]->update(elapsedTime); }
+		for (size_t i = 0; i < mpEnemies.size(); i++) { mpEnemies[i]->update(elapsedTime); }
+	}
+}
+
+void LevelManager::draw()
+{
+	for (size_t i = 0; i < mpWalls.size(); i++) { mpWalls[i]->draw(); }
+	for (size_t i = 0; i < mpEnemies.size(); i++) { mpEnemies[i]->draw(); }
+}
+
+void LevelManager::gotoNextLevel()
+{
+	mCurrentLevel++;
+	if (mCurrentLevel > int(mpLevels.size() - 1))
+	{
+		EventSystem::getInstance()->fireEvent(LevelEvent(VICTORY_EVENT));
+
+		return;
+	}
+
+	Game::getInstance()->getPlayer()->resetHP();
+
+	loadLevel();
+
+	return;
+}
+
+void LevelManager::loadLevel(bool loadEnemies)
+{
+	//clear previous level
+	for (size_t i = 0; i < mpWalls.size(); i++) { delete mpWalls[i]; }
+	mpWalls.clear();
+
+	for (size_t i = 0; i < mpEnemies.size(); i++) { delete mpEnemies[i]; }
+	mpEnemies.clear();
+
+	//load new level
+	ifstream levelFile;
+
+	string currentVar;
+	string enemyType;
+	int numOfEnemies;
+	int enemyX;
+	int enemyY;
+	int enemyDirection;
+
+	levelFile.open(ASSET_PATH + to_string(mCurrentLevel) + ".txt");
+	assert(levelFile.is_open());
+
+	while (!levelFile.eof() && currentVar != "[TILES]") { levelFile >> currentVar; } //skipping to the walls section
+
+	levelFile >> currentVar;
+
+	while (!levelFile.eof() && currentVar != "[ENEMIES]") // building level walls
+	{
+		for (int i = 0; i < mpLevels[mCurrentLevel]->getLevelSize().getY(); i++)
+		{
+			for (int j = 0; j < mpLevels[mCurrentLevel]->getLevelSize().getX(); j++)
+			{
+				if (stoi(currentVar) > 0) {
+					mpWalls.push_back(new Wall(j * Game::TILE_SIZE, i * Game::TILE_SIZE, new Animation(0, mWallAnimation), WallType(stoi(currentVar))));
+				}
+				levelFile >> currentVar;
+			}
+		}
+	}
+
+	levelFile >> numOfEnemies;
+
+	while (!levelFile.eof() && numOfEnemies > 0 && loadEnemies) // building level enemies
+	{
+		levelFile >> enemyType;
+		levelFile >> enemyX;
+		levelFile >> enemyY;
+		levelFile >> enemyDirection;
+
+		if (enemyType == "Penguin") { mpEnemies.push_back(new Penguin(Direction(enemyDirection), Vector2D(enemyX, enemyY), new Animation(ANIMATION_SPEED, mPenguinAnimation))); }
+		else if (enemyType == "Chaser") { mpEnemies.push_back(new Solicitor(Direction(enemyDirection), Vector2D(enemyX, enemyY), new Animation(ANIMATION_SPEED, mSolicitorAnimation), Game::getInstance()->getPlayer())); }
+		else if (enemyType == "Puffle") { mpEnemies.push_back(new Puffle(Direction(enemyDirection), Vector2D(enemyX, enemyY), new Animation(ANIMATION_SPEED, mPuffleAnimation), mBulletAnimation)); }
+		
+		numOfEnemies--;
+	}
+
+	levelFile.close();
+
+	//set player pos
+	Game::getInstance()->getPlayer()->setLocation(mpLevels[mCurrentLevel]->getStartPos());
+}
+
+void LevelManager::handleEvent(const Event& theEvent)
+{
+	if (theEvent.getType() == NEXT_LEVEL_EVENT)
+	{
+		gotoNextLevel();
+	}
+}
+
+void LevelManager::deleteEnemy(EnemyBase* toDelete)
+{
+	for (size_t i = 0; i < mpEnemies.size(); i++)
+	{
+		if (toDelete == mpEnemies[i])
+		{
+			delete mpEnemies[i];
+			mpEnemies.erase(mpEnemies.begin() + i);
+		}
+	}
+}

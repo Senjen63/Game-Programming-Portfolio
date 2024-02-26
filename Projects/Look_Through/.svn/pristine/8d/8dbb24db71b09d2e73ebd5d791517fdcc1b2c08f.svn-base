@@ -1,0 +1,42 @@
+#include "GraphicsBufferManager.h"
+
+void GraphicsBufferManager::createBuffer(string buffName, string path, GraphicsSystem* gs)
+{
+    GraphicsBuffer* buffer = new GraphicsBuffer(path, gs->getRenderer());
+    mpGraphicsBuffers[buffName] = buffer;
+}
+
+void GraphicsBufferManager::createBuffer(string buffName, Color color, int height, int width, GraphicsSystem* gs)
+{
+    GraphicsBuffer* buffer = new GraphicsBuffer(color, height, width, gs->getRenderer());
+    mpGraphicsBuffers[buffName] = buffer;
+}
+
+void GraphicsBufferManager::createBuffer(string buffName, SDL_Texture* pBitmap)
+{
+    GraphicsBuffer* buffer = new GraphicsBuffer(pBitmap);
+    mpGraphicsBuffers[buffName] = buffer;
+}
+
+void GraphicsBufferManager::delBuffer(string buffName)
+{
+    for (map<std::string, GraphicsBuffer*>::iterator itr = mpGraphicsBuffers.begin(); itr != mpGraphicsBuffers.end(); itr++)
+    {
+        if (itr->first == buffName)
+        {
+            delete itr->second;
+            mpGraphicsBuffers.erase(itr);
+            return;
+        }
+    }
+}
+
+void GraphicsBufferManager::removeAllBuffers()
+{
+    for (map<string, GraphicsBuffer*>::iterator itr = mpGraphicsBuffers.begin(); itr != mpGraphicsBuffers.end(); itr++)
+    {
+        delete itr->second;
+    }
+
+    mpGraphicsBuffers.clear();
+}

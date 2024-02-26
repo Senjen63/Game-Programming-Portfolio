@@ -1,0 +1,34 @@
+﻿#include "include/Time.hpp"
+
+Time::Time()
+{
+    mTotalTime = 0;
+    mDeltaTime = 0;
+    mNewTime = std::chrono::high_resolution_clock::now();
+    mLastTime = mNewTime;
+}
+
+float Time::getUnlockedDeltaTime() const
+{
+    return mDeltaTime;
+}
+
+float Time::getDeltaTime() const
+{
+    if(mDeltaTime > 0.2f) return 0.2f;
+    return mDeltaTime;
+}
+
+float Time::getTotalTime() const
+{
+    return mTotalTime;
+}
+
+void Time::update()
+{
+    mNewTime = std::chrono::high_resolution_clock::now();
+    const std::chrono::duration< float > newTimeElapsed = mNewTime - mLastTime;
+    mDeltaTime = newTimeElapsed.count();
+    mLastTime = std::chrono::high_resolution_clock::now();
+    mTotalTime += mDeltaTime;
+}

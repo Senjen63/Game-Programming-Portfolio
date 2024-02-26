@@ -1,0 +1,43 @@
+#pragma once
+
+#include <string>
+#include <assert.h>
+#include <EventListener.h>
+#include <EventSystem.h>
+#include "SFML/Audio/SoundSource.hpp"
+#include "VolumeChangeEvent.h"
+
+
+class Audio : public EventListener
+{
+protected:
+	std::string mFileName;
+	sf::SoundSource* mpSoundSource;
+
+	//Audio(const std::string& fileName, bool looping, float volume, float secondsProgress) { init(fileName, looping, volume, secondsProgress); }
+	Audio() { mFileName = ""; mpSoundSource = nullptr; }
+
+public:
+	~Audio() { cleanup(); }
+
+	void init(const std::string& fileName, bool looping = false, float volume = 50, float secondsProgress = 0);
+	void cleanup();
+
+	virtual void loadFile(const std::string& fileName) = 0;
+
+	void play() { mpSoundSource->play(); }
+	void pause() { mpSoundSource->pause(); }
+	void stop() { mpSoundSource->stop(); }
+	virtual void restart() = 0;
+
+	virtual bool const getLooping() = 0;
+	virtual void setLooping(bool shouldLoop) = 0;
+
+	float const getVolume() { mpSoundSource->getVolume(); }
+	void setVolume(float newVolume) { mpSoundSource->setVolume(newVolume); }
+
+	virtual float const getSecondsProgress() = 0; // How many seconds into song object is
+	virtual void setSecondsProgress(float progress) = 0;
+	
+	void handleEvent(const Event& theEvent) override;
+};

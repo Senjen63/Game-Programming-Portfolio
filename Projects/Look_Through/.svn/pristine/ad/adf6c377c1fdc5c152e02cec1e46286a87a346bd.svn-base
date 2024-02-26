@@ -1,0 +1,45 @@
+PowerUps
+
+timer 10
+points 0 500
+speed 0 2
+slow 0 2
+
+endPowerUps
+
+
+SnakeInfo
+
+speed 4
+startLength 1
+targetLength 8
+lengthPerFood 0
+pointsPerFood 100
+
+endSnakeInfo
+
+LevelLayout
+
+24
+18
+
+w w w w w w w w w w w w w w w w w w w w w w w w
+w ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' w
+w ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' w
+w ' ' w w w w w ' ' w w w w ' ' w w w w w ' ' w
+w ' ' w w w w w ' ' ' ' ' ' ' ' w w w w w ' ' w
+w ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' w
+w ' ' ' ' ' ' ' ' ' w ' ' w ' ' ' ' ' ' ' ' ' w
+w w w w ' ' ' w w w w ' ' w w w w ' ' w w w w w
+' ' ' ' ' ' ' ' ' ' w ' ' w ' ' ' ' ' ' ' ' ' '
+' ' ' ' ' ' ' ' ' ' w ' ' w ' ' ' ' ' ' ' ' ' '
+w w w w ' ' w w ' ' w s ' w ' ' w w ' ' w w w w
+w ' ' ' ' ' w w ' ' w ' ' w ' ' w w ' ' ' ' ' w
+w ' ' ' ' ' w w ' ' w ' ' w ' ' w w ' ' ' ' ' w
+w ' ' w ' ' w w ' ' w ' ' w ' ' w w ' ' w ' ' w
+w ' ' w ' ' w w ' ' w ' ' w ' ' w w ' ' w ' ' w
+w ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' w
+w ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' ' w
+w w w w w w w w w w w w w w w w w w w w w w w w
+
+endLevelLayout

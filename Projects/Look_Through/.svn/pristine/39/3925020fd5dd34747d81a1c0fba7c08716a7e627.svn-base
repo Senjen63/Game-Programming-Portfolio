@@ -1,0 +1,101 @@
+#pragma once
+
+#include <vector>
+#include <Trackable.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include "Vector2D.h"
+#include "Animation.h"
+#include "UnitManager.h"
+
+using namespace std;
+
+class Unit;
+class UnitManager;
+
+class AsteroidManager : public UnitManager
+{
+		const string AST_TYPES = "asteroid_types.txt";
+		int mTypes;
+
+		vector<Vector2D> mGridPos;
+		vector<int> mPlaces;
+
+		float mLowG;
+		float mGravity;
+		float mHighG;
+
+		int mPositions;
+
+		int mSpawn1;
+		int mSpawn2;
+
+		int mNumerator;
+		int mDenominator;
+
+		int mMod;
+		int mLoop;
+
+		bool mRandomSpawn;
+
+		double mCurrentTime;
+		double mReload;
+
+		double mMoveTime;
+		double mSet;
+
+		bool mCanFall;
+		bool mSpeed;
+
+		Animation* mpAstaAnimation;
+		Animation* mpFastAnimation;
+		Animation* mpSlowAnimation;
+		Animation* mpPoinAnimation;
+
+		int determinePower();
+
+	public:
+		AsteroidManager();
+		AsteroidManager(int size);
+		~AsteroidManager();
+		void activateUnit(Vector2D pos, int type);
+		void activateUnit();
+		void activateUnit(Vector2D pos) override;
+
+		void createAndAddUnit(Vector2D location, Animation, Animation altAnimation) override;
+		void createAndAddUnit(Vector2D location, Animation) override;
+		void spawnIn(int amount);
+		void spawnIn(int amount, int other);
+		void updateAll(double) override;
+
+		void detectCollisions(vector<Unit*> pUnArr) override;
+
+		void setAnimations(Animation* astaAnimation, Animation* fastAnimation, Animation* slowAnimation, Animation* poinAnimation);
+
+		void deallocate();
+
+		void makeGrid(float height, int posits);
+
+		void setGravity(float gra);
+		void setHighGravity(float gra) { mHighG = gra; }
+		void setLowGravity(float gra) { mLowG = gra; }
+
+		void setTime(double timeUsed) { mCurrentTime = timeUsed; }
+		void setReload(double reload) { mReload = reload; }
+		void setGravC(double moveTime) { mMoveTime = moveTime; }
+		void setMoveT(double set) { mSet = set; }
+		void setSpawn(int rate1) { mSpawn1 = rate1; mSpawn2 = rate1; mRandomSpawn = false; }
+		void setSpawn(int rate1, int rate2) { mSpawn1 = rate1; mSpawn2 = rate2; mRandomSpawn = true; }
+		void setPowerUp(int numerator, int denominator) { mNumerator = numerator; mDenominator = denominator; }
+
+		float getGravity() { return mGravity; }
+		double getCurrent() { return mCurrentTime; }
+		double getReload() { return mReload; }
+		double getGravC() { return mMoveTime; }
+		double getMoveT() { return mSet; }
+
+		void changeGravity(bool high);
+
+		void resetGame();
+};

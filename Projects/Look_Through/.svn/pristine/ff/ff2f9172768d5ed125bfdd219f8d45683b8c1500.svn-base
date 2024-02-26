@@ -1,0 +1,105 @@
+#pragma once
+#include "EventSystem.h"
+#include "EventListener.h"
+
+#include "GraphicsSystem.h"
+#include "InputSystem.h"
+#include "GraphicsBufferManager.h"
+#include "UnitManager.h"
+#include "LevelManager.h"
+#include "HUD.h"
+
+#include <fstream>
+
+
+const string COMMON_PATH = "..\\..\\common\\assets\\";
+const string SPRITE_PATH = "..\\..\\wagner.thomas\\Midterm\\Assets\\";
+const string FONT_FILENAME = "cour.ttf";
+
+const string WALL_KEY = "Wall";
+const string SNAKE_KEY = "Snake";
+const string POWERUP_KEY = "PowerUp";
+const string POINTS_KEY = "Points";
+const string SPEEDUP_KEY = "SpeedUp";
+const string SPEEDDOWN_KEY = "SpeedDown";
+
+const string WALL_SPRITE = "Wall.png";
+const string SNAKE_SPRITE = "SnakeBody.png";
+const string GROW_SPRITE = "Grow.png";
+const string POINTS_SPRITE = "Points.png"; 
+const string SPEED_UP_SPRITE = "SpeedUp.png"; 
+const string SPEED_DOWN_SPRITE = "SpeedDown.png"; 
+
+const int START_SPEED = 5;
+const int SPEED_CHANGE = 100;
+
+const int WALL_COLUMN_NUM = 16;
+const int WALL_ROW_NUM = 12;
+
+const float SLEEP_MS = 16.7;
+const float TIMER_CHANGE = .001;
+const float DISTANCE = 20;
+const float HIT_DISTANCE = 10;
+
+const int STARTING_X = 425;
+const int STARTING_Y = 325;
+
+
+class Game : public EventListener
+{
+public:
+	static void createInstance(int width, int height);
+	static void destroyInstance();
+	static Game* getGame();
+	
+	void doLoop();
+	
+	int getPoints() { return mPoints; };
+	float getFPS()  { return mFPS;    };
+	float getTime() { return mTime;   };
+	float getSpeed() { return mSnake.getCurrentSpeed(); };
+
+	GraphicsBufferManager* getBufferManager() { return &mBufferManager; };
+
+private:
+	Game();
+	~Game();
+	void init(int width, int height);
+	void cleanUp();
+
+	static Game* mpsInstance;
+
+	GraphicsSystem* mpDisplay = nullptr;
+	InputSystem mInputSystem;
+	HUD mHUD;
+
+	GraphicsBufferManager mBufferManager;
+	LevelManager mLevelManager;
+	UnitManager mSnake;
+
+	Font* mpFont = nullptr;
+
+	EventSystem* mpEventSystem;
+
+	bool keepGoing = true;
+	bool mGameStart = false;
+	bool mGameFail = false;
+	Direction mDir = Direction::RIGHT;
+	int mCurrentLevel = 1;
+	int mWinLength = 0;
+	int mPointIncrease = 0;
+	int mPoints = 0;
+	float mFPS = 0;
+	float mTime = 0;
+
+
+	void handleEvent(const Event& event);
+
+	void getData();
+	void resetData();
+	void resetGame();
+	void checkCollision();
+	void showMenu();
+	void checkWin();
+	void updateHUDData(float time);
+};

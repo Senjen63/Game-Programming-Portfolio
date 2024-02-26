@@ -1,0 +1,45 @@
+#include "StartScreen.h"
+#include "Font.h"
+#include "Color.h"
+#include "Game.h"
+#include "GraphicsBufferManager.h"
+#include "GraphicsBuffer.h"
+#include "GraphicsSystem.h"
+
+using namespace std;
+
+StartScreen::StartScreen()
+{
+	const string START_SCREEN_KEY = "startScreen";
+
+	const string FONT_FILENAME = "cour.ttf";
+	const int FONT_SIZE = 48;
+
+	const string START_SCREEN_TITLE = "Snake Game";
+	const string START_SCREEN_PLAY = "Press Enter to Play";
+	const string TEXT_CENTER_ALIGN = "center";
+
+	Font font = Font(FONT_SIZE, FONT_FILENAME);
+	Color textColor = Color(255, 255, 255, 255);
+	Color backgroundColor = Color(0, 0, 0, 255);
+
+	Game::getInstance()->getGraphicsBufferManager()->createAndAddGraphicsBuffer(START_SCREEN_KEY, 960, 768);
+
+	Game::getInstance()->getGraphicsSystem()->setColor(Game::getInstance()->getGraphicsBufferManager()->getGraphicsBuffer(START_SCREEN_KEY), &backgroundColor);
+
+	Game::getInstance()->getGraphicsSystem()->writeText(Game::getInstance()->getGraphicsBufferManager()->getGraphicsBuffer(START_SCREEN_KEY), Vector2D(960/2, 768 / 4), &font, &textColor, START_SCREEN_TITLE, TEXT_CENTER_ALIGN);
+	Game::getInstance()->getGraphicsSystem()->writeText(Game::getInstance()->getGraphicsBufferManager()->getGraphicsBuffer(START_SCREEN_KEY), Vector2D(960 / 2, 768 / 2), &font, &textColor, START_SCREEN_PLAY, TEXT_CENTER_ALIGN);
+
+	this->mpStartScreen = new Sprite(Game::getInstance()->getGraphicsBufferManager()->getGraphicsBuffer(START_SCREEN_KEY)->getBitmapWidth(), Game::getInstance()->getGraphicsBufferManager()->getGraphicsBuffer(START_SCREEN_KEY)->getBitmapHeight(), Vector2D(0, 0), Game::getInstance()->getGraphicsBufferManager()->getGraphicsBuffer(START_SCREEN_KEY));
+}
+
+StartScreen::~StartScreen()
+{
+	delete mpStartScreen;
+}
+
+void StartScreen::drawStartScreen()
+{
+	Game::getInstance()->getGraphicsSystem()->draw(Vector2D(0, 0), *mpStartScreen);
+}
+

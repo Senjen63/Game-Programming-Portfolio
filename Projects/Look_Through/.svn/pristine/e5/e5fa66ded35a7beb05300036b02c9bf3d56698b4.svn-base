@@ -1,0 +1,40 @@
+#pragma once
+
+#include <vector>
+
+#include "Sprite.h"
+#include "Conversion.h"
+
+class Animation : public Trackable
+{
+	std::vector<Sprite> mFrames;
+
+	float mFramesPerSecond = 1.0f;
+	float mMillisecondsBetweenFrames = 1.0f;
+
+	float mMillisecondsOnCurrentFrame = 0.0f;
+
+	int mCurrentFrameIndex = 0;
+	bool mLoop = true;
+
+public:
+	Animation() {}
+	Animation(float fps, bool shouldLoop = false);
+	Animation(std::vector<Sprite> startFrames, float fps, bool shouldLoop = false);
+
+	~Animation() {}
+
+	float getFramesPerSecond() { return mFramesPerSecond; }
+	void setFramesPerSecond(float fps);
+
+	float getMillisecondsBetweenFrames() { return mMillisecondsBetweenFrames; }
+	void setMillisecondsBetweenFrames(float ms);
+
+	Sprite getCurrentFrame() { return mFrames[mCurrentFrameIndex]; }
+
+	int addFrame(Sprite newFrame); // Returns index of newly added frame
+	Sprite removeFrame(int index); // Returns removed sprite
+
+	void update(float dt); // Delta time in milliseconds
+};
+

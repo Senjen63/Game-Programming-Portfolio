@@ -1,0 +1,12 @@
+#include "CursorEvent.h"
+
+CursorEvent::CursorEvent(Vector2D cursorPos) : GameEvent((GameEventType)CURSOR_GAME_EVENT)
+{
+    mPos = cursorPos;
+}
+
+
+CursorEvent::~CursorEvent()
+{
+
+}

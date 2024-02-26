@@ -1,0 +1,35 @@
+#pragma once
+#include "Event.h"
+
+enum class KeyCode;
+
+enum InputEventTypes
+{
+	KEY_DOWN_EVENT = NUM_BASE_EVENT_TYPES, KEY_UP_EVENT, MOUSE_DOWN_EVENT, MOUSE_UP_EVENT, NUM_INPUT_EVENTS
+};
+
+class KeyInputEvent : public Event
+{
+public:
+	KeyInputEvent( KeyCode key, InputEventTypes type );
+	~KeyInputEvent() {};
+
+	KeyCode getKeyCode() const { return mKey; };
+
+private:
+	KeyCode mKey;
+};
+
+class MouseInputEvent : public Event
+{
+public:
+	MouseInputEvent( KeyCode but, InputEventTypes type );
+	~MouseInputEvent() {};
+
+	KeyCode getMouseCode() { return mBut; };
+	int getX() { return mX; };
+	int getY() { return mY; };
+private:
+	KeyCode mBut;
+	int mX, mY;
+};

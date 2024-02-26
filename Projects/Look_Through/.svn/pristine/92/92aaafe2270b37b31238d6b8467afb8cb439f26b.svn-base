@@ -1,0 +1,104 @@
+#include "UnitManager.h"
+
+/// <summary>
+/// Placeholder constructor for UnitManager.
+/// </summary>
+UnitManager::UnitManager()
+{
+}
+
+/// <summary>
+/// Destructor clears all units from memory.
+/// </summary>
+UnitManager::~UnitManager()
+{
+	clear();
+}
+
+/// <summary>
+/// Adds given Unit ptr to list of units.
+/// </summary>
+/// <param name="pUnit">: Unit pointer to add.</param>
+void UnitManager::addUnit( Unit * pUnit )
+{
+	mUnits.push_back( pUnit );
+}
+
+/// <summary>
+/// Deletes and removes every unit contained in memory.
+/// </summary>
+void UnitManager::clear()
+{
+	for( int i = mUnits.size() - 1; i >= 0; --i )
+	{
+		delete mUnits[ i ];
+	}
+	mUnits.clear();
+}
+
+/// <summary>
+/// Searches for a unit at the position given and deletes it from memory.
+/// </summary>
+/// <param name="pos">: Position of Unit.</param>
+void UnitManager::deleteUnit( Vector2D pos )
+{
+	for( int i = 0; i < mUnits.size(); ++i )
+	{
+		if( mUnits[ i ]->isOnPosition( pos ) )
+		{
+			Unit * pTmp = mUnits[ i ];
+			mUnits.erase( mUnits.begin() + i );
+			delete pTmp;
+			return;
+		}
+	}
+}
+
+/// <summary>
+/// Draws every Unit in memory using given graphics system.
+/// </summary>
+/// <param name="pGfxSystem">: Graphics System to draw to.</param>
+void UnitManager::drawAll( GraphicsSystem * pGfxSystem )
+{
+	for( auto & unit : mUnits )
+	{
+		unit->draw( pGfxSystem );
+	}
+}
+
+/// <summary>
+/// Gets last Unit from memory.
+/// </summary>
+/// <returns>Returns pointer to Unit.</returns>
+Unit * UnitManager::getLastUnit()
+{
+	return mUnits.back();
+}
+
+/// <summary>
+/// Gets the unit at a given position.
+/// </summary>
+/// <param name="pos">: Position to check.</param>
+/// <returns>Unit ptr if a unit is at position, else nullptr.</returns>
+Unit * UnitManager::getUnitAtPos( Vector2D pos )
+{
+	for( auto & unit : mUnits )
+	{
+		if( unit->isOnPosition( pos ) )
+		{
+			return unit;
+		}
+	}
+	return nullptr;
+}
+
+/// <summary>
+/// Updates all units animation frames.
+/// </summary>
+void UnitManager::updateAll()
+{
+	for( auto & unit : mUnits )
+	{
+		unit->updateUnit();
+	}
+}

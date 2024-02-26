@@ -1,0 +1,216 @@
+#include "LevelManager.h"
+
+#include <filesystem>
+#include <fstream>
+#include <sstream>
+#include <string>
+
+LevelManager::LevelManager() = default;
+
+LevelManager::~LevelManager()
+{
+    mLevels.clear();
+}
+
+bool LevelManager::addLevels( const char * pathToLevels )
+{
+    std::ifstream inStream;
+    for ( auto & path : std::filesystem::directory_iterator( pathToLevels ) )
+    {
+        inStream.open( path.path() );
+        if ( inStream.is_open() )
+        {
+            try
+            {
+                // 10 1 20 1      | Walls              x y x y x y
+                // 20 40          | Tiles              width height || width
+                // 1              | Snake Start Length x
+                // 30             | Snake End Length   x
+                // 1              | Snake Speed        x
+                // 1              | Snake PpF          x
+                // 120 0 204      | Snake Color        r g b
+                // 0 0 0 20 20 20 | Background Colors  r1 g1 b1 r2 g2 b2
+                // wall color
+                // food color
+                // power rate
+
+                Level level;
+
+                level.setName( path.path().filename().string() );
+
+                {
+                    std::string walls;
+                    getline( inStream, walls );
+                    std::istringstream ss( walls );
+
+                    int tempNum;
+                    Vector2D tempVec;
+                    int index = 0;
+                    while ( ss >> tempNum )
+                    {
+                        if ( index++ & 1 )
+                        {
+                            tempVec.setY( static_cast< float >(tempNum) );
+                            level.addWall( tempVec );
+                        } else
+                        {
+                            tempVec.setX( static_cast< float >(tempNum) );
+                        }
+                    }
+                }
+
+                {
+                    std::string tiles;
+                    getline( inStream, tiles );
+                    std::istringstream ss( tiles );
+
+                    int tempNum;
+                    Vector2D tileRes;
+                    ss >> tempNum;
+                    tileRes.setX( static_cast< float >(tempNum) );
+                    if ( ss >> tempNum )
+                    {
+                        tileRes.setY( static_cast< float >(tempNum) );
+                    } else
+                    {
+                        tileRes.setY( 0 );
+                    }
+
+                    level.setResolution( tileRes );
+                }
+
+                {
+                    std::string snakeLenStart;
+                    getline( inStream, snakeLenStart );
+                    std::istringstream ss( snakeLenStart );
+
+                    int tempNum;
+                    ss >> tempNum;
+
+                    level.setStartSize( tempNum );
+                }
+
+                {
+                    std::string snakeLenEnd;
+                    getline( inStream, snakeLenEnd );
+                    std::istringstream ss( snakeLenEnd );
+
+                    int tempNum;
+                    ss >> tempNum;
+
+                    level.setEndSize( tempNum );
+                }
+
+                {
+                    std::string snakeSpeed;
+                    getline( inStream, snakeSpeed );
+                    std::istringstream ss( snakeSpeed );
+
+                    float tempNum;
+                    ss >> tempNum;
+
+                    level.setSnakeSpeed( tempNum );
+                }
+
+                {
+                    std::string pointsPerFood;
+                    getline( inStream, pointsPerFood );
+                    std::istringstream ss( pointsPerFood );
+
+                    int tempNum;
+                    ss >> tempNum;
+
+                    level.setPointsPerFood( tempNum );
+                }
+
+                {
+                    std::string snakeCol;
+                    getline( inStream, snakeCol );
+                    std::istringstream ss( snakeCol );
+
+                    int tempR, tempG, tempB;
+                    ss >> tempR >> tempG >> tempB;
+
+                    Color snakeColor( tempR, tempG, tempB );
+
+                    level.setSnakeColor( snakeColor );
+                }
+
+                {
+                    std::string backColors;
+                    getline( inStream, backColors );
+                    std::istringstream ss( backColors );
+
+                    int tempR, tempG, tempB;
+                    ss >> tempR >> tempG >> tempB;
+
+                    Color backCol1( tempR, tempG, tempB );
+                    ss >> tempR >> tempG >> tempB;
+
+                    Color backCol2( tempR, tempG, tempB );
+
+                    level.setBackgroundColors( backCol1, backCol2 );
+                }
+
+                {
+                    std::string wallCol;
+                    getline( inStream, wallCol );
+                    std::istringstream ss( wallCol );
+
+                    int tempR, tempG, tempB;
+                    ss >> tempR >> tempG >> tempB;
+
+                    Color wallColor( tempR, tempG, tempB );
+
+                    level.setWallColor( wallColor );
+                }
+
+                {
+                    std::string foodCol;
+                    getline( inStream, foodCol );
+                    std::istringstream ss( foodCol );
+
+                    int tempR, tempG, tempB;
+                    ss >> tempR >> tempG >> tempB;
+
+                    Color foodColor( tempR, tempG, tempB );
+
+                    level.setFoodColor( foodColor );
+                }
+
+                {
+                    std::string powerUpRateS;
+                    getline( inStream, powerUpRateS );
+                    std::istringstream ss( powerUpRateS );
+
+                    int tempNum;
+                    ss >> tempNum;
+
+                    level.setPowerUpRate( tempNum );
+                }
+
+                mLevels.push_back( level );
+            } catch ( std::exception & e )
+            {
+                std::cout << "Failed to load level > " << path.path() << " | " << e.what();
+            }
+        } else
+        {
+            std::cout << "Failed to load level > " << path.path();
+        }
+
+        inStream.close();
+    }
+
+    return true;
+}
+
+Level & LevelManager::getLevel( const size_t level )
+{
+    return mLevels[ level ];
+}
+
+int LevelManager::getLevelAmount() const
+{
+    return static_cast<int>(mLevels.size());
+}

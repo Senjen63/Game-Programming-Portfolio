@@ -1,0 +1,170 @@
+#include <allegro5/allegro.h>
+#include <allegro5/allegro_font.h>
+#include <allegro5/allegro_ttf.h>
+#include <allegro5/allegro_audio.h>
+#include <allegro5/allegro_acodec.h>
+#include <allegro5/allegro_image.h>
+#include <allegro5/allegro_primitives.h>
+
+#include <iostream>
+#include <cassert>
+#include <string>
+
+#include <PerformanceTracker.h>
+#include <MemoryTracker.h>
+#include <Vector2D.h>
+#include <Timer.h>
+
+#include "Sprite.h"
+#include "Graphics.h"
+#include "Buffer.h"
+#include "Assets.h"
+using namespace std;
+
+//----------------------------------------Graphics System----------------------------------------
+
+GraphicsSystem::GraphicsSystem(int width, int height) {
+	setup();
+	
+	this->DISP_WIDTH = width;
+	this->DISP_HEIGHT = height;
+	this->Display = al_create_display(width, height);
+	assert(Display);
+
+	Back = new GraphicsBuffer(al_get_backbuffer(Display));
+}
+
+GraphicsSystem::~GraphicsSystem() {
+	al_destroy_display(Display);
+	delete Back;
+}
+
+bool GraphicsSystem::setup() {
+	//check for errors
+	if (!al_init())
+	{
+		cout << "error initting Allegro\n";
+		system("pause");
+		return 1;
+	}
+	if (!al_init_image_addon())
+	{
+		cout << "error - Image Add-on not initted\n";
+		system("pause");
+		return 1;
+	}
+	if (!al_init_font_addon())
+	{
+		cout << "error - Font Add-on not initted\n";
+		system("pause");
+		return 1;
+	}
+	if (!al_init_ttf_addon())
+	{
+		cout << "error - TTF Add-on not initted\n";
+		system("pause");
+		return 1;
+	}
+	if (!al_init_primitives_addon())
+	{
+		cout << "error - primitives Add-on not initted\n";
+		system("pause");
+		return 1;
+	}
+	if (!al_install_audio())
+	{
+		cout << "error - Audio Add-on not initted\n";
+		system("pause");
+		return 1;
+	}
+	if (!al_init_acodec_addon())
+	{
+		cout << "error - Audio Codec Add-on not initted\n";
+		system("pause");
+		return 1;
+	}
+	if (!al_reserve_samples(1))
+	{
+		cout << "error - samples not reserved\n";
+		system("pause");
+		return 1;
+	}
+	
+	Display = al_create_display(DISP_WIDTH, DISP_HEIGHT);
+	assert (Display);
+
+	Back = new GraphicsBuffer(al_get_backbuffer(Display));
+
+	return 0;
+}
+
+void GraphicsSystem::cleanup()
+{
+	al_destroy_display(Display);
+	delete Back;
+}
+
+void GraphicsSystem::flip()
+{ 
+	al_flip_display();
+}
+
+void GraphicsSystem::draw(int x, int y, Sprite sprite, float scale)
+{
+	al_set_target_bitmap(al_get_backbuffer(Display));
+	al_draw_scaled_bitmap(sprite.getGraphicsBuffer()->Bitmap, sprite.getSourceX(), sprite.getSourceY(), sprite.getWidth(), sprite.getHeight(), x, y, sprite.getWidth() * scale, sprite.getHeight() * scale, 0);
+}
+
+void GraphicsSystem::draw(GraphicsBuffer* graphicsBuffer, int x, int y, Sprite sprite, float scale)
+{
+	al_set_target_bitmap(graphicsBuffer->Bitmap);
+	al_draw_scaled_bitmap(sprite.getGraphicsBuffer()->Bitmap, sprite.getSourceX(), sprite.getSourceY(), sprite.getWidth(), sprite.getHeight(), x, y, sprite.getWidth() * scale, sprite.getHeight() * scale, 0);
+}
+
+void GraphicsSystem::writeText(int x, int y, Font* font, Color color, std::string text)
+{
+	al_draw_text(font->FontStyle, color.getColor(), x, y, ALLEGRO_ALIGN_CENTER, text.c_str());
+}
+
+void GraphicsSystem::writeText(GraphicsBuffer* graphicsBuffer, int x, int y, Font* font, Color color, std::string text)
+{
+	al_draw_text(font->FontStyle, color.getColor(), x, y, ALLEGRO_ALIGN_CENTER, text.c_str());
+}
+
+void GraphicsSystem::saveBuffer(GraphicsBuffer* graphicsBuffer, std::string fileName)
+{
+	al_save_bitmap(fileName.c_str(), graphicsBuffer->Bitmap);
+}
+
+
+//----------------------------------------Graphics Buffer----------------------------------------
+
+GraphicsBuffer::GraphicsBuffer()
+{
+	this->Bitmap = NULL;
+}
+
+GraphicsBuffer::GraphicsBuffer(ALLEGRO_BITMAP* bitmap)
+{
+	this->Bitmap = bitmap;
+	assert(Bitmap);
+}
+
+GraphicsBuffer::GraphicsBuffer(int width, int height, Color color)
+{
+	this->Bitmap = al_create_bitmap(width, height);
+	al_set_target_bitmap(Bitmap);
+	al_clear_to_color(color.getColor());
+	assert(Bitmap);
+}
+
+GraphicsBuffer::GraphicsBuffer(std::string fileName)
+{
+	this->Bitmap = al_load_bitmap((FILE_PATH + fileName).c_str());
+	assert(Bitmap);
+}
+
+GraphicsBuffer::~GraphicsBuffer()
+{
+	//al_destroy_bitmap(Bitmap);
+}

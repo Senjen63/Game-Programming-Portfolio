@@ -1,0 +1,121 @@
+//Evan Norzow, Nicolas Delbue, and Brandon Perry
+#include "UnitManager.h"
+
+Unit* UnitManager::getTargetUnit(Unit* unit)
+{
+	for (int i = 0; i < mpUnits.size(); i++)
+	{
+		Unit* pUnit = mpUnits[i];
+		if (pUnit == unit)
+		{
+			return pUnit;
+		}
+
+	}
+	return nullptr;
+}
+
+Unit* UnitManager::getLastUnit()
+{
+	if (mpUnits.size() > 0)
+		return mpUnits[mpUnits.size() - 1];
+	else
+		return nullptr;
+}
+
+void UnitManager::addUnit(float posX, float posY, float scaleX, float scaleY)
+{
+	//create unit
+	Unit* pUnit = new Unit(posX, posY, scaleX, scaleY);
+	//manage the unit
+	mpUnits.push_back(pUnit);
+}
+
+void UnitManager::addUnit(float posX, float posY, float scaleX, float scaleY, string tag)
+{
+	//create unit
+	Unit* pUnit = new Unit(posX, posY, scaleX, scaleY, tag);
+	//manage the unit
+	mpUnits.push_back(pUnit);
+}
+
+void UnitManager::delUnit(Unit* unit)
+{
+	for (int i = 0; i < mpUnits.size(); i++)
+	{
+		Unit* pUnit = mpUnits[i];
+		if (pUnit == unit)
+		{
+			delete pUnit;
+			mpUnits.erase(mpUnits.begin() + i);
+			return;
+		}
+
+	}
+}
+
+void UnitManager::delUnit(int unit)
+{
+	Unit* pUnit = mpUnits[unit];
+	delete pUnit;
+	mpUnits.erase(mpUnits.begin() + unit);
+}
+
+void UnitManager::removeAllUnits()
+{
+	for (int i = 0; i < mpUnits.size(); i++)
+	{
+		delete mpUnits[i];
+	}
+
+	mpUnits.clear();
+}
+
+void UnitManager::drawAll()
+{
+	for (int i = 0; i < mpUnits.size(); i++)
+	{
+		Unit* pUnit = mpUnits[i];
+		pUnit->draw();
+	}
+}
+
+void UnitManager::updateAll(double dt)
+{
+	for (int i = 0; i < mpUnits.size(); i++)
+	{
+		Unit* pUnit = mpUnits[i];
+		pUnit->update(dt);
+	}
+}
+
+Unit* UnitManager::getIntersect(Vector2D vec)
+{
+	for (int i = 0; i < mpUnits.size(); i++)
+	{
+		Unit* pUnit = mpUnits[i];
+		if (pUnit->doesPointIntersect(vec))
+		{
+			return pUnit;
+		}
+	}
+	//Mild concern here.
+	return nullptr;
+}
+
+void UnitManager::collisionCheck()
+{
+	EventSystem* pEventSystem = EventSystem::getInstance();
+
+	for (int i = 0; i < mpUnits.size(); i++)
+	{
+		Vector2D unitPos = mpUnits[i]->getLocation();
+		for (int j = i + 1; j < mpUnits.size(); j++)
+		{
+			if (mpUnits[j]->getLocation() == unitPos)
+			{
+				pEventSystem->fireEvent(CollisionEvent(mpUnits[i], mpUnits[j]));
+			}
+		}
+	}
+}

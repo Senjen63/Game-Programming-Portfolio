@@ -1,0 +1,27 @@
+#pragma once
+#include "SDL_FILES.h"
+#include <PerformanceTracker.h>
+#include <MemoryTracker.h>
+#include "Sprite.h"
+
+class Animation : public Trackable
+{
+public:
+	Animation();
+	Animation(GraphicsBuffer* pBuffer, int numSprites, float timing, bool loop);
+	~Animation();
+
+	void update();
+	Sprite* getCurrentSprite();
+	void adjustTiming(float modifier);
+	float getTiming();
+	Sprite getSprite(int pos);
+	int getSpriteNum();
+private:
+	Sprite* mpSprite;
+	float mTiming;
+	float mCurrentTime;
+	int mCurrentSprite;
+	int mNumSprite;
+	bool mLoop;
+};

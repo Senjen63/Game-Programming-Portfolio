@@ -1,0 +1,247 @@
+
+#include "Unit.h"
+#include "Game.h"
+
+Unit::Unit()
+{
+	mPosition = Vector2D();
+	mCurrentAnim = 1;
+	mTime = 0;
+	mTiming = Game::getInstance()->getDefaultTiming();
+	mpAnimation1 = NULL;// new Animation(Game::getInstance()->getGraphicsBuffer(SPEED_UP_FILENAME), 4, STARTING_TIMING, true);
+	mpAnimation2 = NULL;// new Animation(Game::getInstance()->getGraphicsBuffer(FOOD_FILENAME), 4, STARTING_TIMING, true);
+	mpSprite = NULL;//new Sprite(Game::getInstance()->getGraphicsBuffer(Game::getInstance()->getFoodFile()), Vector2D(), 50, 50);
+	mPaused = false;
+	mText = "";
+}
+
+Unit::Unit(GraphicsBuffer* pBuffer, int numFrames)
+{
+	mPosition = Vector2D();
+	mCurrentAnim = 1;
+	mTime = 0;
+	mTiming = Game::getInstance()->getDefaultTiming();
+	mpAnimation1 = new Animation(pBuffer, numFrames, Game::getInstance()->getSpriteWidth(), Game::getInstance()->getDefaultTiming(), true);
+	mpAnimation2 = NULL;// new Animation(Game::getInstance()->getGraphicsBuffer(FOOD_FILENAME), 4, STARTING_TIMING, true);
+	mpSprite = NULL;// new Sprite(Game::getInstance()->getGraphicsBuffer(SNAKE_FILENAME), Vector2D(), 50, 50);
+	mPaused = false;
+	mText = "";
+}
+
+Unit::Unit(GraphicsBuffer* pBuffer, Vector2D location, int width, int height, string text)
+{
+	mPosition = location;
+	mCurrentAnim = 1;
+	mTime = 0;
+	mTiming = Game::getInstance()->getDefaultTiming();
+	mpAnimation1 = NULL;
+	mpAnimation2 = NULL;
+	mpSprite = new Sprite(pBuffer, Vector2D(), width, height);
+	mPaused = false;
+	mText = text;
+}
+
+Unit::Unit(GraphicsBuffer* pBuffer)
+{
+	mPosition = Vector2D();
+	mCurrentAnim = 1;
+	mTime = 0;
+	mTiming = Game::getInstance()->getDefaultTiming();
+	mpAnimation1 = NULL;
+	mpAnimation2 = NULL;
+	mpSprite = new Sprite(pBuffer, Vector2D(), Game::getInstance()->getSpriteWidth(), Game::getInstance()->getSpriteHeight());
+	mPaused = false;
+	mText = "";
+}
+
+Unit::Unit(GraphicsBuffer* pBuffer, Vector2D location)
+{
+	mPosition = location;
+	mCurrentAnim = 1;
+	mTime = 0;
+	mTiming = Game::getInstance()->getDefaultTiming();
+	mpAnimation1 = NULL;
+	mpAnimation2 = NULL;
+	mpSprite = new Sprite(pBuffer, Vector2D(), Game::getInstance()->getSpriteWidth(), Game::getInstance()->getSpriteHeight());
+	mPaused = false;
+	mText = "";
+}
+
+Unit::Unit(Animation* pAnim1)
+{
+	mPosition = Vector2D();
+	mCurrentAnim = 1;
+	mTime = 0;
+	mTiming = Game::getInstance()->getDefaultTiming();
+	mpAnimation1 = pAnim1;
+	mpAnimation2 = NULL;
+	mpSprite = NULL;
+
+	mPaused = false;
+	mText = "";
+}
+
+Unit::Unit(Animation* pAnim1, Vector2D location)
+{
+	mPosition = location;
+	mCurrentAnim = 1;
+	mTime = 0;
+	mTiming = Game::getInstance()->getDefaultTiming();
+	mpAnimation1 = pAnim1;
+	mpAnimation2 = NULL;
+	mpSprite = NULL;
+
+	mPaused = false;
+	mText = "";
+}
+
+Unit::~Unit()
+{
+	mCurrentAnim = 1;
+	mTime = 0;
+
+	//delete mpAnimation1;
+	delete mpAnimation2;
+	
+	if (mpSprite != NULL)
+		delete mpSprite;
+
+	mpAnimation1 = nullptr;
+	mpAnimation2 = nullptr;
+	mpSprite = nullptr;
+	
+	mText = "";
+}
+
+float Unit::getTiming()
+{
+	return mTiming;
+}
+
+void Unit::update(float elapsedTime)
+{
+	mTime += elapsedTime;
+	
+	if (getTiming() != 0 && mTime > getTiming())
+	{
+		mTime = 0;
+		if (mpAnimation1 != NULL)
+			mpAnimation1->update();
+
+		if (mpAnimation2 != NULL)
+			mpAnimation2->update();
+	}
+}
+
+void Unit::update(float elapsedTime, Vector2D newPos)
+{
+	mTime += elapsedTime;
+	
+	if (mTime > mTiming)
+	{
+		mTime = 0;
+		mPosition = newPos;
+	}
+}
+
+void Unit::draw(GraphicsSystem* pGraphicsSystem)
+{
+	if (mpSprite == NULL)
+	{
+		if (mCurrentAnim == 1)
+			pGraphicsSystem->draw(currentSprite()->getLocation(), currentSprite(), (int)getPosition().getX(), (int)getPosition().getY());
+		else
+			pGraphicsSystem->draw(currentSprite()->getLocation(), currentSprite(), (int)getPosition().getX(), (int)getPosition().getY());
+		//cout << currentSprite()->getLocation() << endl;
+	}
+	else
+	{
+		pGraphicsSystem->draw(Vector2D((int)getPosition().getX() - mpSprite->getWidth(), (int)getPosition().getY() - mpSprite->getHeight()), mpSprite);
+	}
+}
+
+void Unit::drawWithText(GraphicsSystem* pGraphicsSystem)
+{
+	if (mpSprite == NULL)
+	{
+		if (mCurrentAnim == 1)
+			pGraphicsSystem->draw(currentSprite()->getLocation(), currentSprite(), (int)getPosition().getX(), (int)getPosition().getY());
+		else
+			pGraphicsSystem->draw(currentSprite()->getLocation(), currentSprite(), (int)getPosition().getX(), (int)getPosition().getY());
+	}
+	else
+	{
+		pGraphicsSystem->draw(Vector2D((int)getPosition().getX() - mpSprite->getWidth(), (int)getPosition().getY() - mpSprite->getHeight()), mpSprite);
+	}
+	pGraphicsSystem->writeText(Vector2D((int)getPosition().getX() - (mpSprite->getWidth() / 2), (int)getPosition().getY() -( mpSprite->getHeight() / 2)), 
+								Game::getInstance()->getFont(), Color(255, 255, 255), mText);
+}
+
+Sprite* Unit::currentSprite()
+{
+	if (mCurrentAnim == 1 && mpAnimation1 != NULL)
+		return mpAnimation1->getCurrentSprite();
+	else if (mpAnimation2 != NULL)
+		return mpAnimation2->getCurrentSprite();
+
+	return NULL;
+}
+
+void Unit::setAnimation()
+{
+	if (mCurrentAnim == 1)
+		mCurrentAnim = 0;
+	else
+		mCurrentAnim = 1;
+}
+
+void Unit::setTiming(float timing)
+{
+	mTiming = timing;
+	
+	if (mpAnimation1 != NULL)
+		mpAnimation1->adjustTiming(timing);
+
+	if (mpAnimation2 != NULL)
+		mpAnimation2->adjustTiming(timing);
+}
+
+void Unit::setPosition(Vector2D position)
+{
+	mPosition = position;
+}
+
+void Unit::setSprite(Sprite* sprite)
+{
+	mpSprite = sprite;
+}
+
+void Unit::setPaused()
+{
+	if (mPaused)
+		mPaused = false;
+	else
+		mPaused = true;
+}
+
+Vector2D Unit::getPosition()
+{
+	return mPosition;
+}
+
+bool Unit::checkMouseCollision(Vector2D mousePos)
+{
+	Vector2D farCorner;
+
+	if(mpSprite == NULL)
+		farCorner = Vector2D(mPosition.getX() - Game::getInstance()->getSpriteWidth(), mPosition.getY() - Game::getInstance()->getSpriteHeight());
+	else
+		farCorner = Vector2D(mPosition.getX() - mpSprite->getWidth(), mPosition.getY() - mpSprite->getHeight());
+
+
+	if (mPosition.getX() >= mousePos.getX() && farCorner.getX() <= mousePos.getX()   &&
+		mPosition.getY() >= mousePos.getY() && farCorner.getY() <= mousePos.getY())
+		return true;
+	else
+		return false;
+}

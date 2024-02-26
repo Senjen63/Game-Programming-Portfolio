@@ -1,0 +1,16 @@
+#include "Panel.h"
+#include "Game.h"
+
+Panel::Panel()
+{
+    panelColor = BLACK;
+    location = Vector2D(0, 0);
+}
+Panel::~Panel()
+{
+
+}
+void Panel::updatePanel()
+{
+
+}

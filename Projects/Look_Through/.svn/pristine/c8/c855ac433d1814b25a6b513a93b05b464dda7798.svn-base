@@ -1,0 +1,44 @@
+﻿#include "include/MiningSystem.hpp"
+
+#include "Block.hpp"
+#include "Player.hpp"
+
+void MiningSystem::createQueries()
+{
+    mQueries.clear();
+    EntityQuery * pEntityQuery = ( new EntityQuery )->withAny< Block >();
+    mQueries.emplace_back( pEntityQuery );
+    EntityQuery * pPlayerQuery = ( new EntityQuery )->withAny< Player >();
+    mQueries.emplace_back( pPlayerQuery );
+}
+
+void MiningSystem::onCreate()
+{
+    
+}
+
+void MiningSystem::onUpdate()
+{
+    const auto pEntityManager = mpEntityManager.lock();
+    const auto pTime = mpTime.lock();
+    const auto pInput = mpInputTranslator.lock();
+
+    for(const auto & playerEnt : mQueries[ 1 ]->entities)
+    {
+    }
+    for ( const auto & ent : mQueries[ 0 ]->entities )
+    {
+        const std::shared_ptr< RigidBody > rigidBody = pEntityManager->getComponentFromEntity< RigidBody >( ent );
+        const std::shared_ptr< Player > player = pEntityManager->getComponentFromEntity< Player >( ent );
+
+        const float horizontal = pInput->getAxis( "Horizontal" );
+        player->direction = atan2( pInput->getAxis( "Vertical" ), horizontal );
+        rigidBody->force.x = horizontal * player->speed;
+        if ( pInput->getButtonDown( KeyCode::Space ) )
+        {
+            rigidBody->force.y += player->jumpHeight;
+        }
+    }
+}
+
+

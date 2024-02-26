@@ -1,0 +1,66 @@
+#include "InputSystem.h"
+
+
+InputSystem::InputSystem()
+{
+}
+
+
+InputSystem::~InputSystem()
+{
+	cleanup();
+}
+
+
+int InputSystem::init()
+{
+	return 0;
+}
+
+
+void InputSystem::cleanup()
+{
+}
+
+
+void InputSystem::handleInputQueue()
+{
+	sf::RenderWindow* window = Game::getInstance()->getGraphicsSystem()->mpDisplay;
+	sf::Event theEvent;
+
+ 	while (window->pollEvent(theEvent))
+	{
+		switch (theEvent.type)
+		{
+		case sf::Event::KeyPressed:
+			EventSystem::getInstance()->fireEvent(KeyPressEvent((Keycode)theEvent.key.code));
+			break;
+
+		case sf::Event::MouseButtonPressed:
+			EventSystem::getInstance()->fireEvent(MousePressEvent((Mousecode)theEvent.mouseButton.button));
+			break;
+
+		default:
+			break;
+		}
+	}
+}
+
+
+bool InputSystem::getKeyState(Keycode keycode)
+{
+	return sf::Keyboard::isKeyPressed((sf::Keyboard::Key) keycode);
+}
+
+
+bool InputSystem::getMouseButtonState(Mousecode mouseCode)
+{
+	return sf::Mouse::isButtonPressed((sf::Mouse::Button) mouseCode);
+}
+
+
+Vector2D InputSystem::getMousePos()
+{
+	sf::Vector2i mousePos = sf::Mouse::getPosition();
+	return Vector2D(mousePos.x, mousePos.y);
+}

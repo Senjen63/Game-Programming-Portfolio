@@ -1,0 +1,3 @@
+Display: 800 x 600
+Grid Size: 16 12
+Grid Slot: 50:50

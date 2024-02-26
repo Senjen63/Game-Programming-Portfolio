@@ -1,0 +1,13 @@
+//BP
+#pragma once
+#include "SpawnEvents.h"
+
+class ItemCreation : public SpawnEvents
+{
+public:
+    ItemCreation(int itemTag);
+    ~ItemCreation();
+    int getItemTag() const { return mItemTag; }
+private:
+    int mItemTag;
+};

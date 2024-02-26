@@ -1,0 +1,230 @@
+#include "LevelManager.h"
+#include "Game.h"
+#include "Unit.h"
+
+LevelManager::LevelManager()
+{
+    mCurrentLevel = 0;
+}
+
+
+LevelManager::~LevelManager()
+{
+    cleanup();
+}
+
+
+void LevelManager::init()
+{
+    mpEventSystem = EventSystem::getInstance();
+}
+
+
+void LevelManager::cleanup()
+{
+    deleteAllLevels();
+    mpEventSystem = nullptr;
+}
+
+
+Level* LevelManager::getCurrentLevel()
+{
+    if (mLevels.size() > 0)
+    {
+        return mLevels[mCurrentLevel];
+    }
+    
+    return nullptr;
+}
+
+
+Level* LevelManager::getLevelByIndex(unsigned int index)
+{
+    if (mLevels.size() > 0 && mLevels.size() < index)
+    {
+        return mLevels[index];
+    }
+
+    return nullptr;
+}
+
+
+int LevelManager::getCurrentLevelIndex()
+{
+    if (mLevels.size() > 0)
+    {
+        return mCurrentLevel;
+    }
+    
+    return -1; //no levels
+}
+
+
+int LevelManager::getLastLevelIndex()
+{
+    if (mLevels.size() > 0)
+    {
+        return mLevels.size() - 1;
+    }
+
+    return -1; //no levels
+}
+
+
+void LevelManager::setLevelIndex(int levelIndex)
+{
+    mCurrentLevel = levelIndex;
+
+    if (mCurrentLevel > mLevels.size())
+    {
+        mCurrentLevel = 0;
+    }
+}
+
+
+Level* LevelManager::loadLevel(string path, GraphicsBuffer* wallBuffer, Vector2D wallSections)
+{
+    ifstream fin;
+
+    if (!fin.fail() && !fin.eof())
+    {
+        Level* newLevel = new Level();
+
+        fin.open(path);
+
+        if (!fin.fail() && !fin.eof())
+        {
+            string tagFin, tempFin;
+
+            while (!fin.eof())
+            {
+                fin >> tagFin;
+
+                if (tagFin == SNAKE_SPEED_TAG)
+                {
+                    fin >> tempFin;
+                    newLevel->setSnakeSpeed(stof(tempFin));
+                }
+
+
+                if (tagFin == START_SEGMENTS_TAG)
+                {
+                    fin >> tempFin;
+                    newLevel->setStartSegmentNum(stoi(tempFin));
+                }
+
+                if (tagFin == END_SEGMENTS_TAG)
+                {
+                    fin >> tempFin;
+                    newLevel->setEndSegmentNum(stoi(tempFin));
+                }
+
+                if (tagFin == FOOD_POINTS_TAG)
+                {
+                    fin >> tempFin;
+                    newLevel->setFoodPoints(stoi(tempFin));
+                }
+
+                if (tagFin == POWER_UP_BASE_FREQUENCY_TAG)
+                {
+                    fin >> tempFin;
+                    newLevel->setPowerUpBaseFrequency(stof(tempFin));
+                }
+
+                if (tagFin == POWER_UP_RANDOM_RANGE_TAG)
+                {
+                    fin >> tempFin;
+                    newLevel->setPowerUpRandomRange(stof(tempFin));
+                }
+
+                if (tagFin == BONUS_CHANCE_TAG)
+                {
+                    fin >> tempFin;
+                    newLevel->setBonusChance(stof(tempFin));
+                }
+
+                if (tagFin == FAST_CHANCE_TAG)
+                {
+                    fin >> tempFin;
+                    newLevel->setFastChance(stof(tempFin));
+                }
+
+                if (tagFin == SLOW_CHANCE_TAG)
+                {
+                    fin >> tempFin;
+                    newLevel->setSlowChance(stof(tempFin));
+                }
+                
+                if (tagFin == WALL_LOCATIONS_TAG)
+                {
+                    getline(fin, tempFin); //move to next line
+                    getline(fin, tempFin); //get first line of level info
+
+                    int yIndex = 0;
+
+                    //while empty line after level is not found
+                    while (tempFin != "")
+                    {
+                        //skip spaces and read every other character
+                        for (unsigned int stringIndex = 0; stringIndex < tempFin.length(); stringIndex += 2)
+                        {
+                            //add new wall if character is 1, ignore if 0
+                            if (tempFin[stringIndex] == '1' )
+                            {
+                                int xIndex = stringIndex / 2; //actual index in wall grid
+                                Vector2D newPos = Vector2D((float)(xIndex + .5) * wallBuffer->getWidth(), (float)(yIndex + .5) * wallBuffer->getHeight());
+                                newLevel->addWallPosition(newPos);
+                            }
+                        }
+
+                        getline(fin, tempFin);
+                        yIndex++;
+                    }
+                }
+            }
+        }
+
+        fin.close();
+
+        mLevels.push_back(newLevel);
+
+        return newLevel;
+    }
+    else
+    {
+        return nullptr;
+    }
+}
+
+
+/*void LevelManager::nextLevel()
+{
+    mCurrentLevel++;
+}
+
+
+void LevelManager::restartLevels()
+{
+    mCurrentLevel = 0;
+}*/
+
+
+void LevelManager::deleteAllLevels()
+{
+    for (unsigned int i = 0; i < mLevels.size(); i++)
+    {
+        delete mLevels[i];
+    }
+
+    mLevels.clear();
+}
+
+
+void LevelManager::printLevelInfo(unsigned int index)
+{
+    cout << endl << "Level " << index << " Info" << endl << endl;
+
+    mLevels[index]->printLevelInfo();
+
+    cout << endl;
+}

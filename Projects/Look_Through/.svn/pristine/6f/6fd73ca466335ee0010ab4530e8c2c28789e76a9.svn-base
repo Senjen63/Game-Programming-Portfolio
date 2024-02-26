@@ -1,0 +1,78 @@
+#include "Hud.h"
+#include "Game.h"
+
+Hud::Hud()
+{
+	mpGraphicsSystem = nullptr;
+
+	mpEventSystem = nullptr;
+
+	mpFont = nullptr;
+
+	mTime = 0.0;
+}
+
+Hud::Hud(GraphicsSystem* pSystem, Font* pFont)
+{
+	mpGraphicsSystem = pSystem;
+
+	mpEventSystem = nullptr;
+
+	mpFont = pFont;
+
+	mTime = 0.0;
+}
+
+Hud::~Hud()
+{
+	cleanup();
+}
+
+void Hud::init()
+{
+	mpEventSystem = EventSystem::getInstance();
+	mpEventSystem->init();
+
+	mpEventSystem->addListener((EventType)FPS_EVENT, this);
+	mpEventSystem->addListener((EventType)TIME_EVENT, this);
+	mpEventSystem->addListener((EventType)SCORE_EVENT, this);
+	mpEventSystem->addListener((EventType)TURN_EVENT, this);
+}
+
+void Hud::cleanup()
+{
+	mpEventSystem->cleanup();
+}
+
+void Hud::handleEvent(const Event& currentEvent)
+{
+	/*if (currentEvent.getType() == FPS_EVENT)
+	{
+		const FpsEvent& fpsEvent = static_cast<const FpsEvent&>(currentEvent);
+		mFPS = fpsEvent.getFps();
+	}
+
+	if (currentEvent.getType() == SCORE_EVENT)
+	{
+		const ScoreEvent& scoreEvent = static_cast<const ScoreEvent&>(currentEvent);
+		mScore = scoreEvent.getScore();
+	}*/
+
+	if (currentEvent.getType() == TIME_EVENT)
+	{
+		const TimeEvent& timeEvent = static_cast<const TimeEvent&>(currentEvent);
+		mTime = timeEvent.getTime();
+	}
+
+	if (currentEvent.getType() == TURN_EVENT)
+	{
+		const TurnEvent& turnEvent = static_cast<const TurnEvent&>(currentEvent);
+		mTurn = turnEvent.getTurn();
+	}
+}
+
+void Hud::display()
+{
+	mpGraphicsSystem->writeText(Vector2D(180, 60), mpFont, mWhite, to_string(mTime));
+	mpGraphicsSystem->writeText(Vector2D(620, 60), mpFont, mWhite, mTurn);
+}

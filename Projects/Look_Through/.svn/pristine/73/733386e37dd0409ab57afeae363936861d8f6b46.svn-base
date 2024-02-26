@@ -1,0 +1,23 @@
+#pragma once
+
+#include "EventListener.h"
+#include "Game.h"
+#include "Event.h"
+#include "GameEvent.h"
+
+class Game;
+
+class ScreenChangeManager : public EventListener
+{
+	friend class Game;
+
+	bool mCanHandleEvents = true;
+
+public:
+	ScreenChangeManager();
+	
+	void init();
+
+	void handleEvent(const Event& theEvent);
+};
+

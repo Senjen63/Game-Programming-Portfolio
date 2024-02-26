@@ -1,0 +1,642 @@
+//BP
+#include "Game.h"
+
+Game* Game::mspGameInstance = nullptr;
+
+Game::Game()
+{
+    mSpeedUpItemFile = "nullSpeedUp";
+    mSlowDownItemFile = "nullSlowDown";
+    mGameFoodFile = "nullFood";
+    mGameWallFile = "nullWall";
+    mBonusPointsItemFile = "nullBonusPoints";
+    mSnakeBodyFile = "nullBody";
+    mSnakeHeadFile = "nullHead";
+    mGameBackgroundFile = "nullBackground";
+    mGameFontFile = "nullFont";
+    mHeightAndWidth = Vector2D(WINDOW_X_DIMENSION, WINDOW_Y_DIMENSION);
+}
+
+Game::Game(Vector2D heightAndWidth)
+{
+    mSpeedUpItemFile = "nullSpeedUp";
+    mSlowDownItemFile = "nullSlowDown";
+    mGameFoodFile = "nullFood";
+    mGameWallFile = "nullWall";
+    mBonusPointsItemFile = "nullBonusPoints";
+    mSnakeBodyFile = "nullBody";
+    mSnakeHeadFile = "nullHead";
+    mGameBackgroundFile = "nullBackground";
+    mGameFontFile = "nullFont";
+    mHeightAndWidth = heightAndWidth;
+}
+
+Game::~Game()
+{
+    cleaner();
+}
+
+void Game::createGameInstance()
+{
+    if (!mspGameInstance)
+    {
+
+        mspGameInstance = new Game();
+
+    }
+}
+
+void Game::createGameInstance(Vector2D heightAndWidth)
+{
+    if (!mspGameInstance)
+    {
+
+        mspGameInstance = new Game(heightAndWidth);
+
+    }
+}
+
+void Game::destroyGameInstance()
+{
+    delete mspGameInstance;
+    mspGameInstance = nullptr;
+}
+
+void Game::init()
+{
+    if (mspGameInstance != nullptr && !mIsInit)
+    {
+        mpEventSystem = EventSystem::getInstance();
+        mpEventSystem->init();
+        mpGraphicSystem = new GraphicsSystem(mHeightAndWidth.getX(), mHeightAndWidth.getY());
+        mpUnitManager = new UnitManager();
+        mpGraphicsBufferManager = new GraphicsBufferManager();
+        mpLevelManager = new LevelManager();
+        mInputTranslator = InputTranslator();
+        mpGraphicSystem->init();
+        mpUnitManager->init();
+        mpGraphicsBufferManager->init();
+        mpLevelManager->init();
+        mInputSystem.init();
+        mInputTranslator.init();
+        mpEventSystem->addListener((EventType)MESSAGE, this);
+        mpEventSystem->addListener((EventType)ACTION, this);
+        mpEventSystem->addListener((EventType)WALL_SPAWN, this);
+        mpEventSystem->addListener((EventType)SNAKE_SPAWN, this);
+        mpEventSystem->addListener((EventType)FOOD_SPAWN, this);
+        mpEventSystem->addListener((EventType)ITEM_SPAWN, this);
+        mpEventSystem->addListener((EventType)COLLISION, this);
+        mpEventSystem->addListener((EventType)END_LEVEL, this);
+        loadFiles();
+        mpGraphicsBufferManager->addNewBuffer(GAME_WALL_KEY,
+            new GraphicsBuffer(GAME_ASSET_PATH + mGameWallFile,
+                WALL_SECTIONS));
+        mpGraphicsBufferManager->addNewBuffer(SNAKE_BODY_KEY,
+            new GraphicsBuffer(GAME_ASSET_PATH + mSnakeBodyFile,
+                BODY_SECTIONS));
+        mpGraphicsBufferManager->addNewBuffer(GAME_BONUS_ITEM_KEY,
+            new GraphicsBuffer(GAME_ASSET_PATH + mBonusPointsItemFile,
+                BONUS_SECTIONS));
+        mpGraphicsBufferManager->addNewBuffer(GAME_FOOD_KEY,
+            new GraphicsBuffer(GAME_ASSET_PATH + mGameFoodFile,
+                FOOD_SECTIONS));
+        mpGraphicsBufferManager->addNewBuffer(SNAKE_HEAD_KEY,
+            new GraphicsBuffer(GAME_ASSET_PATH + mSnakeHeadFile,
+                HEAD_SECTIONS));
+        mpGraphicsBufferManager->addNewBuffer(GAME_SLOW_KEY,
+            new GraphicsBuffer(GAME_ASSET_PATH + mSlowDownItemFile,
+                SLOW_SECTIONS));
+        mpGraphicsBufferManager->addNewBuffer(GAME_SPEED_KEY,
+            new GraphicsBuffer(GAME_ASSET_PATH + mSpeedUpItemFile,
+                SPEED_SECTIONS));
+        GraphicsBuffer* swampBackground = new GraphicsBuffer(GAME_ASSET_PATH + mGameBackgroundFile,
+            BACKGROUND_SECTIONS);
+        if (swampBackground->checkBitmap())
+        {
+
+            delete swampBackground;
+            swampBackground = new GraphicsBuffer(GREEN,
+                mHeightAndWidth.getX(),
+                mHeightAndWidth.getY());
+
+        }
+        mpGraphicsBufferManager->addNewBuffer(GAME_BACKGROUND_KEY,
+            swampBackground);
+        mpFont = new Font((COMMON_ASSET_PATH + mGameFontFile),
+            FONT_SCALE_VALUE, 1);
+        mpLevelManager->loadNewLevel(GAME_ASSET_PATH + LEVEL_ONE_FILE,
+            mpGraphicsBufferManager->getBuffer(GAME_WALL_KEY),
+            Vector2D(1, 1));
+        mpLevelManager->loadNewLevel(GAME_ASSET_PATH + LEVEL_TWO_FILE,
+            mpGraphicsBufferManager->getBuffer(GAME_WALL_KEY),
+            Vector2D(1, 1));
+        mpLevelManager->loadNewLevel(GAME_ASSET_PATH + LEVEL_THREE_FILE,
+            mpGraphicsBufferManager->getBuffer(GAME_WALL_KEY),
+            Vector2D(1, 1));
+        mpLevelManager->printInfo(0);
+        mpLevelManager->printInfo(1);
+        mpLevelManager->printInfo(2);
+        mpLevelManager->setLevelIndex(0);
+        mpGameSnake = new Snake(Vector2D
+        (mpGraphicSystem->getWidth() / 2,
+            mpGraphicSystem->getHeight() / 2),
+            BEGINNING_PATH, 
+            mpGraphicsBufferManager->getBuffer(SNAKE_HEAD_KEY),
+            mpGraphicsBufferManager->getBuffer(SNAKE_BODY_KEY));
+        mpGameSnake->init();
+        mpGameFood = new GameFood();
+        mpGameFood->init();
+        mItemSpawner.init();
+        mpHUD = new GameHUD(mpGraphicSystem->getWidth() / 5,
+            mpGraphicSystem->getHeight() / 32,
+            mpGraphicSystem, mpFont);
+        mpHUD->init();
+        mIsInit = true;
+    }
+}
+
+void Game::cleaner()
+{
+    if (mIsInit && !mIsClean)
+    {
+
+        mIsClean = true;
+        delete mpHUD;
+        delete mpFont;
+        delete mpGameSnake;
+        delete mpGameFood;
+        mInputSystem.cleaner();
+        delete mpUnitManager;
+        delete mpLevelManager;
+        delete mpGraphicsBufferManager;
+        delete mpGraphicSystem;
+        
+    }
+}
+
+void Game::gameLoop()
+{
+    mGameOver = false;
+    PerformanceTracker* pTracker = new PerformanceTracker;
+    while (!mGameOver)
+    {
+
+        bool isSnakeDead = mpGameSnake->hasDied();
+
+        while (!mGameOver && isSnakeDead)
+        {
+
+            mPlayCurrentLevel = false;
+            endCurrentLevel();
+            inputEvents();
+            mpGraphicSystem->draw(mpGraphicsBufferManager->
+                getBuffer("Background"), 0, 0, 1, 1);
+            mpGraphicSystem->displayMessage
+            (mpGraphicSystem->getWidth() / 2,
+                mpGraphicSystem->getHeight() / 2 - 20,
+                mpFont, Color(255, 255, 255),
+                "Oh No! You Died!");
+            mpGraphicSystem->displayMessage
+            (mpGraphicSystem->getWidth() / 2,
+                mpGraphicSystem->getHeight() / 2,
+                mpFont, Color(255, 255, 255),
+                "Try Again? - Space  |  Exit - Esc");
+            mpGraphicSystem->flip();
+            isSnakeDead = mpGameSnake->hasDied();
+
+        }
+
+        while (!mProceed && !isSnakeDead && !mGameOver && !mPlayCurrentLevel)
+        {
+
+            inputEvents();
+            mpGraphicSystem->draw(mpGraphicsBufferManager->
+                getBuffer("Background"), 0, 0, 1, 1);
+            mpGraphicSystem->displayMessage(mpGraphicSystem->
+                getWidth() / 2, mpGraphicSystem->getHeight() / 2,
+                mpFont, Color(255, 255, 255),
+                "SNAKE  |  Press The Spacebar To Begin!  |  Exit - ESC");
+            mpGraphicSystem->flip();
+
+        }
+
+        if (!isSnakeDead && mPlayCurrentLevel && !mGameOver && !mProceed)
+        {
+
+            pTracker->clearTracker(GAME_LOOP_KEY);
+            pTracker->startTracking(GAME_LOOP_KEY);
+            Timer loopTimer;
+            loopTimer.start();
+            inputEvents();
+            updateGame(loopTimer.getElapsedTime());
+            renderGame();
+            loopTimer.sleepUntilElapsed(mFrameTiming);
+            HUDEvents(loopTimer.getElapsedTime());
+            pTracker->stopTracking(GAME_LOOP_KEY);
+            cout << pTracker->getElapsedTime
+            (GAME_LOOP_KEY) << endl;
+
+        }
+
+        while (mProceed && !mGameOver)
+        {
+
+            mPlayCurrentLevel = false;
+            endCurrentLevel();
+            string gameMessage = "";
+            inputEvents();
+            mpGraphicSystem->draw(mpGraphicsBufferManager->
+                getBuffer("Background"), 0, 0, 1, 1);
+
+            if (mpLevelManager->getThisLevelIndex() >= mpLevelManager->getPreviousLevelIndex())
+            {
+
+                mpGraphicSystem->displayMessage(mpGraphicSystem->
+                    getWidth() / 2, mpGraphicSystem->
+                    getHeight() / 2 - 30, mpFont,
+                    Color(255, 255, 255), "Congratulations! You did it!");
+                gameMessage = "Play Again - Space  |  Exit - ESC";
+
+            }
+            else
+            {
+
+                gameMessage = "You Beat The Level!  |  Next Level - Space  |  Exit - ESC";
+
+            }
+
+            mpGraphicSystem->displayMessage
+            (mpGraphicSystem->getWidth() / 2,
+                mpGraphicSystem->getHeight() / 2,
+                mpFont, Color(255, 255, 255), gameMessage);
+            mpGraphicSystem->flip();
+
+        }
+
+    }
+    delete pTracker;
+}
+
+void Game::loadFiles()
+{
+    ifstream fileIn;
+    fileIn.open(GAME_ASSET_PATH + GAME_ASSET_NAMES_FILE);
+    if (!fileIn.eof() && !fileIn.fail())
+    {
+
+        string tempFin;
+        while (!fileIn.eof())
+        {
+
+            fileIn >> tempFin;
+            if (tempFin == GAME_WALL_KEY + ":")
+            {
+
+                fileIn >> mGameWallFile;
+
+            }
+
+            if (tempFin == SNAKE_BODY_KEY + ":")
+            {
+
+                fileIn >> mSnakeBodyFile;
+
+            }
+
+            if (tempFin == GAME_BONUS_ITEM_KEY + ":")
+            {
+
+                fileIn >> mBonusPointsItemFile;
+
+            }
+
+            if (tempFin == GAME_FOOD_KEY + ":")
+            {
+
+                fileIn >> mGameFoodFile;
+
+            }
+
+            if (tempFin == SNAKE_HEAD_KEY + ":")
+            {
+
+                fileIn >> mSnakeHeadFile;
+
+            }
+
+            if (tempFin == GAME_SLOW_KEY + ":")
+            {
+
+                fileIn >> mSlowDownItemFile;
+
+            }
+
+            if (tempFin == GAME_SPEED_KEY + ":")
+            {
+
+                fileIn >> mSpeedUpItemFile;
+
+            }
+
+            if (tempFin == GAME_BACKGROUND_KEY + ":")
+            {
+
+                fileIn >> mGameBackgroundFile;
+
+            }
+
+            if (tempFin == GAME_FONT_KEY + ":")
+            {
+
+                fileIn >> mGameFontFile;
+
+            }
+
+        }
+
+    }
+    fileIn.close();
+}
+
+void Game::renderGame()
+{
+    mpGraphicSystem->draw(mpGraphicsBufferManager->
+        getBuffer("Background"), 0, 0, 1, 1);
+    mpUnitManager->drawAll();
+    mpHUD->showHUD();
+    mpGraphicSystem->flip();
+}
+
+void Game::endCurrentLevel()
+{
+    if (mpUnitManager->getUnitCount() != 0)
+    {
+
+        mpGameSnake->clearSnakeParts();
+        mpUnitManager->clearAll();
+        mpGameFood->levelFinish();
+
+    }
+}
+
+void Game::HUDEvents(float timePassed)
+{
+    mTrueFps = mSecond / timePassed;
+    mpEventSystem->fireEvent(Framerate(mTrueFps));
+    mTotalTimePassed += timePassed / mSecond;
+    mpEventSystem->fireEvent(GameTime(mTotalTimePassed));
+}
+
+void Game::updateGame(float timePassed)
+{
+    mpUnitManager->updateAll(timePassed * mSecond);
+    mpGameSnake->updatePlayerSnake(timePassed * mSecond);
+    mItemSpawner.updateItemCreation(timePassed);
+    mpGameFood->updateFoods();
+    mpUnitManager->collisionCheck(mpGameSnake->getSnakeHead());
+
+}
+
+void Game::handleEvent(const Event& thisEvent)
+{
+    if (thisEvent.getType() == COLLISION)
+    {
+
+        const Collision& hit = static_cast<const Collision&>(thisEvent);
+        if (hit.getPieceHit()->getUnitType() == BONUS_UNIT)
+        {
+
+            hit.getPieceHit()->setDelete(true);
+
+        }
+
+        if (hit.getPieceHit()->getUnitType() == FOOD_UNIT)
+        {
+
+            mpGameFood->setBeenEaten(true);
+            hit.getPieceHit()->setDelete(true);
+
+        }
+
+        if (hit.getPieceHit()->getUnitType() == SLOW_UNIT)
+        {
+
+            mpGameSnake->setSnakeSpeed(mpGameSnake->getSpeed() - 1);
+            hit.getPieceHit()->setDelete(true);
+
+        }
+
+        if (hit.getPieceHit()->getUnitType() == SPEED_UNIT)
+        {
+
+            mpGameSnake->setSnakeSpeed(mpGameSnake->getSpeed() + 1);
+            hit.getPieceHit()->setDelete(true);
+
+        }
+
+    }
+
+    if (thisEvent.getType() == WALL_SPAWN)
+    {
+
+        const WallCreation& createWall = static_cast<const WallCreation&>(thisEvent);
+        mpUnitManager->addNewUnit(createWall.getLocation(),
+            createWall.getBuff(), FPS,
+            LOOP_CONDITION, WALL_UNIT);
+
+    }
+
+    if (thisEvent.getType() == FOOD_SPAWN)
+    {
+
+        GraphicsBuffer* foodBuff = mpGraphicsBufferManager->getBuffer(GAME_FOOD_KEY);
+        Vector2D newLocation = findBlankLevelLocation(foodBuff->getWidth(), foodBuff->getHeight());
+        Unit* food = new Unit(newLocation, foodBuff,
+            FOOD_FRAMERATE, true, FOOD_UNIT);
+        mpGameFood->setThisFood(food);
+        mpUnitManager->addNewUnit(food);
+
+    }
+
+    if (thisEvent.getType() == END_LEVEL)
+    {
+
+        const EndGameLevel& levelEnd = static_cast<const EndGameLevel&>(thisEvent);
+        mPlayCurrentLevel = false;
+        mProceed = levelEnd.getNext();
+
+    }
+
+    if (thisEvent.getType() == ACTION)
+    {
+
+        const GameActions& action = static_cast<const GameActions&>(thisEvent);
+        cout << "Action: " << action.getAction() << endl;
+        if (action.getAction() == GAME_QUIT)
+        {
+
+            mGameOver = true;
+
+        }
+
+        if (action.getAction() == GAME_START)
+        {
+
+            if (!mPlayCurrentLevel)
+            {
+
+                if (mProceed)
+                {
+
+                    mProceed = false;
+                    loadSpecificLevel(mpLevelManager->getThisLevelIndex() + 1,
+                        mpGraphicsBufferManager->getBuffer(GAME_WALL_KEY)->getSections());
+
+                }
+                else
+                {
+
+                    loadSpecificLevel(0, mpGraphicsBufferManager->getBuffer(GAME_WALL_KEY)->getSections());
+
+                }
+                mTotalTimePassed = 0;
+                mPlayCurrentLevel = true;
+            }
+
+        }
+
+        if (action.getAction() == UP_TURN)
+        {
+
+            mpEventSystem->fireEvent(DirectionChange(UP_SPACE));
+
+        }
+
+        if (action.getAction() == DOWN_TURN)
+        {
+
+            mpEventSystem->fireEvent(DirectionChange(DOWN_SPACE));
+
+        }
+
+        if (action.getAction() == RIGHT_TURN)
+        {
+
+            mpEventSystem->fireEvent(DirectionChange(RIGHT_SPACE));
+
+        }
+
+        if (action.getAction() == LEFT_TURN)
+        {
+
+            mpEventSystem->fireEvent(DirectionChange(LEFT_SPACE));
+
+        }
+
+    }
+
+    if (thisEvent.getType() == SNAKE_SPAWN)
+    {
+
+        const SnakeCreation& createSnake = static_cast<const SnakeCreation&>(thisEvent);
+        mpUnitManager->addNewUnit(createSnake.getGameUnit());
+
+    }
+
+    if (thisEvent.getType() == MESSAGE)
+    {
+
+        const GameMessages& message = static_cast<const GameMessages&>(thisEvent);
+        cout << message.getGameMessage() << endl;
+
+    }
+
+    if (thisEvent.getType() == ITEM_SPAWN)
+    {
+
+        const ItemCreation& createItem = static_cast<const ItemCreation&>(thisEvent);
+        if (createItem.getItemTag() == BONUS_UNIT)
+        {
+
+            GraphicsBuffer* bonusItemBuff = mpGraphicsBufferManager->getBuffer(GAME_BONUS_ITEM_KEY);
+            Vector2D newLocation = findBlankLevelLocation(bonusItemBuff->getWidth(), bonusItemBuff->getHeight());
+            mpUnitManager->addNewUnit(newLocation, bonusItemBuff,
+                ITEM_FRAMERATE, true, BONUS_UNIT);
+
+
+
+        }
+        else if (createItem.getItemTag() == SPEED_UNIT)
+        {
+
+            GraphicsBuffer* fastItemBuff = mpGraphicsBufferManager->getBuffer(GAME_SPEED_KEY);
+            Vector2D newLocation = findBlankLevelLocation(fastItemBuff->getWidth(), fastItemBuff->getHeight());
+            mpUnitManager->addNewUnit(newLocation, fastItemBuff,
+                ITEM_FRAMERATE, true, SPEED_UNIT);
+
+        }
+        else if (createItem.getItemTag() == SLOW_UNIT)
+        {
+
+            GraphicsBuffer* slowItemBuffer = mpGraphicsBufferManager->getBuffer(GAME_SLOW_KEY);
+            Vector2D newLocation = findBlankLevelLocation(slowItemBuffer->getWidth(), slowItemBuffer->getHeight());
+            mpUnitManager->addNewUnit(newLocation, slowItemBuffer,
+                ITEM_FRAMERATE, true, SLOW_UNIT);
+
+        }
+
+    }
+}
+
+void Game::loadSpecificLevel(int levelIndex, Vector2D wallPieces)
+{
+    if (levelIndex > mpLevelManager->getPreviousLevelIndex())
+    {
+
+        levelIndex = 0;
+
+    }
+
+    mpLevelManager->setLevelIndex(levelIndex);
+    GameLevel* selectedLevel = mpLevelManager->getThisLevel();
+    endCurrentLevel();
+
+    for (auto newWall : selectedLevel->getWallLocations())
+    {
+
+        mpEventSystem->fireEvent(WallCreation(newWall,
+            mpGraphicsBufferManager->getBuffer("Wall")));
+
+    }
+
+    mpGameSnake->beginLevel(selectedLevel->getPlayerSnakeSpeed(),
+        selectedLevel->getBeginBodyParts(),
+        selectedLevel->getEndBodyParts(),
+        selectedLevel->getFoodScoreValue());
+    mItemSpawner.newGameLevel(selectedLevel->getBeginItemProbability(),
+        selectedLevel->getRandItemProbability(), 
+        selectedLevel->getFastItemProbability(),
+        selectedLevel->getSlowItemProbability(),
+        selectedLevel->getBonusItemProbability());
+    mpLevelManager->printInfo(mpLevelManager->getThisLevelIndex());
+    mPlayCurrentLevel = false;
+}
+
+Vector2D Game::findBlankLevelLocation(float horiDiameter, float vertDiameter)
+{
+    bool blankSpot = false;
+    while (!blankSpot)
+    {
+
+        float vertLocation = rand() % mpGraphicSystem->getHeight();
+        float horiLocation = rand() % mpGraphicSystem->getWidth();
+        if (mpUnitManager->checkCollisionByLocation(Vector2D(horiLocation, vertLocation), horiDiameter, vertDiameter).size() == 0)
+        {
+
+            return Vector2D(horiLocation, vertLocation);
+
+        }
+
+    }
+    return Vector2D(0, 0);
+}

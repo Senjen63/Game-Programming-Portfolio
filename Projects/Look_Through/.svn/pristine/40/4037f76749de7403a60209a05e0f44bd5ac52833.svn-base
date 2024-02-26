@@ -1,0 +1,23 @@
+#pragma once
+
+#include <PerformanceTracker.h>
+#include <MemoryTracker.h>
+
+#include "SDLInclude.h"
+
+class Color : public Trackable
+{
+private:
+	SDL_Color mColor;
+
+	SDL_Color getColor();
+
+public:
+	Color();
+	Color(int red, int green, int blue);
+	Color(int red, int green, int blue, int alpha);
+	~Color();
+
+	friend class GraphicsBuffer;
+	friend class GraphicsSystem;
+};

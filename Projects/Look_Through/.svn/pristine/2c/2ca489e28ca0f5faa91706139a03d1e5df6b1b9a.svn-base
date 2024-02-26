@@ -1,0 +1,21 @@
+#include <Trackable.h>
+#include <iostream>
+#include <cassert>
+#include <string>
+#include "SDL_FILES.h"
+
+using namespace std;
+
+class Font : public Trackable
+{
+	friend class GraphicsSystem;
+public:
+	Font(string& fontPath, int fontSize);
+	~Font();
+
+	TTF_Font* getFont();
+	int getFontSize();
+private:
+	TTF_Font* mpFont;
+	int mFontSize;
+};

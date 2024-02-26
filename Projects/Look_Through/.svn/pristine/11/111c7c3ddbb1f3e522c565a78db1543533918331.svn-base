@@ -1,0 +1,28 @@
+#pragma once
+#include <PerformanceTracker.h>
+#include <vector>
+
+using namespace std;
+
+class Unit;
+class GraphicsBuffer;
+
+class UnitManager : public Trackable
+{
+public:
+	UnitManager() {};
+	~UnitManager();
+
+	void createUnit( int x, int y, float targetTime, GraphicsBuffer* anim1, GraphicsBuffer* anim2 );
+	void addUnit( Unit* unit );
+	void deleteUnit( Unit* unit );
+	void updateAll( float deltaTime );
+	void drawAll();
+	void clearAll();
+
+	Unit* getLastUnit();
+	vector< Unit* > getUnits() { return mpUnits; };
+
+private:
+	vector< Unit* > mpUnits;
+};

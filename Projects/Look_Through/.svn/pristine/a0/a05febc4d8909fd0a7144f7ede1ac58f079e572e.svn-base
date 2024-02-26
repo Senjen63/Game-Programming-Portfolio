@@ -1,0 +1,10 @@
+GameFont: cour.ttf
+Background: Swamp.jpg
+Food: Onion.png
+Wall: TreeStump.png
+SpeedPowerup: AllStar.png
+SlowPowerup: Farquaad.png
+SnakeHead: ShrekSnakeHeadIdle.png
+SnakeBody: ShrekSnakeBody.png
+BonusItem: Bonus.png
+

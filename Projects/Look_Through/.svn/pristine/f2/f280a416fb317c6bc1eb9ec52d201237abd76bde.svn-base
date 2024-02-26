@@ -1,0 +1,79 @@
+#include "LogComponent.h"
+#include "SpawnEvent.h"
+
+void LogComponent::moveLog()
+{
+	mpUnit->setPos(mpUnit->getPos() + (mCurrentDirection * mSpeed)); // Move to new position
+	checkInLevel();
+}
+
+LogComponent::LogComponent(int speed, Vector2D startDirection)
+{
+	mSpeed = speed;
+	mCurrentDirection = startDirection;
+}
+
+void LogComponent::init()
+{
+	CollisionDriver* colDriver = static_cast<CollisionDriver*>(&mpUnit->getComponent(CollisionDriver::COLLISION_DRIVER_COMPONENT_NAME));
+	colDriver->addCollisionObserver(this);
+}
+
+void LogComponent::update(float dt)
+{
+	mElapTime += dt;
+	if (mElapTime >= mTargetTime)
+	{
+		moveLog();
+		mElapTime -= mTargetTime;
+	}
+	cout << mTargetTime;
+}
+
+void LogComponent::draw(GraphicsSystem* gSys)
+{
+	assert(mpUnit != nullptr);
+}
+
+void LogComponent::handleEvent(const Event& theEvent)
+{
+}
+
+std::string LogComponent::getIdentifier()
+{
+	return "Log";
+}
+
+void LogComponent::checkInLevel()
+{
+	Vector2D newPos = mpUnit->getPos();
+	Vector2D windowSize = Game::getInstance()->getWindowSize();
+	if (newPos.getX() < 0 || newPos.getX() >= windowSize.getX() || newPos.getY() < 0 || newPos.getY() >= windowSize.getY())
+	{
+		EventSystem::getInstance()->fireEvent(SpawnLogEvent(getAttachedUnit()->getY(), getCurDir(), 1));
+		Game::getInstance()->getUnitManager()->deleteUnit(*getAttachedUnit());
+	}
+}
+
+void LogComponent::onCollision(Unit* unit, CollisionLayer layer)
+{
+	if (layer == CollisionLayer::SNAKE_HEAD)
+	{
+		Game::getInstance()->getLevelManager()->getCurLevel()->getFrog()->moveSnakeOnLog(mSpeed, getCurDir());
+	}
+	//switch (layer)
+	//{
+	//case(CollisionLayer::SNAKE_HEAD):
+	//	//EventSystem::getInstance()->fireEvent(SnakeDiedEvent());
+	//	std::cout << "Log Collision Received" << std::endl;
+	//	Game::getInstance()->getLevelManager()->getCurLevel()->getFrog()->setOnLog(true);
+	//	break;
+	//}
+}
+
+
+bool LogComponent::checkCollision(CollisionLayer layer)
+{
+	//if (getAttachedUnit()->getPos() == )
+	return false;
+}

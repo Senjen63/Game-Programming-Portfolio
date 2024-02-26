@@ -1,0 +1,187 @@
+#include "..\Pieces\Knight.h"
+#include "../Game.h"
+
+Knight::Knight()
+{
+
+}
+
+Knight::Knight(GraphicsBuffer* pBuffer, Vector2D location)
+{
+	setPosition(location);
+	setSprite(new Sprite(pBuffer, Vector2D(), Game::getInstance()->getSpriteWidth(), Game::getInstance()->getSpriteHeight()));
+
+	createMovePts();
+}
+
+Knight::~Knight()
+{
+	cleanUp();
+}
+
+void Knight::cleanUp()
+{
+	for (unsigned int i = 0; i < mpMovePts.size(); i++)
+	{
+		Unit* pUnit = mpMovePts[i];
+		delete pUnit;
+	}
+
+	for (unsigned int i = 0; i < mpAttackPts.size(); i++)
+	{
+		Unit* pUnit = mpAttackPts[i];
+		delete pUnit;
+	}
+
+	mpMovePts.clear();
+	mpAttackPts.clear();
+}
+
+void Knight::createMovePts()
+{
+	Unit* moveUnit;
+
+	//top right
+	moveUnit = new Unit(Game::getInstance()->getAnimation(Game::getInstance()->getMoveString()), Vector2D(80, -160) + getPosition());
+	mpMovePts.push_back(moveUnit);
+	moveUnit = new Unit(Game::getInstance()->getAnimation(Game::getInstance()->getMoveString()), Vector2D(160, -80) + getPosition());
+	mpMovePts.push_back(moveUnit);
+
+	moveUnit = new Unit(Game::getInstance()->getAnimation(Game::getInstance()->getAttackString()), Vector2D(80, -160) + getPosition());
+	mpAttackPts.push_back(moveUnit);
+	moveUnit = new Unit(Game::getInstance()->getAnimation(Game::getInstance()->getAttackString()), Vector2D(160, -80) + getPosition());
+	mpAttackPts.push_back(moveUnit);
+
+	//bottom right
+	moveUnit = new Unit(Game::getInstance()->getAnimation(Game::getInstance()->getMoveString()), Vector2D(80, 160) + getPosition());
+	mpMovePts.push_back(moveUnit);
+	moveUnit = new Unit(Game::getInstance()->getAnimation(Game::getInstance()->getMoveString()), Vector2D(160, 80) + getPosition());
+	mpMovePts.push_back(moveUnit);
+
+	moveUnit = new Unit(Game::getInstance()->getAnimation(Game::getInstance()->getAttackString()), Vector2D(80, 160) + getPosition());
+	mpAttackPts.push_back(moveUnit);
+	moveUnit = new Unit(Game::getInstance()->getAnimation(Game::getInstance()->getAttackString()), Vector2D(160, 80) + getPosition());
+	mpAttackPts.push_back(moveUnit);
+
+	//top left
+	moveUnit = new Unit(Game::getInstance()->getAnimation(Game::getInstance()->getMoveString()), Vector2D(-80, -160) + getPosition());
+	mpMovePts.push_back(moveUnit);
+	moveUnit = new Unit(Game::getInstance()->getAnimation(Game::getInstance()->getMoveString()), Vector2D(-160, -80) + getPosition());
+	mpMovePts.push_back(moveUnit);
+
+	moveUnit = new Unit(Game::getInstance()->getAnimation(Game::getInstance()->getAttackString()), Vector2D(-80, -160) + getPosition());
+	mpAttackPts.push_back(moveUnit);
+	moveUnit = new Unit(Game::getInstance()->getAnimation(Game::getInstance()->getAttackString()), Vector2D(-160, -80) + getPosition());
+	mpAttackPts.push_back(moveUnit);
+
+	//bottom left
+	moveUnit = new Unit(Game::getInstance()->getAnimation(Game::getInstance()->getMoveString()), Vector2D(-80, 160) + getPosition());
+	mpMovePts.push_back(moveUnit);
+	moveUnit = new Unit(Game::getInstance()->getAnimation(Game::getInstance()->getMoveString()), Vector2D(-160, 80) + getPosition());
+	mpMovePts.push_back(moveUnit);
+
+	moveUnit = new Unit(Game::getInstance()->getAnimation(Game::getInstance()->getAttackString()), Vector2D(-80, 160) + getPosition());
+	mpAttackPts.push_back(moveUnit);
+	moveUnit = new Unit(Game::getInstance()->getAnimation(Game::getInstance()->getAttackString()), Vector2D(-160, 80) + getPosition());
+	mpAttackPts.push_back(moveUnit);
+}
+
+void Knight::draw(GraphicsSystem* pGraphicsSystem, PieceManager& team, PieceManager& otherTeam)
+{
+	Unit::draw(pGraphicsSystem);
+
+	if (mSelected)
+	{
+		for (unsigned int i = 0; i < mpMovePts.size(); i++)
+		{
+			if (!otherTeam.checkPosition(mpMovePts[i]->getPosition()) && otherTeam.inBounds(mpMovePts[i]->getPosition()) && !team.checkPosition(mpMovePts[i]->getPosition()))
+			{
+				//mpMovePts[i]->setSprite(mpGreenSprite);
+				mpMovePts[i]->draw(pGraphicsSystem);
+			}
+			
+			if (otherTeam.checkPosition(mpMovePts[i]->getPosition()) && otherTeam.inBounds(mpMovePts[i]->getPosition()))
+			{
+				//mpMovePts[i]->setSprite(mpRedSprite);
+				mpAttackPts[i]->draw(pGraphicsSystem);
+			}
+		}
+	}
+}
+
+void Knight::selected(bool selected)
+{
+	mSelected = selected;
+}
+
+void Knight::checkMovePts(Vector2D mousePos, PieceManager& team, PieceManager& otherTeam)
+{
+	Vector2D tmp1, tmp2;
+
+	for (unsigned int i = 0; i < mpMovePts.size(); i++)
+	{
+		if (mpMovePts[i]->checkMouseCollision(mousePos) && !otherTeam.checkPosition(mpMovePts[i]->getPosition()) && team.inBounds(mpMovePts[i]->getPosition()) && !team.checkPosition(mpAttackPts[i]->getPosition()))
+		{
+			tmp1 = getPosition();
+
+			setPosition(mpMovePts[i]->getPosition());
+			team.checkCheck(team, otherTeam);
+
+			if (!team.inCheck())
+			{
+				//setPosition(mpMovePts[i]->getPosition());
+				Game::getInstance()->endCurrentTurn();
+
+				cleanUp();
+				createMovePts();
+
+				break;
+			}
+			else
+			{
+				setPosition(tmp1);
+			}
+		}
+
+		if (mpAttackPts[i]->checkMouseCollision(mousePos) && otherTeam.checkPosition(mpAttackPts[i]->getPosition()))
+		{
+			tmp1 = getPosition();
+			tmp2 = mpAttackPts[i]->getPosition();
+
+			setPosition(mpAttackPts[i]->getPosition());
+			otherTeam.movePiece(mpAttackPts[i]->getPosition(), Vector2D(10000, 10000));
+			team.checkCheck(team, otherTeam);
+
+			if (!team.inCheck())
+			{
+				otherTeam.deletePiece(Vector2D(10000, 10000)/*mpAttackPts[i]->getPosition()*/);
+
+				//setPosition(mpMovePts[i]->getPosition());
+				Game::getInstance()->endCurrentTurn();
+
+				cleanUp();
+				createMovePts();
+
+				break;
+			}
+			else
+			{
+				setPosition(tmp1);
+				otherTeam.movePiece(Vector2D(10000, 10000), tmp2);
+			}
+		}
+	}
+}
+
+bool Knight::checkAttackPts(Vector2D position, Vector2D& location)
+{
+	for (unsigned int i = 0; i < mpAttackPts.size(); i++)
+	{
+		if (mpAttackPts[i]->getPosition() == position)
+		{
+			location = getPosition();
+			return true;
+		}
+	}
+	return false;
+}

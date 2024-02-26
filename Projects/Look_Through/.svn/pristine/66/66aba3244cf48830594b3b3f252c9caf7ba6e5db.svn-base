@@ -1,0 +1,10 @@
+#pragma once
+
+#include <string>
+
+
+class IButtonListener
+{
+public:
+	virtual void onButtonPressed(std::string buttonID) = 0;
+};

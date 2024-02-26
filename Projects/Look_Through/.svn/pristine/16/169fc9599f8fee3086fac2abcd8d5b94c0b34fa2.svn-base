@@ -1,0 +1,30 @@
+//BP
+#pragma once
+#include <map>
+#include <string>
+#include "Trackable.h"
+#include "GraphicsBuffer.h"
+
+using namespace std;
+
+typedef string BuffTag;
+const BuffTag MISSING_TEXTURE = "Missing";
+const int SPRITE_X_LENGTH = 64;
+const int SPRITE_Y_LENGTH = 64;
+
+class GraphicsBufferManager : public Trackable
+{
+public:
+	GraphicsBufferManager();
+	~GraphicsBufferManager();
+	void init();
+	void clearBuffs();
+	void deleteBuffer(BuffTag tag);
+	void cleaner() { clearBuffs(); }
+	GraphicsBuffer* getBuffer(BuffTag tag);
+	void deleteBuffer(GraphicsBuffer* newTag);
+	void addNewBuffer(BuffTag tag, GraphicsBuffer* newTag);
+private:
+	GraphicsBuffer* mpPlaceholder;
+	map<BuffTag, GraphicsBuffer*> mpGraphicsBufferList;
+};

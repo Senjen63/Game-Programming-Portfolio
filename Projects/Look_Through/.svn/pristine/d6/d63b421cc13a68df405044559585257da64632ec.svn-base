@@ -1,0 +1,245 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Header Files\Color/Font">
+      <UniqueIdentifier>{e1b1ea59-ef0d-4ce9-8e48-feb07b19a985}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Events">
+      <UniqueIdentifier>{a44c3b2d-558a-42f4-8e12-09cbe9e26afd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Graphics">
+      <UniqueIdentifier>{eab98b07-5102-4b8b-bc4f-9538f9156f68}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Unit/Ani/Sprite">
+      <UniqueIdentifier>{1f1e931d-d6fd-41b5-95e3-05fa1888adc3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Other Managers">
+      <UniqueIdentifier>{fccea790-98ce-4829-9759-075bf0b091fc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Events">
+      <UniqueIdentifier>{08b8154a-4e8d-46ec-b651-95e5817da2ea}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Color/Font">
+      <UniqueIdentifier>{dc48b977-23c1-4d9c-b64e-485bf06debd4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Unit/Ani/Sprite">
+      <UniqueIdentifier>{2f745235-1a15-48d9-be13-0c4f172d1c4f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Graphics">
+      <UniqueIdentifier>{3cc2939d-e9da-4bb3-93ec-355530fe9fd0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Other Managers">
+      <UniqueIdentifier>{a7c10865-870a-4eea-9c57-d47e4ad27d6f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Audio">
+      <UniqueIdentifier>{d78fe587-631d-4433-85cd-b42cd9ea08ea}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Audio">
+      <UniqueIdentifier>{9ff5b355-b2df-449a-9d1e-75a365cf471b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Game/Input/HUD">
+      <UniqueIdentifier>{2ed367c1-809f-4ca6-bc79-d342d90f84a8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Game/Input/HUD">
+      <UniqueIdentifier>{ac859978-313b-4143-890a-9249cbf8e7e9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\MenuSystem">
+      <UniqueIdentifier>{fe42c31b-6c50-4b38-9a34-7ee5ef38cca5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\MenuSystem">
+      <UniqueIdentifier>{28ba4886-17e0-4547-9805-b359236e9f2a}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GraphicsBuffer.cpp">
+      <Filter>Source Files\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="GraphicsSystem.cpp">
+      <Filter>Source Files\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="Animation.cpp">
+      <Filter>Source Files\Unit/Ani/Sprite</Filter>
+    </ClCompile>
+    <ClCompile Include="AnimationManager.cpp">
+      <Filter>Source Files\Unit/Ani/Sprite</Filter>
+    </ClCompile>
+    <ClCompile Include="SFX.cpp">
+      <Filter>Source Files\Audio</Filter>
+    </ClCompile>
+    <ClCompile Include="Color.cpp">
+      <Filter>Source Files\Color/Font</Filter>
+    </ClCompile>
+    <ClCompile Include="DataManager.cpp">
+      <Filter>Source Files\Other Managers</Filter>
+    </ClCompile>
+    <ClCompile Include="Font.cpp">
+      <Filter>Source Files\Color/Font</Filter>
+    </ClCompile>
+    <ClCompile Include="Game.cpp">
+      <Filter>Source Files\Game/Input/HUD</Filter>
+    </ClCompile>
+    <ClCompile Include="GameEvent.cpp">
+      <Filter>Source Files\Events</Filter>
+    </ClCompile>
+    <ClCompile Include="GraphicsBufferManager.cpp">
+      <Filter>Source Files\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="InputEvent.cpp">
+      <Filter>Source Files\Events</Filter>
+    </ClCompile>
+    <ClCompile Include="InputSystem.cpp">
+      <Filter>Source Files\Game/Input/HUD</Filter>
+    </ClCompile>
+    <ClCompile Include="LevelManager.cpp">
+      <Filter>Source Files\Other Managers</Filter>
+    </ClCompile>
+    <ClCompile Include="Sprite.cpp">
+      <Filter>Source Files\Unit/Ani/Sprite</Filter>
+    </ClCompile>
+    <ClCompile Include="TobbManager.cpp">
+      <Filter>Source Files\Other Managers</Filter>
+    </ClCompile>
+    <ClCompile Include="Unit.cpp">
+      <Filter>Source Files\Unit/Ani/Sprite</Filter>
+    </ClCompile>
+    <ClCompile Include="UnitManager.cpp">
+      <Filter>Source Files\Unit/Ani/Sprite</Filter>
+    </ClCompile>
+    <ClCompile Include="HUD.cpp">
+      <Filter>Source Files\Game/Input/HUD</Filter>
+    </ClCompile>
+    <ClCompile Include="AnimationPrototype.cpp">
+      <Filter>Source Files\Unit/Ani/Sprite</Filter>
+    </ClCompile>
+    <ClCompile Include="Menu.cpp">
+      <Filter>Source Files\MenuSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="FriendManager.cpp">
+      <Filter>Source Files\Other Managers</Filter>
+    </ClCompile>
+    <ClCompile Include="TreeManager.cpp">
+      <Filter>Source Files\Other Managers</Filter>
+    </ClCompile>
+    <ClCompile Include="BabbManager.cpp">
+      <Filter>Source Files\Other Managers</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="GraphicsBuffer.h">
+      <Filter>Header Files\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="GraphicsSystem.h">
+      <Filter>Header Files\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Animation.h">
+      <Filter>Header Files\Unit/Ani/Sprite</Filter>
+    </ClInclude>
+    <ClInclude Include="AnimationManager.h">
+      <Filter>Header Files\Unit/Ani/Sprite</Filter>
+    </ClInclude>
+    <ClInclude Include="SFX.h">
+      <Filter>Header Files\Audio</Filter>
+    </ClInclude>
+    <ClInclude Include="Color.h">
+      <Filter>Header Files\Color/Font</Filter>
+    </ClInclude>
+    <ClInclude Include="DataManager.h">
+      <Filter>Header Files\Other Managers</Filter>
+    </ClInclude>
+    <ClInclude Include="Font.h">
+      <Filter>Header Files\Color/Font</Filter>
+    </ClInclude>
+    <ClInclude Include="Game.h">
+      <Filter>Header Files\Game/Input/HUD</Filter>
+    </ClInclude>
+    <ClInclude Include="GameEvent.h">
+      <Filter>Header Files\Events</Filter>
+    </ClInclude>
+    <ClInclude Include="GraphicsBufferManager.h">
+      <Filter>Header Files\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="InputEvent.h">
+      <Filter>Header Files\Events</Filter>
+    </ClInclude>
+    <ClInclude Include="InputSystem.h">
+      <Filter>Header Files\Game/Input/HUD</Filter>
+    </ClInclude>
+    <ClInclude Include="LevelManager.h">
+      <Filter>Header Files\Other Managers</Filter>
+    </ClInclude>
+    <ClInclude Include="Sprite.h">
+      <Filter>Header Files\Unit/Ani/Sprite</Filter>
+    </ClInclude>
+    <ClInclude Include="TobbManager.h">
+      <Filter>Header Files\Other Managers</Filter>
+    </ClInclude>
+    <ClInclude Include="Unit.h">
+      <Filter>Header Files\Unit/Ani/Sprite</Filter>
+    </ClInclude>
+    <ClInclude Include="UnitManager.h">
+      <Filter>Header Files\Unit/Ani/Sprite</Filter>
+    </ClInclude>
+    <ClInclude Include="HUD.h">
+      <Filter>Header Files\Game/Input/HUD</Filter>
+    </ClInclude>
+    <ClInclude Include="AnimationPrototype.h">
+      <Filter>Header Files\Unit/Ani/Sprite</Filter>
+    </ClInclude>
+    <ClInclude Include="SDL_ALL.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Menu.h">
+      <Filter>Header Files\MenuSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="FriendManager.h">
+      <Filter>Header Files\Other Managers</Filter>
+    </ClInclude>
+    <ClInclude Include="TreeManager.h">
+      <Filter>Header Files\Other Managers</Filter>
+    </ClInclude>
+    <ClInclude Include="BabbManager.h">
+      <Filter>Header Files\Other Managers</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="LoadFile.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
+    <Text Include="SavedData.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
+    <Text Include="EasyLevel.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
+    <Text Include="MediumLevel.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
+    <Text Include="HardLevel.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
+    <Text Include="English.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
+    <Text Include="Spanish.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
+    <Text Include="French.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
+  </ItemGroup>
+</Project>

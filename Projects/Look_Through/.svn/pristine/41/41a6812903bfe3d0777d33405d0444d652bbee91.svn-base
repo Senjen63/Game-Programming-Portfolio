@@ -1,0 +1,97 @@
+#include "Unit.h"
+#include "Animation.h"
+#include "Game.h"
+#include "GraphicsSystem.h"
+#include "Sprite.h"
+
+Unit::Unit(Vector2D location)
+{
+	this->mLocation = location;
+	this->mIsAnimating = true;
+	this->mIsMainAnimation = true;
+}
+
+Unit::~Unit()
+{
+}
+
+void Unit::update(double elapsedTime)
+{
+	if (mIsAnimating) 
+	{
+		if (mIsMainAnimation)
+		{
+			mMainAnimation.update(elapsedTime);
+		}
+		else 
+		{
+			mAltAnimation.update(elapsedTime);
+		}
+	}
+	else 
+	{
+		return;
+	}	
+}
+
+void Unit::draw()
+{
+	if (mIsMainAnimation)
+	{
+		Game::getInstance()->getGraphicsSystem()->draw(Vector2D(mLocation.getX() - mMainAnimation.getCurrentSprite().getSpriteWidth() / 2, mLocation.getY() - mMainAnimation.getCurrentSprite().getSpriteHeight() / 2), mMainAnimation.getCurrentSprite());
+	}
+	else
+	{
+		Game::getInstance()->getGraphicsSystem()->draw(Vector2D(mLocation.getX() - mAltAnimation.getCurrentSprite().getSpriteWidth() / 2, mLocation.getY() - mAltAnimation.getCurrentSprite().getSpriteHeight() / 2), mAltAnimation.getCurrentSprite());
+	}
+}
+
+void Unit::setLocation(Vector2D newLocation)
+{
+	this->mLocation = newLocation;
+}
+
+void Unit::setMainAnimation(Animation animation)
+{
+	this->mMainAnimation = animation;
+}
+
+void Unit::setAltAnimation(Animation animation) 
+{
+	this->mAltAnimation = animation;
+}
+
+void Unit::turnAnimationOff()
+{
+	mIsAnimating = false;
+}
+
+void Unit::turnAnimationOn() 
+{
+	mIsAnimating = true;
+}
+
+void Unit::swapCurrentAnimation() 
+{
+
+	if (mIsMainAnimation) 
+	{
+		mIsMainAnimation = false;
+	} 
+	else 
+	{
+		mIsMainAnimation = true;
+	}
+}
+
+Animation Unit::getCurrentAnimation()
+{
+	if (mIsMainAnimation) 
+	{
+		return mMainAnimation;
+	}
+	else 
+	{
+		return mAltAnimation;
+	}
+}

@@ -1,0 +1,33 @@
+#include "CircleCollider.h"
+#include "BoxCollider.h"
+#include "CollisionMath.h"
+
+#include <cassert>
+
+CircleCollider::CircleCollider(CollisionTag collisionTag, float radius) :
+    Collider(ColliderType::CIRCLE, collisionTag), mRadius(radius)
+{}
+
+bool CircleCollider::collides(const Collider& other) const
+{
+    switch (other.getColliderType())
+    {
+    case ColliderType::BOX:
+    {
+        const BoxCollider& box = static_cast<const BoxCollider&>(other);
+        return CollisionMath::boxOnCircle(box, *this);
+    }
+
+    case ColliderType::CIRCLE:
+    {
+        const CircleCollider& circle = static_cast<const CircleCollider&>(other);
+        return CollisionMath::circleOnCircle(*this, circle);
+    }
+
+    default:
+        printf("Invalid collider type!");
+        assert(false);
+    }
+
+    return false;
+}

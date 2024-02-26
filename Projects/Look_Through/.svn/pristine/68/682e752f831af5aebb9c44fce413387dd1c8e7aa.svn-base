@@ -1,0 +1,5 @@
+ship_color 0 0 255 255
+ship_lives 3
+ship_speed 100
+ship_fire_rate 250
+ship_size 32 32

@@ -1,0 +1,15 @@
+#include "SpawnArrowEvent.h"
+
+SpawnArrowEvent::SpawnArrowEvent(Vector2D pos, Vector2D velocity, float life, float angle) : SpawnEvent((SpawnEventType)SPAWN_ARROW_EVENT)
+{
+    mPos = pos;
+    mVelocity = velocity;
+    mLife = life;
+    mAngle = angle;
+}
+
+
+SpawnArrowEvent::~SpawnArrowEvent()
+{
+
+}

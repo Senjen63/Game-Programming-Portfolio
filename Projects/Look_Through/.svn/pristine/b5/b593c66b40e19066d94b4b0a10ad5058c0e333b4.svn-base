@@ -1,0 +1,64 @@
+#pragma once
+#include <Trackable.h>
+#include <Vector2D.h>
+
+const float PIXELS_IN_FOOT = 12.0f; //number of pixels that make up a foot
+const float TERMINAL_VELOCITY = 176.0f * PIXELS_IN_FOOT; //feet per sec, same as 120 mph
+const Vector2D GRAVITY_CONST = Vector2D(0.0f, 30.0f) * PIXELS_IN_FOOT; //feet per second squared, gravitational constant
+const float BASE_SPEED = 11.7f * PIXELS_IN_FOOT; //avg run speed of a human in feet per sec
+const float BASE_JUMP_POWER = -20.0f * PIXELS_IN_FOOT; //avg standing jump velocity of a human in feet per sec
+const int MAX_JUMPS = 2; //how many jumps the player can do before landing
+
+class Unit;
+class UnitManager;
+
+class PhysicsComponent : public Trackable
+{
+    private:
+        bool mActive = false; //use physics?
+        bool mGravityActive = false; //use gravity?
+
+        float mSpeed = BASE_SPEED;
+        float mJumpPower = BASE_JUMP_POWER; 
+
+        int mJumpCount = 1;
+        int mLastJumpCount = 1;
+
+        //float mTimePerFrame = 16.7f;
+
+        Vector2D mVelocity;
+        Vector2D mAcceleration;
+
+        Unit* mpSelf = nullptr;
+
+        UnitManager* mpUnitManager = nullptr; //needed for checking future collisions to determine if velocity should be stopped
+
+    public:
+        PhysicsComponent();
+        PhysicsComponent(float timePerFrame);
+        PhysicsComponent(Unit* self, float timePerFrame, bool active, bool gravity);
+        ~PhysicsComponent();
+
+        void init();
+        void cleanup();
+
+        bool getActive() { return mActive; }
+        bool getGravityActive() { return mGravityActive; }
+        float getSpeed() { return mSpeed; }
+        float getJumpPower() { return mJumpPower; }
+        int getJumpCount() { return mJumpCount; }
+        Vector2D getVelocity() { return mVelocity; }
+        Vector2D getAcceleration() { return mAcceleration; }
+
+        void setActive(bool active) { mActive = active; }
+        void setGravityActive(bool gravityActive) { mGravityActive = gravityActive; }
+        void setSpeed(float speed) { mSpeed = speed; }
+        void setJumpPower(float jumpPower) { mJumpPower = jumpPower; }
+        void setJumpCount(int jumpCount) { mJumpCount = jumpCount; }
+        void setVelocity(Vector2D velocity) { mVelocity = velocity; }
+        void setAcceleration(Vector2D acceleration) { mAcceleration = acceleration; }
+
+        bool jumped() { return mJumpCount != mLastJumpCount; } //returns whether player jumped since last update or not
+
+        void update(float timeElapsed);
+};

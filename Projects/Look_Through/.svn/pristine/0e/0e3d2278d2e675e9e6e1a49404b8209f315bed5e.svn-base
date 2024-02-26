@@ -1,0 +1,60 @@
+#include "SoundManager.h"
+
+SoundManager::SoundManager()
+{
+
+}
+
+SoundManager::~SoundManager()
+{
+	cleanup();
+}
+
+void SoundManager::init()
+{
+
+}
+
+void SoundManager::cleanup()
+{
+	for (auto sound : mSoundList)
+	{
+		if (sound.second)
+		{
+			delete sound.second;
+		}
+		sound.second = nullptr;
+	}
+	mSoundList.clear();
+}
+
+void SoundManager::addSound(SoundKey key, string soundFile, float volume)
+{
+	Sound* newSound = new Sound(soundFile, volume);
+	mSoundList[key] = newSound;
+}
+
+Sound* SoundManager::getSound(SoundKey key)
+{
+	return mSoundList[key];
+}
+
+
+void SoundManager::changeVolume(float newVolume)
+{
+	float setVol = newVolume;
+
+	if (newVolume > MAX_SOUND)
+	{
+		setVol = MAX_SOUND;
+	}
+	else if(newVolume < MIN_SOUND)
+	{
+		setVol = MIN_SOUND;
+	}
+
+	for (auto sound : mSoundList)
+	{
+		sound.second->setVolume(setVol);
+	}
+}

@@ -1,0 +1,211 @@
+#include "Game.h"
+
+// Initialization of static private members
+GraphicsSystem* Game::mpGraphicsSystem = nullptr;
+InputSystem* Game::mpInputSystem = nullptr;
+UnitManager* Game::mpUnitManager = nullptr;
+GraphicsBufferManager* Game::mpGraphicsBufferManager = nullptr;
+LevelManager* Game::mpLevelManager = nullptr;
+HUD* Game::mpHUD = nullptr;
+
+Game::Game(float displayWidth, float displayHeight)
+{
+	mpGraphicsSystem = new GraphicsSystem(displayWidth, displayHeight);
+	mpInputSystem = new InputSystem();
+	mpGraphicsBufferManager = new GraphicsBufferManager();
+	mpUnitManager = new UnitManager();
+	init(); // this is only here so allegro stuff relating to images are loaded before the level manager is. should level manager even be here?
+	mpLevelManager = new LevelManager(60);
+	mpHUD = new HUD();
+
+	EventSystem* pEventSystem = EventSystem::getInstance();
+	pEventSystem->addListener((EventType)INPUT_EVENT, this);
+	pEventSystem->addListener((EventType)SNAKE_COLLISION_EVENT, this);
+	pEventSystem->addListener((EventType)SCORE_EVENT, this);
+	pEventSystem->addListener((EventType)WIN_EVENT, this);
+}
+
+Game::~Game()
+{
+	//clean();
+}
+
+void Game::init()
+{
+	mpGraphicsSystem->init();
+	mpInputSystem->init();
+}
+
+void Game::clean()
+{
+	delete(mpLevelManager);
+	delete(mpInputSystem);
+	delete(mpGraphicsBufferManager);
+	delete(mpUnitManager);
+	delete(mpGraphicsSystem);
+	delete(mpHUD);
+}
+
+void Game::handleEvent(const Event& theEvent)
+{
+	// Would it be better to have SnakeManager process input events instead?
+	if (theEvent.getType() == INPUT_EVENT)
+	{
+		const InputEvent& inputEvent = static_cast<const InputEvent&>(theEvent);
+
+		if (mpLevelManager->getSnake() != nullptr)
+		{
+			SnakeManager* snake = mpLevelManager->getSnake();
+
+			if (inputEvent.getInputType() == W_PRESSED)
+			{
+				snake->changeHeadDirection(std::make_pair(0, -1));
+			}
+
+			else if (inputEvent.getInputType() == A_PRESSED)
+			{
+				snake->changeHeadDirection(std::make_pair(-1, 0));
+			}
+
+			else if (inputEvent.getInputType() == S_PRESSED)
+			{
+				snake->changeHeadDirection(std::make_pair(0, 1));
+			}
+
+			else if (inputEvent.getInputType() == D_PRESSED)
+			{
+				snake->changeHeadDirection(std::make_pair(1, 0));
+			}
+		}
+
+		if (inputEvent.getInputType() == ESCAPE_PRESSED)
+		{
+			continueLoop = false;
+		}
+
+		if (inputEvent.getInputType() == SPACE_PRESSED)
+		{
+			if (mGameState != 0)
+			{
+				mGameState = 0;
+			}
+		}
+	}
+
+	if (theEvent.getType() == SNAKE_COLLISION_EVENT)
+	{
+		mGameState = 2;
+		mpLevelManager->reloadCurrentLevel();
+		mNewSegments = 0;
+		mCurrentScore = 0;
+	}
+
+	if (theEvent.getType() == SCORE_EVENT)
+	{
+		const UpdateScoreEvent& scoreEvent = static_cast<const UpdateScoreEvent&>(theEvent);
+		mCurrentScore += scoreEvent.getScoreChange();
+		mNewSegments += scoreEvent.getSegments();
+
+		if (mNewSegments == mpLevelManager->getSegmentsToNextLevel())
+		{
+			mGameState = 1;
+			mpLevelManager->loadNextLevel();
+			mNewSegments = 0;
+		}
+	}
+
+	if (theEvent.getType() == WIN_EVENT)
+	{
+		mGameState = 3;
+	}
+}
+
+void Game::doLoop()
+{
+	srand(time(NULL));
+
+	GraphicsSystem* pGraphicsSystem = getGraphicsSystem();
+	InputSystem* pInputSystem = getInputSystem();
+	UnitManager* pUnitManager = getUnitManager();
+	GraphicsBufferManager* pGraphicsBufferManager = getGraphicsBufferManager();
+	LevelManager* pLevelManager = getLevelManager();
+	PerformanceTracker* pPerformanceTracker = new PerformanceTracker;
+
+	float displayWidth = pGraphicsSystem->getDisplayWidth();
+	float displayHeight = pGraphicsSystem->getDisplayHeight();
+
+	std::pair<float, float> defaultUnitPosition = std::pair<float, float>(displayWidth / 2, displayHeight / 2);
+
+	double targetFPS = 60;
+	double targetTimeMS = 1000 / targetFPS;
+	double currentTimeMS = targetTimeMS;
+
+	const std::string ASSET_PATH = "Assets\\";
+	const std::string BACKGROUND_FILENAME = "background.png";
+
+	// Graphics Buffers
+	pGraphicsBufferManager->addBuffer(ASSET_PATH + BACKGROUND_FILENAME, "backgroundBuffer");
+
+	bool enterHeldPreviousFrame = false;
+	bool spaceHeldPreviousFrame = false;
+
+	while (continueLoop)
+	{
+		pPerformanceTracker->clearTracker("loop");
+		pPerformanceTracker->startTracking("loop");
+
+		Timer timerVar;
+		timerVar.start();
+
+		pInputSystem->update();
+
+		if (mGameState == 0)
+		{
+			pUnitManager->updateAll(currentTimeMS);
+			mpLevelManager->update(currentTimeMS);
+		}
+
+		pGraphicsSystem->draw(0, 0, pGraphicsBufferManager->getBuffer("backgroundBuffer"), 30, 30);
+
+		if (mGameState == 0)
+		{
+			pUnitManager->drawAll(pGraphicsSystem);
+			mpLevelManager->draw(pGraphicsSystem);
+			mpHUD->updateHUD(pGraphicsSystem, "Score: " + std::to_string(mCurrentScore), std::make_pair(0, 0));
+			mpHUD->updateHUD(pGraphicsSystem, "Segments Added: " + std::to_string(mNewSegments), std::make_pair(0, 30));
+		}
+
+		else if (mGameState == -1)
+		{
+			mpHUD->updateHUD(pGraphicsSystem, "Snake Game", std::make_pair((displayWidth / 2) - 70, (displayHeight / 2) - 80));
+			mpHUD->updateHUD(pGraphicsSystem, "Press space to start", std::make_pair((displayWidth / 2) - 140, (displayHeight / 2) - 20));
+		}
+
+		else if (mGameState == 1)
+		{
+			mpHUD->updateHUD(pGraphicsSystem, "Level Completed", std::make_pair((displayWidth / 2) - 120, displayHeight / 2));
+			mpHUD->updateHUD(pGraphicsSystem, "Press space to continue", std::make_pair((displayWidth / 2) - 180, (displayHeight / 2) + 30));
+		}
+
+		else if (mGameState == 2)
+		{
+			mpHUD->updateHUD(pGraphicsSystem, "You Have Died", std::make_pair((displayWidth / 2) - 120, displayHeight / 2));
+			mpHUD->updateHUD(pGraphicsSystem, "Press space to retry", std::make_pair((displayWidth / 2) - 180, (displayHeight / 2) + 30));
+		}
+
+		else if (mGameState == 3)
+		{
+			mpHUD->updateHUD(pGraphicsSystem, "You Win!", std::make_pair((displayWidth / 2) - 70, (displayHeight / 2) - 80));
+			mpHUD->updateHUD(pGraphicsSystem, "Press space to replay", std::make_pair((displayWidth / 2) - 150, (displayHeight / 2) - 20));
+		}
+
+		pGraphicsSystem->flipBackBuffer();
+
+		timerVar.sleepUntilElapsed(targetTimeMS);
+
+		pPerformanceTracker->stopTracking("loop");
+		//std::cout << "Frame took " << pPerformanceTracker->getElapsedTime("loop") << " milliseconds." << std::endl;
+	}
+
+	delete pPerformanceTracker;
+}

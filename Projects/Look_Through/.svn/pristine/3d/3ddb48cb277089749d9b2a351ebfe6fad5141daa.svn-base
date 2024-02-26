@@ -1,0 +1,38 @@
+#pragma once
+
+//#include "GraphicsBuffer.h"
+#include "Sprite.h"
+#include "Font.h"
+
+class GraphicsSystem
+{
+public:
+	GraphicsSystem(std::string displayName, float displayWidth, float displayHeight);
+	~GraphicsSystem();
+
+	void init();
+	void clean();
+
+	float getDisplayHeight();
+	float getDisplayWidth();
+	GraphicsBuffer* getBackBuffer() { return mpDisplayBuffer; }
+
+	void flipBackBuffer() { SDL_RenderPresent(mpRenderer); }
+	void clearRenderer() { SDL_RenderClear(mpRenderer); }
+
+	// Draw to Display Buffer
+	void draw(Sprite sprite, float xPos, float yPos, float scaleX, float scaleY);
+	// Draw to given GraphicsBuffer
+	void draw(GraphicsBuffer* graphicsBuffer, Sprite sprite, float xPos, float yPos, float scaleX, float scaleY);
+
+	void drawText(Font* font, float xPos, float yPos, float scaleX, float scaleY, std::string displayText, GraphicsBuffer*& textBuffer);
+
+private:
+	SDL_Window* mpDisplay;
+	SDL_Renderer* mpRenderer;
+	// Stores a surface seperate from the one that comes with the window. Will be drawn to the window's display buffer.
+	// Is this redundant? Wouldn't passing in the window's surface and have it get deleted before the display does cause an error?
+	// This will directly store the window's surface for now.
+	// Does this even need to be a specific GraphicsBuffer instance?
+	GraphicsBuffer* mpDisplayBuffer;
+};

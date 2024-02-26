@@ -1,0 +1,20 @@
+#include <random>
+#include <EventSystem.h>
+
+#include "Level.h"
+
+using namespace std;
+
+Level::Level(int levelNum)
+{
+	mLevelNum = levelNum;
+}
+
+Level::~Level()
+{
+}
+
+void Level::update(double elapsedTime)
+{
+	//anything like time updates could go here
+}

@@ -1,0 +1,64 @@
+#pragma once
+
+#include <allegro5/allegro.h>
+#include <allegro5/allegro_font.h>
+#include <allegro5/allegro_ttf.h>
+#include <allegro5/allegro_audio.h>
+#include <allegro5/allegro_acodec.h>
+#include <allegro5/allegro_image.h>
+#include <allegro5/allegro_primitives.h>
+
+#include <Trackable.h>
+#include <Vector2D.h>
+
+#include <iostream>
+#include <cassert>
+#include <string>
+
+#include <PerformanceTracker.h>
+#include <Timer.h>
+
+#include "GraphicsSystem.h"
+#include "InputSystem.h"
+#include "Unit.h"
+#include "Animation.h"
+#include "InputSystem.h"
+
+using namespace std;
+
+//Initialize variables
+const string ASSET_PATH = "..\\..\\common\\assets\\";
+const string BACKGROUND_FILENAME = "Woods.png";
+const string SMURF_FILENAME = "smurf_sprites.png";
+const string DEAN_FILENAME = "dean_sprites.png";
+
+const int DISP_WIDTH = 800;
+const int DISP_HEIGHT = 600;
+
+const float TIME_PER_FRAME = 0.005;
+const int NUM_FRAMES = 16;
+
+class Game : public Trackable
+{
+public:
+	Game();
+	~Game();
+
+	void Init();
+	void cleanUp();
+
+	void doLoop();
+
+private:
+	GraphicsSystem* mpDisplay;
+	InputSystem mInput;
+	Unit* mpUnit;
+
+	GraphicsBuffer* mpWoodsBackground;
+	GraphicsBuffer* mpSmurfs;
+	GraphicsBuffer* mpDeans;
+	Animation* mpSmurfsAnimation;
+	Animation* mpDeansAnimation;
+};
+
+extern Game* gpGame;

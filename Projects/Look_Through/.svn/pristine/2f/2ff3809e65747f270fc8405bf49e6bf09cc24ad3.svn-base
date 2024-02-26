@@ -1,0 +1,96 @@
+#pragma once
+
+#include <allegro5/allegro.h>
+#include <allegro5/allegro_font.h>
+#include <allegro5/allegro_ttf.h>
+#include <allegro5/allegro_audio.h>
+#include <allegro5/allegro_acodec.h>
+#include <allegro5/allegro_image.h>
+#include <allegro5/allegro_primitives.h>
+
+#include <Trackable.h>
+#include <Vector2D.h>
+
+#include <iostream>
+#include <cassert>
+#include <string>
+#include <vector>
+#include <stdlib.h>
+#include <time.h>
+#include <fstream>
+
+#include <PerformanceTracker.h>
+#include <Timer.h>
+
+#include "UnitManager.h"
+#include "Animation.h"
+#include "EventListener.h"
+
+using namespace std;
+
+class EventSystem;
+
+enum diffSetting {
+	easy,
+	medium,
+	hard
+};
+
+class Orbs : public EventListener
+{
+public:
+	Orbs(UnitManager* manager, Animation* anim1, Animation* anim2);
+	~Orbs();
+
+	void spawnOrb();
+	void moveOrbs();
+	void increaseDif();
+	void setDifficulty(diffSetting difToSet);
+
+	void loadOrbFile(string fileName);
+
+	void handleEvent(const Event& theEvent);
+
+	void saveOrbState();
+	void saveOrbs();
+	void loadOrbStateFromSave();
+	void loadOrbsFromSave();
+
+	void resetOrbs();
+
+private:
+	UnitManager* mpOrbManager;
+	Animation* mpRedAnimation;
+	Animation* mpBlueAnimation;
+
+	diffSetting currentDifficulty;
+
+	//Base values used within the running code
+	int orbCount;
+	int randCount;
+
+	float speedMod;
+	int spawnChance;
+
+	int neededOrbsForSpawnIncrease;
+	int neededOrbsForSpeedIncrease;
+	float spawnIncreaseAmount;
+	float speedIncreaseAmount;
+
+	Vector2D spawnLoc;
+	int spawnRangeSize;
+	int minSpawnX;
+	int minSpawnY;
+
+	//Easy mode values
+	float easySpeedMod;
+	int easySpawnChance;
+
+	//Medium mode values
+	float medSpeedMod;
+	int medSpawnChance;
+
+	//Hard mode values
+	float hardSpeedMod;
+	int hardSpawnChance;
+};

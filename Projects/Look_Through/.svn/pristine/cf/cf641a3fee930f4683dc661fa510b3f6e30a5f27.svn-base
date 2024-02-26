@@ -1,0 +1,48 @@
+#include "AudioSystem.h"
+
+bool AudioSystem::init()
+{
+	Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, 2, 2048);
+	return true;
+}
+
+void AudioSystem::cleanUp()
+{
+	Mix_CloseAudio();
+}
+
+void AudioSystem::playLoopingMusic(Audio* audio)
+{
+	Mix_PlayMusic(audio->mpMusicClip, -1);
+}
+
+void AudioSystem::playSound(Audio* audio)
+{
+	Mix_PlayChannel(-1, audio->mpAudioClip, 0);
+}
+
+void AudioSystem::mute(bool isMute, Audio* audio)
+{
+	if (isMute)
+	{
+		if (audio->mpAudioClip != nullptr)
+		{
+			audio->mpAudioClip->volume = 0;
+		}
+		else
+		{
+			Mix_PauseMusic();
+		}
+	}
+	else
+	{
+		if (audio->mpAudioClip != nullptr)
+		{
+			audio->mpAudioClip->volume = 128;
+		}
+		else
+		{
+			Mix_PlayMusic(audio->mpMusicClip, -1);
+		}
+	}
+}

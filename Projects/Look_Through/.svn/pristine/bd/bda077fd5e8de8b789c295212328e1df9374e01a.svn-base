@@ -1,0 +1,24 @@
+#include "Color.h"
+
+using namespace std;
+
+Color::Color()
+{
+	mR = 0;
+	mG = 0;
+	mB = 0;
+	mA = 255;
+}
+
+Color::Color(float r, float g, float b, float a)
+{
+	mR = r;
+	mG = g;
+	mB = b;
+	mA = a;
+}
+
+ALLEGRO_COLOR Color::getColor()
+{ 
+	return al_map_rgba(mR, mG, mB, mA);
+}

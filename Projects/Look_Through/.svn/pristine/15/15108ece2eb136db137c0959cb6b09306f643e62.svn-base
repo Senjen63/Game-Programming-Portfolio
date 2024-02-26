@@ -1,0 +1,12 @@
+#include "SpawnSnakeEvent.h"
+
+SpawnSnakeEvent::SpawnSnakeEvent(Unit* unit) : SpawnEvent((SpawnEventType)SPAWN_SNAKE_EVENT)
+{
+    mpUnit = unit;
+}
+
+
+SpawnSnakeEvent::~SpawnSnakeEvent()
+{
+
+}

@@ -1,0 +1,111 @@
+#pragma once
+#include <Trackable.h>
+#include <EventSystem.h>
+#include <EventListener.h>
+
+#include <fstream>
+#include <string>
+#include <unordered_map>
+
+using namespace std;
+
+typedef string StringKey;
+typedef string LangKey;
+
+/*
+==================================
+
+A data type that stores identifiers
+for every string in the game, matched
+with a phrase
+
+==================================
+*/
+typedef const struct
+{
+    const StringKey LANGUAGE_STRING = "LanguageString";
+    const StringKey FIRST_LANG_STRING = "EnglishString";
+    const StringKey SECOND_LANG_STRING = "SwedishString";
+    const StringKey THIRD_LANG_STRING = "GermanString";
+    const StringKey TITLE_STRING = "TitleString";
+    const StringKey START_STRING = "StartString";
+    const StringKey LOAD_STRING = "LoadString";
+    const StringKey OPTIONS_STRING = "OptionsString";
+    const StringKey QUIT_STRING = "QuitString";
+    const StringKey TIME_STRING = "TimeString";
+    const StringKey FPS_STRING = "FpsString";
+    const StringKey POINTS_STRING = "PointsString";
+    const StringKey LOSE_STRING = "LoseString";
+    const StringKey WIN_STRING = "WinString";
+    const StringKey CLEAR_LEVEL_STRING = "ClearLevelString";
+    const StringKey NEXT_STRING = "NextString";
+    const StringKey BACK_STRING = "BackString";
+    const StringKey EASY_STRING = "EasyString";
+    const StringKey MEDIUM_STRING = "MediumString";
+    const StringKey HARD_STRING = "HardString";
+    const StringKey SOUND_ON_STRING = "SoundOnString";
+    const StringKey SOUND_OFF_STRING = "SoundOffString";
+} StringKeys;
+
+StringKeys STRING_KEYS;
+
+/*
+==================================
+
+A data type that stores the same
+word each in one of the three loaded
+languages, matched with a StringKey
+
+==================================
+*/
+class LangCluster
+{
+    private:
+        unordered_map<LangKey, string> mStrings;
+
+    public:
+        LangCluster() {}
+        LangCluster(LangKey firstLang, LangKey secondLang, LangKey thirdLang, StringKey firstString, StringKey secondString, StringKey thirdString);
+        ~LangCluster();
+
+        string getString(LangKey key) { return mStrings[key]; }
+
+        void changeString(LangKey key, string text) { mStrings[key] = text; }
+};
+
+class LanguageSystem : public EventListener
+{
+    private:
+        static LanguageSystem* mspLanguageSystem;
+
+        EventSystem* mpEventSystem = nullptr;
+
+        LangKey mFirstLang, mSecondLang, mThirdLang;
+
+        LangKey mCurrentLanguage;
+
+        unordered_map<StringKey, LangCluster> mClusters;
+
+    public:
+        static void createLangSystem();
+        static LanguageSystem* getLanguageSystem();
+        static void destroyLangSystem();
+
+        LanguageSystem();
+        ~LanguageSystem();
+
+        void init(string filename);
+        void cleanup();
+
+        LangKey getFirstLanguage() { return mFirstLang; }
+        LangKey getSecondLanguage() { return mSecondLang; }
+        LangKey getThirdLanguage() { return mThirdLang; }
+        LangKey getCurrentLanguage() { return mCurrentLanguage; }
+        string getString(StringKey key);
+
+        void setCurrentLanguage(LangKey language);
+
+        virtual void handleEvent(const Event& currentEvent);
+
+        void loadStrings(string filename);
+};

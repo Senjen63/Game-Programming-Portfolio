@@ -1,0 +1,48 @@
+﻿//     -------------------------------------------------------------------------
+//     Final Project
+//         GraphicsSystem.hpp
+//     
+//             Created:
+//                 06-04-2022
+//             Author(s):
+//                 Aven Presseisen
+//     -------------------------------------------------------------------------
+
+#pragma once
+
+#include <SDL.h>
+
+#include "Color.hpp"
+#include "Font.hpp"
+#include "SoundSystem.hpp"
+#include "Sprite.hpp"
+
+class GraphicsSystem
+{
+    friend class GraphicsBuffer;
+
+    SDL_Window * mpWindow;
+    SDL_Renderer * mpRenderer;
+
+    int mWidth;
+    int mHeight;
+
+public:
+    GraphicsSystem();
+    ~GraphicsSystem();
+
+    bool init( const char * windowName, int width, int height, const char * pIconPath = nullptr );
+    void cleanup();
+
+    void clearScreen( const Color & color = Color( 255, 255, 255 ) ) const;
+    Font * createFont( const char * pFilename, int fontSize = 25, const Color & color = Color( 0, 0, 0, 255 ), Font::Style style = Font::Style::Normal ) const;
+    void drawBuffer( const GraphicsBuffer * pBuffer, const Rect2D & destination ) const;
+    void drawBuffer( const GraphicsBuffer * pBuffer, const Rect2DF & destination ) const;
+    void drawSprite( const Sprite * pSprite, const Rect2D & destination ) const;
+    void drawSprite( const Sprite * pSprite, const Rect2DF & destination ) const;
+    void drawSpriteCentered( const Sprite * pSprite, const Rect2DF & destination ) const;
+    [[nodiscard]] int getWidth() const;
+    [[nodiscard]] int getHeight() const;
+    void renderScreen() const;
+    void writeText( const Font * pFont, const char * pText, float xPos, float yPos, Font::Align alignment = Font::Align::Left ) const;
+};

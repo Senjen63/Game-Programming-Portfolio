@@ -1,0 +1,80 @@
+#include "SnakeManager.h"
+
+SnakeManager::SnakeManager()
+{
+
+}
+
+SnakeManager::~SnakeManager()
+{
+	
+}
+
+void SnakeManager::initialSpawn(SnakeUnitManager& mSnakeUnitManager, Animation& mSnakeAnimation)
+{
+	Vector2D location;
+
+	ifstream input;
+
+	input.open(LEVEL_1);
+	assert(input);
+	string word;
+
+	while (!input.eof())
+	{
+		input >> word;
+
+		if (word == "Walls")
+		{
+			for (int i = 0; i < 19; i++)//vertical
+			{
+				for (int j = 0; j < 25; j++) //horizontal
+				{
+					input >> word;
+
+					if (word == "a")
+					{
+						//Walls
+						location = Vector2D(0 + (32 * j), 0 + (32 * i));
+
+						mSnakeUnitManager.createAndAddSnakeUnit(mSnakeAnimation);
+					}
+					else
+					{
+
+					}
+
+				}
+			}
+		}
+	}
+	input.close();
+}
+
+void SnakeManager::snakeMovementManager(SnakeUnitManager& mSnakeUnitManager, bool up, bool down, bool right, bool left, double targetTime)
+{
+	//make the location change by vector
+	// MOVEMENT OF SNAKE
+	if (up)
+	{
+		direction = Vector2D(0, -SPRITE_SIZE);
+	/*	mSnakeUnitManager.update(direction, UP);*/
+	}
+	else if (down)
+	{
+		direction = Vector2D(0, SPRITE_SIZE);
+		//mSnakeUnitManager.SnakeMovement(direction, DOWN);
+	}
+	else if (right)
+	{
+		direction = Vector2D(SPRITE_SIZE, 0);
+		/*mSnakeUnitManager.SnakeMovement(direction, RIGHT);*/
+	}
+	else if (left)
+	{
+		direction = Vector2D(-SPRITE_SIZE, 0);
+		/*mSnakeUnitManager.SnakeMovement(direction, LEFT);*/
+	}
+			
+	mSnakeUnitManager.update(targetTime, direction);//animates unit			
+}

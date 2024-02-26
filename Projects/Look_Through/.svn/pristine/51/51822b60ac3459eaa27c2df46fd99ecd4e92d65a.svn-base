@@ -1,0 +1,53 @@
+#include"animation.h"
+
+Animation::Animation()
+{
+
+}
+Animation::Animation(float time, bool shouldLoop)//May need constructor with sprites
+{
+	mFps = time;
+	mFrameTime = 1000.0 / mFps;
+	mCurrentSprite = 0;
+	mTime = mFrameTime;
+	mLoop = shouldLoop;
+}
+Animation::~Animation()
+{
+	
+}
+void Animation::addSprite(Sprite sprite)
+{
+	mpSprites.push_back(sprite);
+	cout << "PushBack" << endl;
+}
+void Animation::animUpdate(float time)
+{
+	mTime -= time;
+	if (mTime <= time)
+	{
+		mCurrentSprite++;
+		mTime = mFrameTime;
+
+		if (mCurrentSprite >= mpSprites.size() && mLoop)
+		{
+			mCurrentSprite = 0;
+		}
+		cout << mCurrentSprite << endl;
+	}
+
+}
+
+Sprite Animation::getCurrentSprite() //Returns currentSprite
+{
+	return mpSprites[mCurrentSprite];
+}
+void Animation::changeAnimationSpeed(int newFrames)
+{
+	mTime += newFrames;
+
+	if (mTime <= 0)
+	{
+		mTime = .0001;
+	}
+}

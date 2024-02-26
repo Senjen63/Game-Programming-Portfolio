@@ -1,0 +1,44 @@
+#pragma once
+#include <string>
+#include <SFML/Graphics.hpp>
+
+#include "Texture.h"
+#include "Color.h"
+
+class Sprite : public Trackable
+{
+	friend class GraphicsSystem;
+
+public:
+	//constructors - you can set a position and scale on spr creation but you don't need to
+	Sprite();
+	Sprite(Texture* baseTexture, int xPos = 0, int yPos = 0, float xScale = 1, float yScale = 1); //takes a full texture as sprite
+	Sprite(Texture* baseTexture, int x, int y, int width, int height, int xPos = 0, int yPos = 0, float xScale = 1, float yScale = 1); //takes only part of a texture as sprite
+	Sprite(const Sprite* spr, int xPos = 0, int yPos = 0, float xScale = 1, float yScale = 1); //copy constructor
+	~Sprite();
+
+	//accessors
+	int getX() { return int(mSprite->getPosition().x); }
+	int getY() { return int(mSprite->getPosition().y); }
+	int getXScale() { return int(mSprite->getScale().x); }
+	int getYScale() { return int(mSprite->getScale().y); }
+	Texture* getTexture() { return mTexture; }
+	Color getColor() { return mColor; }
+
+	//mutators
+	void setPosition(float x, float y) { mSprite->setPosition(x,y); }
+	void setScale(float xScale, float yScale) { mSprite->setScale(xScale, yScale); }
+	void setColor(Color newCol) { mColor = newCol; mSprite->setColor(newCol.mColor); }
+	Texture* setTexture(Texture* newTexture) { mTexture = newTexture; }
+private:
+	Texture* mTexture; //this is where the file is stored
+	sf::Sprite* mSprite; //this stores x/y position, scale, and what parts of the texture are used
+	sf::IntRect mIntRect;
+	Color mColor; //this stores a color to apply to the sprite
+
+	// THESE ARE STORED FOR THE COPY CONSTRUCTOR
+	int mX;
+	int mY;
+	int mWidth;
+	int mHeight;
+};

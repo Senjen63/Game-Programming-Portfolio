@@ -1,0 +1,42 @@
+#include "Color.h"
+
+Color::Color(int r, int g, int b, int a)
+{
+	mRed = r;
+	mGreen = g;
+	mBlue = b;
+	mAlpha = a;
+}
+
+Color::Color(int r, int g, int b)
+{
+	mRed = r;
+	mGreen = g;
+	mBlue = b;
+	mAlpha = 255;
+}
+
+Color::~Color()
+{
+
+}
+
+int Color::getR()
+{
+	return mRed;
+}
+
+int Color::getG() 
+{
+	return mGreen;
+}
+
+int Color::getB()
+{
+	return mBlue;
+}
+
+float Color::getA()
+{
+	return mAlpha;
+}

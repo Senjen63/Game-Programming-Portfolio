@@ -1,0 +1,399 @@
+#include "Game.h"
+
+#include "FoodManager.h"
+#include "GraphicsSystem.h"
+#include "InputTranslator.h"
+#include "Timer.h"
+
+/// <summary>
+/// Constructor adding all member variables to memory.
+/// </summary>
+Game::Game()
+{
+    mpGraphicsSystem = new GraphicsSystem;
+    mpGraphicsBufferManager = new GraphicsBufferManager;
+    mpInputSystem = new InputSystem;
+
+    mpLevelManager = new LevelManager;
+    mpHUD = new HUD;
+
+    mpSnake = nullptr;
+
+    mWidth = 800;
+    mHeight = 600;
+
+    mRunning = true;
+
+    mCurrentLevelData = { nullptr, -1, nullptr };
+}
+
+/// <summary>
+/// Destructor to delete everything in memory.
+/// </summary>
+Game::~Game()
+{
+    if ( mpGraphicsSystem )
+    {
+        delete mpGraphicsSystem;
+        mpGraphicsSystem = nullptr;
+    }
+    if ( mpInputSystem )
+    {
+        delete mpInputSystem;
+        mpInputSystem = nullptr;
+    }
+    if ( mpGraphicsBufferManager )
+    {
+        delete mpGraphicsBufferManager;
+        mpGraphicsBufferManager = nullptr;
+    }
+    if ( mpLevelManager )
+    {
+        delete mpLevelManager;
+        mpLevelManager = nullptr;
+    }
+    if ( mpHUD )
+    {
+        delete mpHUD;
+        mpHUD = nullptr;
+    }
+    if ( mpSnake )
+    {
+        delete mpSnake;
+        mpSnake = nullptr;
+    }
+}
+
+void Game::loadLevels() const
+{
+    const auto LEVELS_FOLDER = "./assets/levels/";
+    mpLevelManager->addLevels( LEVELS_FOLDER );
+
+    for ( int f = 0; f < mpLevelManager->getLevelAmount(); ++f )
+    {
+        mpGraphicsBufferManager->addGraphicsBuffer( mpLevelManager->getLevel( f ).getName(), new GraphicsBuffer( mWidth, mHeight ) );
+
+        int tileSpot = 1;
+        const int res = mHeight / static_cast< int >(mpLevelManager->getLevel( f ).getResolution().getX());
+        mpLevelManager->getLevel( f ).setResolution( Vector2D( mWidth / res, mHeight / res ) );
+        for ( int i = 0; i < mWidth; i += res )
+        {
+            for ( int j = 0; j < mHeight; j += res )
+            {
+                if ( tileSpot++ % 2 == 0 )
+                {
+                    mpGraphicsSystem->draw( *mpGraphicsBufferManager->getGraphicsBuffer( mpLevelManager->getLevel( f ).getName() ), Vector2D( i, j ), Vector2D( i + res, j + res ), std::get< 0 >( mpLevelManager->getLevel( f ).getBackgroundColors() ) );
+                } else
+                {
+                    mpGraphicsSystem->draw( *mpGraphicsBufferManager->getGraphicsBuffer( mpLevelManager->getLevel( f ).getName() ), Vector2D( i, j ), Vector2D( i + res, j + res ), std::get< 1 >( mpLevelManager->getLevel( f ).getBackgroundColors() ) );
+                }
+            }
+            tileSpot = i / res & 1;
+        }
+    }
+}
+
+/// <summary>
+/// Returns the static instance of the Game class.
+/// </summary>
+/// <returns>Static instance of Game class.</returns>
+Game & Game::getInstance()
+{
+    static Game sGame;
+    return sGame;
+}
+
+/// <summary>
+/// Clears all systems from memory.
+/// </summary>
+void Game::cleanup()
+{
+    EventSystemAven::getInstance().clearListeners();
+    mpGraphicsBufferManager->clear();
+
+    if ( mpSnake )
+    {
+        delete mpSnake;
+        mpSnake = nullptr;
+    }
+
+    mpInputSystem->cleanup();
+    mpGraphicsSystem->cleanup();
+
+    delete mpGraphicsSystem;
+    mpGraphicsSystem = nullptr;
+    delete mpInputSystem;
+    mpInputSystem = nullptr;
+    delete mpGraphicsBufferManager;
+    mpGraphicsBufferManager = nullptr;
+    delete mpLevelManager;
+    mpLevelManager = nullptr;
+    delete mpHUD;
+    mpHUD = nullptr;
+}
+
+/// <summary>
+/// Loop to draw game.
+/// </summary>
+void Game::doLoop()
+{
+    constexpr double STEP_TIME = 1 / 60.0 * 1000.0;
+    constexpr double SNAKE_SPEED_TIME = 0.01;
+
+    mCurrentLevelData.mpCurrentLevel = &mpLevelManager->getLevel( 0 );
+    mCurrentLevelData.mCurrentLevelIndex = 0;
+    mCurrentLevelData.mpCurrentLevelBuffer = mpGraphicsBufferManager->getGraphicsBuffer( mCurrentLevelData.mpCurrentLevel->getName() );
+
+    InputTranslator translator;
+    translator.init();
+
+    mpSnake = new Snake( mCurrentLevelData.mpCurrentLevel->getStartSize(), mCurrentLevelData.mpCurrentLevel->getSnakeColor() );
+
+    mGameState = Menu;
+
+    Timer timer;
+    timer.start();
+
+    Timer snakeTimer;
+    snakeTimer.start();
+
+    FoodManager::getInstance().generateFood( mCurrentLevelData.mpCurrentLevel->getResolution().getX(), mCurrentLevelData.mpCurrentLevel->getResolution().getY(), mCurrentLevelData.mpCurrentLevel->getWalls() );
+
+    while ( mRunning )
+    {
+        // get all inputs
+        mpInputSystem->pollInputs();
+
+        if ( mGameState != Lost && mGameState != Won && snakeTimer.getElapsedTime() * SNAKE_SPEED_TIME > static_cast< double >(mCurrentLevelData.mpCurrentLevel->getSnakeSpeed()) )
+        {
+            mpSnake->move( static_cast< int >(mCurrentLevelData.mpCurrentLevel->getResolution().getX()), static_cast< int >(mCurrentLevelData.mpCurrentLevel->getResolution().getY()) );
+
+            if ( FoodManager::getInstance().isTouchingFood( mpSnake->getPosition(), mCurrentLevelData.mpCurrentLevel->getResolution().getX(), mCurrentLevelData.mpCurrentLevel->getResolution().getY(), mCurrentLevelData.mpCurrentLevel->getWalls() ) )
+            {
+                for ( int i = 0; i < mCurrentLevelData.mpCurrentLevel->getPointsPerFood(); ++i )
+                {
+                    mpSnake->addChild();
+                    mScore++;
+                }
+
+                if ( mScore >= mCurrentLevelData.mpCurrentLevel->getEndSize() )
+                {
+                    mGameState = Won;
+                    delete mpSnake;
+                    mpSnake = new Snake( mCurrentLevelData.mpCurrentLevel->getStartSize(), mCurrentLevelData.mpCurrentLevel->getSnakeColor() );
+                }
+            }
+
+            if ( const int RANDOM_NUM = rand() % 1000 + 1; RANDOM_NUM <= mCurrentLevelData.mpCurrentLevel->getPowerUpRate() )
+            {
+                FoodManager::getInstance().generatePowerUp( mCurrentLevelData.mpCurrentLevel->getResolution().getX(), mCurrentLevelData.mpCurrentLevel->getResolution().getY(), mCurrentLevelData.mpCurrentLevel->getWalls() );
+            }
+
+            if ( FoodManager::getInstance().isTouchingPowerUp( mpSnake->getPosition() ) )
+            {
+                constexpr int MULT_POWER = 5;
+                for ( int i = 0; i < mCurrentLevelData.mpCurrentLevel->getPointsPerFood() * MULT_POWER; ++i )
+                {
+                    mpSnake->addChild();
+                    mScore++;
+                }
+
+                if ( mScore >= mCurrentLevelData.mpCurrentLevel->getEndSize() )
+                {
+                    mGameState = Won;
+                    delete mpSnake;
+                    mpSnake = new Snake( mCurrentLevelData.mpCurrentLevel->getStartSize(), mCurrentLevelData.mpCurrentLevel->getSnakeColor() );
+                }
+            }
+
+            if ( mGameState == InGame )
+            {
+                for ( auto & wall : mCurrentLevelData.mpCurrentLevel->getWalls() )
+                {
+                    if ( wall == mpSnake->getPosition() )
+                    {
+                        // end game
+                        mGameState = Lost;
+                        delete mpSnake;
+                        mpSnake = new Snake( mCurrentLevelData.mpCurrentLevel->getStartSize(), mCurrentLevelData.mpCurrentLevel->getSnakeColor() );
+                        break;
+                    }
+                }
+            }
+            if ( mGameState == InGame )
+            {
+                for ( auto child = mpSnake->getChild(); child != nullptr; child = child->getChild() )
+                {
+                    if ( child->getPosition() == mpSnake->getPosition() )
+                    {
+                        // end game
+                        mGameState = Lost;
+                        delete mpSnake;
+                        mpSnake = new Snake( mCurrentLevelData.mpCurrentLevel->getStartSize(), mCurrentLevelData.mpCurrentLevel->getSnakeColor() );
+                        break;
+                    }
+                }
+            }
+
+            snakeTimer.start();
+        }
+
+        if ( timer.getElapsedTime() > STEP_TIME )
+        {
+            GraphicsSystem::draw( 0, 0, *mCurrentLevelData.mpCurrentLevelBuffer );
+
+            const float RESOLUTION = static_cast< float >(mHeight) / mCurrentLevelData.mpCurrentLevel->getResolution().getY();
+
+            mpSnake->draw( static_cast< int >(RESOLUTION) );
+
+            for ( auto & wall : mCurrentLevelData.mpCurrentLevel->getWalls() )
+            {
+                GraphicsSystem::draw( wall * RESOLUTION, wall * RESOLUTION + Vector2D( RESOLUTION, RESOLUTION ), mCurrentLevelData.mpCurrentLevel->getWallColor() );
+            }
+
+            for ( auto & foodPos : FoodManager::getInstance().getFoods() )
+            {
+                GraphicsSystem::drawEllipse( foodPos * RESOLUTION + Vector2D( RESOLUTION / 2, RESOLUTION / 2 ), Vector2D( RESOLUTION / 2, RESOLUTION / 2 ), mCurrentLevelData.mpCurrentLevel->getFoodColor() );
+            }
+
+            for ( auto & powerPos : FoodManager::getInstance().getPowerUps() )
+            {
+                GraphicsSystem::drawEllipse( powerPos * RESOLUTION + Vector2D( RESOLUTION / 2, RESOLUTION / 2 ), Vector2D( RESOLUTION / 2, RESOLUTION / 2 ), Color( rand() % 255, rand() % 255, rand() % 255 ) );
+            }
+
+            if ( mGameState == Menu )
+            {
+                mpHUD->drawMenu( mMenuOption );
+            } else if ( mGameState == InGame )
+            {
+                mpHUD->drawGame( static_cast< int >(1.0f / static_cast< float >(timer.getElapsedTime()) * 1000.0f), mScore );
+            } else if ( mGameState == Lost )
+            {
+                mpHUD->drawEnd( false, mScore );
+            } else if ( mGameState == Won )
+            {
+                mpHUD->drawEnd( true, mScore );
+            }
+
+            GraphicsSystem::flip();
+            timer.start();
+        }
+    }
+}
+
+void Game::handleEvent( const EventAven & event )
+{
+    if ( mGameState == None )
+    {
+        return;
+    }
+
+    switch ( event.mType )
+    {
+    case EventType::MenuOpen:
+        mGameState = Menu;
+        break;
+    case EventType::MenuSelect:
+        if ( mGameState == InGame ) break;
+
+        switch ( mMenuOption )
+        {
+        case Start:
+            mGameState = InGame;
+            mScore = 0;
+            break;
+        case ChangeLevel:
+            mCurrentLevelData.mCurrentLevelIndex++;
+            if ( mCurrentLevelData.mCurrentLevelIndex >= mpLevelManager->getLevelAmount() )
+            {
+                mCurrentLevelData.mCurrentLevelIndex = 0;
+            }
+            mCurrentLevelData.mpCurrentLevelBuffer = mpGraphicsBufferManager->getGraphicsBuffer( mpLevelManager->getLevel( mCurrentLevelData.mCurrentLevelIndex ).getName() );
+            mCurrentLevelData.mpCurrentLevel = &mpLevelManager->getLevel( mCurrentLevelData.mCurrentLevelIndex );
+
+            delete mpSnake;
+            mpSnake = new Snake( mCurrentLevelData.mpCurrentLevel->getStartSize(), mCurrentLevelData.mpCurrentLevel->getSnakeColor() );
+            break;
+        case Quit:
+            mRunning = false;
+            break;
+        }
+
+        break;
+    case EventType::MoveUp:
+        if ( mGameState == Menu )
+        {
+            if ( mMenuOption == Start )
+            {
+                mMenuOption = Quit;
+            } else
+            {
+                mMenuOption = static_cast< MenuOption >(static_cast< int >(mMenuOption) - 1);
+            }
+            break;
+        }
+
+        mpSnake->setDirection( Up );
+
+        break;
+    case EventType::MoveRight:
+        if ( mGameState == Menu ) break;
+
+        mpSnake->setDirection( Right );
+
+        break;
+    case EventType::MoveDown:
+        if ( mGameState == Menu )
+        {
+            if ( mMenuOption == Quit )
+            {
+                mMenuOption = Start;
+            } else
+            {
+                mMenuOption = static_cast< MenuOption >(static_cast< int >(mMenuOption) + 1);
+            }
+            break;
+        }
+
+        mpSnake->setDirection( Down );
+
+        break;
+    case EventType::MoveLeft:
+        if ( mGameState == Menu ) break;
+
+        mpSnake->setDirection( Left );
+
+        break;
+    default:
+        break;
+    }
+}
+
+/// <summary>
+/// Initializes graphics system and input system.
+/// </summary>
+void Game::init()
+{
+    GraphicsSystem::init();
+    mpInputSystem->init();
+
+    mpGraphicsSystem->createDisplay( mWidth, mHeight );
+
+    EventSystemAven & eventSystem = EventSystemAven::getInstance();
+
+    eventSystem.addListener( EventType::MenuSelect, this );
+    eventSystem.addListener( EventType::MoveUp, this );
+    eventSystem.addListener( EventType::MoveRight, this );
+    eventSystem.addListener( EventType::MoveDown, this );
+    eventSystem.addListener( EventType::MoveLeft, this );
+    eventSystem.addListener( EventType::MenuOpen, this );
+
+    loadLevels();
+
+    const std::string FONTS_FOLDER = "./assets/fonts/";
+    const auto pTitleFont = new Font( ( FONTS_FOLDER + "titlefont.ttf" ).c_str(), 100 );
+    const auto pGameFont = new Font( ( FONTS_FOLDER + "gamefont.ttf" ).c_str(), 50 );
+    const auto pMenuFont = new Font( ( FONTS_FOLDER + "menufont.ttf" ).c_str(), 50 );
+
+    mpHUD->loadHUD( mWidth, mHeight, *pTitleFont, *pMenuFont, *pGameFont );
+}

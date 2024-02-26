@@ -1,0 +1,305 @@
+#include "LanguageSystem.h"
+#include "Game.h"
+
+LanguageSystem* LanguageSystem::mspLanguageSystem = nullptr;
+
+LangCluster::LangCluster(LangKey firstLang, LangKey secondLang, LangKey thirdLang, StringKey firstString, StringKey secondString, StringKey thirdString)
+{
+    mStrings[firstLang] = firstString;
+    mStrings[secondLang] = secondString;
+    mStrings[thirdLang] = thirdString;
+}
+
+
+LangCluster::~LangCluster()
+{
+
+}
+
+
+void LanguageSystem::createLangSystem()
+{
+    if (!mspLanguageSystem)
+    {
+        mspLanguageSystem = new LanguageSystem();
+    }
+}
+
+
+void LanguageSystem::destroyLangSystem()
+{
+    delete mspLanguageSystem;
+    mspLanguageSystem = nullptr;
+}
+
+
+LanguageSystem* LanguageSystem::getLanguageSystem()
+{
+    return mspLanguageSystem;
+}
+
+
+LanguageSystem::LanguageSystem()
+{
+    mFirstLang = "";
+    mSecondLang = "";
+    mThirdLang = "";
+
+    mCurrentLanguage = mFirstLang;
+}
+
+
+LanguageSystem::~LanguageSystem()
+{
+    cleanup();
+}
+
+
+void LanguageSystem::init(string filename)
+{
+    mpEventSystem = EventSystem::getInstance();
+
+    mpEventSystem->addListener((EventType)ACTION_GAME_EVENT, this);
+
+    loadStrings(filename);
+}
+
+
+void LanguageSystem::cleanup()
+{
+
+}
+
+
+string LanguageSystem::getString(StringKey key)
+{
+    return mClusters[key].getString(mCurrentLanguage);
+}
+
+
+void LanguageSystem::setCurrentLanguage(LangKey language)
+{
+    mCurrentLanguage = language;
+
+    //fire a language change event?
+}
+
+
+void LanguageSystem::handleEvent(const Event& currentEvent)
+{
+    if (currentEvent.getType() == ACTION_GAME_EVENT)
+    {
+        const ActionEvent& actionEvent = static_cast<const ActionEvent&>(currentEvent);
+
+        
+    }
+}
+
+
+void LanguageSystem::loadStrings(string filename)
+{
+    ifstream fin;
+
+    fin.open(ASSET_PATH + filename);
+
+    if (!fin.fail())
+    {
+        string tempFin = "";
+        string first = "", second = "", third = "";
+
+        fin >> mFirstLang >> mSecondLang >> mThirdLang;
+        
+        mCurrentLanguage = mFirstLang;
+
+        while (fin)
+        {
+            getline(fin, tempFin);
+
+            //checks input line to see if it matches any "<StringKey>:", if not, it is ignored
+            if (tempFin == STRING_KEYS.LANGUAGE_STRING + ":")
+            {
+                /*reads next three lines, which should each be the same word in the language corresponding to its position,
+                and creates a new LangCluster from it*/
+                getline(fin, first);
+                getline(fin, second);
+                getline(fin, third);
+
+                mClusters[STRING_KEYS.LANGUAGE_STRING] = LangCluster(mFirstLang, mSecondLang, mThirdLang, first, second, third);
+            }
+            else if (tempFin == STRING_KEYS.FIRST_LANG_STRING + ":")
+            {
+                getline(fin, first);
+                getline(fin, second);
+                getline(fin, third);
+
+                mClusters[STRING_KEYS.FIRST_LANG_STRING] = LangCluster(mFirstLang, mSecondLang, mThirdLang, first, second, third);
+            }
+            else if (tempFin == STRING_KEYS.SECOND_LANG_STRING + ":")
+            {
+                getline(fin, first);
+                getline(fin, second);
+                getline(fin, third);
+
+                mClusters[STRING_KEYS.SECOND_LANG_STRING] = LangCluster(mFirstLang, mSecondLang, mThirdLang, first, second, third);
+            }
+            else if (tempFin == STRING_KEYS.THIRD_LANG_STRING + ":")
+            {
+                getline(fin, first);
+                getline(fin, second);
+                getline(fin, third);
+
+                mClusters[STRING_KEYS.THIRD_LANG_STRING] = LangCluster(mFirstLang, mSecondLang, mThirdLang, first, second, third);
+            }
+            else if (tempFin == STRING_KEYS.TITLE_STRING + ":")
+            {
+                getline(fin, first);
+                getline(fin, second);
+                getline(fin, third);
+     
+                mClusters[STRING_KEYS.TITLE_STRING] = LangCluster(mFirstLang, mSecondLang, mThirdLang, first, second, third);
+            }
+            else if (tempFin == STRING_KEYS.START_STRING + ":")
+            {
+                getline(fin, first);
+                getline(fin, second);
+                getline(fin, third);
+
+                mClusters[STRING_KEYS.START_STRING] = LangCluster(mFirstLang, mSecondLang, mThirdLang, first, second, third);
+            }
+            else if (tempFin == STRING_KEYS.LOAD_STRING + ":")
+            {
+                getline(fin, first);
+                getline(fin, second);
+                getline(fin, third);
+          
+                mClusters[STRING_KEYS.LOAD_STRING] = LangCluster(mFirstLang, mSecondLang, mThirdLang, first, second, third);
+            }
+            else if (tempFin == STRING_KEYS.OPTIONS_STRING + ":")
+            {
+                getline(fin, first);
+                getline(fin, second);
+                getline(fin, third);
+             
+                mClusters[STRING_KEYS.OPTIONS_STRING] = LangCluster(mFirstLang, mSecondLang, mThirdLang, first, second, third);
+            }
+            else if (tempFin == STRING_KEYS.QUIT_STRING + ":")
+            {
+                getline(fin, first);
+                getline(fin, second);
+                getline(fin, third);
+           
+                mClusters[STRING_KEYS.QUIT_STRING] = LangCluster(mFirstLang, mSecondLang, mThirdLang, first, second, third);
+            }
+            else if (tempFin == STRING_KEYS.TIME_STRING + ":")
+            {
+                getline(fin, first);
+                getline(fin, second);
+                getline(fin, third);
+             
+                mClusters[STRING_KEYS.TIME_STRING] = LangCluster(mFirstLang, mSecondLang, mThirdLang, first, second, third);
+            }
+            else if (tempFin == STRING_KEYS.FPS_STRING + ":")
+            {
+                getline(fin, first);
+                getline(fin, second);
+                getline(fin, third);
+          
+                mClusters[STRING_KEYS.FPS_STRING] = LangCluster(mFirstLang, mSecondLang, mThirdLang, first, second, third);
+            }
+            else if (tempFin == STRING_KEYS.POINTS_STRING + ":")
+            {
+                getline(fin, first);
+                getline(fin, second);
+                getline(fin, third);
+                
+                mClusters[STRING_KEYS.POINTS_STRING] = LangCluster(mFirstLang, mSecondLang, mThirdLang, first, second, third);
+            }
+            else if (tempFin == STRING_KEYS.LOSE_STRING + ":")
+            {
+                getline(fin, first);
+                getline(fin, second);
+                getline(fin, third);
+                
+                mClusters[STRING_KEYS.LOSE_STRING] = LangCluster(mFirstLang, mSecondLang, mThirdLang, first, second, third);
+            }
+            else if (tempFin == STRING_KEYS.WIN_STRING + ":")
+            {
+                getline(fin, first);
+                getline(fin, second);
+                getline(fin, third);
+                
+                mClusters[STRING_KEYS.WIN_STRING] = LangCluster(mFirstLang, mSecondLang, mThirdLang, first, second, third);
+            }
+            else if (tempFin == STRING_KEYS.CLEAR_LEVEL_STRING + ":")
+            {
+                getline(fin, first);
+                getline(fin, second);
+                getline(fin, third);
+               
+                mClusters[STRING_KEYS.CLEAR_LEVEL_STRING] = LangCluster(mFirstLang, mSecondLang, mThirdLang, first, second, third);
+            }
+            else if (tempFin == STRING_KEYS.NEXT_STRING + ":")
+            {
+                getline(fin, first);
+                getline(fin, second);
+                getline(fin, third);
+                
+                mClusters[STRING_KEYS.NEXT_STRING] = LangCluster(mFirstLang, mSecondLang, mThirdLang, first, second, third);
+            }
+            else if (tempFin == STRING_KEYS.BACK_STRING + ":")
+            {
+                getline(fin, first);
+                getline(fin, second);
+                getline(fin, third);
+                
+                mClusters[STRING_KEYS.BACK_STRING] = LangCluster(mFirstLang, mSecondLang, mThirdLang, first, second, third);
+            }
+            else if (tempFin == STRING_KEYS.EASY_STRING + ":")
+            {
+                getline(fin, first);
+                getline(fin, second);
+                getline(fin, third);
+
+                mClusters[STRING_KEYS.EASY_STRING] = LangCluster(mFirstLang, mSecondLang, mThirdLang, first, second, third);
+            }
+            else if (tempFin == STRING_KEYS.MEDIUM_STRING + ":")
+            {
+                getline(fin, first);
+                getline(fin, second);
+                getline(fin, third);
+
+                mClusters[STRING_KEYS.MEDIUM_STRING] = LangCluster(mFirstLang, mSecondLang, mThirdLang, first, second, third);
+            }
+            else if (tempFin == STRING_KEYS.HARD_STRING + ":")
+            {
+                getline(fin, first);
+                getline(fin, second);
+                getline(fin, third);
+
+                mClusters[STRING_KEYS.HARD_STRING] = LangCluster(mFirstLang, mSecondLang, mThirdLang, first, second, third);
+            }
+            else if (tempFin == STRING_KEYS.SOUND_ON_STRING + ":")
+            {
+                getline(fin, first);
+                getline(fin, second);
+                getline(fin, third);
+
+                mClusters[STRING_KEYS.SOUND_ON_STRING] = LangCluster(mFirstLang, mSecondLang, mThirdLang, first, second, third);
+            }
+            else if (tempFin == STRING_KEYS.SOUND_OFF_STRING + ":")
+            {
+                getline(fin, first);
+                getline(fin, second);
+                getline(fin, third);
+
+                mClusters[STRING_KEYS.SOUND_OFF_STRING] = LangCluster(mFirstLang, mSecondLang, mThirdLang, first, second, third);
+            }
+        }
+    }
+    else
+    {
+        cout << endl << "Language Load Failed" << endl << endl;
+    }
+
+    fin.close();
+}

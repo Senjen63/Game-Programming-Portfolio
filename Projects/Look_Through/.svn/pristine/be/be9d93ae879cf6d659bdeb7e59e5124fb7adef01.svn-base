@@ -1,0 +1,336 @@
+#include "Game.h"
+#include <fstream>
+
+Game* Game::gpGame = NULL;
+
+Game::Game()
+{
+	mpSystem = new GraphicsSystem();
+	mInputSystem.init();
+	mpFont = new Font("assets\\cour.ttf", 30);
+}
+
+Game::~Game()
+{
+	cleanup();
+}
+
+Game* Game::getInstance()
+{
+	return gpGame;
+}
+
+void Game::createInstance()
+{
+	if (gpGame == NULL)
+	{
+		gpGame = new Game;
+	}
+}
+
+void Game::destroyInstance()
+{
+	delete gpGame;
+	gpGame = nullptr;
+}
+
+void Game::init()
+{
+	ifstream fin("data.txt");
+	if (fin.good())
+	{
+		while (!fin.eof())
+		{
+			fin >> key;
+
+			if (key == "asspth")
+			{
+				fin >> assetPath;
+			}
+			else if (key == "bkgrnd")
+			{
+				fin >> background;
+			}
+			else if (key == "sprite")
+			{
+				fin >> playerSprite;
+			}
+			else if (key == "1spd")
+			{
+				fin >> speed;
+			}
+			else if (key == "food")
+			{
+				fin >> foodSprite;
+			}
+			else if (key == "wallpng")
+			{
+				fin >> wallSprite;
+			}
+			else if (key == "ptspng")
+			{
+				fin >> pointsSprite;
+			}
+			else if (key == "speedpow")
+			{
+				fin >> speedUpSprite;
+			}
+			else if (key == "slowpow")
+			{
+				fin >> slowDownSprite;
+			}
+		}
+	}
+	fin.close();
+
+	ifstream wall1Fin("walls1.txt");
+	if (wall1Fin.good())
+	{
+		int i, j;
+		for (i = 0; i < 10; i++)
+		{
+			for (j = 0; j < 14; j++)
+			{
+				wall1Fin >> wallArray1[i][j];
+			}
+		}
+	}
+	wall1Fin.close();
+	ifstream wall2Fin("walls2.txt");
+	if (wall2Fin.good())
+	{
+		int i, j;
+		for (i = 0; i < 10; i++)
+		{
+			for (j = 0; j < 14; j++)
+			{
+				wall2Fin >> wallArray2[i][j];
+			}
+		}
+	}
+	wall2Fin.close();
+	ifstream wall3Fin("walls3.txt");
+	if (wall3Fin.good())
+	{
+		int i, j;
+		for (i = 0; i < 10; i++)
+		{
+			for (j = 0; j < 14; j++)
+			{
+wall3Fin >> wallArray3[i][j];
+			}
+		}
+	}
+	wall3Fin.close();
+
+	mBuffMan.addBuffer(background, assetPath + background);
+	mBuffMan.addBuffer(foodSprite, assetPath + foodSprite);
+	mBuffMan.addBuffer(playerSprite, assetPath + playerSprite);
+	mBuffMan.addBuffer(wallSprite, assetPath + wallSprite);
+	mBuffMan.addBuffer(pointsSprite, assetPath + pointsSprite);
+	mBuffMan.addBuffer(slowDownSprite, assetPath + slowDownSprite);
+	mBuffMan.addBuffer(speedUpSprite, assetPath + speedUpSprite);
+
+	mpEventSystem = EventSystem::getInstance();
+	mpEventSystem->init();
+
+	mpEventSystem->getInstance()->addListener((EventType)INPUT_EVENT, this);
+}
+
+void Game::cleanup()
+{
+	mpSystem->cleanUp();
+	mInputSystem.cleanup();
+	mBuffMan.cleanup();
+	mUnitMan.cleanup();
+	mLevelMan.cleanup();
+
+	delete mpFont;
+	delete mpSystem;
+
+	mpEventSystem->cleanup();
+}
+
+GraphicsBuffer* Game::getBuff(string name)
+{
+	return mBuffMan.getBuffer(name);
+}
+
+void Game::doLoop()
+{
+	float timeAmount = .005;
+	double frames;
+
+	PerformanceTracker* pPerformanceTracker = new PerformanceTracker();
+
+	Timer timer, fullTime;
+	float animationTime = 0;
+
+	Vector2D mousePos = Vector2D((DISPLAY_WIDTH / 2) + (SPRITE_WIDTH / 2), (DISPLAY_HEIGHT / 2) + (SPRITE_HEIGHT / 2));
+
+	mUnitMan.addUnit(Vector2D(DISPLAY_WIDTH / 2, DISPLAY_HEIGHT / 2), playerSprite);
+	Unit* food = new Unit(Vector2D(300, 400), foodSprite);
+	Unit* slowPow = new Unit(Vector2D(-100, -200), slowDownSprite);
+	Unit* speedPow = new Unit(Vector2D(-100, -200), speedUpSprite);
+	Unit* pointsPow = new Unit(Vector2D(100, 200), pointsSprite);
+	mLevelMan.addLevel();
+	mLevelMan.addLevel(wallArray1, assetPath, wallSprite);
+	mLevelMan.addLevel(wallArray2, assetPath, wallSprite);
+	mLevelMan.addLevel(wallArray3, assetPath, wallSprite);
+	mLevelMan.addLevel("You win. Press Enter to Restart");
+	mLevelMan.addLevel("You lose. Press Enter to Restart");
+	HUD* hud = new HUD();
+
+	xMove = -speed;
+
+	pPerformanceTracker->clearTracker("time");
+	pPerformanceTracker->startTracking("time");
+	fullTime.start();
+
+	while (keepGoing)
+	{
+		pPerformanceTracker->clearTracker("loop");
+		pPerformanceTracker->startTracking("loop");
+		timer.start();
+		mpSystem->draw(mBuffMan.getBuffer(background), Vector2D(), 1);
+		if (level > 0 && level < 4)
+		{
+			mUnitMan.updateAll(timer.getElapsedTime(), xMove, yMove, food->getPos(), playerSprite);
+			food->update(timer.getElapsedTime(), mUnitMan.getHeadPos(), mUnitMan.getHeadUnit());
+
+			slowPow->update(timer.getElapsedTime(), mUnitMan.getHeadPos(), mUnitMan.getHeadUnit(), speed);
+			speedPow->update(timer.getElapsedTime(), mUnitMan.getHeadPos(), mUnitMan.getHeadUnit(), speed);
+			pointsPow->update(timer.getElapsedTime(), mUnitMan.getHeadPos(), mUnitMan.getHeadUnit(), bonus);
+		}
+		else if (level == 4 || level == 5)
+		{
+			mLevelMan.drawHUD(level, mpFont);
+		}
+
+		mInputSystem.getKeyEvent();
+		if (level == 1)
+		{
+			lose = mUnitMan.checkCollision(wallArray1);
+		}
+		if (level == 2)
+		{
+			lose = mUnitMan.checkCollision(wallArray2);
+		}
+		if (level == 3)
+		{
+			lose = mUnitMan.checkCollision(wallArray3);
+		}
+
+		if (lose)
+		{
+			level = 5;
+		}
+		
+		if (!start)
+		{
+			mLevelMan.drawHUD(level, mpFont);
+		}
+		else
+		{
+			if (level > 0 && level < 4)
+			{
+				mUnitMan.drawAll(mpSystem);
+
+				mUnitMan.move(xMove, yMove);
+
+
+				mLevelMan.drawWalls(level, mpSystem->getBackBuff(), mBuffMan.getBuffer(wallSprite), 1);
+				mLevelMan.drawHUD(level, mpFont, mUnitMan.getCount() + bonus, pPerformanceTracker->getElapsedTime("loop"), pPerformanceTracker->getElapsedTime("time"));
+
+
+
+				food->draw(mpSystem);
+				speedPow->draw(mpSystem);
+				slowPow->draw(mpSystem);
+				pointsPow->draw(mpSystem);
+			}
+		}
+
+		timer.sleepUntilElapsed(120);
+		pPerformanceTracker->stopTracking("loop");
+		mpSystem->flip();
+
+		if ((mUnitMan.getCount() * 10) + bonus > 20)
+		{
+			level = 2;
+			if ((mUnitMan.getCount() * 10) + bonus > 50)
+			{
+				level = 3;
+				if ((mUnitMan.getCount() * 10) + bonus > 80)
+				{
+					level = 4;
+				}
+			}
+			//int i;
+			/*for (i = 1; i < mUnitMan.getCount(); i++)
+			{
+				mUnitMan.deleteUnit(i);
+			}*/
+		}
+	}
+	delete food;
+	delete hud;
+	food = nullptr;
+	hud = nullptr;
+	delete pPerformanceTracker;
+}
+
+void Game::handleEvent(const Event& event)
+{
+	if (event.getType() == INPUT_EVENT)
+	{
+		const InputEvent& inputEvent = static_cast<const InputEvent&>(event);
+
+		if (inputEvent.getKeyCode() == (int)KeyCode::KEY_SPACE && !start)
+		{
+			start = true;
+			level++;
+		}
+		if (inputEvent.getKeyCode() == (int)KeyCode::LEFT && start && level > 0 && level < 4)
+		{
+			if (xMove != speed)
+			{
+				xMove = -speed;
+				yMove = 0;
+			}
+		}
+		if (inputEvent.getKeyCode() == (int)KeyCode::RIGHT && start && level > 0 && level < 4)
+		{
+			if (xMove != -speed)
+			{
+				xMove = speed;
+				yMove = 0;
+			}
+		}
+		if (inputEvent.getKeyCode() == (int)KeyCode::UP && start && level > 0 && level < 4)
+		{
+			if (yMove != speed)
+			{
+				xMove = 0;
+				yMove = -speed;
+			}
+		}
+		if (inputEvent.getKeyCode() == (int)KeyCode::DOWN && start && level > 0 && level < 4)
+		{
+			if (yMove != -speed)
+			{
+				xMove = 0;
+				yMove = speed;
+			}
+		}
+		if (inputEvent.getKeyCode() == (int)KeyCode::KEY_ESCAPE)
+		{
+			keepGoing = false;
+		}
+		if (inputEvent.getKeyCode() == (int)KeyCode::KEY_ENTER && (level == 4 || level == 5))
+		{
+			level = 1;
+			mUnitMan.getHeadUnit()->setPos(Vector2D(300, 400));
+		}
+	}
+}

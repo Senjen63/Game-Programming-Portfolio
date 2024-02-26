@@ -1,0 +1,68 @@
+#include "HUD.h"
+#include "Game.h"
+
+HUD::HUD()
+{
+    mElapsedTime = 0;
+    mScore = 0;
+    mPanelWidth = 0;
+    mPanelHeight = 0;
+}
+HUD::HUD(int panelWidth, int panelHeight, GraphicsSystem* graphics, Font* font)
+{
+    mpGraphics = graphics;
+    mpFont = font;
+    mElapsedTime = 0;
+    mScore = 0;
+    mPanelWidth = panelWidth;
+    mPanelHeight = panelHeight;
+}
+HUD::~HUD()
+{
+    cleanup();
+}
+void HUD::init()
+{
+    mpTimePanel = new GraphicsBuffer(BLACK, mPanelWidth, mPanelHeight);
+    mpScorePanel = new GraphicsBuffer(BLACK, mPanelWidth, mPanelHeight);
+
+    mpEventSystem = EventSystem::getInstance();
+
+    mpEventSystem->addListener((EventType)SCORE_EVENT, this);
+    mpEventSystem->addListener((EventType)TIME_EVENT, this);
+}
+void HUD::cleanup()
+{
+    mpEventSystem = nullptr;
+
+    delete mpScorePanel;
+    delete mpTimePanel;
+}
+
+
+void HUD::handleEvent(const Event& currentEvent)
+{
+    if (currentEvent.getType() == SCORE_EVENT)
+    {
+        const ScoreEvent& scoreEvent = static_cast<const ScoreEvent&>(currentEvent);
+        mScore = scoreEvent.getScore();
+    }
+
+    if (currentEvent.getType() == TIME_EVENT)
+    {
+        const TimeEvent& timeEvent = static_cast<const TimeEvent&>(currentEvent);
+        mElapsedTime = timeEvent.getTime();
+    }
+}
+
+
+void HUD::displayHud()
+{
+    mpScorePanel->clearToColor(BLACK);
+    mpGraphics->writeText(mpScorePanel, mpScorePanel->getWidth() / 2, 0, mpFont, WHITE, "Points: " + to_string(mScore));
+    mpGraphics->draw(mpScorePanel, mpGraphics->getWidth() - mpScorePanel->getWidth(), 0, 1, 1);
+
+    mpTimePanel->clearToColor(BLACK);
+    mpGraphics->writeText(mpTimePanel, mpTimePanel->getWidth() / 2, 0, mpFont, WHITE, "Time: " + to_string(mElapsedTime));
+    mpGraphics->draw(mpTimePanel, (mpGraphics->getWidth() - mpTimePanel->getWidth()) / 16, 0, 1, 1);
+}

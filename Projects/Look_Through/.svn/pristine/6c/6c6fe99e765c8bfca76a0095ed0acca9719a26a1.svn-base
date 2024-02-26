@@ -1,0 +1,57 @@
+#include "Food.h"
+
+Food::Food()
+{
+    
+}
+
+
+Food::~Food()
+{
+    cleanup();
+}
+
+
+void Food::init()
+{
+    mpEventSystem = EventSystem::getInstance();
+}
+
+
+void Food::cleanup()
+{
+
+}
+
+
+void Food::setEaten(bool eaten)
+{
+    mEaten = eaten;
+}
+
+
+void Food::setCurrentFood(Unit* food)
+{
+    mCurrentFood = food;
+    mEaten = false;
+}
+
+
+void Food::updateFood()
+{
+    if (mEaten)
+    {
+        mCurrentFood = nullptr;
+    }
+
+    if (mCurrentFood == nullptr)
+    {
+        mpEventSystem->fireEvent(SpawnFoodEvent());
+    }
+}
+
+
+void Food::endLevel()
+{
+    mCurrentFood = nullptr;
+}

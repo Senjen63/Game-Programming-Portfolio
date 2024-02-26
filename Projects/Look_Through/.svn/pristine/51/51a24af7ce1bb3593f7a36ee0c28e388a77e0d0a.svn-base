@@ -1,0 +1,82 @@
+#include "Collider.h"
+#include "GameEvent.h"
+#include "EventSystem.h"
+
+#include <cassert>
+
+std::vector<Collider*> Collider::smColliders;
+
+bool Bounds::pointInBounds(Vector2D point)
+{
+    float halfWidth  = mSize.getX() * 0.5f;
+    float halfHeight = mSize.getY() * 0.5f;
+
+    return
+        point.getX() > mPos.getX() - halfWidth &&   // left boundry 
+        point.getX() < mPos.getX() + halfWidth &&   // right boundry 
+        point.getY() > mPos.getY() - halfHeight &&  // top boundry 
+        point.getY() < mPos.getY() + halfHeight;    // bottom boundry 
+}
+
+bool Bounds::boundsIntersect(const Bounds& a, const Bounds& b)
+{
+    return
+        (abs(a.mPos.getX() - b.mPos.getX()) * 2) < (a.mSize.getX() + b.mSize.getX()) &&
+        (abs(a.mPos.getY() - b.mPos.getY()) * 2) < (a.mSize.getY() + b.mSize.getY());
+}
+
+Collider::Collider() : 
+    Collider(Bounds(), CollisionType::INVALID)
+{}
+
+Collider::Collider(Bounds bounds, CollisionType type, Entity* parentEntity) :
+    mBounds(bounds), mType(type), pParentEntity(parentEntity)
+{
+    smColliders.push_back(this);
+}
+
+Collider::Collider(const Collider& other, Entity* parentEntity) :
+    Collider(other.mBounds, other.mType, parentEntity)
+{}
+
+Collider::~Collider()
+{
+    for (auto iter = smColliders.begin(); iter != smColliders.end(); iter++)
+    {
+        if (*iter == this)
+        {
+            smColliders.erase(iter);
+            return;
+        }
+    }
+    assert(false);
+}
+
+void Collider::updatePos(const Vector2D& pos)
+{
+    mBounds.setPos(pos);
+}
+
+const Collider* Collider::checkForCollision(Vector2D position)
+{
+    for (const Collider* pCol : smColliders)
+    {
+        if (pCol->getBounds().pointInBounds(position))
+        {
+            return pCol;
+        }
+    }
+    return nullptr;
+}
+
+const Collider* Collider::checkForCollision(Bounds bounds)
+{
+    for (const Collider* pCol : smColliders)
+    {
+        if (Bounds::boundsIntersect(pCol->getBounds(), bounds))
+        {
+            return pCol;
+        }
+    }
+    return nullptr;
+}

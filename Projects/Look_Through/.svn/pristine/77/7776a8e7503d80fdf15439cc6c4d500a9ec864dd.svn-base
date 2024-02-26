@@ -1,0 +1,29 @@
+#pragma once
+#include <allegro5/allegro.h>
+
+#include <PerformanceTracker.h>
+#include <MemoryTracker.h>
+#include <Vector2D.h>
+
+using namespace std;
+
+class InputSystem : public Trackable
+{
+public:
+	friend class Game;
+
+	InputSystem();
+	~InputSystem();
+
+	Vector2D getMousePosition();
+
+	void init();
+	void cleanup();
+
+private:
+	bool getKeyState(int keyCode);
+	bool getMouseState();
+
+	ALLEGRO_MOUSE_STATE mMouseState;
+	ALLEGRO_KEYBOARD_STATE mKeyboardState;
+};

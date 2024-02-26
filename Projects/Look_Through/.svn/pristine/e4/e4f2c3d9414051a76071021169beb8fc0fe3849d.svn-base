@@ -1,0 +1,32 @@
+#pragma once
+
+#include "GraphicsBuffer.h"
+
+#include <iostream>
+#include <cassert>
+#include <string>
+
+#include <Trackable.h>
+#include <Vector2D.h>
+
+using namespace std;
+
+class Sprite : public Trackable
+{
+public:
+	Sprite();
+	Sprite(GraphicsBuffer* pBuffer, Vector2D& location, int width, int height);
+	Sprite(GraphicsBuffer* pBuffer);
+	~Sprite();
+
+	GraphicsBuffer* getBuffer();
+	Vector2D getLocation();
+	int getWidth();
+	int getHeight();
+
+private:
+	GraphicsBuffer* mpBuffer;
+	Vector2D mLocation;
+	int mHeight;
+	int mWidth;
+};

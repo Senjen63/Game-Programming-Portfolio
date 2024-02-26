@@ -1,0 +1,11 @@
+#include "InputEvent.h"
+
+InputEvent::InputEvent(InputEventType type)
+	:LevelEvent(INPUT_EVENT)
+	,mType(type)
+{
+}
+
+InputEvent::~InputEvent()
+{
+}

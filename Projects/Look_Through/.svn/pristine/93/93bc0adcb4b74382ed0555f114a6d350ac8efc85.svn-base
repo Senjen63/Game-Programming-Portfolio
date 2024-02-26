@@ -1,0 +1,162 @@
+#pragma once
+
+#include <algorithm>
+#include <fstream>
+#include <Trackable.h>
+#include <PerformanceTracker.h>
+#include <EventSystem.h>
+#include <EventListener.h>
+#include "InputSystem.h"
+#include "InputTranslator.h"
+#include "MessageEvent.h"
+#include "SpawnWallEvent.h"
+#include "SpawnSnakeEvent.h"
+#include "TimeEvent.h"
+#include "TurnEvent.h"
+#include "EndLevelEvent.h"
+#include "GraphicsSystem.h"
+#include "UnitManager.h"
+#include "Snake.h"
+#include "Food.h"
+#include "HUD.h"
+#include "Panel.h"
+#include "GraphcisBufferManager.h"
+#include "LevelManager.h"
+#include "ItemSpawner.h"
+
+const int X_SECTIONS = 4;
+const int Y_SECTIONS = 4;
+
+const int FRAME_CHANGE_FACTOR = 40;
+const int FRAME_RATE_CAP = 120;
+const int FRAME_RATE_MIN = 1;
+
+const int POWER_UP_FRAME_RATE = 15;
+const int FOOD_FRAME_RATE = 15;
+
+const int DEFAULT_WIDTH = 800;
+const int DEFAULT_HEIGHT = 600;
+
+const int FONT_SIZE = 24;
+
+//Directions
+const Vector2D LEFT_DIRECTION = Vector2D(-1, 0);
+const Vector2D RIGHT_DIRECTION = Vector2D(1, 0);
+const Vector2D UP_DIRECTION = Vector2D(0, -1);
+const Vector2D DOWN_DIRECTION = Vector2D(0, 1);
+const Vector2D SNAKE_START_DIRECTION = RIGHT_DIRECTION;
+const int MIN_SNAKE_SPEED = 1;
+
+//Tracker
+const string LOOP_TRACKER_NAME = "loop";
+
+//Asset Info
+const string ASSET_PATH = "Assets\\";
+const string COMMON_ASSET_PATH = "..\\..\\common\\assets\\";
+const string HEAD_TAG = "Head";
+const string BODY_TAG = "Body";
+const string FOOD_TAG = "Food";
+const string BONUS_POINTS_TAG = "BonusPoints";
+const string SPEED_UP_TAG = "SpeedUp";
+const string SLOW_DOWN_TAG = "SlowDown";
+const string WALL_TAG = "Wall";
+const string FONT_TAG = "Font";
+const string BACKGROUND_TAG = "Background";
+const string ASSET_NAMES_FILENAME = "asset_names.txt";
+const string LEVEL_ZERO_FILENAME = "Level0.txt";
+const string LEVEL_ONE_FILENAME = "Level1.txt";
+const string LEVEL_TWO_FILENAME = "Level2.txt";
+
+//Color
+const Color WHITE = Color(255, 255, 255);
+const Color BLACK = Color(0, 0, 0);
+const Color TEAL = Color(0, 255, 255);
+
+//Sections for Asset animations
+const Vector2D HEAD_SECTIONS = Vector2D(1, 1);
+const Vector2D BODY_SECTIONS = Vector2D(1, 1);
+const Vector2D FOOD_SECTIONS = Vector2D(2, 2);
+const Vector2D SPEED_SECTIONS = Vector2D(2, 2);
+const Vector2D SLOW_SECTIONS = Vector2D(2, 2);
+const Vector2D BONUS_SECTIONS = Vector2D(2, 2);
+const Vector2D WALL_SECTIONS = Vector2D(1, 1);
+const Vector2D BACKGROUND_SECTIONS = Vector2D(1, 1);
+
+
+
+class Game : public EventListener
+{       
+    public:
+        static void createGame();
+        static void createGame(Vector2D);
+        static void destroyGame();
+
+        static Game* getGame();
+
+        void init();
+        void cleanup();
+
+        GraphicsSystem* getGraphicsSystem();
+        UnitManager* getUnitManager();
+        float getTimeScale();
+
+        void loadFilenames();
+        void input();
+        virtual void handleEvent(const Event& currentEvent);
+        void update(float);
+        void render();
+        void fireHudEvents(float);
+        void loadSelectedLevel(int, Vector2D);
+        void endLevel();
+        void gameLoop();
+
+        Vector2D findEmptyPosition(float, float);
+private:
+    static Game* mspGame;
+
+    EventSystem* mpEventSystem = nullptr;
+    GraphicsSystem* mpGraphics = nullptr;
+    UnitManager* mpUnitManager = nullptr;
+    GraphicsBufferManager* mpGBManager = nullptr;
+    LevelManager* mpLevelManager = nullptr;
+    InputSystem mInput;
+    InputTranslator mTranslator;
+
+    Snake* mpSnake = nullptr;
+    Food* mpFood = nullptr;
+
+    ItemSpawner mPowerUpSpawner;
+
+    HUD* mpHud = nullptr;
+
+    string mBodyFilename = "";
+    string mHeadFilename = "";
+    string mFoodFilename = "";
+    string mSpeedUpFilename = "";
+    string mSlowDownFilename = "";
+    string mBonusPointsFilename = "";
+    string mWallFilename = "";
+    string mBackgroundFilename = "";
+
+    string mFontFilename = "";
+
+    Font* mpFont = nullptr;
+
+    float mTimeScale = 1000.0; //converts seconds to milliseconds
+    int mFps = 60;
+    float mTimePerFrame = mTimeScale / mFps;
+    float mTotalElapsedTime = 0; //in seconds
+    float mActualFps = 0;
+
+    bool mPlayLevel = false;
+    bool mNextLevel = false;
+    bool mEndGame = false;
+    bool mInitialized = false;
+    bool mCleaned = false;
+
+    Vector2D mWidthHeight;
+
+    Game();
+    Game(Vector2D widthHeight);
+    ~Game();
+};

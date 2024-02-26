@@ -1,0 +1,22 @@
+﻿#pragma once
+#include <list>
+
+#include <Vector2D.h>
+#include <vector>
+
+class FoodManager final : public Trackable
+{
+    std::list< Vector2D > mFoods;
+    std::list< Vector2D > mPowerUps;
+public:
+    static FoodManager & getInstance();
+
+    void generateFood( int width, int height, std::vector< Vector2D > & walls );
+    std::list< Vector2D > & getFoods();
+    bool isTouchingFood( const Vector2D & position );
+    bool isTouchingFood( const Vector2D & position, int width, int height, std::vector< Vector2D > & walls );
+
+    void generatePowerUp( int width, int height, const std::vector< Vector2D > & walls );
+    std::list< Vector2D > & getPowerUps();
+    bool isTouchingPowerUp( const Vector2D & position );
+};

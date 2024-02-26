@@ -1,0 +1,185 @@
+#include "Game.h"
+
+Game* Game::spSmurfGame = nullptr;
+
+Game::Game()
+{
+	mlengthXY = Vector2D(WIDTH, HEIGHT);
+}
+
+Game::Game(Vector2D lengthXY)
+{
+	mlengthXY = lengthXY;
+}
+
+Game::~Game()
+{
+	cleaner();
+}
+
+void Game::loop()
+{
+	PerformanceTracker* pTrack = new PerformanceTracker;
+	mLoopTheGame = true;
+	mpGraphicsBufferManager->addBuffer(new GraphicsBuffer(ASSET_PATH + SMURFS_FILENAME), "smurfs");
+	mpGraphicsBufferManager->addBuffer(new GraphicsBuffer(ASSET_PATH + DEAN_SMURFS_FILENAME), "deanSmurfs");
+	mpGraphicsBufferManager->addBuffer(new GraphicsBuffer(ASSET_PATH + BACKGROUND_FILENAME), "woodsBackground");
+
+	bool swapSmurfs = false;
+	bool walkSmurfs = true;
+
+	while (mLoopTheGame)
+	{
+		pTrack->clearTracker(LOOP_NAME);
+		pTrack->startTracking(LOOP_NAME);
+		Timer loopTimer;
+		loopTimer.start();
+		bool enterKeyDown = mpInputSystem->getKeyPress(ALLEGRO_KEY_ENTER);
+		bool spaceKeyDown = mpInputSystem->getKeyPress(ALLEGRO_KEY_SPACE);
+		bool escapeKeyDown = mpInputSystem->getKeyPress(ALLEGRO_KEY_ESCAPE);
+
+		Vector2D lmbStatus = mpInputSystem->getMouse(LMB);
+
+		if (mpInputSystem->getMouseButtonPress(LMB))
+		{
+			Unit* tmpUnit = mpUnitManager->addNewUnit(mFps, lmbStatus);
+
+			if (mpGraphicsBufferManager->getBuffer("smurfs") != NULL)
+			{
+				tmpUnit->addNewAnimation(SMURF_SPACING, SMURF_SPACING, mpGraphicsBufferManager->getBuffer("smurfs"));
+			}
+			if (mpGraphicsBufferManager->getBuffer("deanSmurfs") != NULL)
+			{
+				tmpUnit->addNewAnimation(SMURF_SPACING, SMURF_SPACING, mpGraphicsBufferManager->getBuffer("deanSmurfs"));
+			}
+		}
+
+		Vector2D rmbStatus = mpInputSystem->getMouse(RMB);
+
+		if (mpInputSystem->getMouseButtonPress(RMB))
+		{
+			Unit* tmpUnit = mpUnitManager->getSpecificUnit(rmbStatus);
+			if (tmpUnit != nullptr)
+			{
+				mpUnitManager->deleteUnit(tmpUnit);
+			}
+		}
+
+		if (enterKeyDown)
+		{
+			cout << "Enter Key Pressed" << endl;
+			enterKeyDown = false;
+			// To try to make the Dean Sprite transition more noticable
+			enterCount++;
+			if ((enterCount % 5) == 0) {
+				
+				int indexPlusOne = mpUnitManager->getUnitAtEnd()->getIndex() + 1;
+				if (indexPlusOne >= mpUnitManager->getUnitAtEnd()->getAnimations())
+				{
+					indexPlusOne = 0;
+				}
+				mpUnitManager->getUnitAtEnd()->setAnimation(indexPlusOne);
+			}
+		}
+
+		if (escapeKeyDown)
+		{
+			cout << "Escape Key Pressed" << endl;
+			mLoopTheGame = false;
+		}
+
+		if (spaceKeyDown)
+		{
+			cout << "Space Bar Pressed" << endl;
+			if (walkSmurfs)
+			{
+				walkSmurfs = false;
+			}
+			else
+			{
+				walkSmurfs = true;
+			}
+		}
+		
+		getGraphicsSystem()->draw(mpGraphicsBufferManager->getBuffer("woodsBackground"), 0, 0, 1, 1);
+
+		if (walkSmurfs)
+		{
+			mpUnitManager->updateAll(mFrameTime);
+		}
+		mpUnitManager->drawAll(mpGraphicsSystem);
+		mpGraphicsSystem->flip();
+		loopTimer.sleepUntilElapsed(mFrameTime);
+		pTrack->stopTracking(LOOP_NAME);
+		cout << pTrack->getElapsedTime(LOOP_NAME) << endl;
+	}
+	
+	mpGraphicsBufferManager->clearBuffs();
+	delete pTrack;
+}
+
+void Game::cleaner()
+{
+	if (mIsInit && !mIsClean)
+	{
+		std::cout << "Cleaned!" << std::endl;
+		delete mpGraphicsBufferManager;
+		delete mpUnitManager;
+		delete mpGraphicsSystem;
+		mpGraphicsBufferManager = nullptr;
+		mpUnitManager = nullptr;
+		mpGraphicsSystem = nullptr;
+		mIsClean = true;
+	}
+}
+
+void Game::init()
+{
+	if (!mIsInit && spSmurfGame != nullptr)
+	{
+		mpGraphicsSystem->init();
+		mpInputSystem->init();
+		mpGraphicsSystem = new GraphicsSystem(mlengthXY.getX(), mlengthXY.getY());
+		mpUnitManager = new UnitManager();
+		mpGraphicsBufferManager = new GraphicsBufferManager();
+		mpInputSystem = &InputSystem();
+		mIsInit = true;
+	}
+	else
+	{
+		std::cout << "Could not initialize Game. Please try again." << std::endl;
+	}
+}
+
+void Game::createGame(Vector2D lengthXY)
+{
+	if (spSmurfGame == nullptr)
+	{
+		spSmurfGame = new Game(lengthXY);
+	}
+}
+
+void Game::destroyGame()
+{
+	delete spSmurfGame;
+	spSmurfGame = nullptr;
+}
+
+Game* Game::getGame()
+{
+	if (spSmurfGame == nullptr)
+	{
+		spSmurfGame = new Game;
+	}
+	return spSmurfGame;
+}
+
+InputSystem* Game::getInputSystem()
+{
+	return mpInputSystem;
+}
+
+GraphicsSystem* Game::getGraphicsSystem()
+{
+	return mpGraphicsSystem;
+}

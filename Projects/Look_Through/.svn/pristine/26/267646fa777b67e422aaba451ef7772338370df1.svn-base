@@ -1,0 +1,27 @@
+#pragma once
+
+#include <string>
+#include <allegro5/allegro_font.h>
+#include <allegro5/allegro_ttf.h>
+#include <Trackable.h>
+
+class Font : public Trackable
+{
+	friend class GraphicsSystem;
+
+private:
+	ALLEGRO_FONT* mpBackingFont;
+	int mFontSize;
+
+	operator ALLEGRO_FONT* () const { return mpBackingFont; }
+
+public:
+	Font(std::string fullPath, int fontSize);
+	~Font();
+
+	void loadNewFont(std::string fullPath, int fontSize);
+
+	int getSize() { return mFontSize; }
+	void setSize(int fontSize) { mFontSize = fontSize; }
+};
+

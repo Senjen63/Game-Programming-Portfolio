@@ -1,0 +1,21 @@
+﻿//     -------------------------------------------------------------------------
+//     Final Project
+//         MovementSystem.hpp
+//     
+//             Created:
+//                 19-04-2022
+//             Author(s):
+//                 Aven Presseisen
+//     -------------------------------------------------------------------------
+
+#pragma once
+#include "System.hpp"
+
+class MovementSystem final : public System
+{
+    int mLast{};
+public:
+    void createQueries() override;
+    void onCreate() override;
+    void onUpdate() override;
+};

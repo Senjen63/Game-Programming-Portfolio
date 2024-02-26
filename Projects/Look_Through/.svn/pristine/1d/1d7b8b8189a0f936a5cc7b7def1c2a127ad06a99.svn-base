@@ -1,0 +1,50 @@
+/*
+* Author: Quincy Gomes-Cedeno, Ananda Shumock-Bailey
+* Class: GPR-250-02
+* Assignment: Final
+* Certification of Authenticity:
+* We certify that this assignment is entirely our own work
+*/
+
+
+#include <iostream>
+#include <cassert>
+#include <string>
+
+#include <PerformanceTracker.h>
+#include <MemoryTracker.h>
+#include <Vector2D.h>
+#include <Timer.h>
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+
+//Game & Events
+#include "Game.h"
+#include "EventSystem.h"
+#include "EventListener.h"
+#include "Event.h"
+
+using namespace std;
+
+
+// SDL requires this type of main so it is compatible with multiple platforms
+int main(int argc, char* args[])
+{
+	
+	Game::createInstance();
+	Game* gpGame = Game::getInstance();
+
+	EventSystem::initInstance();
+	
+	gpGame->init();
+
+	gpGame->doLoop();
+	gpGame->destroyInstance();
+	EventSystem::cleanupInstance();
+
+	MemoryTracker::getInstance()->reportAllocations(cout);
+	system("pause");
+	return 0;
+}

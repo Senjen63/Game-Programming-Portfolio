@@ -1,0 +1,45 @@
+#include "Font.h"
+
+Font::Font( string filePath, float fontSize, int flags )
+{
+    mFontSize = fontSize;
+    
+    mpFont = new sf::Font();
+
+    //interprets int flags to actual flag
+    if ( flags == ALIGN_RIGHT )
+    {
+        mFlag = ALIGN_RIGHT;
+    }
+    else if ( flags == ALIGN_CENTER )
+    {
+        mFlag = ALIGN_CENTER;
+    }
+    else
+    {
+        mFlag = ALIGN_LEFT;
+    }
+
+    if (!mpFont->loadFromFile(filePath.c_str()))
+    {
+        mpFont = nullptr;
+        cout << "Font Failed" << endl;
+    }
+    
+}
+
+Font::~Font()
+{
+    delete mpFont;
+}
+
+float Font::getSize()
+{
+    return mFontSize;
+}
+
+
+int Font::getAlignment()
+{
+    return mFlag;
+}

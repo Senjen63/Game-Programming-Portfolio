@@ -1,0 +1,70 @@
+#pragma once
+
+#include <vector>
+#include <EventListener.h>
+#include <Vector2D.h>
+#include <Trackable.h>
+// Don't include GameEvent.h! 
+
+class Entity;
+
+enum class CollisionType
+{
+    INVALID = -1,
+    SNAKE,
+    WALL,
+    POWERUP,
+    MAX_TYPES
+};
+
+class Bounds : public Trackable
+{
+public:
+    Bounds() = default;
+
+    Bounds(Vector2D position, Vector2D size) :
+        mPos(position), mSize(size)
+    {}
+
+    void setPos(const Vector2D& pos) { mPos = pos; }
+    void setSize(const Vector2D& size) { mSize = size; }
+
+    Vector2D getPos() const { return mPos; }
+    Vector2D getSize() const { return mSize; }
+    bool pointInBounds(Vector2D point);
+
+    static bool boundsIntersect(const Bounds& a, const Bounds& b);
+
+private:
+    Vector2D mPos = Vector2D();
+    Vector2D mSize = Vector2D();
+};
+
+class Collider : public Trackable
+{
+public:
+    Collider();
+    Collider(Bounds bounds, CollisionType type, Entity* parentEntity = nullptr);
+    Collider(const Collider& other, Entity* parentEntity = nullptr);
+    Collider(const Collider&) = delete;
+    ~Collider();
+
+    void updatePos(const Vector2D& pos);
+
+    Bounds getBounds() const { return mBounds; }
+    CollisionType getCollisionType() const { return mType; }
+    const Entity* getParentEntity() const { return pParentEntity; }
+
+    /// <summary> Returns pointer to first collider found or nullptr if none exist </summary>
+    static const Collider* checkForCollision(Vector2D position);
+    /// <summary> Returns pointer to first collider found or nullptr if none exist </summary>
+    static const Collider* checkForCollision(Bounds bounds);
+
+private:
+    Bounds mBounds;
+    CollisionType mType;
+
+    const Entity* pParentEntity = nullptr;
+
+    static std::vector<Collider*> smColliders;
+};

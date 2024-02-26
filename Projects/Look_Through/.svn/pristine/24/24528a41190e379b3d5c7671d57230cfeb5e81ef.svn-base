@@ -1,0 +1,50 @@
+#include "SnakeUnit.h"
+
+SnakeUnit::SnakeUnit(Animation snake)
+{
+	mSnakeLimb.push_back(snake);//ani 0
+	// set smurf animation first
+	mCurrentAnimation = 0;
+
+	// set animation location to center of the screen
+	mLocation = Vector2D(300,300);
+}
+
+SnakeUnit::SnakeUnit(Animation snake, Vector2D pos)
+{
+	mSnakeLimb.push_back(snake);//ani 0
+	// set smurf animation first
+	mCurrentAnimation = 0;
+
+	// set animation location to center of the screen
+	mLocation = pos;
+}
+
+SnakeUnit::~SnakeUnit() {}
+
+void SnakeUnit::draw(GraphicsSystem* graphSys)
+{
+	// draw the animation to the screen
+	graphSys->draw(mLocation.getX(), mLocation.getY(), mSnakeLimb[mCurrentAnimation].getCurrentSprite(), 1);
+}
+
+void SnakeUnit::update(double dt, Vector2D newPos)
+{
+	// update the current animation
+	if (mPause == false)
+	{
+		mLocation = newPos;
+		mSnakeLimb[mCurrentAnimation].update(dt);
+	}
+}
+
+void SnakeUnit::setLocation(Vector2D loc)
+{
+	// set the mouse location to the unit's location
+	mLocation = loc;
+}
+
+Vector2D SnakeUnit::getLocation()
+{
+	return mLocation;
+}

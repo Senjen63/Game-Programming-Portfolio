@@ -1,0 +1,32 @@
+#include "Sprite.h"
+
+Sprite::Sprite( GraphicsBuffer* pBitmap, Vector2D sourcePos, Vector2D widthHeight )
+{
+    mpBitmap = pBitmap;
+    mSourcePos = sourcePos;
+    mWidthHeight = widthHeight;
+}
+
+
+Sprite::~Sprite()
+{
+    
+}
+
+
+Vector2D Sprite::getSourcePos()
+{
+    return mSourcePos;
+}
+
+
+Vector2D Sprite::getWidthHeight()
+{
+    return mWidthHeight;
+}
+
+
+GraphicsBuffer Sprite::getSpriteGraphicsBuffer()
+{
+    return mpBitmap;
+}

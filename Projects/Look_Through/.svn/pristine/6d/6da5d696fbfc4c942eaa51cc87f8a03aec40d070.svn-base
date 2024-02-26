@@ -1,0 +1,36 @@
+#pragma once
+#include "Unit.h"
+#include "UnitManager.h"
+
+enum direction
+{
+	LEFT, RIGHT, UP, DOWN
+};
+
+class Snake : public UnitManager
+{
+private:
+	float mFps;
+	float mTimeBetweenFrame;
+	float mTimeLeft;
+
+	direction mDir;
+
+public:
+
+	Snake();
+
+	Snake(float framerate);
+
+	void setDir(direction dir);
+
+	direction getDir();
+
+	~Snake();
+
+	void updateSnake(int headX, int headY, float dt);
+
+	void resetSnake();
+
+	void setFps(double& fps);
+};

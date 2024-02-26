@@ -1,0 +1,51 @@
+#pragma once
+
+#include <iostream>
+
+#include "Sprite.h"
+#include "Font.h"
+
+#include <Trackable.h>
+
+class GraphicsSystem : public Trackable
+{
+    private:
+        sf::RenderWindow* mpDisplay;
+        GraphicsBuffer* mpBackBuffer;
+        Vector2D mBufferSize;
+
+        string mTitle;
+
+        friend class InputSystem; //needed to access window for event polling, I don't like it any more than you do since it kind of couples code
+
+    public:
+        GraphicsSystem();
+        GraphicsSystem( int width, int height, string title );
+        ~GraphicsSystem();
+
+        bool init();
+        void cleanup();
+
+        int getWidth();
+        int getHeight();
+        GraphicsBuffer* getBackBuffer();
+
+        void setTitle(string newTitle);
+
+        void clear();
+        void flip();
+
+        //draw sprite to window
+        void draw(int xPos, int yPos, Sprite sprite, float xScale = 1.0f, float yScale = 1.0f, float angle = 0.0f );
+        //draw graphics buffer to window
+        void draw(GraphicsBuffer* pBackBuffer, int xPos, int yPos, float xScale = 1.0f, float yScale = 1.0f, float angle = 0.0f);
+        //draw sprite to graphics buffer
+        void draw( GraphicsBuffer* pBackBuffer, int xPos, int yPos, Sprite sprite, float xScale = 1.0f, float yScale = 1.0f, float angle = 0.0f);
+
+        void writeText( int xPos, int yPos, Font* font, Color color, string text );
+        void writeText( GraphicsBuffer* pBackBuffer, int xPos, int yPos, Font* font, Color color, string text );
+
+        bool saveBuffer( GraphicsBuffer* saveBuffer, string fileName );
+
+        void alignText(int& xPos, int& yPos, Font* font, int width, int height); //aligns text to point based on flag in font
+};

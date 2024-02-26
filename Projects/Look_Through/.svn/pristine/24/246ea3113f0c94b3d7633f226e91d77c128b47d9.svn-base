@@ -1,0 +1,17 @@
+#pragma once
+
+#include "Trackable.h"
+
+class Sprite;
+
+class StartScreen : public Trackable
+{
+	private:
+		Sprite* mpStartScreen;
+
+	public:
+		StartScreen();
+		~StartScreen();
+
+		void drawStartScreen();
+};

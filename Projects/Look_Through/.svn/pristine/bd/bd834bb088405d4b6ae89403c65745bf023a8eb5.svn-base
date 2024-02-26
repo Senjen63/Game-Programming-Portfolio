@@ -1,0 +1,23 @@
+#pragma once
+
+#include<Trackable.h>
+
+#include "graphicsSystem.h"
+
+class InputSystem : public Trackable
+{
+public:
+	InputSystem();
+	~InputSystem();
+
+	void inputInit();
+	void inputCleanup();
+
+	bool getKeyState(int);
+	Vector2D getMouseState(int);
+
+private:
+	bool mInit = false;
+	bool mClean = false;
+	//Fill out when needing a variable
+};

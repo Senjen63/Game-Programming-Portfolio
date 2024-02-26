@@ -1,0 +1,16 @@
+//Evan Norzow, Nicolas Delbue, and Brandon Perry
+#pragma once
+#include "Trackable.h"
+#include <SDL_mixer.h>
+#include <SDL_audio.h>
+
+class Audio : public Trackable
+{
+private:
+	Mix_Chunk* mpAudioClip = nullptr;
+	Mix_Music* mpMusicClip = nullptr;
+	friend class AudioSystem;
+public:
+	Audio(bool isMusic, std::string path);
+	~Audio();
+};

@@ -1,0 +1,19 @@
+#pragma once
+#include <Vector2D.h>
+
+#include "SpawnEvent.h"
+#include "GraphicsBuffer.h"
+
+class SpawnArrowTrapEvent : public SpawnEvent
+{
+private:
+    Vector2D mPos;
+    GraphicsBuffer* mpBuffer = nullptr;
+
+public:
+    SpawnArrowTrapEvent(Vector2D pos, GraphicsBuffer* buffer);
+    ~SpawnArrowTrapEvent();
+
+    Vector2D getPos() const { return mPos; }
+    GraphicsBuffer* getBuffer() const { return mpBuffer; }
+};

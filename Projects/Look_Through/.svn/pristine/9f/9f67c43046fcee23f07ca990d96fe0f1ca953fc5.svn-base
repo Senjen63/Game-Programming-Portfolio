@@ -1,0 +1,64 @@
+#include "Animation.h"
+
+Animation::Animation(const Animation& other) : 
+    Animation(other.mpSpriteArray, other.mNumOfSprites, other.mFrameRate, other.mLoops) {}
+
+Animation::~Animation()
+{
+    if (mCreatedSprites)
+    {
+        delete[] mpSpriteArray;
+        delete mpSpriteBuffer;
+    }
+}
+
+Animation::Animation(const Sprite* pSpriteArray, int numOfSprites, float frameRate, bool loops)
+{
+    mpSpriteArray = pSpriteArray;
+    mNumOfSprites = numOfSprites;
+    mFrameRate = frameRate;
+    mLoops = loops;
+
+    mTimePast = 0;
+
+    mCreatedSprites = false;
+    mpSpriteBuffer = nullptr;
+}
+
+Animation::Animation(const std::string& spriteSheetPath, int spriteWidth, int spriteHeight, int numSprites, float frameRate, bool loops)
+{
+    mCreatedSprites = true; // Set so that things get deleted later 
+
+    // Create GraphicsBuffer then slice it 
+    mpSpriteBuffer = new GraphicsBuffer(spriteSheetPath);
+    mpSpriteArray = Sprite::slice(mpSpriteBuffer, spriteWidth, spriteHeight, numSprites);
+
+    mTimePast = 0;
+
+    mFrameRate = frameRate;
+    mLoops = loops;
+    mNumOfSprites = numSprites;
+}
+
+void Animation::update(double deltaTime)
+{
+    mTimePast += deltaTime;
+}
+
+const Sprite* Animation::getCurrentSprite() const
+{
+    // Get the time since the start of the animation and 
+    // multiply it by 1/1000 to go from ms to sec then 
+    // multiply it by the framerate to get from seconds to number of frames 
+    int framesElapsed = (int)(mTimePast * 0.001 * mFrameRate);
+
+    // Return last sprite when done 
+    if (!mLoops && framesElapsed >= mNumOfSprites)
+        return mpSpriteArray + (mNumOfSprites - 1);
+
+    // modulus to wrap when it exceeds the number of frames 
+    return mpSpriteArray + (framesElapsed % mNumOfSprites);
+
+    // This all makes it so the animation does not need to keep track of which frame it is on 
+    // and it does not need an update 
+}

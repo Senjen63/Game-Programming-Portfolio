@@ -1,0 +1,178 @@
+#include "GraphicsSystem.h"
+#include "Game.h"
+int GraphicsSystem::Init(int height, int width)
+{
+	if (SDL_Init(SDL_INIT_EVERYTHING) != 0) 
+	{
+		cout << "ERROR: SDL failed to load";
+		return 1;
+	}
+	SDL_DisplayMode DM;
+	SDL_GetCurrentDisplayMode(0, &DM);
+	int monitorWidth = DM.w;
+	int monitorHeight = DM.h;
+	mpDisplay = SDL_CreateWindow("Rocket", (monitorWidth - width) / 2, (monitorHeight - height) / 2, width, height, 0);
+	SDL_SetWindowBordered(mpDisplay, SDL_TRUE);
+	assert(mpDisplay);
+	mpRenderer = SDL_CreateRenderer(mpDisplay, -1, 0);
+	if (!mpRenderer) {
+		cout << "Error creating renderer: " << SDL_GetError() << endl;
+		return false;
+	}
+	if (TTF_Init() < 0) {
+		cout << "Error intializing SDL_ttf: " << TTF_GetError() << endl;
+		return false;
+	}
+	SDL_RenderClear(mpRenderer);
+	return 0;
+}
+
+
+GraphicsSystem::GraphicsSystem()
+{
+	Init(Game::GetInstance()->GetDisplayHeight(), Game::GetInstance()->GetDisplayWidth());
+}
+
+
+GraphicsSystem::~GraphicsSystem()
+{
+	CleanUp();
+}
+
+
+GraphicsSystem::GraphicsSystem(int height, int width)
+{
+	Init(height, width);
+}
+
+
+void GraphicsSystem::CleanUp()
+{
+	if (mpDisplay)
+	{
+		SDL_DestroyWindow(mpDisplay);
+		SDL_DestroyRenderer(mpRenderer);
+		mpDisplay = nullptr;
+	}
+}
+
+
+int GraphicsSystem::GetHeight()
+{
+	int w = 0;
+	int h = 0;
+	//bruh what 
+	SDL_GetWindowSize(mpDisplay, &w, &h);
+	return h;
+
+}
+
+
+int GraphicsSystem::GetWidth()
+{
+	int w = 0;
+	int h = 0;
+	//bruh what 
+	SDL_GetWindowSize(mpDisplay, &w, &h);
+	return w;
+}
+
+
+SDL_Window* GraphicsSystem::GetBackBuffer()
+{
+	return mpDisplay;
+}
+
+
+SDL_Surface* GraphicsSystem::GetBitmap()
+{
+	return SDL_GetWindowSurface(mpDisplay);
+}
+
+
+void GraphicsSystem::Flip()
+{
+	SDL_RenderPresent(mpRenderer);  //render the next frame
+}
+
+void GraphicsSystem::ClearForNextFrame()
+{
+	SDL_RenderClear(mpRenderer);
+}
+void GraphicsSystem::Draw(GraphicsBuffer* pBuffer)
+{
+	SDL_CreateTextureFromSurface(mpRenderer, pBuffer->GetBitmap());
+}
+
+void GraphicsSystem::Draw(GraphicsBuffer* pBuffer, Vector2D location)
+{
+	SDL_Texture* texture = SDL_CreateTextureFromSurface(mpRenderer, pBuffer->GetBitmap());
+	SDL_Rect dest = { (int)location.getX(), (int)location.getY(), pBuffer->GetBitmap()->w, pBuffer->GetBitmap()->h };
+	//SDL_FreeSurface(pBuffer->GetBitmap());
+	if (!texture) 
+	{
+		cout << "Failed to render texture: " << TTF_GetError() << endl;
+	}
+	if (SDL_RenderCopy(mpRenderer, texture, NULL, &dest) < 0)
+	{
+		cout << "Failed to render copy: " << TTF_GetError() << endl;
+	}
+	SDL_DestroyTexture(texture);
+}
+
+void GraphicsSystem::Draw(Vector2D location, Sprite* pSprite)
+{
+	SDL_Texture* texture = SDL_CreateTextureFromSurface(mpRenderer, pSprite->GetBuffer()->GetBitmap());
+	//band-aid fix to buffers showing up with an offset.
+	SDL_Rect dest = { (int)location.getX(), (int)location.getY(),  pSprite->GetBuffer()->GetBitmap()->w,  pSprite->GetBuffer()->GetBitmap()->h };
+	SDL_RenderCopy(mpRenderer, texture, NULL, &dest);
+	SDL_DestroyTexture(texture);
+}
+
+void GraphicsSystem::Draw(Vector2D spriteLocation, Sprite* pSprite, int x, int y)
+{
+	SDL_Rect locationRect;
+	SDL_Rect spriteRect;
+	locationRect.x = x - 16;
+	locationRect.y = y - 16;
+	locationRect.w = (int)pSprite->GetWidth();
+	locationRect.h = (int)pSprite->GetHeight();
+	spriteRect.x = (int)spriteLocation.getX();
+	spriteRect.y = (int)spriteLocation.getY();
+	spriteRect.w = (int)pSprite->GetWidth();
+	spriteRect.h = (int)pSprite->GetHeight();
+	SDL_Texture* texture = SDL_CreateTextureFromSurface(mpRenderer, pSprite->GetBuffer()->GetBitmap());
+	if (!texture)
+	{
+		cout << "Failed to render copy: " << TTF_GetError() << endl;
+	}
+	SDL_RenderCopy(mpRenderer, texture, &spriteRect, &locationRect);
+	SDL_DestroyTexture(texture);
+
+}
+
+
+void GraphicsSystem::WriteText(GraphicsBuffer* pGraphicsBuffer, Vector2D location, Font* pFont, Color color, string text)
+{
+	SDL_Surface* textSurface;
+	textSurface = TTF_RenderText_Solid(pFont->GetFont(), text.c_str(), color.GetColor());
+	if (!textSurface) 
+	{
+		cout << "Failed to render text: " << TTF_GetError() << endl;
+		return;
+	}
+	SDL_Texture* textTexture = SDL_CreateTextureFromSurface(mpRenderer, textSurface);
+	SDL_Rect dest = { (int)location.getX(), (int)location.getY(), textSurface->w, textSurface->h };
+	SDL_RenderCopy(mpRenderer, textTexture, NULL, &dest);
+	SDL_FreeSurface(textSurface);
+	SDL_DestroyTexture(textTexture);
+}
+
+Vector2D GraphicsSystem::GetCenterText(Font* pfont, string text)
+{
+	int width;
+	int height;
+	TTF_SizeText(pfont->GetFont(), text.c_str(), &width, &height);
+	Vector2D textPos = Vector2D(width, height);
+	return textPos;
+}

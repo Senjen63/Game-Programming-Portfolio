@@ -1,0 +1,57 @@
+#include "Unit.h"
+
+Unit::Unit(int fps, Vector2D location)
+{
+	mFps = fps;
+	mLocation = location;
+}
+
+Unit::~Unit()
+{
+
+}
+
+void Unit::update(float timePassed)
+{
+	mAnimations[mAnimationIndex].updateSprite(timePassed);
+}
+
+void Unit::setFramerate(int fps)
+{
+	mFps = fps;
+	mAnimations[mAnimationIndex].changeSpriteSpeed(fps);
+}
+
+void Unit::setAnimation(int frame)
+{
+	mAnimationIndex = frame;
+	setFramerate(mFps);
+}
+
+void Unit::addNewAnimation(int xSize, int ySize, GraphicsBuffer* buff)
+{
+	Animation newAnimation = Animation(mFps, xSize, ySize, true, buff);
+	mAnimations.push_back(newAnimation);
+}
+
+void Unit::moveLocation(Vector2D location)
+{
+	mLocation = location;
+}
+
+void Unit::draw(GraphicsSystem* gameGraphics)
+{
+	Vector2D spriteDimensions = Vector2D(mAnimations[mAnimationIndex].getThisSprite().getHeightAndWidth()) / 2;
+	Vector2D location = mLocation - spriteDimensions;
+	gameGraphics->draw(location.getX(), location.getY(), mAnimations[mAnimationIndex].getThisSprite(), 1, 1);
+}
+
+int Unit::getIndex()
+{
+	return mAnimationIndex;
+}
+
+int Unit::getAnimations()
+{
+	return mAnimations.size();
+}

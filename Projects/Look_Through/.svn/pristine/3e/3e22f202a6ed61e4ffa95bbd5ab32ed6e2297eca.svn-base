@@ -1,0 +1,98 @@
+#include "Game.h"
+
+Game* pGame = new Game();
+
+Game::Game()
+{
+	mDisplayHeight = DISP_HEIGHT;
+	mDisplayWidth = DISP_WIDTH;
+	mFramesPerSecond = FRAMES_PER_SECOND;
+}
+
+Game::~Game()
+{
+	cleanup();
+}
+
+void Game::cleanup()
+{
+	mpInputSystem.cleanup();
+
+	delete mpGraphicsSystem;
+}
+
+void Game::init()
+{
+	mpGraphicsSystem = new GraphicsSystem(mDisplayHeight, mDisplayWidth);
+	mpGraphicsSystem->init();
+	mpInputSystem.init();
+}
+
+void Game::doLoop()
+{
+	PerformanceTracker* pPerformanceTracker = new PerformanceTracker;
+	
+	bool keepGoing = true;
+
+	float targetTime = MILLISECOND_TO_SECOND / mFramesPerSecond;
+
+	GraphicsBuffer* pBackground = new GraphicsBuffer(ASSET_PATH + BACKGROUND_FILENAME);
+	GraphicsBuffer* pSmurfs = new GraphicsBuffer(ASSET_PATH + SMURFS_FILENAME);
+	GraphicsBuffer* pDeanFaced = new GraphicsBuffer(ASSET_PATH + DEAN_FILENAME);
+
+	Animation * smurfRun = new Animation(pSmurfs, SMURFS_PER_COL, SMURFS_PER_ROW, SMURF_SIZE, SMURF_SIZE, targetTime, true);
+	Animation * deanRun = new Animation(pDeanFaced, SMURFS_PER_COL, SMURFS_PER_ROW, SMURF_SIZE, SMURF_SIZE, targetTime, true);
+	
+	Unit smurf =  Unit(DEFAULT_LOCATION, smurfRun, deanRun);
+
+	Timer loopTimer;
+	Sprite background = Sprite(pBackground, DEFAULT_LOCATION);
+
+	while (keepGoing)
+	{
+		pPerformanceTracker->clearTracker("loop");
+		pPerformanceTracker->startTracking("loop");
+		loopTimer.start();
+
+		smurf.update();
+		mpGraphicsSystem->draw(DEFAULT_LOCATION, background, 1);
+		smurf.draw(mpGraphicsSystem);
+		mpGraphicsSystem->flip();
+
+		if (mpInputSystem.getMouseState())
+		{
+			smurf.setLocation(mpInputSystem.getMousePosition());
+		}
+
+		if (mpInputSystem.getKeyState(ALLEGRO_KEY_ESCAPE))
+		{
+			keepGoing = false;
+		}
+
+		if (mpInputSystem.getKeyState(ALLEGRO_KEY_S))
+		{
+			smurf.mpCurrentAnimation->slowDown();
+		}
+
+		if (mpInputSystem.getKeyState(ALLEGRO_KEY_F))
+		{
+			smurf.mpCurrentAnimation->speedUp();
+		}
+
+		if (mpInputSystem.getKeyState(ALLEGRO_KEY_ENTER))
+		{
+			smurf.setAnimation();
+		}
+
+		loopTimer.sleepUntilElapsed(targetTime);
+		pPerformanceTracker->stopTracking("loop");
+		cout << "Frame Took:" << pPerformanceTracker->getElapsedTime("loop") << " ms" << endl;
+	}
+	
+	delete deanRun;
+	delete smurfRun;
+	delete pDeanFaced;
+	delete pSmurfs;
+	delete pBackground;
+	delete pPerformanceTracker;
+}

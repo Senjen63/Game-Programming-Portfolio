@@ -1,0 +1,127 @@
+#include "Game.h"
+#include <PerformanceTracker.h>
+
+using namespace std;
+
+Game* gpGame = nullptr;
+
+// Game Specific Constants 
+const string ASSET_PATH = "..\\..\\common\\assets\\";
+const string SMURF_SPRITES_FILENAME = "smurf_sprites.png";
+const string DEAN_SPRITES_FILENAME = "dean_sprites.png";
+const string WOODS_FILENAME = "Woods.png";
+const int NUM_SMURFS = 16;
+const int SMURF_SIZE = 60;
+const float ANIM_FRAME_RATE = 10;
+const float ANIM_DELTA_FRAME_RATE = 2;
+
+const float HALF = 0.5f;
+
+Game::Game(const Game& other) : mSys(other.mSys), mFrameTargetTime(other.mFrameTargetTime)
+{
+    mpEntities = new vector<Entity>();
+    *mpEntities = *other.mpEntities; // Copies other's entities into new vector 
+}
+
+Game::~Game()
+{
+    delete mpEntities;
+
+    cleanUp();
+}
+
+Game::Game(int screenWidth, int screenHeight, float frameRate) : mSys(screenWidth, screenHeight)
+{
+    mFrameTargetTime = 1.0 / frameRate * 1000; // Frames per second to ms per frame 
+    mpEntities = new vector<Entity>();
+}
+
+void Game::init()
+{
+    mSys.init();
+    InputSystem::init();
+
+    // Create animations and Entity 
+    mpSmurfAnimation = new Animation(ASSET_PATH + SMURF_SPRITES_FILENAME, SMURF_SIZE, SMURF_SIZE, NUM_SMURFS, ANIM_FRAME_RATE, true);
+    mpDeanAnimation = new Animation(ASSET_PATH + DEAN_SPRITES_FILENAME, SMURF_SIZE, SMURF_SIZE, NUM_SMURFS, ANIM_FRAME_RATE, true);
+    mpWoodsBuffer = new GraphicsBuffer(ASSET_PATH + WOODS_FILENAME);
+    mpWoodsSprite = new Sprite(mpWoodsBuffer);
+
+    mpEntities->emplace_back(Vector2D(mSys.getWidth() * HALF, mSys.getHeight() * HALF), mpSmurfAnimation);
+}
+
+void Game::cleanUp()
+{
+    mSys.cleanUp();
+    InputSystem::cleanUp();
+
+    // Delete animations and Entity 
+    delete mpSmurfAnimation;
+    delete mpDeanAnimation;
+    delete mpWoodsBuffer;
+    delete mpWoodsSprite;
+}
+
+void Game::doLoop()
+{
+    PerformanceTracker* pTracker = new PerformanceTracker();
+    Timer loopTimer;
+
+    while (!InputSystem::getKeyState(KeyCode::ESCAPE))
+    {
+        // Timer things 
+        pTracker->clearTracker(LOOP_TRACKER_NAME);
+        pTracker->startTracking(LOOP_TRACKER_NAME);
+        loopTimer.start();
+
+        // Clear background 
+        mSys.clearToColor(COLOR_BLACK);
+        mSys.draw(Vector2D(0, 0), *mpWoodsSprite);
+
+        // Get input 
+        bool speedUp = InputSystem::getKeyState(KeyCode::F);
+        bool speedDown = InputSystem::getKeyState(KeyCode::S);
+        bool swapAnim = InputSystem::getKeyState(KeyCode::ENTER);
+
+        // Update 
+        for (Entity& entity : *mpEntities)
+        {
+            // Does not take into account entities updating each other 
+            // We only have 1 entity for now so eh 
+            entity.update(mFrameTargetTime);
+
+            if (speedUp)
+            {
+                entity.getAnimation()->addFrameRate(ANIM_DELTA_FRAME_RATE);
+            }
+            if (speedDown)
+            {
+                entity.getAnimation()->addFrameRate(-ANIM_DELTA_FRAME_RATE);
+            }
+            if (swapAnim)
+            {
+                mUseingSmurfAnim = !mUseingSmurfAnim;
+                entity.setAnimation(mUseingSmurfAnim ? mpSmurfAnimation : mpDeanAnimation);
+            }
+        }
+
+        for (Entity& entity : *mpEntities)
+        {
+            entity.draw(mSys);
+        }
+
+        mSys.flip();
+
+        loopTimer.sleepUntilElapsed(mFrameTargetTime);
+
+        pTracker->stopTracking(LOOP_TRACKER_NAME);
+        //std::cout << "Time took: " << pTracker->getElapsedTime(LOOP_TRACKER_NAME) << " ms" << std::endl;
+    }
+
+    delete pTracker;
+}
+
+void Game::createEntity(Vector2D position, const std::string& pathToSpriteSheet, int spriteWidth, int spriteHeight, int numSprites, float frameRate, bool loops)
+{
+    mpEntities->emplace_back(position, pathToSpriteSheet, spriteWidth, spriteHeight, numSprites, frameRate, loops);
+}

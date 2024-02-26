@@ -1,0 +1,23 @@
+#include "Color.h"
+
+Color::Color()
+{
+	mR = 0;
+	mG = 0;
+	mB = 0;
+	mA = 255;
+
+	mColor = al_map_rgba(mR, mG, mB, mA);
+}
+
+Color::Color(unsigned int r, unsigned int g, unsigned int b, unsigned int a)
+{
+	mR = r;
+	mG = g;
+	mB = b;
+	mA = a;
+
+	mColor = al_map_rgba(r, g, b, a);
+}
+
+Color::~Color() {}

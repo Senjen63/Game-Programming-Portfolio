@@ -1,0 +1,32 @@
+#include "Wall.h"
+#include "Game.h"
+#include <random>
+
+Wall::Wall()
+{
+	mX = 0;
+	mY = 0;
+	mAnimation = nullptr;
+}
+
+Wall::Wall(int x, int y, Animation* anim)
+{
+	mX = x * Game::TILE_SIZE;
+	mY = y * Game::TILE_SIZE;
+	mAnimation = anim;
+}
+
+Wall::~Wall()
+{
+	delete mAnimation;
+}
+
+void Wall::update(float elapsedTime)
+{
+	mAnimation->update(elapsedTime);
+}
+
+void Wall::draw()
+{
+	Game::instance()->getGraphics()->draw(mX, mY, mAnimation->getCurrentSprite());
+}

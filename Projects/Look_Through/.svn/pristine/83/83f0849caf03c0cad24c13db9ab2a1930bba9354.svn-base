@@ -1,0 +1,46 @@
+#pragma once
+
+#include <PerformanceTracker.h>
+#include <vector>
+#include <iostream>
+#include "Vector2D.h"
+#include <vector>
+#include "Animation.h"
+#include "Unit.h"
+#include "GraphicsBuffer.h"
+#include "GraphicsSystem.h"
+
+using namespace std;
+class Unit;
+class GraphicsSystem;
+
+class UnitManager : public Trackable
+{
+public:
+	UnitManager();
+	UnitManager(int maxUnitCount);
+	~UnitManager();
+	void cleanup();
+	void addUnit(Vector2D location, Animation* pAnimation);
+	void addUnit(Vector2D location, Animation* pAnimation1, Animation* pAnimation2);
+	void addUnit(GraphicsBuffer* pBuffer, Vector2D pos);
+	void deleteUnit(Vector2D location);
+	void clearVector();
+	void clearSnake();
+	Unit* getFirstUnit();
+	Unit* getLastUnit();
+	void updateAll(float time);
+	void updateSnake(float time, Vector2D pos);
+	void drawAnimated(GraphicsSystem* pGraphicsSystem, int x, int y);
+	void drawSnake(GraphicsSystem* pGraphicsSystem);
+	void drawNoAnimated(GraphicsSystem* pGraphicsSystem);
+	int getUnitCount();
+	void setPause();
+	bool collidingWith(UnitManager* pManager);
+	void moveAllUnits(Vector2D pos);
+private:
+	vector<Unit*> mpUnits;
+	vector<Unit*> getVector();
+	int mMaxUnitCount;
+	int mUnitCount;
+};

@@ -1,0 +1,50 @@
+#pragma once
+
+#include <allegro5/allegro.h>
+#include <allegro5/allegro_font.h>
+#include <allegro5/allegro_ttf.h>
+#include <allegro5/allegro_audio.h>
+#include <allegro5/allegro_acodec.h>
+#include <allegro5/allegro_image.h>
+#include <allegro5/allegro_primitives.h>
+
+#include <cstring>
+#include <string>
+#include <fstream>
+#include <iostream>
+
+#include <PerformanceTracker.h>
+#include <MemoryTracker.h>
+
+using namespace std;
+
+class SoundSystem : public Trackable
+{
+public:
+	SoundSystem();
+	SoundSystem(string soundFile);
+
+	~SoundSystem();
+
+	void init();
+	void cleanup();
+
+	void playFiring();
+	void playExplosion();
+	void playMusic();
+	void toggleSound();
+
+	bool checkSound();
+
+	void operator=(const SoundSystem& aSoundSystem);
+
+private:
+	ALLEGRO_SAMPLE* mpShootSound;
+	ALLEGRO_SAMPLE* mpExplosionSound;
+	ALLEGRO_SAMPLE* mpMusic;
+	ALLEGRO_SAMPLE_INSTANCE* mpMusicInstance;
+	bool mSoundOn;
+
+	const char DEFAULT_SOUND[20] = "DefaultSound.wav";
+
+};

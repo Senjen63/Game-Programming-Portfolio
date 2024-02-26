@@ -1,0 +1,25 @@
+#pragma once
+
+#include "Trackable.h"
+#include "GraphicsSystem.h"
+#include "Unit.h"
+
+class Component : public Trackable
+{
+	friend class Unit;
+
+protected:
+	Unit* mpUnit;
+
+	void setAttachedUnit(Unit* unit);
+	void removeFromUnit();
+
+public:
+	virtual void update(float dt) = 0;
+	virtual void draw(GraphicsSystem* gSys) = 0;
+
+	virtual std::string getIdentifier() = 0;
+
+	Unit* getAttachedUnit();
+};
+

@@ -1,0 +1,22 @@
+#include "InputSystem.h"
+#include "EventSystem.h"
+#include "KeyboardEvent.h"
+
+using namespace sf;
+
+InputSystem::InputSystem()
+{
+}
+
+InputSystem::~InputSystem()
+{
+
+}
+
+void InputSystem::update()
+{
+	for (int i = 1; i < SFML_KEYS_TO_CHECK; i++)
+	{
+		if (Keyboard::isKeyPressed(Keyboard::Key(i))) { EventSystem::getInstance()->fireEvent(KeyboardEvent(i)); }
+	}
+}

@@ -1,0 +1,78 @@
+#include "Unit.h"
+
+Unit::Unit()
+{
+	mpSmurfWalk = nullptr;
+	mpDeanWalk = nullptr;
+	mpCurrent = nullptr;
+	mX = 0;
+	mY = 0;
+	mAnimChoose = 0;
+}
+
+Unit::Unit(int x, int y, Animation* smurf, Animation* dean)
+{
+	mpSmurfWalk = smurf;
+	mpDeanWalk = dean;
+	mpCurrent = mpSmurfWalk;
+	mAnimChoose = 0;
+	mX = x;
+	mY = y;
+}
+Unit::~Unit()
+{
+	mpSmurfWalk = nullptr;
+	mpDeanWalk = nullptr;
+	mpCurrent = nullptr;
+	mX = 0;
+	mY = 0;
+	mAnimChoose = 0;
+}
+
+void Unit::update(float removeTime)
+{
+	mpCurrent->update(removeTime);
+}
+
+void Unit::draw(GraphicsSystem* display , Vector2D pos)
+{
+	mX = pos.getX();
+	mY = pos.getY();
+	display->draw(mX, mY, mpCurrent->getCurrentSprite());
+}
+
+void Unit::storeAnimations(Animation* smurf, Animation* dean)
+{
+	mpSmurfWalk = smurf;
+	mpDeanWalk = dean;
+}
+
+void Unit::setAnimation()
+{
+
+	if (mpCurrent == mpSmurfWalk) {
+		mpCurrent = mpDeanWalk;
+		mAnimChoose = 1;
+	}
+	else
+	{
+		mpCurrent = mpSmurfWalk;
+		mAnimChoose = 0;
+	}
+}
+
+void Unit::changeSpeed(float timeChange)
+{
+	mpCurrent->adjustTime(timeChange);
+}
+
+Vector2D Unit::getPos()
+{
+	Vector2D pos = Vector2D(mX, mY);
+	return pos;
+}
+
+void Unit::pause()
+{
+	mpCurrent->pause();
+}

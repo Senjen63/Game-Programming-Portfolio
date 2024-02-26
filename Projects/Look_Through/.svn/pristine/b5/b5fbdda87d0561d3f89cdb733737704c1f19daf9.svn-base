@@ -1,0 +1,134 @@
+//BP
+#include "SnakeUnit.h"
+
+SnakeUnit::SnakeUnit()
+{
+    mPath = Vector2D(0, 0);
+}
+
+SnakeUnit::SnakeUnit(Vector2D path, Vector2D location, int fps)
+{
+    mFps = fps;
+    mPath = path;
+    mLocation = location;
+}
+
+SnakeUnit::SnakeUnit(Vector2D path, Vector2D location, GraphicsBuffer* newBuff, int fps, float beginTime, float moveTime, bool loop, int type)
+{
+    mFps = fps;
+    mPath = path;
+    mLocation = location;
+    mGameStartTimer = beginTime;
+    mTimer = moveTime;
+    addNewAnimation(newBuff, fps, loop);
+    mUnitType = type;
+}
+
+SnakeUnit::~SnakeUnit()
+{
+
+}
+
+void SnakeUnit::updateTurns()
+{
+    for (int i = 0; i < mListMoves.size(); i++)
+    {
+        auto listPoint = mListMoves[i];
+        listPoint->second = (listPoint->second - 1);
+        if (listPoint->second <= 0)
+        {
+
+            mPath = listPoint->first;
+            delete mListMoves.front();
+            mListMoves.erase(mListMoves.begin());
+
+        }
+
+    }
+}
+
+Vector2D SnakeUnit::getDirection()
+{
+    if (!(mGameStartTimer > 0))
+    {
+
+        return mPath;
+
+    }
+    return Vector2D(0, 0);
+}
+
+void SnakeUnit::setDirection(Vector2D path)
+{
+    mPath = path;
+}
+
+void SnakeUnit::addTurn(Vector2D path, int index)
+{
+    pair<Vector2D, int>* turnPair =
+        new pair<Vector2D, int>(path, index * mTimer);
+    for (unsigned int i = 0; i < mListMoves.size(); i++)
+    {
+
+        if (turnPair->second < mListMoves[i]->second)
+        {
+
+            delete mListMoves[i];
+            mListMoves.erase(mListMoves.begin() + i);
+
+        }
+
+    }
+    mListMoves.push_back(turnPair);
+}
+
+void SnakeUnit::unitUpdate(float timePassed)
+{
+    if (mGameStartTimer > 0)
+    {
+
+        mGameStartTimer = (mGameStartTimer - 1);
+        if (mGameStartTimer <= 0)
+        {
+        }
+
+    }
+    updateTurns();
+}
+
+void SnakeUnit::syncTurnList(SnakeUnit* body, int spacer)
+{
+    if (body->mListMoves.size() > 0 && mListMoves.size() == 1)
+    {
+
+        delete mListMoves[0];
+        mListMoves.erase(mListMoves.begin());
+
+    }
+    for (auto snakeTurn : body->mListMoves)
+    {
+
+        mListMoves.push_back(new pair<Vector2D,
+            int>(snakeTurn->first, snakeTurn->second + (spacer * mTimer)));
+
+    }
+}
+
+void SnakeUnit::speedChange(float newSpeed, float currentSpeed, float moveTimer)
+{
+    if (mGameStartTimer > 0)
+    {
+
+        mGameStartTimer *= (newSpeed / currentSpeed);
+
+    }
+
+    for (unsigned int i = 0; i < mListMoves.size(); i++)
+    {
+
+        mListMoves[i]->second = 
+            (mListMoves[i]->second / mTimer) * moveTimer;
+
+    }
+    mTimer = moveTimer;
+}

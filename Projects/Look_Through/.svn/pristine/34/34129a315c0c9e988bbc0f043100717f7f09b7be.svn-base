@@ -1,0 +1,1088 @@
+#include "Game.h"
+
+Game* Game::mspGame = nullptr;
+
+Game::Game()
+{
+    mWidthHeight = Vector2D(DEFAULT_WIDTH, DEFAULT_HEIGHT);
+
+    mPlayerFilename = "nullPlayer";
+    mPlayerIdleFilename = "nullPlayerIdle";
+    mPlayerWalkFilename = "nullPlayerWalk";
+    mBodyFilename = "nullBody";
+    mHeadFilename = "nullHead";
+    mFoodFilename = "nullFood";
+    mSpeedUpFilename = "nullSpeedUp";
+    mSlowDownFilename = "nullSlowDown";
+    mBonusPointsFilename = "nullBonusPoints";
+    mWallFilename = "nullWall";
+    mSpikeFilename = "nullSpike";
+    mArrowTrapFilename = "nullArrowTrap";
+    mArrowsFilename = "nullArrows";
+    mCollectibleFilename = "nullCollectible";
+    mCollectibleAnimFilename = "nullCollectibleAnim";
+    mDoorFilename = "nullDoor";
+    mBackgroundFilename = "nullBackground";
+
+    mArrowShootFilename = "nullArrowShoot";
+    mArrowStabFilename = "nullArrowStab";
+    mCollectibleGrabbedFilename = "nulCollectibleGrabbed";
+    mDeathFilename = "nullDeath";
+    mDoorOpenFilename = "nullDoorOpen";
+    mDripFilename = "nullDrip";
+    mGameWinFilename = "nullGameWin";
+    mIdleSoundFilename = "nullIdleSound";
+    mJumpSoundFilename = "nullJumpSound";
+    mGameLoseFilename = "nullGameLose";
+    mSpikeStabFilename = "nullSpikeStab";
+    mWalkSoundFilename = "nullWalkSound";
+
+    mFontFilename = "nullFont";
+
+    mStringsFilename = "nullString";
+
+    mLevelZeroFilename = "nullLevel0";
+    mLevelOneFilename = "nullLevel1";
+    mLevelTwoFilename = "nullLevel2";
+    mSaveFilename = "nullSave";
+}
+
+
+Game::Game(Vector2D widthHeight)
+{
+    mWidthHeight = widthHeight;
+
+    mPlayerFilename = "nullPlayer";
+    mPlayerIdleFilename = "nullPlayerIdle";
+    mPlayerWalkFilename = "nullPlayerWalk";
+    mBodyFilename = "nullBody";
+    mHeadFilename = "nullHead";
+    mFoodFilename = "nullFood";
+    mSpeedUpFilename = "nullSpeedUp";
+    mSlowDownFilename = "nullSlowDown";
+    mBonusPointsFilename = "nullBonusPoints";
+    mWallFilename = "nullWall";
+    mSpikeFilename = "nullSpike";
+    mArrowTrapFilename = "nullArrowTrap";
+    mArrowsFilename = "nullArrows";
+    mCollectibleFilename = "nullCollectible";
+    mCollectibleAnimFilename = "nullCollectibleAnim";
+    mDoorFilename = "nullDoor";
+    mBackgroundFilename = "nullBackground";
+
+    mArrowShootFilename = "nullArrowShoot";
+    mArrowStabFilename = "nullArrowStab";
+    mCollectibleGrabbedFilename = "nulCollectibleGrabbed";
+    mDeathFilename = "nullDeath";
+    mDoorOpenFilename = "nullDoorOpen";
+    mDripFilename = "nullDrip";
+    mGameWinFilename = "nullGameWin";
+    mIdleSoundFilename = "nullIdleSound";
+    mJumpSoundFilename = "nullJumpSound";
+    mGameLoseFilename = "nullGameLose";
+    mSpikeStabFilename = "nullSpikeStab";
+    mWalkSoundFilename = "nullWalkSound";
+
+    mFontFilename = "nullFont";
+
+    mStringsFilename = "nullString";
+
+    mLevelZeroFilename = "nullLevel0";
+    mLevelOneFilename = "nullLevel1";
+    mLevelTwoFilename = "nullLevel2";
+    mSaveFilename = "nullSave";
+}
+
+
+Game::~Game()
+{
+    cleanup();
+}
+
+
+void Game::createGame()
+{
+    if (!mspGame)
+    {
+        mspGame = new Game();
+    }
+}
+
+
+void Game::createGame(Vector2D widthHeight)
+{
+    if (!mspGame)
+    {
+        mspGame = new Game(widthHeight);
+    }
+}
+
+
+void Game::destroyGame()
+{
+    delete mspGame;
+    mspGame = nullptr;
+}
+
+
+Game* Game::getGame()
+{
+    return mspGame;
+}
+
+
+void Game::init()
+{
+    if (!mInitialized && mspGame != nullptr)
+    {
+        loadFilenames();
+
+        mpLangSystem->createLangSystem();
+        mpLangSystem = LanguageSystem::getLanguageSystem();
+        mpLangSystem->loadStrings(mStringsFilename);
+
+        mpEventSystem = EventSystem::getInstance();
+        mpEventSystem->init();
+
+        mpGraphics = new GraphicsSystem(mWidthHeight.getX(), mWidthHeight.getY(), mpLangSystem->getString(STRING_KEYS.TITLE_STRING));
+        mpUnitManager = new UnitManager();
+        mpGBManager = new GraphicsBufferManager();
+        mpAnimManager = new AnimationManager();
+        mpLevelManager = new LevelManager();
+        mTranslator = InputTranslator();
+        mpSoundManager = new SoundManager();
+
+        mpGraphics->init();
+        mpUnitManager->init();
+        mpGBManager->init();
+        mpAnimManager->init();
+        mpLevelManager->init();
+        mInput.init();
+        mTranslator.init();
+        mpSoundManager->init();
+
+        mpEventSystem->addListener((EventType)MESSAGE_EVENT, this);
+        mpEventSystem->addListener((EventType)ACTION_GAME_EVENT, this);
+        mpEventSystem->addListener((EventType)SPAWN_WALL_EVENT, this);
+        mpEventSystem->addListener((EventType)SPAWN_SNAKE_EVENT, this);
+        mpEventSystem->addListener((EventType)SPAWN_SPIKE_EVENT, this);
+        mpEventSystem->addListener((EventType)SPAWN_ARROW_TRAP_EVENT, this);
+        mpEventSystem->addListener((EventType)SPAWN_ARROW_EVENT, this);
+        mpEventSystem->addListener((EventType)SPAWN_COLLECTIBLE_EVENT, this);
+        mpEventSystem->addListener((EventType)ADD_SCORE_EVENT, this);
+        mpEventSystem->addListener((EventType)COLLISION_EVENT, this);
+        mpEventSystem->addListener((EventType)END_LEVEL_EVENT, this);
+
+        mpFont = new Font((COMMON_ASSET_PATH + mFontFilename), FONT_SIZE, ALIGN_CENTER);
+
+        mpGBManager->addBuffer(PLAYER_TAG, new GraphicsBuffer(ASSET_PATH + mPlayerFilename, PLAYER_SECTIONS));
+        mpGBManager->addBuffer(PLAYER_IDLE_TAG, new GraphicsBuffer(ASSET_PATH + mPlayerIdleFilename, PLAYER_IDLE_SECTIONS));
+        mpGBManager->addBuffer(PLAYER_WALK_TAG, new GraphicsBuffer(ASSET_PATH + mPlayerWalkFilename, PLAYER_WALK_SECTIONS));
+        mpGBManager->addBuffer(HEAD_TAG, new GraphicsBuffer(ASSET_PATH + mHeadFilename, HEAD_SECTIONS));
+        mpGBManager->addBuffer(BODY_TAG, new GraphicsBuffer(ASSET_PATH + mBodyFilename, BODY_SECTIONS));
+        mpGBManager->addBuffer(FOOD_TAG, new GraphicsBuffer(ASSET_PATH + mFoodFilename, FOOD_SECTIONS));
+        mpGBManager->addBuffer(SPEED_UP_TAG, new GraphicsBuffer(ASSET_PATH + mSpeedUpFilename, SPEED_SECTIONS));
+        mpGBManager->addBuffer(SLOW_DOWN_TAG, new GraphicsBuffer(ASSET_PATH + mSlowDownFilename, SLOW_SECTIONS));
+        mpGBManager->addBuffer(BONUS_POINTS_TAG, new GraphicsBuffer(ASSET_PATH + mBonusPointsFilename, BONUS_SECTIONS));
+        mpGBManager->addBuffer(WALL_TAG, new GraphicsBuffer(ASSET_PATH + mWallFilename, WALL_SECTIONS));
+        mpGBManager->addBuffer(SPIKE_TAG, new GraphicsBuffer(ASSET_PATH + mSpikeFilename, SPIKE_SECTIONS));
+        mpGBManager->addBuffer(ARROW_TRAP_TAG, new GraphicsBuffer(ASSET_PATH + mArrowTrapFilename, ARROWTRAP_SECTIONS));
+        mpGBManager->addBuffer(ARROWS_TAG, new GraphicsBuffer(ASSET_PATH + mArrowsFilename, ARROWS_SECTIONS));
+        mpGBManager->addBuffer(COLLECTIBLE_TAG, new GraphicsBuffer(ASSET_PATH + mCollectibleFilename, COLLECTIBLE_SECTIONS));
+        mpGBManager->addBuffer(COLLECTIBLE_ANIM_TAG, new GraphicsBuffer(ASSET_PATH + mCollectibleAnimFilename, COLLECTIBLE_ANIM_SECTIONS));
+        mpGBManager->addBuffer(DOOR_TAG, new GraphicsBuffer(ASSET_PATH + mDoorFilename, DOOR_SECTIONS));
+
+        GraphicsBuffer* background = new GraphicsBuffer(ASSET_PATH + mBackgroundFilename, BACKGROUND_SECTIONS);
+        //make background black if no file loaded
+        if (background->isBitmapNull())
+        {
+            delete background;
+            background = new GraphicsBuffer(BLACK, mWidthHeight.getX(), mWidthHeight.getY());
+        }
+        mpGBManager->addBuffer(BACKGROUND_TAG, background);
+
+        generateButtonBuffers(); //creates buttons that are just squares with the proper text written to them
+
+        mpAnimManager->addAnimation(PLAYER_TAG, new AnimationFrames(mpGBManager->getBuffer(PLAYER_TAG)));
+        mpAnimManager->addAnimation(PLAYER_IDLE_TAG, new AnimationFrames(mpGBManager->getBuffer(PLAYER_IDLE_TAG)));
+        mpAnimManager->addAnimation(PLAYER_WALK_TAG, new AnimationFrames(mpGBManager->getBuffer(PLAYER_WALK_TAG)));
+        mpAnimManager->addAnimation(HEAD_TAG, new AnimationFrames(mpGBManager->getBuffer(HEAD_TAG)));
+        mpAnimManager->addAnimation(BODY_TAG, new AnimationFrames(mpGBManager->getBuffer(BODY_TAG)));
+        mpAnimManager->addAnimation(FOOD_TAG, new AnimationFrames(mpGBManager->getBuffer(FOOD_TAG)));
+        mpAnimManager->addAnimation(SPEED_UP_TAG, new AnimationFrames(mpGBManager->getBuffer(SPEED_UP_TAG)));
+        mpAnimManager->addAnimation(SLOW_DOWN_TAG, new AnimationFrames(mpGBManager->getBuffer(SLOW_DOWN_TAG)));
+        mpAnimManager->addAnimation(BONUS_POINTS_TAG, new AnimationFrames(mpGBManager->getBuffer(BONUS_POINTS_TAG)));
+        mpAnimManager->addAnimation(WALL_TAG, new AnimationFrames(mpGBManager->getBuffer(WALL_TAG)));
+        mpAnimManager->addAnimation(SPIKE_TAG, new AnimationFrames(mpGBManager->getBuffer(SPIKE_TAG)));
+        mpAnimManager->addAnimation(ARROW_TRAP_TAG, new AnimationFrames(mpGBManager->getBuffer(ARROW_TRAP_TAG)));
+        mpAnimManager->addAnimation(ARROWS_TAG, new AnimationFrames(mpGBManager->getBuffer(ARROWS_TAG)));
+        mpAnimManager->addAnimation(COLLECTIBLE_TAG, new AnimationFrames(mpGBManager->getBuffer(COLLECTIBLE_TAG)));
+        mpAnimManager->addAnimation(COLLECTIBLE_ANIM_TAG, new AnimationFrames(mpGBManager->getBuffer(COLLECTIBLE_ANIM_TAG)));
+        mpAnimManager->addAnimation(BACKGROUND_TAG, new AnimationFrames(mpGBManager->getBuffer(BACKGROUND_TAG)));
+        mpAnimManager->addAnimation(DOOR_TAG, new AnimationFrames(mpGBManager->getBuffer(DOOR_TAG)));
+
+        mpLevelManager->loadLevel(ASSET_PATH + mLevelZeroFilename, mpGBManager->getBuffer(WALL_TAG), Vector2D(1, 1));
+        mpLevelManager->loadLevel(ASSET_PATH + mLevelOneFilename, mpGBManager->getBuffer(WALL_TAG), Vector2D(1, 1));
+        mpLevelManager->loadLevel(ASSET_PATH + mLevelTwoFilename, mpGBManager->getBuffer(WALL_TAG), Vector2D(1, 1));
+        mpLevelManager->printLevelInfo(0);
+        mpLevelManager->printLevelInfo(1);
+        mpLevelManager->printLevelInfo(2);
+
+        mpSoundManager->addSound(ARROW_SHOOT_TAG, ASSET_PATH + mArrowShootFilename, ARROW_SHOOT_VOLUME);
+        mpSoundManager->addSound(ARROW_STAB_TAG, ASSET_PATH + mArrowStabFilename, ARROW_STAB_VOLUME);
+        mpSoundManager->addSound(COLLECTIBLE_GRABBED_TAG, ASSET_PATH + mCollectibleGrabbedFilename, COLLECTIBLE_GRABBED_VOLUME);
+        mpSoundManager->addSound(DEATH_TAG, ASSET_PATH + mDeathFilename, DEATH_VOLUME);
+        mpSoundManager->addSound(DOOR_OPEN_TAG, ASSET_PATH + mDoorOpenFilename, DOOR_OPEN_VOLUME);
+        mpSoundManager->addSound(DRIP_TAG, ASSET_PATH + mDripFilename, DRIP_VOLUME);
+        mpSoundManager->addSound(GAME_WIN_TAG, ASSET_PATH + mGameWinFilename, GAME_WIN_VOLUME);
+        mpSoundManager->addSound(IDLE_SOUND_TAG, ASSET_PATH + mIdleSoundFilename, IDLE_SOUND_VOLUME);
+        mpSoundManager->addSound(JUMP_SOUND_TAG, ASSET_PATH + mJumpSoundFilename, JUMP_SOUND_VOLUME);
+        mpSoundManager->addSound(GAME_LOSE_TAG, ASSET_PATH + mGameLoseFilename, LOSE_VOLUME);
+        mpSoundManager->addSound(SPIKE_STAB_TAG, ASSET_PATH + mSpikeStabFilename, SPIKE_STAB_VOLUME);
+        mpSoundManager->addSound(WALK_SOUND_TAG, ASSET_PATH + mWalkSoundFilename, WALK_VOLUME);
+
+
+        mpLevelManager->setLevelIndex(0);
+
+        mpMenuSystem = new MenuSystem(mFps);
+        mpMenuSystem->init(mpAnimManager, mpGraphics);
+
+        mpHud = new HUD(DEFAULT_PANEL_WIDTH, DEFAULT_PANEL_HEIGHT, mpGraphics, mpFont);
+        mpHud->init();
+
+        mInitialized = true;
+    }
+}
+
+
+void Game::cleanup()
+{
+    if (mInitialized && !mCleaned)
+    {
+        delete mpHud;
+
+        //DO NOT DELETE PLAYER, IT IS A UNIT AND HANDLED BY UNITMANAGER
+        //delete mpPlayer;
+
+        delete mpMenuSystem;
+
+        delete mpFont;
+
+        mInput.cleanup();
+        delete mpSoundManager;
+        delete mpLevelManager;
+        delete mpAnimManager;
+        delete mpGBManager;
+        delete mpUnitManager;
+        delete mpGraphics;
+
+        mpLangSystem->destroyLangSystem();
+
+        if (mTimeScale)
+        {
+            delete mTimeScale;
+        }
+
+        mCleaned = true;
+    }
+}
+
+
+GraphicsSystem* Game::getGraphicsSystem()
+{
+    return mpGraphics;
+}
+
+
+UnitManager* Game::getUnitManager()
+{
+    return mpUnitManager;
+}
+
+
+float* Game::getTimeScale()
+{
+    return mTimeScale;
+}
+
+
+float Game::getTimePerFrame()
+{
+    return mTimePerFrame;
+}
+
+
+void Game::loadFilenames()
+{
+    ifstream fin;
+
+    fin.open(ASSET_PATH + ASSET_NAMES_FILENAME);
+
+    if (!fin.fail() && fin)
+    {
+        string tempFin;
+        while (fin)
+        {
+            fin >> tempFin;
+
+            if (tempFin == PLAYER_TAG + ":")
+            {
+                fin >> mPlayerFilename;
+            }
+
+            if (tempFin == PLAYER_IDLE_TAG + ":")
+            {
+                fin >> mPlayerIdleFilename;
+            }
+
+            if (tempFin == PLAYER_WALK_TAG + ":")
+            {
+                fin >> mPlayerWalkFilename;
+            }
+
+            if (tempFin == HEAD_TAG + ":")
+            {
+                fin >> mHeadFilename;
+            }
+
+            if (tempFin == BODY_TAG + ":")
+            {
+                fin >> mBodyFilename;
+            }
+
+            if (tempFin == FOOD_TAG + ":")
+            {
+                fin >> mFoodFilename;
+            }
+
+            if (tempFin == BONUS_POINTS_TAG + ":")
+            {
+                fin >> mBonusPointsFilename;
+            }
+
+            if (tempFin == SPEED_UP_TAG + ":")
+            {
+                fin >> mSpeedUpFilename;
+            }
+
+            if (tempFin == SLOW_DOWN_TAG + ":")
+            {
+                fin >> mSlowDownFilename;
+            }
+
+            if (tempFin == WALL_TAG + ":")
+            {
+                fin >> mWallFilename;
+            }
+
+           if (tempFin == SPIKE_TAG + ":")
+            {
+                fin >> mSpikeFilename;
+            }
+
+            if (tempFin == ARROW_TRAP_TAG + ":")
+            {
+                fin >> mArrowTrapFilename;
+            }
+
+            if (tempFin == ARROWS_TAG + ":")
+            {
+                fin >> mArrowsFilename;
+            }
+
+            if (tempFin == COLLECTIBLE_TAG + ":")
+            {
+                fin >> mCollectibleFilename;
+            }
+
+            if (tempFin == COLLECTIBLE_ANIM_TAG + ":")
+            {
+                fin >> mCollectibleAnimFilename;
+            }
+
+            if (tempFin == DOOR_TAG + ":")
+            {
+                fin >> mDoorFilename;
+            }
+
+            if (tempFin == FONT_TAG + ":")
+            {
+                fin >> mFontFilename;
+            }
+
+            if (tempFin == BACKGROUND_TAG + ":")
+            {
+                fin >> mBackgroundFilename;
+            }
+
+            if (tempFin == STRINGS_TAG + ":")
+            {
+                fin >> mStringsFilename;
+            }
+
+            if (tempFin == LEVEL_ZERO_TAG + ":")
+            {
+                fin >> mLevelZeroFilename;
+            }
+
+            if (tempFin == LEVEL_ONE_TAG + ":")
+            {
+                fin >> mLevelOneFilename;
+            }
+
+            if (tempFin == LEVEL_TWO_TAG + ":")
+            {
+                fin >> mLevelTwoFilename;
+            }
+
+            if (tempFin == LEVEL_SAVE_TAG + ":")
+            {
+                fin >> mSaveFilename;
+            }
+            if (tempFin == ARROW_SHOOT_TAG + ":")
+            {
+                fin >> mArrowShootFilename;
+            }
+            if (tempFin == ARROW_STAB_TAG + ":")
+            {
+                fin >> mArrowStabFilename;
+            }
+
+            if (tempFin == COLLECTIBLE_GRABBED_TAG + ":")
+            {
+                fin >> mCollectibleGrabbedFilename;
+            }
+            if (tempFin == DEATH_TAG + ":")
+            {
+                fin >> mDeathFilename;
+            }
+            if (tempFin == DOOR_OPEN_TAG + ":")
+            {
+                fin >> mDoorOpenFilename;
+            }
+            if (tempFin == DRIP_TAG + ":")
+            {
+                fin >> mDripFilename;
+            }
+            if (tempFin == GAME_WIN_TAG + ":")
+            {
+                fin >> mGameWinFilename;
+            }
+            if (tempFin == IDLE_SOUND_TAG + ":")
+            {
+                fin >> mIdleSoundFilename;
+            }
+            if (tempFin == JUMP_SOUND_TAG + ":")
+            {
+                fin >> mJumpSoundFilename;
+            }
+            if (tempFin == GAME_LOSE_TAG + ":")
+            {
+                fin >> mGameLoseFilename;
+            }
+            if (tempFin == SPIKE_STAB_TAG + ":")
+            {
+                fin >> mSpikeStabFilename;
+            }
+            if (tempFin == WALK_SOUND_TAG + ":")
+            {
+                fin >> mWalkSoundFilename;
+            }
+        }
+    }
+
+    fin.close();
+}
+
+
+/*
+===============================
+
+I wanted to move this somewhere
+else like MenuSystem, but it
+needs so many aspects of Game
+that it did not make sense to
+put it anywhere else
+
+===============================
+*/
+void Game::generateButtonBuffers()
+{
+    GraphicsBuffer* pStart = new GraphicsBuffer(COLOR_BUTTON_IDLE, 150, 50);
+    mpGraphics->writeText(pStart, pStart->getWidth() / 2, pStart->getHeight() / 2, mpFont, BLACK, mpLangSystem->getString(STRING_KEYS.START_STRING));
+    mpGBManager->addBuffer(START_TAG, pStart);
+    mpAnimManager->addAnimation(START_TAG, new AnimationFrames(mpGBManager->getBuffer(START_TAG)));
+
+    //GraphicsBuffer* pStartHover = new GraphicsBuffer(COLOR_BUTTON_HOVER, 150, 50);
+    GraphicsBuffer* pStartHover = new GraphicsBuffer(COLOR_BUTTON_HOVER, 225, 75); //Uncomment for button to grow slightly when hovered
+    mpGraphics->writeText(pStartHover, pStartHover->getWidth() / 2, pStartHover->getHeight() / 2, mpFont, BLACK, mpLangSystem->getString(STRING_KEYS.START_STRING));
+    mpGBManager->addBuffer(START_HOVER_TAG, pStartHover);
+    mpAnimManager->addAnimation(START_HOVER_TAG, new AnimationFrames(mpGBManager->getBuffer(START_HOVER_TAG)));
+
+    GraphicsBuffer* pLoad = new GraphicsBuffer(COLOR_BUTTON_IDLE, 150, 50);
+    mpGraphics->writeText(pLoad, pLoad->getWidth() / 2, pLoad->getHeight() / 2, mpFont, BLACK, mpLangSystem->getString(STRING_KEYS.LOAD_STRING));
+    mpGBManager->addBuffer(LOAD_TAG, pLoad);
+    mpAnimManager->addAnimation(LOAD_TAG, new AnimationFrames(mpGBManager->getBuffer(LOAD_TAG)));
+
+    //GraphicsBuffer* pLoadHover = new GraphicsBuffer(COLOR_BUTTON_HOVER, 150, 50);
+    GraphicsBuffer* pLoadHover = new GraphicsBuffer(COLOR_BUTTON_HOVER, 225, 75); //Uncomment for button to grow slightly when hovered
+    mpGraphics->writeText(pLoadHover, pLoadHover->getWidth() / 2, pLoadHover->getHeight() / 2, mpFont, BLACK, mpLangSystem->getString(STRING_KEYS.LOAD_STRING));
+    mpGBManager->addBuffer(LOAD_HOVER_TAG, pLoadHover);
+    mpAnimManager->addAnimation(LOAD_HOVER_TAG, new AnimationFrames(mpGBManager->getBuffer(LOAD_HOVER_TAG)));
+
+    GraphicsBuffer* pOptions = new GraphicsBuffer(COLOR_BUTTON_IDLE, 150, 50);
+    mpGraphics->writeText(pOptions, pOptions->getWidth() / 2, pOptions->getHeight() / 2, mpFont, BLACK, mpLangSystem->getString(STRING_KEYS.OPTIONS_STRING));
+    mpGBManager->addBuffer(OPTIONS_TAG, pOptions);
+    mpAnimManager->addAnimation(OPTIONS_TAG, new AnimationFrames(mpGBManager->getBuffer(OPTIONS_TAG)));
+
+    //GraphicsBuffer* pOptionsHover = new GraphicsBuffer(COLOR_BUTTON_HOVER, 150, 50);
+    GraphicsBuffer* pOptionsHover = new GraphicsBuffer(COLOR_BUTTON_HOVER, 225, 75); //Uncomment for button to grow slightly when hovered
+    mpGraphics->writeText(pOptionsHover, pOptionsHover->getWidth() / 2, pOptionsHover->getHeight() / 2, mpFont, BLACK, mpLangSystem->getString(STRING_KEYS.OPTIONS_STRING));
+    mpGBManager->addBuffer(OPTIONS_HOVER_TAG, pOptionsHover);
+    mpAnimManager->addAnimation(OPTIONS_HOVER_TAG, new AnimationFrames(mpGBManager->getBuffer(OPTIONS_HOVER_TAG)));
+
+    GraphicsBuffer* pQuit = new GraphicsBuffer(COLOR_BUTTON_IDLE, 150, 50);
+    mpGraphics->writeText(pQuit, pQuit->getWidth() / 2, pQuit->getHeight() / 2, mpFont, BLACK, mpLangSystem->getString(STRING_KEYS.QUIT_STRING));
+    mpGBManager->addBuffer(QUIT_TAG, pQuit);
+    mpAnimManager->addAnimation(QUIT_TAG, new AnimationFrames(mpGBManager->getBuffer(QUIT_TAG)));
+
+    //GraphicsBuffer* pQuitHover = new GraphicsBuffer(COLOR_BUTTON_HOVER, 150, 50);
+    GraphicsBuffer* pQuitHover = new GraphicsBuffer(COLOR_BUTTON_HOVER, 225, 75); //Uncomment for button to grow slightly when hovered
+    mpGraphics->writeText(pQuitHover, pQuitHover->getWidth() / 2, pQuitHover->getHeight() / 2, mpFont, BLACK, mpLangSystem->getString(STRING_KEYS.QUIT_STRING));
+    mpGBManager->addBuffer(QUIT_HOVER_TAG, pQuitHover);
+    mpAnimManager->addAnimation(QUIT_HOVER_TAG, new AnimationFrames(mpGBManager->getBuffer(QUIT_HOVER_TAG)));
+
+    GraphicsBuffer* pNext = new GraphicsBuffer(COLOR_BUTTON_IDLE, 150, 50);
+    mpGraphics->writeText(pNext, pNext->getWidth() / 2, pNext->getHeight() / 2, mpFont, BLACK, mpLangSystem->getString(STRING_KEYS.NEXT_STRING));
+    mpGBManager->addBuffer(NEXT_TAG, pNext);
+    mpAnimManager->addAnimation(NEXT_TAG, new AnimationFrames(mpGBManager->getBuffer(NEXT_TAG)));
+
+    //GraphicsBuffer* pNextHover = new GraphicsBuffer(COLOR_BUTTON_HOVER, 150, 50);
+    GraphicsBuffer* pNextHover = new GraphicsBuffer(COLOR_BUTTON_HOVER, 225, 75); //Uncomment for button to grow slightly when hovered
+    mpGraphics->writeText(pNextHover, pNextHover->getWidth() / 2, pNextHover->getHeight() / 2, mpFont, BLACK, mpLangSystem->getString(STRING_KEYS.NEXT_STRING));
+    mpGBManager->addBuffer(NEXT_HOVER_TAG, pNextHover);
+    mpAnimManager->addAnimation(NEXT_HOVER_TAG, new AnimationFrames(mpGBManager->getBuffer(NEXT_HOVER_TAG)));
+
+    GraphicsBuffer* pBack = new GraphicsBuffer(COLOR_BUTTON_IDLE, 150, 50);
+    mpGraphics->writeText(pBack, pBack->getWidth() / 2, pBack->getHeight() / 2, mpFont, BLACK, mpLangSystem->getString(STRING_KEYS.BACK_STRING));
+    mpGBManager->addBuffer(BACK_TAG, pBack);
+    mpAnimManager->addAnimation(BACK_TAG, new AnimationFrames(mpGBManager->getBuffer(BACK_TAG)));
+
+    //GraphicsBuffer* pBackHover = new GraphicsBuffer(COLOR_BUTTON_HOVER, 150, 50);
+    GraphicsBuffer* pBackHover = new GraphicsBuffer(COLOR_BUTTON_HOVER, 225, 75); //Uncomment for button to grow slightly when hovered
+    mpGraphics->writeText(pBackHover, pBackHover->getWidth() / 2, pBackHover->getHeight() / 2, mpFont, BLACK, mpLangSystem->getString(STRING_KEYS.BACK_STRING));
+    mpGBManager->addBuffer(BACK_HOVER_TAG, pBackHover);
+    mpAnimManager->addAnimation(BACK_HOVER_TAG, new AnimationFrames(mpGBManager->getBuffer(BACK_HOVER_TAG)));
+
+    GraphicsBuffer* pFirstLang = new GraphicsBuffer(COLOR_BUTTON_IDLE, 150, 50);
+    mpGraphics->writeText(pFirstLang, pFirstLang->getWidth() / 2, pFirstLang->getHeight() / 2, mpFont, BLACK, mpLangSystem->getString(STRING_KEYS.FIRST_LANG_STRING));
+    mpGBManager->addBuffer(FIRST_LANG_TAG, pFirstLang);
+    mpAnimManager->addAnimation(FIRST_LANG_TAG, new AnimationFrames(mpGBManager->getBuffer(FIRST_LANG_TAG)));
+
+    //GraphicsBuffer* pFirstLangHover = new GraphicsBuffer(COLOR_BUTTON_HOVER, 150, 50);
+    GraphicsBuffer* pFirstLangHover = new GraphicsBuffer(COLOR_BUTTON_HOVER, 225, 75); //Uncomment for button to grow slightly when hovered
+    mpGraphics->writeText(pFirstLangHover, pFirstLangHover->getWidth() / 2, pFirstLangHover->getHeight() / 2, mpFont, BLACK, mpLangSystem->getString(STRING_KEYS.FIRST_LANG_STRING));
+    mpGBManager->addBuffer(FIRST_LANG_HOVER_TAG, pFirstLangHover);
+    mpAnimManager->addAnimation(FIRST_LANG_HOVER_TAG, new AnimationFrames(mpGBManager->getBuffer(FIRST_LANG_HOVER_TAG)));
+
+    GraphicsBuffer* pSecondLang = new GraphicsBuffer(COLOR_BUTTON_IDLE, 150, 50);
+    mpGraphics->writeText(pSecondLang, pSecondLang->getWidth() / 2, pSecondLang->getHeight() / 2, mpFont, BLACK, mpLangSystem->getString(STRING_KEYS.SECOND_LANG_STRING));
+    mpGBManager->addBuffer(SECOND_LANG_TAG, pSecondLang);
+    mpAnimManager->addAnimation(SECOND_LANG_TAG, new AnimationFrames(mpGBManager->getBuffer(SECOND_LANG_TAG)));
+
+    //GraphicsBuffer* pSecondLangHover = new GraphicsBuffer(COLOR_BUTTON_HOVER, 150, 50);
+    GraphicsBuffer* pSecondLangHover = new GraphicsBuffer(COLOR_BUTTON_HOVER, 225, 75); //Uncomment for button to grow slightly when hovered
+    mpGraphics->writeText(pSecondLangHover, pSecondLangHover->getWidth() / 2, pSecondLangHover->getHeight() / 2, mpFont, BLACK, mpLangSystem->getString(STRING_KEYS.SECOND_LANG_STRING));
+    mpGBManager->addBuffer(SECOND_LANG_HOVER_TAG, pSecondLangHover);
+    mpAnimManager->addAnimation(SECOND_LANG_HOVER_TAG, new AnimationFrames(mpGBManager->getBuffer(SECOND_LANG_HOVER_TAG)));
+
+    GraphicsBuffer* pThirdLang = new GraphicsBuffer(COLOR_BUTTON_IDLE, 150, 50);
+    mpGraphics->writeText(pThirdLang, pThirdLang->getWidth() / 2, pThirdLang->getHeight() / 2, mpFont, BLACK, mpLangSystem->getString(STRING_KEYS.THIRD_LANG_STRING));
+    mpGBManager->addBuffer(THIRD_LANG_TAG, pThirdLang);
+    mpAnimManager->addAnimation(THIRD_LANG_TAG, new AnimationFrames(mpGBManager->getBuffer(THIRD_LANG_TAG)));
+
+    //GraphicsBuffer* pThirdLangHover = new GraphicsBuffer(COLOR_BUTTON_HOVER, 150, 50);
+    GraphicsBuffer* pThirdLangHover = new GraphicsBuffer(COLOR_BUTTON_HOVER, 225, 75); //Uncomment for button to grow slightly when hovered
+    mpGraphics->writeText(pThirdLangHover, pThirdLangHover->getWidth() / 2, pThirdLangHover->getHeight() / 2, mpFont, BLACK, mpLangSystem->getString(STRING_KEYS.THIRD_LANG_STRING));
+    mpGBManager->addBuffer(THIRD_LANG_HOVER_TAG, pThirdLangHover);
+    mpAnimManager->addAnimation(THIRD_LANG_HOVER_TAG, new AnimationFrames(mpGBManager->getBuffer(THIRD_LANG_HOVER_TAG)));
+
+    GraphicsBuffer* pEasy = new GraphicsBuffer(COLOR_BUTTON_IDLE, 150, 50);
+    mpGraphics->writeText(pEasy, pEasy->getWidth() / 2, pEasy->getHeight() / 2, mpFont, BLACK, mpLangSystem->getString(STRING_KEYS.EASY_STRING));
+    mpGBManager->addBuffer(EASY_TAG, pEasy);
+    mpAnimManager->addAnimation(EASY_TAG, new AnimationFrames(mpGBManager->getBuffer(EASY_TAG)));
+
+    //GraphicsBuffer* pBackHover = new GraphicsBuffer(COLOR_BUTTON_HOVER, 150, 50);
+    GraphicsBuffer* pEasyHover = new GraphicsBuffer(COLOR_BUTTON_HOVER, 225, 75); //Uncomment for button to grow slightly when hovered
+    mpGraphics->writeText(pEasyHover, pEasyHover->getWidth() / 2, pEasyHover->getHeight() / 2, mpFont, BLACK, mpLangSystem->getString(STRING_KEYS.EASY_STRING));
+    mpGBManager->addBuffer(EASY_HOVER_TAG, pEasyHover);
+    mpAnimManager->addAnimation(EASY_HOVER_TAG, new AnimationFrames(mpGBManager->getBuffer(EASY_HOVER_TAG)));
+
+    GraphicsBuffer* pMedium = new GraphicsBuffer(COLOR_BUTTON_IDLE, 150, 50);
+    mpGraphics->writeText(pMedium, pMedium->getWidth() / 2, pMedium->getHeight() / 2, mpFont, BLACK, mpLangSystem->getString(STRING_KEYS.MEDIUM_STRING));
+    mpGBManager->addBuffer(MEDIUM_TAG, pMedium);
+    mpAnimManager->addAnimation(MEDIUM_TAG, new AnimationFrames(mpGBManager->getBuffer(MEDIUM_TAG)));
+
+    //GraphicsBuffer* pBackHover = new GraphicsBuffer(COLOR_BUTTON_HOVER, 150, 50);
+    GraphicsBuffer* pMediumHover = new GraphicsBuffer(COLOR_BUTTON_HOVER, 225, 75); //Uncomment for button to grow slightly when hovered
+    mpGraphics->writeText(pMediumHover, pMediumHover->getWidth() / 2, pMediumHover->getHeight() / 2, mpFont, BLACK, mpLangSystem->getString(STRING_KEYS.MEDIUM_STRING));
+    mpGBManager->addBuffer(MEDIUM_HOVER_TAG, pMediumHover);
+    mpAnimManager->addAnimation(MEDIUM_HOVER_TAG, new AnimationFrames(mpGBManager->getBuffer(MEDIUM_HOVER_TAG)));
+
+    GraphicsBuffer* pHard = new GraphicsBuffer(COLOR_BUTTON_IDLE, 150, 50);
+    mpGraphics->writeText(pHard, pHard->getWidth() / 2, pHard->getHeight() / 2, mpFont, BLACK, mpLangSystem->getString(STRING_KEYS.HARD_STRING));
+    mpGBManager->addBuffer(HARD_TAG, pHard);
+    mpAnimManager->addAnimation(HARD_TAG, new AnimationFrames(mpGBManager->getBuffer(HARD_TAG)));
+
+    //GraphicsBuffer* pBackHover = new GraphicsBuffer(COLOR_BUTTON_HOVER, 150, 50);
+    GraphicsBuffer* pHardHover = new GraphicsBuffer(COLOR_BUTTON_HOVER, 225, 75); //Uncomment for button to grow slightly when hovered
+    mpGraphics->writeText(pHardHover, pHardHover->getWidth() / 2, pHardHover->getHeight() / 2, mpFont, BLACK, mpLangSystem->getString(STRING_KEYS.HARD_STRING));
+    mpGBManager->addBuffer(HARD_HOVER_TAG, pHardHover);
+    mpAnimManager->addAnimation(HARD_HOVER_TAG, new AnimationFrames(mpGBManager->getBuffer(HARD_HOVER_TAG)));
+
+    GraphicsBuffer* pSoundOn = new GraphicsBuffer(COLOR_BUTTON_IDLE, 150, 50);
+    mpGraphics->writeText(pSoundOn, pSoundOn->getWidth() / 2, pSoundOn->getHeight() / 2, mpFont, BLACK, mpLangSystem->getString(STRING_KEYS.SOUND_ON_STRING));
+    mpGBManager->addBuffer(SOUND_ON_TAG, pSoundOn);
+    mpAnimManager->addAnimation(SOUND_ON_TAG, new AnimationFrames(mpGBManager->getBuffer(SOUND_ON_TAG)));
+
+    //GraphicsBuffer* pBackHover = new GraphicsBuffer(COLOR_BUTTON_HOVER, 150, 50);
+    GraphicsBuffer* pSoundOnHover = new GraphicsBuffer(COLOR_BUTTON_HOVER, 225, 75); //Uncomment for button to grow slightly when hovered
+    mpGraphics->writeText(pSoundOnHover, pSoundOnHover->getWidth() / 2, pSoundOnHover->getHeight() / 2, mpFont, BLACK, mpLangSystem->getString(STRING_KEYS.SOUND_ON_STRING));
+    mpGBManager->addBuffer(SOUND_ON_HOVER_TAG, pSoundOnHover);
+    mpAnimManager->addAnimation(SOUND_ON_HOVER_TAG, new AnimationFrames(mpGBManager->getBuffer(SOUND_ON_HOVER_TAG)));
+
+    GraphicsBuffer* pSoundOff = new GraphicsBuffer(COLOR_BUTTON_IDLE, 150, 50);
+    mpGraphics->writeText(pSoundOff, pSoundOff->getWidth() / 2, pSoundOff->getHeight() / 2, mpFont, BLACK, mpLangSystem->getString(STRING_KEYS.SOUND_OFF_STRING));
+    mpGBManager->addBuffer(SOUND_OFF_TAG, pSoundOff);
+    mpAnimManager->addAnimation(SOUND_OFF_TAG, new AnimationFrames(mpGBManager->getBuffer(SOUND_OFF_TAG)));
+
+    //GraphicsBuffer* pBackHover = new GraphicsBuffer(COLOR_BUTTON_HOVER, 150, 50);
+    GraphicsBuffer* pSoundOffHover = new GraphicsBuffer(COLOR_BUTTON_HOVER, 225, 75); //Uncomment for button to grow slightly when hovered
+    mpGraphics->writeText(pSoundOffHover, pSoundOffHover->getWidth() / 2, pSoundOffHover->getHeight() / 2, mpFont, BLACK, mpLangSystem->getString(STRING_KEYS.SOUND_OFF_STRING));
+    mpGBManager->addBuffer(SOUND_OFF_HOVER_TAG, pSoundOffHover);
+    mpAnimManager->addAnimation(SOUND_OFF_HOVER_TAG, new AnimationFrames(mpGBManager->getBuffer(SOUND_OFF_HOVER_TAG)));
+
+}
+
+
+void Game::handleEvent(const Event& currentEvent)
+{
+    if (currentEvent.getType() == MESSAGE_EVENT)
+    {
+        const MessageEvent& messageEvent = static_cast<const MessageEvent&>(currentEvent);
+        cout << messageEvent.getMessage() << endl;
+    }
+
+    if (currentEvent.getType() == ACTION_GAME_EVENT)
+    {
+        const ActionEvent& actionEvent = static_cast<const ActionEvent&>(currentEvent);
+        //cout << "Action: " << actionEvent.getAction() << endl;
+
+        if (actionEvent.getAction() == EXIT_GAME)
+        {
+            if (mPlayLevel)
+            {
+                mpLevelManager->saveLevel(ASSET_PATH + mSaveFilename, mpUnitManager, mpPlayer->getPosition(), mTimeRemainingInLevel, mPoints);
+            }
+            
+            mEndGame = true;
+        }
+        else if (actionEvent.getAction() == START_GAME) // when start button is pressed
+        {
+            if (!mPlayLevel)
+            {
+                if (mNextLevel) //player flagged to move to next level, reached the target segment number
+                {
+                    mNextLevel = false;
+                    loadSelectedLevel(mpLevelManager->getCurrentLevelIndex() + 1, mpGBManager->getBuffer(WALL_TAG)->getSections(), false);
+                }
+                else //player died
+                {
+                    loadSelectedLevel(0, mpGBManager->getBuffer(WALL_TAG)->getSections(), false);
+                }
+                mTimeRemainingInLevel = mpLevelManager->getCurrentLevel()->getTimeLimit(mpLevelManager->getDifficulty());
+                mPlayLevel = true;
+
+                mpMenuSystem->toggleButtons(false);
+            }
+        }
+        else if (actionEvent.getAction() == OPTIONS) //options button pressed
+        {
+            mpMenuSystem->setCurrentMenu(MenuType::OPTIONS_MENU);
+        }
+        else if (actionEvent.getAction() == LOAD) //load button pressed
+        {
+            bool loadedSave = mpLevelManager->loadSave(ASSET_PATH + mSaveFilename, mTimeRemainingInLevel, mPoints); //load save file
+
+            if (loadedSave)
+            {
+                //load and render proper level to screen, spawn player
+                loadSelectedLevel(mpLevelManager->getCurrentLevelIndex(), mpGBManager->getBuffer(WALL_TAG)->getSections(), true);
+                mpPlayer->setPosition(mpLevelManager->getSavedPosition()); //set player position to saved position
+                mPlayLevel = true;
+                mpMenuSystem->toggleButtons(false);
+            }
+        }
+        else if (actionEvent.getAction() == NEXT_LEVEL) //'Next Level' pressed
+        {
+            //currently just fires start game event to start the game again since level is increased at the end of the last level
+            //may want to do more here later than START_GAME though
+            mpEventSystem->fireEvent(ActionEvent(START_GAME));
+        }
+        else if (actionEvent.getAction() == MAIN_MENU)
+        {
+            mNextLevel = false;
+            mPoints = 0; //set points to 0 at main menu, overwritten when loading save
+            mpMenuSystem->setCurrentMenu(MenuType::START_MENU);
+        }
+        else if (actionEvent.getAction() == SWAP_TO_FIRST_LANGUAGE)
+        {
+            mpLangSystem->setCurrentLanguage(mpLangSystem->getFirstLanguage());
+            generateButtonBuffers();
+            
+            mpMenuSystem->resetAllTitles(mpLangSystem->getString(STRING_KEYS.TITLE_STRING), mpLangSystem->getString(STRING_KEYS.OPTIONS_STRING),
+                mpLangSystem->getString(STRING_KEYS.CLEAR_LEVEL_STRING), mpLangSystem->getString(STRING_KEYS.QUIT_STRING));
+        }
+        else if (actionEvent.getAction() == SWAP_TO_SECOND_LANGUAGE)
+        {
+            mpLangSystem->setCurrentLanguage(mpLangSystem->getSecondLanguage());
+            generateButtonBuffers();
+            
+            mpMenuSystem->resetAllTitles(mpLangSystem->getString(STRING_KEYS.TITLE_STRING), mpLangSystem->getString(STRING_KEYS.OPTIONS_STRING),
+                mpLangSystem->getString(STRING_KEYS.CLEAR_LEVEL_STRING), mpLangSystem->getString(STRING_KEYS.QUIT_STRING));
+        }
+        else if (actionEvent.getAction() == SWAP_TO_THIRD_LANGUAGE)
+        {
+            mpLangSystem->setCurrentLanguage(mpLangSystem->getThirdLanguage());
+            generateButtonBuffers();
+            
+            mpMenuSystem->resetAllTitles(mpLangSystem->getString(STRING_KEYS.TITLE_STRING), mpLangSystem->getString(STRING_KEYS.OPTIONS_STRING),
+                mpLangSystem->getString(STRING_KEYS.CLEAR_LEVEL_STRING), mpLangSystem->getString(STRING_KEYS.QUIT_STRING));
+        }
+        else if (actionEvent.getAction() == SOUND_ON)
+        {
+            mpSoundManager->changeVolume(MAX_SOUND);
+        }
+        else if (actionEvent.getAction() == SOUND_OFF)
+        {
+            mpSoundManager->changeVolume(MIN_SOUND);
+        }
+    }
+
+    if (currentEvent.getType() == SPAWN_WALL_EVENT)
+    {
+        const SpawnWallEvent& spawnWallEvent = static_cast<const SpawnWallEvent&>(currentEvent);
+        mpUnitManager->addUnit(spawnWallEvent.getPos(), mpAnimManager->getFrames(WALL_TAG), DEFAULT_FPS, DEFAULT_LOOP, WALL_UNIT_TYPE, false, false, true);
+    }
+    
+    if (currentEvent.getType() == SPAWN_SPIKE_EVENT)
+    {
+        const SpawnSpikeEvent& spawnSpikeEvent = static_cast<const SpawnSpikeEvent&>(currentEvent);
+        mpUnitManager->addUnit(spawnSpikeEvent.getPos(), mpAnimManager->getFrames(SPIKE_TAG), DEFAULT_FPS, DEFAULT_LOOP, SPIKE_UNIT_TYPE, false, false, false);
+    }
+
+    if (currentEvent.getType() == SPAWN_ARROW_TRAP_EVENT)
+    {
+        const SpawnArrowTrapEvent& spawnArrowTrapEvent = static_cast<const SpawnArrowTrapEvent&>(currentEvent);
+
+        //get information for arrow trap to create it
+        float arrowFreq = mpLevelManager->getCurrentLevel()->getArrowFreq(mpLevelManager->getDifficulty());
+        AnimationFrames* pTrapFrames = mpAnimManager->getFrames(ARROW_TRAP_TAG);
+        Vector2D arrowDimensions = Vector2D(0, 0);
+
+        //check if arrow trap animation frames has any frames before trying to get dimensions
+        if (pTrapFrames->getFrameTotal() > 0)
+        {
+            arrowDimensions = mpAnimManager->getFrames(ARROWS_TAG)->getSprite(0).getWidthHeight();
+        }
+
+        //create arrow trap
+        ArrowTrapUnit* pArrowTrap = new ArrowTrapUnit(spawnArrowTrapEvent.getPos(), pTrapFrames, DEFAULT_FPS, DEFAULT_LOOP,
+            ARROW_TRAP_UNIT_TYPE, false, false, true, arrowFreq, arrowDimensions);
+        pArrowTrap->init();
+        mpUnitManager->addUnit(pArrowTrap);
+    }
+
+    if (currentEvent.getType() == SPAWN_ARROW_EVENT)
+    {
+        mpSoundManager->getSound(ARROW_SHOOT_TAG)->play();
+        const SpawnArrowEvent& spawnArrowEvent = static_cast<const SpawnArrowEvent&>(currentEvent);
+        ArrowUnit* pNewArrow = new ArrowUnit(spawnArrowEvent.getPos(), mpAnimManager->getFrames(ARROWS_TAG), DEFAULT_FPS, DEFAULT_LOOP,
+            ARROWS_UNIT_TYPE, true, false, false, spawnArrowEvent.getLife(), spawnArrowEvent.getVelocity());
+        pNewArrow->setAngle(spawnArrowEvent.getAngle());
+        pNewArrow->init();
+        mpUnitManager->addUnit(pNewArrow);
+        
+    }
+
+    if (currentEvent.getType() == SPAWN_COLLECTIBLE_EVENT)
+    {
+        const SpawnCollectibleEvent& spawnCollectibleEvent = static_cast<const SpawnCollectibleEvent&>(currentEvent);
+        mpUnitManager->addUnit(spawnCollectibleEvent.getPos(), mpAnimManager->getFrames(COLLECTIBLE_ANIM_TAG), COLLECT_FRAME_RATE, DEFAULT_LOOP, COLLECTIBLE_UNIT_TYPE, false, false, false);
+    }
+
+    if (currentEvent.getType() == COLLISION_EVENT)
+    {
+        const CollisionEvent& collisionEvent = static_cast<const CollisionEvent&>(currentEvent);
+
+        /*if (collisionEvent.getCollider()->getType() == FOOD_UNIT_TYPE)
+        {
+            mpFood->setEaten(true);
+            collisionEvent.getCollider()->setDelete(true);
+        }
+
+        if (collisionEvent.getCollider()->getType() == SPEED_UP_UNIT_TYPE)
+        {
+            mpSnake->setSnakeSpeed(mpSnake->getSnakeSpeed() + 1);
+            collisionEvent.getCollider()->setDelete(true);
+        }
+
+        if (collisionEvent.getCollider()->getType() == SLOW_DOWN_UNIT_TYPE)
+        {
+            mpSnake->setSnakeSpeed(mpSnake->getSnakeSpeed() - 1);
+            collisionEvent.getCollider()->setDelete(true);
+        }
+
+        if (collisionEvent.getCollider()->getType() == BONUS_POINTS_UNIT_TYPE)
+        {
+            collisionEvent.getCollider()->setDelete(true);
+        }*/
+    }
+
+    if (currentEvent.getType() == ADD_SCORE_EVENT)
+    {
+        const AddScoreEvent& addScoreEvent = static_cast<const AddScoreEvent&>(currentEvent);
+        mPoints += addScoreEvent.getScore();
+        mpSoundManager->getSound(COLLECTIBLE_GRABBED_TAG)->play();
+    }
+
+    if (currentEvent.getType() == END_LEVEL_EVENT)
+    {
+        const EndLevelEvent& endEvent = static_cast<const EndLevelEvent&>(currentEvent);
+
+        mPlayLevel = false;
+        mNextLevel = endEvent.getNextLevel();
+
+        mpMenuSystem->toggleButtons(true);
+
+        if (!mNextLevel) //player died, ran out of time, lost basically
+        {
+            mpMenuSystem->setCurrentMenu(MenuType::END_MENU);
+            mpMenuSystem->getCurrentMenu()->setTitleText(mpLangSystem->getString(STRING_KEYS.LOSE_STRING));
+            mpSoundManager->getSound(DEATH_TAG)->play();
+        }
+        else if (mpLevelManager->getCurrentLevelIndex() >= mpLevelManager->getLastLevelIndex())
+        {
+            mpMenuSystem->setCurrentMenu(MenuType::END_MENU);
+            mpMenuSystem->getCurrentMenu()->setTitleText(mpLangSystem->getString(STRING_KEYS.WIN_STRING));
+            mpSoundManager->getSound(GAME_WIN_TAG)->play();
+        }
+        else
+        {
+            mpMenuSystem->setCurrentMenu(MenuType::BETWEEN_MENU);
+            mpMenuSystem->getCurrentMenu()->setTitleText(mpLangSystem->getString(STRING_KEYS.CLEAR_LEVEL_STRING));
+        }
+    }
+}
+
+
+void Game::input()
+{
+    mInput.fireInputEvents();
+}
+
+
+void Game::update(float elapsedTime)
+{
+    /*mpPlayer->checkDoorCollision(mpUnitManager);
+    //Check arrow collision
+    mpPlayer->checkSpikeCollision(mpUnitManager);
+    mpPlayer->checkCollectibleCollision(mpUnitManager, mpLevelManager->getCurrentLevel());*/
+    mpPlayer->checkCollisions(mpUnitManager, mpLevelManager->getCurrentLevel(), mpSoundManager->getSound(ARROW_STAB_TAG), mpSoundManager->getSound(SPIKE_STAB_TAG), mpSoundManager->getSound(DOOR_OPEN_TAG));
+    mpUnitManager->updateAll(elapsedTime * *mTimeScale);
+}
+
+
+void Game::render()
+{
+    mpGraphics->clear();
+    mpGraphics->draw(mpGBManager->getBuffer(BACKGROUND_TAG), 0, 0, 1, 1); //draw background
+    mpUnitManager->drawAll();
+    mpHud->displayHud();
+    mpGraphics->flip();
+}
+
+
+void Game::fireHudEvents(float elapsedTime)
+{
+    mpEventSystem->fireEvent(TimeEvent(mTimeRemainingInLevel));
+    mpEventSystem->fireEvent(ScoreEvent(mPoints));
+
+    mActualFps = *mTimeScale / elapsedTime;
+    mpEventSystem->fireEvent(FpsEvent(mActualFps));
+}
+
+
+void Game::loadSelectedLevel(unsigned int level, Vector2D wallSections, bool loadingSave)
+{
+    if (level > mpLevelManager->getLastLevelIndex())
+    {
+        level = 0;
+    }
+
+    mpLevelManager->setLevelIndex(level);
+    Level* newLevel = mpLevelManager->getCurrentLevel();
+
+    endLevel();
+
+    for (auto wall : newLevel->getWallPositions())
+    {
+        mpEventSystem->fireEvent(SpawnWallEvent(wall, mpGBManager->getBuffer(WALL_TAG)));
+    }
+
+    for (auto spike : newLevel->getSpikePositions())
+    {
+        mpEventSystem->fireEvent(SpawnSpikeEvent(spike, mpGBManager->getBuffer(SPIKE_TAG)));
+    }
+
+    for (auto arrowTrap : newLevel->getArrowPositions())
+    {
+        mpEventSystem->fireEvent(SpawnArrowTrapEvent(arrowTrap, mpGBManager->getBuffer(ARROW_TRAP_TAG)));
+    }
+
+
+    vector<Vector2D> collectiblePositions;
+    if (loadingSave) //if loading from a save, use saved collectible positions
+    {
+        collectiblePositions = mpLevelManager->getSavedCollectiblePositions();
+    }
+    else //if not loading from a save, load collectible positions from save file
+    {
+        collectiblePositions = newLevel->getCollectiblePositions();
+    }
+
+    for (auto Collectible : collectiblePositions)
+    {
+        mpEventSystem->fireEvent(SpawnCollectibleEvent(Collectible, mpGBManager->getBuffer(COLLECTIBLE_TAG)));
+    }
+    
+    mpPlayer = new PlayerUnit(/*Vector2D(mpGraphics->getWidth() / 2, mpGraphics->getHeight() / 2)*/ newLevel->getSpawnPos(),
+        mpAnimManager->getFrames(PLAYER_TAG), PLAYER_FRAME_RATE, DEFAULT_LOOP, PLAYER_UNIT_TYPE, true, true, true, 
+        mpSoundManager->getSound(IDLE_SOUND_TAG), mpSoundManager->getSound(JUMP_SOUND_TAG), mpSoundManager->getSound(WALK_SOUND_TAG));
+    mpPlayer->addAnimation(mpAnimManager->getFrames(PLAYER_IDLE_TAG));
+    mpPlayer->addAnimation(mpAnimManager->getFrames(PLAYER_WALK_TAG));
+    mpUnitManager->addUnit(mpPlayer);
+
+    GraphicsBuffer* pDoorBuffer = mpGBManager->getBuffer(DOOR_TAG);
+    mpDoor = new Unit(newLevel->getDoorPos(),
+        mpAnimManager->getFrames(DOOR_TAG), DEFAULT_FPS, DEFAULT_LOOP, DOOR_UNIT_TYPE, false, false, false);
+    mpUnitManager->addUnit(mpDoor);
+
+    mpLevelManager->printLevelInfo(mpLevelManager->getCurrentLevelIndex());
+
+    mPlayLevel = false;
+}
+
+
+void Game::endLevel()
+{
+    if (mpUnitManager->getUnitCount() != 0)
+    {
+        mpUnitManager->clearAll();
+    }
+}
+
+
+void Game::gameLoop()
+{
+    mEndGame = false;
+
+    PerformanceTracker* pPerformance = new PerformanceTracker;
+
+    Timer timer;
+    timer.start();
+
+    double previous = timer.getElapsedTime();
+
+    while (!mEndGame)
+    {
+        double current = timer.getElapsedTime();
+        double elapsedTime = (current - previous) / 1000;
+        previous = current;
+
+        while (!mPlayLevel && !mEndGame) //if not playing and not ending, player must be in a menu
+        {
+            current = timer.getElapsedTime();
+            elapsedTime = (current - previous) / 1000;
+            previous = current;
+            input();
+
+            if (mNextLevel && !mEndGame)
+            {
+                mPlayLevel = false;
+                endLevel();
+            }
+
+            mpMenuSystem->update(elapsedTime);
+
+            mpGraphics->draw(mpGBManager->getBuffer(BACKGROUND_TAG), 0, 0, 1, 1); //draw background
+
+            mpMenuSystem->drawMenu(mpFont, mPoints, mpLangSystem->getString(STRING_KEYS.POINTS_STRING) + ": ");
+
+            mpGraphics->flip();
+
+            timer.sleepUntilElapsed(mTimePerFrame);
+        }
+
+        //game loop
+        if (!mEndGame && !mNextLevel && /*!dead &&*/ mPlayLevel)
+        {
+            pPerformance->clearTracker(LOOP_TRACKER_NAME);
+            pPerformance->startTracking(LOOP_TRACKER_NAME);
+
+            input();
+            update(elapsedTime);
+            render();
+            if (!mpSoundManager->getSound(DRIP_TAG)->getStatusPlaying())
+            {
+                mpSoundManager->getSound(DRIP_TAG)->play();
+            }
+
+            timer.sleepUntilElapsed(previous + mTimePerFrame);
+
+            mTimeRemainingInLevel -= elapsedTime; //convert to seconds
+
+            if (mTimeRemainingInLevel <= 0)
+            {
+                mpEventSystem->fireEvent(EndLevelEvent(false)); //end level, don't go to next level
+            }
+
+            fireHudEvents(elapsedTime * 1000);
+
+            pPerformance->stopTracking(LOOP_TRACKER_NAME);
+            cout << pPerformance->getElapsedTime(LOOP_TRACKER_NAME) << endl;
+        }
+    }
+    
+    delete pPerformance;
+}
+
+
+Vector2D Game::findEmptyPosition(float xDiameter, float yDiameter)
+{
+    bool spaceEmpty = false;
+
+    //yes I am aware this is bad but it's a quick implementation
+    while (!spaceEmpty)
+    {
+        float xPos = rand() % mpGraphics->getWidth();
+        float yPos = rand() % mpGraphics->getHeight();
+
+        if (mpUnitManager->checkCollisionInArea(Vector2D(xPos, yPos), xDiameter, yDiameter, nullptr, false).size() == 0)
+        {
+            return Vector2D(xPos, yPos);
+        }
+    }
+
+    return Vector2D(0, 0); //how did you get here?
+}

@@ -1,0 +1,45 @@
+PowerUps
+
+timer 10
+points 10 500
+speed 10 2
+slow 10 2
+
+endPowerUps
+
+
+SnakeInfo
+
+speed 5
+startLength 10
+targetLength 15
+lengthPerFood 1
+pointsPerFood 25
+
+endSnakeInfo
+
+LevelLayout
+
+24
+18
+
+w w w w w w w w w w w w w w w w w w w w w w w w
+w 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 w
+w 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 w
+w 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 w
+w 0 0 0 w w w w 0 0 w w w w 0 0 w w w w 0 0 0 w
+w 0 0 0 w 0 0 0 0 0 0 0 0 0 0 0 0 0 0 w 0 0 0 w
+w 0 0 0 w 0 0 0 0 0 0 0 0 0 0 0 0 0 0 w 0 0 0 w
+w 0 0 0 w 0 0 0 0 0 0 0 0 0 0 0 0 0 0 w 0 0 0 w
+w 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 w
+w 0 0 0 0 0 0 0 0 0 0 0 s 0 0 0 0 0 0 0 0 0 0 w
+w 0 0 0 w 0 0 0 0 0 0 0 0 0 0 0 0 0 0 w 0 0 0 w
+w 0 0 0 w 0 0 0 0 0 0 0 0 0 0 0 0 0 0 w 0 0 0 w
+w 0 0 0 w 0 0 0 0 0 0 0 0 0 0 0 0 0 0 w 0 0 0 w
+w 0 0 0 w w w w 0 0 w w w w 0 0 w w w w 0 0 0 w
+w 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 w
+w 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 w
+w 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 w
+w w w w w w w w w w w w w w w w w w w w w w w w
+
+endLevelLayout

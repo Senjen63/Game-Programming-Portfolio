@@ -1,0 +1,41 @@
+#include "MenuSystem.h"
+
+#include "PlayerActionEvent.h"
+#include "EventSystem.h"
+#include "UnitManager.h"
+#include "Animation.h"
+#include "Font.h"
+#include "Game.h"
+
+MenuSystem::MenuSystem(string filename, Font* menuFont) : mpMenuFont(menuFont)
+{
+	mpGame = Game::getInstance();
+	mpGraphicsSystem = mpGame->getGraphicsSystem();
+
+	EventSystem::getInstance()->addListener((EventType)PlayerAction::BUTTON_PRESS, this);	
+	mMenuState = MenuState::MAIN_MENU;
+}
+
+MenuSystem::~MenuSystem()
+{
+}
+
+void MenuSystem::update()
+{
+}
+
+void MenuSystem::draw()
+{
+}
+
+void MenuSystem::handleEvent(const Event& theEvent)
+{
+	if (mpGame->getState() == GameState::IN_MENU)
+	{
+		if (theEvent.getType() == (EventType)PlayerAction::BUTTON_PRESS)
+		{
+			const PlayerActionEvent& keyEvent = static_cast<const PlayerActionEvent&>(theEvent);
+			
+		}
+	}
+}

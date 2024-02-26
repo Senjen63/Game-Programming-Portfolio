@@ -1,0 +1,108 @@
+#include "GraphicsBuffer.h"
+
+GraphicsBuffer::GraphicsBuffer(unsigned int width, unsigned int height)
+{
+    mpBuffer = new sf::Texture();
+    mpBuffer->create(width, height);
+}
+
+GraphicsBuffer::GraphicsBuffer( string filePath, Vector2D sections)
+{
+    mOwnsBuffer = false;
+    mpBuffer = new sf::Texture();
+
+    //loads file to texture, if fail, set mpBuffer to nullptr and print failure in console
+    if (!mpBuffer->loadFromFile(filePath.c_str()))
+    {
+        cout << endl << "File Does Not Exist: " << filePath << endl << endl;
+        mpBuffer = nullptr;
+    }
+
+    mSections = sections;
+}
+
+
+GraphicsBuffer::GraphicsBuffer( sf::Texture* pTarget)
+{
+    mOwnsBuffer = false;
+    mpBuffer = new sf::Texture();
+    mpBuffer = pTarget;
+}
+
+
+GraphicsBuffer::GraphicsBuffer(GraphicsBuffer* pTarget)
+{
+    mOwnsBuffer = false;
+    mpBuffer = new sf::Texture();
+    mpBuffer = pTarget->mpBuffer;
+    mSections = pTarget->getSections();
+}
+
+
+GraphicsBuffer::GraphicsBuffer( Color color, unsigned int width, unsigned int height )
+{
+    mOwnsBuffer = false;
+    mpBuffer = new sf::Texture();
+    
+    //create render texture that can be modified
+    sf::RenderTexture render;
+    render.create(width, height);
+
+    //clear to color
+    render.clear(sf::Color(color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha()));
+    render.display(); //register changes on render texture
+
+    *mpBuffer = render.getTexture(); //set member buffer to render texture
+}
+
+
+GraphicsBuffer::~GraphicsBuffer()
+{
+    if ( mOwnsBuffer )
+    {
+        delete mpBuffer;
+    }
+}
+
+int GraphicsBuffer::getWidth()
+{
+    return mpBuffer->getSize().x;
+}
+
+
+int GraphicsBuffer::getHeight()
+{
+    return mpBuffer->getSize().y;
+}
+
+
+Vector2D GraphicsBuffer::getSections()
+{
+    return mSections;
+}
+
+
+void GraphicsBuffer::setSections(Vector2D sections)
+{
+    mSections = sections;
+}
+
+
+bool GraphicsBuffer::isBitmapNull()
+{
+    return (mpBuffer == nullptr);
+}
+
+
+void GraphicsBuffer::clearToColor(Color color)
+{
+    //create render texture that can be modified
+    sf::RenderTexture render;
+    render.create(mpBuffer->getSize().x, mpBuffer->getSize().y);
+
+    //clear to color
+    render.clear(sf::Color(color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha()));
+    render.display(); //register changes on render texture
+
+    *mpBuffer = render.getTexture(); //set member buffer to render texture
+}

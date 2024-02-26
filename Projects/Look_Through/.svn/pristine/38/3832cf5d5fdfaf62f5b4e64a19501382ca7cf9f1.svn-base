@@ -1,0 +1,261 @@
+#include "SettingsMenu.h"
+#include "Game.h"
+#include "UnitManager.h"
+#include "ButtonComponent.h"
+#include "IButtonListener.h"
+#include <fstream>
+
+const string SETTINGS_MENU_FILE = "Data\\SettingsMenu.txt";
+const int WORDS = 10;
+
+void SettingsMenu::init()
+{
+
+	std::ifstream input;// = std::ifstream(SETTINGS_MENU_FILE);
+	input.open(SETTINGS_MENU_FILE);
+
+	if (!input.good())
+	{
+		throw "Settings menu init failed";
+	}
+
+	std::string line;
+
+	while (!input.eof())
+	{
+		input >> line;
+
+		if (line == "ENGLISH")
+		{
+			for (int i = 0; i < WORDS; i++)
+			{
+				std::string key, word;
+				input >> key >> word;
+				mEnglish[key] = word;
+			}
+
+			input >> line;
+			mLanguages.push_back(mEnglish);
+		}
+		if (line == "SPANISH")
+		{
+			for (int i = 0; i < WORDS; i++)
+			{
+				std::string key, word;
+				input >> key >> word;
+				mSpanish[key] = word;
+			}
+
+			input >> line;
+			mLanguages.push_back(mSpanish);
+		}
+		if (line == "POLISH")
+		{
+			for (int i = 0; i < WORDS; i++)
+			{
+				std::string key, word;
+				input >> key >> word;
+				mPolish[key] = word;
+			}
+
+			input >> line;
+			mLanguages.push_back(mPolish);
+		}
+	}
+
+
+	UnitManager* uMan = Game::getInstance()->getUnitManager();
+	GraphicsBufferManager* gbManager = Game::getInstance()->getGraphicsBufferManager();
+	AnimationManager* aManager = Game::getInstance()->getAnimationManager();
+
+	// Setting up easy difficulty button
+	std::vector<Sprite> easyButtonSprites;
+	easyButtonSprites.push_back(Sprite(&gbManager->getGraphicsBuffer("EasyButtonBuffer")));
+	aManager->addAnimationFrames("EasyButtonFrames", easyButtonSprites);
+	Animation easyButtonAnimation = *aManager->addAnimation("EasyButtonAnim", "EasyButtonFrames", 1, true);
+	std::unordered_map<std::string, Animation> easyButtonAnims;
+	easyButtonAnims["EasyButtonAnim"] = easyButtonAnimation;
+
+	UnitParameters easyButtonParams = UnitParameters(Vector2D(0, 150), easyButtonAnims, "EasyButtonAnim");
+
+	// Setting up normal difficulty button
+	std::vector<Sprite> normalButtonSprites;
+	normalButtonSprites.push_back(Sprite(&gbManager->getGraphicsBuffer("NormalButtonBuffer")));
+	aManager->addAnimationFrames("NormalButtonFrames", normalButtonSprites);
+	Animation normalButtonAnimation = *aManager->addAnimation("NormalButtonAnim", "NormalButtonFrames", 1, true);
+	std::unordered_map<std::string, Animation> normalButtonAnims;
+	normalButtonAnims["NormalButtonAnim"] = normalButtonAnimation;
+
+	UnitParameters normalButtonParams = UnitParameters(Vector2D(275, 150), normalButtonAnims, "NormalButtonAnim");
+
+	// Setting up hard difficulty button
+	std::vector<Sprite> hardButtonSprites;
+	hardButtonSprites.push_back(Sprite(&gbManager->getGraphicsBuffer("HardButtonBuffer")));
+	aManager->addAnimationFrames("HardButtonFrames", hardButtonSprites);
+	Animation hardButtonAnimation = *aManager->addAnimation("HardButtonAnim", "HardButtonFrames", 1, true);
+	std::unordered_map<std::string, Animation> hardButtonAnims;
+	hardButtonAnims["HardButtonAnim"] = hardButtonAnimation;
+
+	UnitParameters hardButtonParams = UnitParameters(Vector2D(550, 150), hardButtonAnims, "HardButtonAnim");
+
+	// Setting up English button
+	std::vector<Sprite> engButtonSprites;
+	engButtonSprites.push_back(Sprite(&gbManager->getGraphicsBuffer("EnglishButtonBuffer")));
+	aManager->addAnimationFrames("EnglishButtonFrames", engButtonSprites);
+	Animation engButtonAnimation = *aManager->addAnimation("EnglishButtonAnim", "EnglishButtonFrames", 1, true);
+	std::unordered_map<std::string, Animation> engButtonAnims;
+	engButtonAnims["EnglishButtonAnim"] = engButtonAnimation;
+
+	UnitParameters engButtonParams = UnitParameters(Vector2D(0, 425), engButtonAnims, "EnglishButtonAnim");
+
+	// Setting up Spanish button
+	std::vector<Sprite> spanButtonSprites;
+	spanButtonSprites.push_back(Sprite(&gbManager->getGraphicsBuffer("SpanishButtonBuffer")));
+	aManager->addAnimationFrames("SpanishButtonFrames", spanButtonSprites);
+	Animation spanButtonAnimation = *aManager->addAnimation("SpanishButtonAnim", "SpanishButtonFrames", 1, true);
+	std::unordered_map<std::string, Animation> spanButtonAnims;
+	spanButtonAnims["SpanishButtonAnim"] = spanButtonAnimation;
+
+	UnitParameters spanButtonParams = UnitParameters(Vector2D(275, 425), spanButtonAnims, "SpanishButtonAnim");
+
+	// Setting up Polish button
+	std::vector<Sprite> polButtonSprites;
+	polButtonSprites.push_back(Sprite(&gbManager->getGraphicsBuffer("PolishButtonBuffer")));
+	aManager->addAnimationFrames("PolishButtonFrames", polButtonSprites);
+	Animation polButtonAnimation = *aManager->addAnimation("PolishButtonAnim", "PolishButtonFrames", 1, true);
+	std::unordered_map<std::string, Animation> polButtonAnims;
+	polButtonAnims["PolishButtonAnim"] = polButtonAnimation;
+
+	UnitParameters polButtonParams = UnitParameters(Vector2D(550, 425), polButtonAnims, "PolishButtonAnim");
+
+	// Setting up menu button
+	std::vector<Sprite> menuButtonSprites;
+	menuButtonSprites.push_back(Sprite(&gbManager->getGraphicsBuffer("MenuButtonBuffer")));
+	aManager->addAnimationFrames("MenuButtonFrames", menuButtonSprites);
+	Animation menuButtonAnimation = *aManager->addAnimation("MenuButtonAnim", "MenuButtonFrames", 1, true);
+	std::unordered_map<std::string, Animation> menuButtonAnims;
+	menuButtonAnims["MenuButtonAnim"] = menuButtonAnimation;
+
+	UnitParameters menuButtonParams = UnitParameters(Vector2D(275, 700), menuButtonAnims, "MenuButtonAnim");
+
+	// Setting up volume on button
+	std::vector<Sprite> volumeOnButtonSprites;
+	volumeOnButtonSprites.push_back(Sprite(&gbManager->getGraphicsBuffer("EasyButtonBuffer")));
+	aManager->addAnimationFrames("VolumeOnButtonFrames", volumeOnButtonSprites);
+	Animation volumeOnButtonAnimation = *aManager->addAnimation("VolumeOnButtonAnim", "VolumeOnButtonFrames", 1, true);
+	std::unordered_map<std::string, Animation> volumeOnButtonAnims;
+	volumeOnButtonAnims["VolumeOnButtonAnim"] = volumeOnButtonAnimation;
+
+	UnitParameters volumeOnButtonParams = UnitParameters(Vector2D(0, 700), volumeOnButtonAnims, "VolumeOnButtonAnim");
+
+	// Setting up volume on button
+	std::vector<Sprite> volumeOffButtonSprites;
+	volumeOffButtonSprites.push_back(Sprite(&gbManager->getGraphicsBuffer("HardButtonBuffer")));
+	aManager->addAnimationFrames("VolumeOffButtonFrames", volumeOffButtonSprites);
+	Animation volumeOffButtonAnimation = *aManager->addAnimation("VolumeOffButtonAnim", "VolumeOffButtonFrames", 1, true);
+	std::unordered_map<std::string, Animation> volumeOffButtonAnims;
+	volumeOffButtonAnims["VolumeOffButtonAnim"] = volumeOffButtonAnimation;
+
+	UnitParameters volumeOffButtonParams = UnitParameters(Vector2D(550, 700), volumeOffButtonAnims, "VolumeOffButtonAnim");
+
+
+	// Creating buttons
+	std::vector<Component*> easyButtonComponents;
+	easyButtonComponents.push_back(new ButtonComponent("EasyButton", getWord("Easy")));
+	Unit& easyButton = uMan->createUnit(easyButtonParams, easyButtonComponents);
+	((ButtonComponent*)&easyButton.getComponent("ButtonComponent"))->subscribeListener(this);
+
+	std::vector<Component*> normalButtonComponents;
+	normalButtonComponents.push_back(new ButtonComponent("NormalButton", getWord("Normal")));
+	Unit& normalButton = uMan->createUnit(normalButtonParams, normalButtonComponents);
+	((ButtonComponent*)&normalButton.getComponent("ButtonComponent"))->subscribeListener(this);
+
+	std::vector<Component*> hardButtonComponents;
+	hardButtonComponents.push_back(new ButtonComponent("HardButton", getWord("Hard")));
+	Unit& hardButton = uMan->createUnit(hardButtonParams, hardButtonComponents);
+	((ButtonComponent*)&hardButton.getComponent("ButtonComponent"))->subscribeListener(this);
+
+	std::vector<Component*> engButtonComponents;
+	engButtonComponents.push_back(new ButtonComponent("EnglishButton", getWord("English")));
+	Unit& engButton = uMan->createUnit(engButtonParams, engButtonComponents);
+	((ButtonComponent*)&engButton.getComponent("ButtonComponent"))->subscribeListener(this);
+
+	std::vector<Component*> spanButtonComponents;
+	spanButtonComponents.push_back(new ButtonComponent("SpanishButton", getWord("Spanish")));
+	Unit& spanButton = uMan->createUnit(spanButtonParams, spanButtonComponents);
+	((ButtonComponent*)&spanButton.getComponent("ButtonComponent"))->subscribeListener(this);
+
+	std::vector<Component*> polButtonComponents;
+	polButtonComponents.push_back(new ButtonComponent("PolishButton", getWord("Polish")));
+	Unit& polButton = uMan->createUnit(polButtonParams, polButtonComponents);
+	((ButtonComponent*)&polButton.getComponent("ButtonComponent"))->subscribeListener(this);
+
+	std::vector<Component*> menuButtonComponents;
+	menuButtonComponents.push_back(new ButtonComponent("MenuButton", getWord("Menu")));
+	Unit& menuButton = uMan->createUnit(menuButtonParams, menuButtonComponents);
+	((ButtonComponent*)&menuButton.getComponent("ButtonComponent"))->subscribeListener(this);
+
+	std::vector<Component*> volumeOnButtonComponents;
+	volumeOnButtonComponents.push_back(new ButtonComponent("VolumeOnButton", getWord("Volume") + getWord("On")));
+	Unit& volumeOnButton = uMan->createUnit(volumeOnButtonParams, volumeOnButtonComponents);
+	((ButtonComponent*)&volumeOnButton.getComponent("ButtonComponent"))->subscribeListener(this);
+
+	std::vector<Component*> volumeOffButtonComponents;
+	volumeOffButtonComponents.push_back(new ButtonComponent("VolumeOffButton", getWord("Volume") + getWord("Off")));
+	Unit& volumeOffButton = uMan->createUnit(volumeOffButtonParams, volumeOffButtonComponents);
+	((ButtonComponent*)&volumeOffButton.getComponent("ButtonComponent"))->subscribeListener(this);
+
+}
+
+void SettingsMenu::cleanup()
+{
+	cout << "POG";
+}
+
+void SettingsMenu::onButtonPressed(std::string buttonID)
+{
+	if (buttonID == "EasyButton")
+	{
+		Game::getInstance()->getLevelManager()->setCurDiffLev(DifficultyLevel::EASY_DIFFICULTY);
+	}
+	if (buttonID == "NormalButton")
+	{
+		Game::getInstance()->getLevelManager()->setCurDiffLev(DifficultyLevel::NORMAL_DIFFICULTY);
+	}
+	if (buttonID == "HardButton")
+	{
+		Game::getInstance()->getLevelManager()->setCurDiffLev(DifficultyLevel::HARD_DIFFICULTY);
+	}
+	if (buttonID == "EnglishButton")
+	{
+		Game::getInstance()->setCurrentLanguage(int(Languages::ENGLISH_LANG));
+	}
+	if (buttonID == "SpanishButton")
+	{
+		Game::getInstance()->setCurrentLanguage(int(Languages::SPANISH_LANG));
+	}
+	if (buttonID == "PolishButton")
+	{
+		Game::getInstance()->setCurrentLanguage(int(Languages::POLISH_LANG));
+	}
+	if (buttonID == "MenuButton")
+	{
+		Game::getInstance()->changeCurrentScreen(ScreenType::START_MENU);
+	}
+	if (buttonID == "VolumeOnButton")
+	{
+		EventSystem::getInstance()->fireEvent(VolumeChangeEvent(50));
+	}
+	if (buttonID == "VolumeOffButton")
+	{
+		EventSystem::getInstance()->fireEvent(VolumeChangeEvent(0));
+	}
+}
+
+
+std::string SettingsMenu::getWord(std::string text)
+{
+	unordered_map<std::string, std::string> test = getCurLangStrings();
+	string texttest = test[text];
+	return texttest;
+}

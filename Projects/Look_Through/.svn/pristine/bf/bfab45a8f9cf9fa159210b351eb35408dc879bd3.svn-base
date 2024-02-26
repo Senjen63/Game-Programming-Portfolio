@@ -1,0 +1,15 @@
+#pragma once
+
+#include "HudEvent.h"
+
+class TimeEvent : public HudEvent
+{
+public:
+	TimeEvent(float theTime);
+	~TimeEvent();
+
+	inline float getTime() const { return mTime; }
+
+private:
+	float mTime = 0.0f;
+};

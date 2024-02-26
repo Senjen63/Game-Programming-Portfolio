@@ -1,0 +1,151 @@
+#include <PerformanceTracker.h>
+#include <string>
+#include "GraphicsSystem.h"
+#include "GraphicsBuffer.h"
+#include <Vector2D.h>
+#include "Sprite.h"
+#include "Font.h"
+#include "Color.h"
+#include <Timer.h>
+#include <MemoryTracker.h>
+#include <stdlib.h>
+
+using namespace std;
+
+int main() 
+{
+	PerformanceTracker* pPerformanceTracker = new PerformanceTracker;
+
+	srand(time(NULL));
+
+	const string INIT_TRACKER_NAME = "init";
+	const string DRAW_TRACKER_NAME = "draw";
+	const string WAIT_TRACKER_NAME = "wait";
+
+	const int DISP_WIDTH = 800;
+	const int DISP_HEIGHT = 600;
+	const int FONT_SIZE = 48;
+	const float RED_SQUARE_SCALE = 0.67f;
+	const int NUM_SMURFS_ROW_COLUMN = 4;
+	const int MIN_RAND_NUMBER = 0;
+	
+	int red = 0;
+	int blue = 0;
+	int green = 0;
+	int a = 255;
+
+	const string STEPS_IMAGE = "steps.png";
+	const string SMURF_IMAGE = "smurf_sprites.png";
+	const string QUIMBY_IMAGE = "mayor_quimby.png";
+	const string MESSAGE = "Curse you Papa Smurf!";
+	const string FONT_FILENAME = "cour.ttf";
+	const string BACKBUFFER_IMAGE = "backbuffer.jpg";
+	const string REDBUFFER_IMAGE = "redbuffer.jpg";
+
+	Vector2D* pZeroZeroLocation = new Vector2D(0, 0);
+
+	GraphicsSystem* pGraphicsSystem = new GraphicsSystem();
+	pGraphicsSystem->init(DISP_WIDTH, DISP_HEIGHT);
+
+	Color* blackColor = new Color(red, green, blue, a);
+
+	red = 255;
+
+	Color* redColor = new Color(red, green, blue, a);
+
+	Font* font = new Font(FONT_SIZE, FONT_FILENAME);
+
+	GraphicsBuffer* pStepsBuffer = new GraphicsBuffer(STEPS_IMAGE);
+	GraphicsBuffer* pSmurfBuffer = new GraphicsBuffer(SMURF_IMAGE);
+	GraphicsBuffer* pQuimbyBuffer = new GraphicsBuffer(QUIMBY_IMAGE);
+	GraphicsBuffer* pRedSquareBuffer = new GraphicsBuffer(DISP_WIDTH, DISP_HEIGHT);
+
+	pGraphicsSystem->setColor(pRedSquareBuffer, redColor);
+
+	Sprite* pQuimbySprite = new Sprite(pQuimbyBuffer->getBitmapWidth(), pQuimbyBuffer->getBitmapHeight(), pZeroZeroLocation, pQuimbyBuffer);
+	Sprite* pStepsSprite = new Sprite(pStepsBuffer->getBitmapWidth(), pStepsBuffer->getBitmapHeight(), pZeroZeroLocation, pStepsBuffer);
+	Sprite* pRedSquareSprite = new Sprite(pRedSquareBuffer->getBitmapWidth(), pRedSquareBuffer->getBitmapHeight(), pZeroZeroLocation, pRedSquareBuffer);
+
+	Vector2D* pQuimbyLocation = new Vector2D((DISP_WIDTH - (pRedSquareSprite->getSpriteWidth() * RED_SQUARE_SCALE)) / 2, (DISP_HEIGHT - (pRedSquareSprite->getSpriteHeight() * RED_SQUARE_SCALE)) / 2);
+
+	/*
+	draw qumiby on red square with text 'Curse you papa smurf!"
+	draw steps in the background
+	*/
+	pGraphicsSystem->draw(pRedSquareBuffer, pZeroZeroLocation, pQuimbySprite);
+	
+	pGraphicsSystem->writeText(pRedSquareBuffer, pZeroZeroLocation, font, blackColor, MESSAGE);
+	
+	pGraphicsSystem->draw(pZeroZeroLocation, pStepsSprite);
+	
+	pGraphicsSystem->draw(pQuimbyLocation, pRedSquareSprite, RED_SQUARE_SCALE);
+
+	vector<Sprite*> pSmurfSprites;
+	vector<Vector2D*> pSmurfLocations;
+
+	// create 16 smurf sprites
+	for (float i = 1; i <= 4; i++) 
+	{
+		for (float j = 1; j <= 4; j++)
+		{
+			Vector2D* pSmurfLocation = new Vector2D((pSmurfBuffer->getBitmapWidth() - (pSmurfBuffer->getBitmapWidth() * (i/ NUM_SMURFS_ROW_COLUMN))), (pSmurfBuffer->getBitmapHeight() - (pSmurfBuffer->getBitmapHeight() * (j/ NUM_SMURFS_ROW_COLUMN))));
+			pSmurfLocations.push_back(pSmurfLocation);
+			Sprite* pSmurfSprite = new Sprite(pSmurfBuffer->getBitmapWidth() / NUM_SMURFS_ROW_COLUMN, pSmurfBuffer->getBitmapHeight() / NUM_SMURFS_ROW_COLUMN, pSmurfLocation, pSmurfBuffer);
+			pSmurfSprites.push_back(pSmurfSprite);
+		}
+	}
+
+	// place the 16 smurf sprites randomly on the screen
+	for (Sprite* sprite : pSmurfSprites)
+	{
+		Vector2D* pRandomLocation = new Vector2D(rand() % (DISP_WIDTH - (pSmurfBuffer->getBitmapWidth() / NUM_SMURFS_ROW_COLUMN)) + MIN_RAND_NUMBER, rand() % (DISP_HEIGHT - (pSmurfBuffer->getBitmapWidth() / NUM_SMURFS_ROW_COLUMN)) + MIN_RAND_NUMBER);
+		pGraphicsSystem->draw(pRandomLocation, sprite);
+
+		delete pRandomLocation;
+		delete sprite;
+	}
+
+	for (Vector2D* smurfLocation : pSmurfLocations)
+	{
+		delete smurfLocation;
+	}
+
+	/*
+	save the full display to a jpg
+	Save the only red square with quimby and text to a jpg
+	*/
+
+	pGraphicsSystem->saveBuffer(pGraphicsSystem->getBackBuffer(), BACKBUFFER_IMAGE);
+	pGraphicsSystem->saveBuffer(pRedSquareBuffer, REDBUFFER_IMAGE);
+
+
+	pGraphicsSystem->flip();
+	
+
+	Timer timer;
+	timer.sleep(5000.0);
+
+	pPerformanceTracker->stopTracking("loop");
+
+	pPerformanceTracker->clearTracker("loop");
+
+	delete pQuimbyLocation;
+	delete pQuimbySprite;
+	delete pStepsSprite;
+	delete pRedSquareSprite;
+	delete pStepsBuffer;
+	delete pSmurfBuffer;
+	delete pQuimbyBuffer;
+	delete pRedSquareBuffer;
+	delete font;
+	delete blackColor;
+	delete redColor;
+	delete pGraphicsSystem;
+	delete pZeroZeroLocation;
+	delete pPerformanceTracker;
+
+	MemoryTracker::getInstance()->reportAllocations(cout);
+
+	system("pause");
+	return 0;
+}

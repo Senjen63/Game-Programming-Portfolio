@@ -1,0 +1,69 @@
+#include "InputTranslator.h"
+#include "Game.h"
+
+InputTranslator::InputTranslator()
+{
+    mpEventSystem = nullptr;
+}
+InputTranslator::~InputTranslator()
+{
+
+}
+void InputTranslator::init()
+{
+    mpEventSystem = EventSystem::getInstance();
+
+    mpEventSystem->getInstance()->addListener((EventType)MESSAGE_EVENT, this);
+    mpEventSystem->getInstance()->addListener((EventType)INPUT_GAME_EVENT, this);
+}
+void InputTranslator::handleEvent(const Event& currentEvent)
+{
+    if (currentEvent.getType() == MESSAGE_EVENT)
+    {
+        const MessageEvent& messageEvent = static_cast<const MessageEvent&>(currentEvent);
+        cout << "Input Translator Message - " << messageEvent.getMessage() << endl;
+    }
+    //Same here could I do a switch statement instead to make it so getting inputs isnt just if statements
+    if (currentEvent.getType() == INPUT_GAME_EVENT)
+    {
+        bool actionFired = false;
+        cout << endl << "InputTranslator - ";
+
+        const InputEvent& inputEvent = static_cast<const InputEvent&>(currentEvent);
+
+        if (inputEvent.getKeyCode() == W_KEY || inputEvent.getKeyCode() == UP)
+        {
+            mpEventSystem->fireEvent(ActionEvent(MOVE_UP));
+            actionFired = true;
+        }
+        if (inputEvent.getKeyCode() == A_KEY || inputEvent.getKeyCode() == LEFT)
+        {
+            mpEventSystem->fireEvent(ActionEvent(MOVE_LEFT));
+            actionFired = true;
+        }
+        if (inputEvent.getKeyCode() == S_KEY || inputEvent.getKeyCode() == DOWN)
+        {
+            mpEventSystem->fireEvent(ActionEvent(MOVE_DOWN));
+            actionFired = true;
+        }
+        if (inputEvent.getKeyCode() == D_KEY || inputEvent.getKeyCode() == RIGHT)
+        {
+            mpEventSystem->fireEvent(ActionEvent(MOVE_RIGHT));
+            actionFired = true;
+        }
+        if (inputEvent.getKeyCode() == SPACE)
+        {
+            mpEventSystem->fireEvent(ActionEvent(START_GAME));
+            actionFired = true;
+        }
+        if (inputEvent.getKeyCode() == ESCAPE)
+        {
+            mpEventSystem->fireEvent(ActionEvent(EXIT_GAME));
+            actionFired = true;
+        }
+        if (!actionFired)
+        {
+            cout << "No Action Event" << endl;
+        }
+    }
+}

@@ -1,0 +1,62 @@
+/*
+Author: David Silverman
+Class: GPR-250-01
+Assignment: Assignment 3
+Certification of Authenticity:
+I certify that this assignment is entirely my own work.
+ */
+
+#include "levelmanager.h"
+
+LevelManager::LevelManager()
+{
+
+}
+
+LevelManager::~LevelManager()
+{
+	Clear();
+}
+
+void LevelManager::addLevel(GraphicsBufferManager* manager, string bufferKey, int rows, int colums, int score, float spawn, float speed, int length, int food, string title)
+{
+	mTitles.push_back(bufferKey);
+	pair <string, Level*> buffAdd(bufferKey, new Level(manager->getBuffer(bufferKey), rows, colums, score, title, spawn, speed, length, food));
+	mMap.insert(buffAdd);
+}
+
+void LevelManager::addLevel(GraphicsBufferManager* manager, string bufferKey, int rows, int colums, int score, float spawn, float speed, int length, int food, string title, Vector2D xToYScale)
+{
+	mTitles.push_back(bufferKey);
+	pair <string, Level*> buffAdd(bufferKey, new Level(manager->getBuffer(bufferKey), rows, colums, score, title, spawn, speed, length, food, xToYScale));
+	mMap.insert(buffAdd);
+}
+
+/*
+void LevelManager::addLevel(GraphicsBufferManager* manager, string bufferKey, int rows, int colums, int score, string title, Vector2D xToYScale, string name)
+{
+
+}
+
+*/
+Level* LevelManager::getLevel(string levelKey)
+{
+	return mMap[levelKey];
+}
+
+void LevelManager::Clear()
+{
+	string key;
+	for (int i = 0; i < mTitles.size(); i++)
+	{
+		key = mTitles[i];
+		delete mMap[key];
+		mMap.erase(key);
+	}
+	mTitles.clear();
+}
+
+void LevelManager::Cleanup()
+{
+	Clear();
+}

@@ -1,0 +1,56 @@
+#include "Sound.h"
+#include <iostream>
+
+Sound::Sound() 
+{
+	if (Mix_OpenAudio(22055, AUDIO_S16SYS, 2, 2048) != 0)
+	{
+		std::cout << "Error intializing sounds: " << Mix_GetError() << std::endl;
+	}
+}
+
+Sound::~Sound()
+{
+	for (int i = 0; i < mNumSounds; i++)
+	{
+		Mix_Chunk* pSound = mpSounds[i];
+		Mix_FreeChunk(pSound);
+	}
+	mNumSounds = 0;
+	mpSounds.clear();
+	Mix_CloseAudio();
+	SDL_Quit();
+}
+
+void Sound::AddSound(std::string path) 
+{
+	Mix_Chunk* newSound = Mix_LoadWAV(path.c_str());
+	if (newSound != nullptr) 
+	{
+		mpSounds.push_back(newSound);
+		mNumSounds++;
+	}
+}
+//this is scuffed and goes against like, everything we've learned. 
+//My best option would be to create another unordered map but I just don't have the time or energy for that.
+void Sound::PlayAudio(int ID)
+{
+	Mix_PlayChannel(-1, mpSounds[ID], 0);
+}
+
+void Sound::PlayAudio(int ID, int loop, int channel)
+{
+	Mix_PlayChannel(channel, mpSounds[ID], loop);
+}
+
+void Sound::ToggleAudio(bool audio)
+{
+	if (!audio) 
+	{
+		Mix_Volume(-1, 0);
+	}
+	else
+	{
+		Mix_Volume(-1, 128);
+	}
+}

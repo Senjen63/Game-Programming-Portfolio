@@ -1,0 +1,12 @@
+#pragma once
+
+#include "GameEvent.h"
+#include <string>
+
+class NextLevelEvent : public GameEvent
+{
+public:
+
+	NextLevelEvent() : GameEvent(NEXT_LEVEL_EVENT) {};
+	~NextLevelEvent() {};
+};

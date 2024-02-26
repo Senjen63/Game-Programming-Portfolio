@@ -1,0 +1,17 @@
+#pragma once
+#include "SDL.h"
+
+class Color
+{
+private:
+ SDL_Color mColor;
+ SDL_Color GetColor();
+
+public:
+	Color();
+	Color(int r, int g, int b);
+	~Color();
+
+	friend class GraphicsSystem;
+	friend class GraphicsBuffer;
+};

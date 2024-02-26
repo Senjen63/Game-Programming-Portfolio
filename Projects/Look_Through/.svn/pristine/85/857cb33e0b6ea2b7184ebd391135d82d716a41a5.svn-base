@@ -1,0 +1,135 @@
+#include "Game.h"
+#include "ShipManager.h"
+#include "UnitManager.h"
+#include "Unit.h"
+#include "Animation.h"
+#include "Sprite.h"
+#include "LoseEvent.h"
+#include <EventSystem.h>
+#include <fstream>
+#include "SoundEffectManager.h"
+
+ShipManager::ShipManager()
+{
+	ifstream inputDiff("../GalahadAssets/data/" + FILE_PATH);
+	if (inputDiff.good())
+	{
+		string key;
+
+		while (!inputDiff.eof())
+		{
+			inputDiff >> key;
+
+			if (key == "single")
+			{
+				inputDiff >> mOrigin;
+			}
+			else if (key == "height")
+			{
+				inputDiff >> mRelative;
+			}
+			else if (key == "life")
+			{
+				inputDiff >> mTakeLife;
+			}
+		}
+	}
+}
+
+ShipManager::ShipManager(int size) : UnitManager(size)
+{
+	ifstream inputDiff("../GalahadAssets/data/" + FILE_PATH);
+	if (inputDiff.good())
+	{
+		string key;
+
+		while (!inputDiff.eof())
+		{
+			inputDiff >> key;
+
+			if (key == "single")
+			{
+				inputDiff >> mOrigin;
+			}
+			else if (key == "height")
+			{
+				inputDiff >> mRelative;
+			}
+			else if (key == "life")
+			{
+				inputDiff >> mTakeLife;
+			}
+		}
+	}
+}
+
+ShipManager::~ShipManager()
+{
+
+}
+
+void ShipManager::createAndAddUnit(Vector2D location, Animation mainAnimation, Animation altAnimation)
+{
+	Unit* pUnit = new Unit(location);
+
+	pUnit->setMainAnimation(mainAnimation);
+	pUnit->setAltAnimation(altAnimation);
+	pUnit->setSpeed(mShipSpeed);
+	pUnit->mHitbox = mainAnimation.getDimen();
+
+	mpUnits.push_back(pUnit);
+}
+
+void ShipManager::createAndAddUnit(Vector2D location, Animation mainAnimation)
+{
+	Unit* pUnit = new Unit(location);
+
+	pUnit->setMainAnimation(mainAnimation);
+	pUnit->setSpeed(mShipSpeed);
+	pUnit->mHitbox = mainAnimation.getDimen();
+
+	mpUnits.push_back(pUnit);
+}
+
+void ShipManager::updateAll(double dt)
+{
+	if (mpUnits[mOrigin]->mInUse)
+	{
+		mpUnits[mOrigin]->draw();
+		setBlasterPos();
+	}
+}
+
+void ShipManager::activateUnit(Vector2D pos)
+{
+	mpUnits[0]->init(pos, mpUnits[mOrigin]->mHitbox);
+	mpUnits[0]->setType(SHIP);
+	setBlasterPos();
+}
+
+void ShipManager::shipMovement(int direction)
+{
+	mpUnits[mOrigin]->move(direction, mOrigin);
+	setBlasterPos();
+}
+
+void ShipManager::detectCollisions(vector<Unit*> pUnArr)
+{
+	// detects asteroids
+	for each (Unit* pUnit in pUnArr)
+	{
+		if ((pUnit->mInUse && collideCheck(mpUnits[mOrigin], pUnit)) && (pUnit->getYPos() < mpUnits[mOrigin]->getYPos() && pUnit->getType() == ASTEROID))
+		{
+			Game::getInstance()->getSoundEffectManager()->playSound("death", mOrigin);
+			pUnit->mInUse = false;
+			Game::getInstance()->addLife(mTakeLife);
+			EventSystem::getInstance()->fireEvent(LoseEvent(Game::getInstance()->getLife()));
+		}
+	}
+}
+
+void ShipManager::activeShip(bool active)
+{
+	mpUnits[mOrigin]->mInUse = active;
+	setBlasterPos();
+}

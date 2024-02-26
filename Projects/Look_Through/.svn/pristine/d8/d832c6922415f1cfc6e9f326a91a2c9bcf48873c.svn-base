@@ -1,0 +1,27 @@
+﻿//     -------------------------------------------------------------------------
+//     Final Project
+//         EventSystem.hpp
+//     
+//             Created:
+//                 15-04-2022
+//             Author(s):
+//                 Aven Presseisen
+//     -------------------------------------------------------------------------
+
+#pragma once
+#include <list>
+#include <memory>
+
+#include "Event.hpp"
+#include "EventListener.hpp"
+
+class EventSystem
+{
+    std::list< std::pair< EventType, std::weak_ptr< EventListener > > > mEventListeners; 
+public:
+    void addListener( EventType eventType, const std::shared_ptr< EventListener > & pEventListener );
+    void clearListeners();
+    void removeListener( EventType eventType, const std::shared_ptr< EventListener > & pEventListener );
+
+    void invokeEvent( const Event & event );
+};

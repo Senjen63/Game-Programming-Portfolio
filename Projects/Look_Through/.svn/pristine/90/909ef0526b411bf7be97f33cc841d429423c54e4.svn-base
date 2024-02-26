@@ -1,0 +1,29 @@
+﻿//     -------------------------------------------------------------------------
+//     Final Project
+//         BufferManager.hpp
+//     
+//             Created:
+//                 06-04-2022
+//             Author(s):
+//                 Aven Presseisen
+//     -------------------------------------------------------------------------
+
+#pragma once
+
+#include <unordered_map>
+
+#include "GraphicsBuffer.hpp"
+
+class BufferManager
+{
+    std::unordered_map< std::string, GraphicsBuffer * > mBuffers;
+
+public:
+    BufferManager();
+    ~BufferManager();
+
+    void addBuffer( const std::string & key, GraphicsBuffer * pBuffer );
+    void clearBuffers();
+    void deleteBuffer( const std::string & key );
+    GraphicsBuffer * getBuffer( const std::string & key );
+};

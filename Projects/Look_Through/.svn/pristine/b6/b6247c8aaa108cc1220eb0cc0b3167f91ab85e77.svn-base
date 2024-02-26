@@ -1,0 +1,13 @@
+﻿#include "include/Font.hpp"
+
+Font::Font( const char * pFilename, SDL_Renderer * pRenderer, const int fontSize, const Color & color, Style style )
+{
+    mpFont = FC_CreateFont();
+    FC_LoadFont( mpFont, pRenderer, pFilename, fontSize, SDL_Color{ color.r, color.g, color.b, color.a }, static_cast< int >(style) );
+}
+
+Font::~Font()
+{
+    FC_FreeFont( mpFont );
+    mpFont = nullptr;
+}

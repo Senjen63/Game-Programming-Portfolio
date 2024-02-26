@@ -1,0 +1,49 @@
+#pragma once
+
+#include <PerformanceTracker.h>
+#include <Timer.h>
+#include <Trackable.h>
+#include "GraphicsSystem.h"
+#include "InputSystem.h"
+#include "Animation.h"
+#include "Unit.h"
+
+const int DISP_WIDTH = 800;
+const int DISP_HEIGHT = 600;
+
+const std::string ASSET_PATH = "..\\..\\common\\assets\\";
+const std::string BACKGROUND_FILENAME = "woods.png";
+const std::string DEAN_FILENAME = "dean_sprites.png";
+const std::string SMURFS_FILENAME = "smurf_sprites.png";
+const int ORIGIN_X = 0;
+const int ORIGIN_Y = 0;
+
+class Game : public Trackable
+{
+	public:
+		Game();
+		~Game();
+		void init();
+		void cleanup();
+		void doLoop();
+
+	private:
+		bool mHoldDown = false;
+
+		GraphicsSystem* mpGraphics;
+		InputSystem* mpInput;
+
+		// create 3 GraphicsBuffers
+		GraphicsBuffer* mpWoods;
+		GraphicsBuffer* mpDean;
+		GraphicsBuffer* mpSmurf;
+
+		// create 2 Animations
+		Animation mSmurfAnimation;
+		Animation mDeanAnimation;
+
+		// create Unit to hold animations
+		Unit* mpUnit;
+};
+
+extern Game* gpGame;

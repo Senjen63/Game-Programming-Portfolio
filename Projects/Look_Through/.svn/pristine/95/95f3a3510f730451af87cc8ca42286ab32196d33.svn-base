@@ -1,0 +1,72 @@
+#pragma once
+
+#include "Trackable.h"
+#include "Vector2D.h"
+#include "Sprite.h"
+#include "Animation.h"
+#include <vector>
+
+class Sprite;
+class Animation;
+class Vector2D;
+
+enum MovementDirections
+{
+	MOVE_UP,
+	MOVE_LEFT,
+	MOVE_DOWN,
+	MOVE_RIGHT
+};
+
+class SnakePlayer : public Trackable
+{
+
+const std::string PLAYER_SPRITE = "snake_player.png";
+const std::string PLAYER_KEY = "player";
+const std::string SEGMENT_SPRITE = "snake_segment.png";
+const std::string SEGMENT_KEY = "segment";
+
+const int ROW = 2;
+const int COLUMN = 1;
+
+const int PLAYER_SIZE = 32;
+
+private:
+
+	std::vector<Vector2D> mSegmentLocations;
+
+	Sprite* mpPlayerSprite;
+	Sprite* mpSegmentSprite;
+	Animation mPlayerAnimation;
+
+	MovementDirections mDirection;
+
+	int mDefaultTick;
+	int mCurrentTick;
+	int mRemainingTick;
+	int mNumOfSegments;
+
+public:
+
+	SnakePlayer();
+	~SnakePlayer();
+
+	void initPlayer();
+	void drawPlayer();
+	void playerMovement(double tickTime);
+	void addSegment(Vector2D newLocation);
+	void setPlayerDirection(MovementDirections newDirection);
+	void resetPlayerDirection();
+	void growPlayerBody();
+	void powerUpCollision(Vector2D& currentPlayerLocation);
+	void clearPlayer();
+	void increasePlayerSpeed();
+	void decreasePlayerSpeed();
+	void resetPlayerSpeed();
+
+	bool isColliding(Vector2D playerLocation);
+
+	int getPlayerSegmentCount() { return mSegmentLocations.size(); };
+
+	std::vector<Vector2D> getPlayerSegmentLocations() { return mSegmentLocations; };
+};

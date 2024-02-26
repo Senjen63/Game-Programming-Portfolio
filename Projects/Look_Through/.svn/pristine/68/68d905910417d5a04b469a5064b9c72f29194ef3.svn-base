@@ -1,0 +1,105 @@
+#include "Animation.h"
+
+
+void Animation::addSprites(GraphicsBuffer* buffer)
+{
+	int count = 0;
+	const int NUM_WIDTH = 4;
+	const int NUM_HEIGHT = 4;
+	const int SPRITE_SIZE = 60;
+
+	Vector2D loc = Vector2D();
+
+	for (int i = 0; i < NUM_HEIGHT; i++)
+	{
+		for (int j = 0; j < NUM_WIDTH; j++)
+		{
+			loc.setX(j * SPRITE_SIZE);
+			loc.setY(i * SPRITE_SIZE);
+
+			mSpriteList[count] = Sprite(buffer, loc, SPRITE_SIZE, SPRITE_SIZE);
+			count++;
+		}
+	}
+}
+
+
+Animation::Animation()
+{
+	mCurrentSprite = 0;
+	mShouldLoop = false;
+	mTimeLeft = 0;
+	mTimePerFrame = 0;
+	mSpriteNum = 0;
+	mSpriteList = nullptr;
+}
+
+Animation::Animation(GraphicsBuffer* buffer, float mTime, bool mLoop, int spriteNum)
+{
+	mSpriteList = new Sprite[spriteNum];
+
+	addSprites(buffer);
+
+	mCurrentSprite = 0;
+	mShouldLoop = mLoop;
+
+	mTimePerFrame = mTime;
+	mTimeLeft = 0;
+
+	mSpriteNum = spriteNum;
+}
+
+Animation::Animation(Animation* anim)
+{
+	mSpriteList = anim->mSpriteList;
+
+	mCurrentSprite = 0;
+	mShouldLoop = anim->mShouldLoop;
+
+	mTimePerFrame = anim->mTimePerFrame;
+	mTimeLeft = 0;
+
+	mSpriteNum = anim->mSpriteNum;
+}
+
+Animation::~Animation()
+{
+	mShouldLoop = false;
+	//delete[] mSpriteList;
+}
+
+void Animation::cleanUp()
+{
+	delete[] mSpriteList;
+}
+
+Sprite* Animation::getCurrentSprite()
+{
+	return &mSpriteList[mCurrentSprite];
+}
+
+void Animation::setTimePerFrame(float timeMod)
+{
+	mTimePerFrame += timeMod;
+
+	if (mTimePerFrame <= 0)
+	{
+		mTimePerFrame = .0001;
+	}
+}
+
+void Animation::Update(double dt)
+{
+	mTimeLeft -= dt;
+
+	if (mTimeLeft <= 0)
+	{
+		mCurrentSprite++;
+		mTimeLeft = mTimePerFrame;
+
+		if (mCurrentSprite >= mSpriteNum && mShouldLoop)
+		{
+			mCurrentSprite = 0;
+		}
+	}
+}

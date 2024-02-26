@@ -1,0 +1,14 @@
+positions 50
+power_numerator 1
+power_denominator 10
+normal_asteroid 100
+special_asteroid 1000
+drop_point -60
+reload 500
+power_time 1000
+falling 400
+low_gravity 1
+medium_gravity 5
+high_gravity 10
+low_spawn 1
+over_spawn 2

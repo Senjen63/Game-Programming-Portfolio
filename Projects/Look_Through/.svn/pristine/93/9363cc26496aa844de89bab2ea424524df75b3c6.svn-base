@@ -1,0 +1,124 @@
+#include "UnitManager.h"
+#include "Animation.h"
+#include <algorithm>
+#include "Unit.h"
+
+UnitManager::UnitManager(Animation* wallAnim, Animation* snakeAnim, Animation* foodAnim, Animation* pointsAnim, Animation* speedAnim, Animation* slowAnim)
+	: mpWallAnim(wallAnim), mpSnakeAnim(snakeAnim), mpFoodAnim(foodAnim), mpPointsAmim(pointsAnim), mpSpeedAnim(speedAnim), mpSlowAnim(slowAnim)
+{
+
+}
+
+UnitManager::~UnitManager()
+{
+	clearUnits();
+
+	mpWallAnim = nullptr;
+	mpSnakeAnim = nullptr;
+	mpFoodAnim = nullptr;
+	mpPointsAmim = nullptr;
+	mpSpeedAnim = nullptr;
+	mpSlowAnim = nullptr;
+}
+
+Unit* UnitManager::getLastUnit()
+{
+	return mvpUnits.back();
+}
+
+Unit* UnitManager::getUnitAt(Vector2D location)
+{
+	for each (auto iter in mvpUnits)
+	{
+		if (iter->checkIfIntersecting(location))
+		{
+			return iter;			
+		}		
+	}
+	return nullptr;
+}
+
+void UnitManager::addUnitAt(Vector2D location, UnitType type)
+{
+	switch (type)
+	{
+	case UnitType::INVALID_TYPE:		
+		break;
+	case UnitType::WALL:
+		mvpUnits.push_back(new Unit(location, *mpWallAnim, type));
+		break;
+	case UnitType::SNAKE:
+		mvpUnits.push_back(new Unit(location, *mpSnakeAnim, type));
+		break;
+	case UnitType::FOOD:
+		mvpUnits.push_back(new Unit(location, *mpFoodAnim, type));
+		break;
+	case UnitType::POINTS_POWER:
+		mvpUnits.push_back(new Unit(location, *mpPointsAmim, type));
+		break;
+	case UnitType::SPEED_POWER:
+		mvpUnits.push_back(new Unit(location, *mpSpeedAnim, type));
+		break;
+	case UnitType::SLOW_POWER:
+		mvpUnits.push_back(new Unit(location, *mpSlowAnim, type));
+		break;
+	default:
+		break;
+	}
+
+	
+}
+
+void UnitManager::deleteAllUnitsAt(Vector2D location)
+{
+	int unitNum = 0;
+
+	for each (auto iter in mvpUnits)
+	{
+		if (iter->checkIfIntersecting(location))
+		{
+			delete iter;
+			mvpUnits[unitNum] = nullptr;
+		}
+		unitNum++;
+	}
+
+	auto removeAfterIter = remove_if(mvpUnits.begin(), mvpUnits.end(),
+		[](Unit* const u) { return u == nullptr; });
+
+	mvpUnits.erase(removeAfterIter, mvpUnits.end());	
+}
+
+void UnitManager::clearUnits()
+{
+	for each (auto iter in mvpUnits)
+	{
+		delete iter;
+	}
+
+	mvpUnits.clear();
+}
+
+void UnitManager::setPauseAllUnitAnims(bool pause)
+{
+	for each (auto iter in mvpUnits)
+	{
+		iter->pauseAnimation(pause);
+	}
+}
+
+void UnitManager::updateAll(double dt)
+{
+	for each (auto iter in mvpUnits)
+	{
+		iter->update(dt);
+	}
+}
+
+void UnitManager::drawAll()
+{
+	for each (auto iter in mvpUnits)
+	{
+		iter->draw();
+	}
+}

@@ -1,0 +1,14 @@
+#pragma once
+
+#include "GameEvent.h"
+
+class EnemyDeathEvent : public GameEvent
+{
+public:
+	EnemyDeathEvent(int scoreGiven);
+	virtual ~EnemyDeathEvent();
+
+	int getScoreGiven() const { return mScoreGiven; }
+private:
+	int mScoreGiven;
+};

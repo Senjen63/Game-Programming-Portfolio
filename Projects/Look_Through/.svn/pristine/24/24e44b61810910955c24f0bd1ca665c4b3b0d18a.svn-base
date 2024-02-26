@@ -1,0 +1,90 @@
+﻿//     -------------------------------------------------------------------------
+//     Final Project
+//         Event.hpp
+//     
+//             Created:
+//                 16-04-2022
+//             Author(s):
+//                 Aven Presseisen
+//     -------------------------------------------------------------------------
+
+#pragma once
+#include <variant>
+
+enum class EventType
+{
+    None,
+    KeyboardInput,
+    MouseInput,
+    Quit,
+};
+
+enum class ButtonState
+{
+    None,
+    Released,
+    Pressed,
+    Held,
+};
+
+enum class MouseButton
+{
+    None,
+    Left = 0b1,
+    Middle = 0b10,
+    Right = 0b100,
+};
+
+enum class KeyCode
+{
+    Return = '\r',
+    Escape = 27,
+    Space = ' ',
+    A = 'a',
+    B,
+    C,
+    D,
+    E,
+    F,
+    G,
+    H,
+    I,
+    J,
+    K,
+    L,
+    M,
+    N,
+    O,
+    P,
+    Q,
+    R,
+    S,
+    T,
+    U,
+    V,
+    W,
+    X,
+    Y,
+    Z,
+};
+
+struct KeyboardEventData
+{
+    ButtonState keyState;
+    KeyCode keyCode;
+};
+
+struct MouseEventData
+{
+    ButtonState mouseState;
+    MouseButton mouseButton;
+    int x;
+    int y;
+};
+
+struct Event
+{
+    EventType type;
+
+    std::variant< std::monostate, KeyboardEventData, MouseEventData > data;
+};

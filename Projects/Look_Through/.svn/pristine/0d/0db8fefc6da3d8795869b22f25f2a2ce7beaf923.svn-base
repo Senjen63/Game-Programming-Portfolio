@@ -1,0 +1,18 @@
+#pragma once
+
+#include "Trackable.h"
+
+class Sprite;
+
+
+class WinScreen : public Trackable
+{
+private:
+	Sprite* mpWinScreen;
+
+public:
+	WinScreen();
+	~WinScreen();
+
+	void drawWinScreen();
+}; 

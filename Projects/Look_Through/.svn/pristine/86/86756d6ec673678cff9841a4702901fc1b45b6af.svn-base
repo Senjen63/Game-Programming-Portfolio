@@ -1,0 +1,26 @@
+//BP
+#pragma once
+#include "Unit.h"
+#include <Trackable.h>
+#include <EventSystem.h>
+#include "ItemCreation.h"
+
+class Items : public Trackable
+{
+private:
+    int mRandom = 1;
+    float mGameTimer = 0;
+    float mDefaultTime = 0;
+    float mFastItemProbability = 0;
+    float mSlowItemProbability = 0;
+    float mBonusItemProbability = 0;
+    EventSystem* mpEventSystem = nullptr;
+public:
+    Items();
+    ~Items();
+    void init();
+    void cleaner();
+    void generateItem();
+    void updateItemCreation(float TimePassed);
+    void newGameLevel(float defaultTime, float random, float fastProb, float slowProb, float bonusProb);
+};

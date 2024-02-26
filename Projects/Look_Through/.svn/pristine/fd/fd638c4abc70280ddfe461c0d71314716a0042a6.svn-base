@@ -1,0 +1,36 @@
+#pragma once
+
+#include <string>
+#include <Trackable.h>
+#include <Vector2D.h>
+#include <SFML/Graphics.hpp>
+
+#include "Color.h"
+
+
+class GraphicsBuffer : public Trackable
+{
+	friend class GraphicsSystem;
+	friend class GraphicsBufferManager;
+
+private:
+	sf::RenderTexture* mpBitmap;
+	bool mOwnsBitmap;
+
+	GraphicsBuffer(sf::RenderTexture* pBitmap);
+
+	sf::RenderTexture* getBitmap() const { return mpBitmap; }
+
+	GraphicsBuffer(std::string fullPath);
+	GraphicsBuffer(Vector2D size); // Creates empty Graphics Buffer of size width x height
+	GraphicsBuffer(Vector2D size, Color col); // Creates Graphics Buffer of size width x height with color col
+	GraphicsBuffer(const GraphicsBuffer* og);
+
+public:
+
+	~GraphicsBuffer();
+
+	int getWidth() const { return mpBitmap->getSize().x; };
+	int getHeight() const { return mpBitmap->getSize().y; };
+};
+

@@ -1,0 +1,13 @@
+#include "Music.h"
+
+
+void Music::loadFile(const std::string& fileName)
+{
+	if (mpSoundSource != nullptr) { delete mpSoundSource; }
+
+	sf::Music* music = new sf::Music;
+	music->openFromFile(fileName);
+	mpSoundSource = music;
+
+	mFileName = fileName;
+}

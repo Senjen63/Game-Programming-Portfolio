@@ -1,0 +1,11 @@
+#include "HUD.h"
+
+void HUD::writeHUD(GraphicsSystem* display, int score, float time, float FPS, GraphicsBuffer* background, int x, int y, Font* font, Color color)
+{
+	string scoreText = to_string(score);
+	string timeText = to_string(time);
+	string FPSText = to_string(FPS);
+	display->write(background, x, y, font, color, scoreText);
+	display->write(background, x, y+50, font, color, timeText);
+	display->write(background, x, y+100, font, color, FPSText);
+}

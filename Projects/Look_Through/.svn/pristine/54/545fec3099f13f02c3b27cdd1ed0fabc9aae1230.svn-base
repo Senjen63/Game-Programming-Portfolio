@@ -1,0 +1,26 @@
+#pragma once
+
+#include "GraphicsSystem.h"
+#include "LevelManager.h"
+#include "Conversion.h"
+#include "Font.h"
+
+class LevelManager;
+
+class HUD : public Trackable
+{
+	GraphicsBuffer* mBackground;
+
+	LevelManager* mLevelManagerRef;
+	Font* mFont;
+	Color mTextColor;
+
+	float mFPS = 0;
+
+public:
+	HUD(LevelManager& levelManagerRef, Font& font, Color textColor, GraphicsBuffer* background);
+
+	void update(float dt) { mFPS = 1 / Conversion::milToSec(dt); }
+	void draw(GraphicsSystem* gSys);
+};
+

@@ -1,0 +1,185 @@
+#include "PowerUps.h"
+#include "Game.h"
+#include "GraphicsBufferManager.h"
+#include "GraphicsBuffer.h"
+#include "GraphicsSystem.h"
+#include "Animation.h"
+#include "Color.h"
+#include "Sprite.h"
+#include "Snake.h"
+#include "UnitManager.h"
+#include "Level.h"
+#include "LevelManager.h"
+#include <fstream>
+
+
+PowerUps::PowerUps()
+{
+	int red = 0;
+	int green = 0;
+	int blue = 0;
+	int a = 0;
+
+	ifstream input("./data_files/power_up.txt");
+
+	if (input.good())
+	{
+		string key;
+
+		while (!input.eof())
+		{
+			input >> key;
+			if (key == "slow_down_color")
+			{
+				input >> red >> green >> blue >> a;
+				this->mpSlowDownColor = new Color(red, green, blue, a);
+			}
+			else if (key == "bonus_points_color")
+			{
+				input >> red >> green >> blue >> a;
+				this->mpBonusPointColor = new Color(red, green, blue, a);
+			}
+			else if (key == "speed_up_color")
+			{
+				input >> red >> green >> blue >> a;
+				this->mpSpeedUpColor = new Color(red, green, blue, a);
+			}
+			else if (key == "food_color")
+			{
+				input >> red >> green >> blue >> a;
+				this->mpFoodColor = new Color(red, green, blue, a);
+			}
+		}
+	}
+	input.close();
+
+	createPowerUpUnits();
+}
+
+PowerUps::~PowerUps()
+{
+	delete mpSlowDownColor;
+	delete mpSpeedUpColor;
+	delete mpBonusPointColor;
+	delete mpFoodColor;
+}
+
+void PowerUps::initPowerUpLocations()
+{
+	Game* pGame = Game::getInstance();
+
+	int offset = 16;
+
+	srand(time(NULL));
+
+	vector<Vector2D> emptySpaces = pGame->getLevelManager()->getLevels()[pGame->getLevelManager()->getCurrentLevel() - 1]->getEmptySpaces();
+
+	vector<Vector2D> copyEmptySpaces = emptySpaces;
+
+	for (int i = 0; i < pGame->getSnake()->getSnakeSize(); i++)
+	{
+		for (unsigned int j = 0; j < copyEmptySpaces.size(); j++)
+		{
+			if (pGame->getSnake()->getSnakePartLocations()[i] == copyEmptySpaces[j])
+			{
+				copyEmptySpaces.erase(copyEmptySpaces.begin() + j);
+			}
+		}
+	}
+
+	int bonusPointIndex = rand() % (copyEmptySpaces.size() - 1) + 0;
+	mBonusPointLocation = Vector2D(copyEmptySpaces[bonusPointIndex].getX() + offset, copyEmptySpaces[bonusPointIndex].getY() + offset);
+	copyEmptySpaces.erase(copyEmptySpaces.begin() + bonusPointIndex);
+
+	int foodIndex = rand() % (copyEmptySpaces.size() - 1) + 0;
+	mFoodLocation = Vector2D(copyEmptySpaces[foodIndex].getX() + offset, copyEmptySpaces[foodIndex].getY() + offset);
+	copyEmptySpaces.erase(copyEmptySpaces.begin() + foodIndex);
+
+	int speedSlowIndex = rand() % (copyEmptySpaces.size() - 1) + 0;
+	mSlowSpeedLocation = Vector2D(copyEmptySpaces[speedSlowIndex].getX() + offset, copyEmptySpaces[speedSlowIndex].getY() + offset);
+	copyEmptySpaces.erase(copyEmptySpaces.begin() + speedSlowIndex);
+}
+
+void PowerUps::createPowerUpUnits()
+{
+	Game* pGame = Game::getInstance();
+
+	const string SLOW_DOWN_KEY = "slowDown";
+	const string SPEED_UP_KEY = "speedUp";
+	const string BONUS_POINTS_KEY = "bonusPoints";
+	const string FOOD_KEY = "food";
+
+	const int POWER_UP_WIDTH = pGame->getGridSlotSize().getX();
+	const int POWER_UP_HEIGHT = pGame->getGridSlotSize().getY();
+
+	pGame->getGraphicsBufferManager()->createAndAddGraphicsBuffer(SLOW_DOWN_KEY, POWER_UP_WIDTH, POWER_UP_HEIGHT);
+	pGame->getGraphicsBufferManager()->createAndAddGraphicsBuffer(SPEED_UP_KEY, POWER_UP_WIDTH, POWER_UP_HEIGHT);
+	pGame->getGraphicsBufferManager()->createAndAddGraphicsBuffer(BONUS_POINTS_KEY, POWER_UP_WIDTH, POWER_UP_HEIGHT);
+	pGame->getGraphicsBufferManager()->createAndAddGraphicsBuffer(FOOD_KEY, POWER_UP_WIDTH, POWER_UP_HEIGHT);
+
+
+	pGame->getGraphicsSystem()->setColor(pGame->getGraphicsBufferManager()->getGraphicsBuffer(SLOW_DOWN_KEY), mpSlowDownColor);
+	pGame->getGraphicsSystem()->setColor(pGame->getGraphicsBufferManager()->getGraphicsBuffer(SPEED_UP_KEY), mpSpeedUpColor);
+	pGame->getGraphicsSystem()->setColor(pGame->getGraphicsBufferManager()->getGraphicsBuffer(BONUS_POINTS_KEY), mpBonusPointColor);
+	pGame->getGraphicsSystem()->setColor(pGame->getGraphicsBufferManager()->getGraphicsBuffer(FOOD_KEY), mpFoodColor);
+
+
+	mSlowDownAnimation = Animation(true);
+	mSpeedUpAnimation = Animation(true);
+	mBonusPointAnimation = Animation(true);
+	mFoodAnimation = Animation(true);
+
+	const int GROW_INCREMENTS = 10;
+
+	//create growing animation
+	for (int i = 1; i <= GROW_INCREMENTS; i++)
+	{
+		Sprite slowDownSprite = Sprite(POWER_UP_WIDTH * (float(i) / float(GROW_INCREMENTS)), POWER_UP_HEIGHT * (float(i) / float(GROW_INCREMENTS)), Vector2D(0, 0), pGame->getGraphicsBufferManager()->getGraphicsBuffer(SLOW_DOWN_KEY));
+		Sprite speedUpSprite = Sprite(POWER_UP_WIDTH * (float(i) / float(GROW_INCREMENTS)), POWER_UP_HEIGHT * (float(i) / float(GROW_INCREMENTS)), Vector2D(0, 0), pGame->getGraphicsBufferManager()->getGraphicsBuffer(SPEED_UP_KEY));
+		Sprite bonusPointSprite = Sprite(POWER_UP_WIDTH * (float(i) / float(GROW_INCREMENTS)), POWER_UP_HEIGHT * (float(i) / float(GROW_INCREMENTS)), Vector2D(0, 0), pGame->getGraphicsBufferManager()->getGraphicsBuffer(BONUS_POINTS_KEY));
+		Sprite foodSprite = Sprite(POWER_UP_WIDTH * (float(i) / float(GROW_INCREMENTS)), POWER_UP_HEIGHT * (float(i) / float(GROW_INCREMENTS)), Vector2D(0, 0), pGame->getGraphicsBufferManager()->getGraphicsBuffer(FOOD_KEY));
+
+
+		mSlowDownAnimation.addSprite(slowDownSprite);
+		mSpeedUpAnimation.addSprite(speedUpSprite);
+		mBonusPointAnimation.addSprite(bonusPointSprite);
+		mFoodAnimation.addSprite(foodSprite);
+	}
+
+	const int START_FINISH_INCREMENT = 2;
+	const int SHRINK_INCREMENTS = GROW_INCREMENTS - START_FINISH_INCREMENT;
+
+	// create shrinking animation
+	for (int i = SHRINK_INCREMENTS; i >= 1; i--)
+	{
+		mSlowDownAnimation.addSprite(mSlowDownAnimation.getSprites()[i]);
+		mSpeedUpAnimation.addSprite(mSpeedUpAnimation.getSprites()[i]);
+		mBonusPointAnimation.addSprite(mBonusPointAnimation.getSprites()[i]);
+		mFoodAnimation.addSprite(mFoodAnimation.getSprites()[i]);
+	}
+}
+
+void PowerUps::drawPowerUps()
+{
+	initPowerUpLocations();
+
+	int slowOrSpeed = rand() % 100 + 1;
+
+	Game* pGame = Game::getInstance();
+
+	pGame->getUnitManager()->createAndAddUnit(mFoodLocation, mFoodAnimation);
+	pGame->getUnitManager()->createAndAddUnit(mBonusPointLocation, mBonusPointAnimation);
+
+	int slowDownFrequency = pGame->getLevelManager()->getLevels()[pGame->getLevelManager()->getCurrentLevel() - 1]->getSlowDownPowerUpFrequency();
+
+	if (slowOrSpeed <= slowDownFrequency)
+	{
+		pGame->getUnitManager()->createAndAddUnit(mSlowSpeedLocation, mSlowDownAnimation);
+		mIsSlow = true;
+	}
+	else if (slowOrSpeed > slowDownFrequency)
+	{
+		pGame->getUnitManager()->createAndAddUnit(mSlowSpeedLocation, mSpeedUpAnimation);
+		mIsSlow = false;
+	}
+}

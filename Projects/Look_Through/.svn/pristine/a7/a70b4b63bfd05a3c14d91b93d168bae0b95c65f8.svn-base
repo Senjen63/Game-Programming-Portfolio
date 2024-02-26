@@ -1,0 +1,12 @@
+#include "InputEvent.h"
+
+InputEvent::InputEvent(InputEventType type, bool releasing)
+	:LevelEvent(INPUT_EVENT)
+	,mType(type)
+	, mReleased(releasing)
+{
+}
+
+InputEvent::~InputEvent()
+{
+}

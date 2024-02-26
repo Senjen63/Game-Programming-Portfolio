@@ -1,0 +1,35 @@
+#include "CollisionMath.h"
+
+bool CollisionMath::boxOnBox(const BoxCollider& box1, const BoxCollider& box2)
+{
+    return 
+        box1.getRightX() >= box2.getLeftX() && box1.getLeftX() <= box2.getRightX() && // Check X 
+        box1.getBottomY() >= box2.getTopY() && box1.getTopY() <= box2.getBottomY(); // Check Y 
+}
+
+bool CollisionMath::boxOnCircle(const BoxCollider& box, const CircleCollider& circle)
+{
+    // With help from https://stackoverflow.com/questions/401847/circle-rectangle-collision-detection-intersection 
+
+    Vector2D circleDist(
+        abs(circle.getPosition().getX() - box.getPosition().getX()),
+        abs(circle.getPosition().getY() - box.getPosition().getY()));
+
+    // circle center is far enough from the edges of the box to know there is no overlap 
+    if (circleDist.getX() > box.getBounds().getX() + circle.getRadius()) { return false; }
+    if (circleDist.getY() > box.getBounds().getY() + circle.getRadius()) { return false; }
+
+    // circle center is within the box 
+    if (circleDist.getX() <= box.getBounds().getX()) { return true; }
+    if (circleDist.getY() <= box.getBounds().getY()) { return true; }
+
+    // Now if the circle only collides with the corner 
+    float cornerDistSqr = (circleDist - box.getBounds()).getLengthSquared();
+    return cornerDistSqr <= circle.getRadiusSqr();
+}
+
+bool CollisionMath::circleOnCircle(const CircleCollider& circle1, const CircleCollider& circle2)
+{
+    float dist = Vector2D::getDistanceBetween(circle1.getPosition(), circle2.getPosition());
+    return dist <= (circle1.getRadius() + circle2.getRadius());
+}

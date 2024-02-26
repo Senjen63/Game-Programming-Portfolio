@@ -1,0 +1,63 @@
+#pragma once
+
+#include <PerformanceTracker.h>
+#include <vector>
+#include <iostream>
+#include "Vector2D.h"
+#include <vector>
+#include "Animation.h"
+#include "Unit.h"
+#include "GraphicsBuffer.h"
+#include "GraphicsSystem.h"
+#include "Audio.h"
+
+using namespace std;
+class Unit;
+class GraphicsSystem;
+
+class UnitManager : public Trackable
+{
+public:
+	UnitManager();
+	UnitManager(int maxUnitCount);
+	UnitManager(Animation* pAnimation);
+	UnitManager(int maxUnitcount, Animation* pAnimation);
+	~UnitManager();
+	void cleanup();
+	void addUnit(Vector2D location);
+	void addUnit(GraphicsBuffer* pBuffer, Vector2D pos);
+	void addUnit(GraphicsBuffer* pBuffer, Vector2D pos, float width, float height);
+	void deleteUnit(Vector2D location);
+	void clearVector();
+	void clearSnake();
+	Unit* getFirstUnit();
+	Unit* getLastUnit();
+	void updateAll(float time);
+	void updateEnemies(float time, int distance);
+	void updateSnake(float time, Vector2D pos);
+	void updateBullet(float distance);
+	void deleteBullets();
+	void drawAnimated(GraphicsSystem* pGraphicsSystem, int x, int y);
+	void drawSnake(GraphicsSystem* pGraphicsSystem);
+	void drawNoAnimated(GraphicsSystem* pGraphicsSystem);
+	void drawAll(int enemyArray[13][20], GraphicsSystem* pGraphicsSystem);
+	int getUnitCount();
+	void setUnitCount();
+	void setPause();
+	bool collidingWith(UnitManager* pManager);
+	bool collidingWith(Unit* enemyBullet);
+	bool bulletCollision(UnitManager* pManager);
+	void moveAllUnits(Vector2D pos);
+	Unit* getUnit(int pos);
+	void setFrame();
+	void resetAllPositions();
+private:
+	vector<Unit*> mpUnits;
+	vector<Unit*> getVector();
+	int mMaxUnitCount;
+	int mUnitCount;
+	int mTime;
+	Animation* mpAnimation1;
+	bool mPause;
+	Vector2D bufferLocation;
+};

@@ -1,0 +1,45 @@
+#include "GraphicsBuffer.h"
+
+#include <allegro5/allegro.h>
+
+GraphicsBuffer::GraphicsBuffer()
+{
+	mpBitmap = al_create_bitmap(mDEFAULT_WIDTH, mDEFAULT_HEIGHT);
+	assert(mpBitmap);
+}
+
+GraphicsBuffer::GraphicsBuffer(int width, int height)
+{
+	mpBitmap = al_create_bitmap(width, height);
+	assert(mpBitmap);
+}
+
+GraphicsBuffer::GraphicsBuffer(string fileName)
+{
+	mpBitmap = al_load_bitmap((fileName).c_str());
+	assert(mpBitmap);
+}
+
+GraphicsBuffer::GraphicsBuffer(ALLEGRO_BITMAP* pBitmap)
+{
+	mpBitmap = pBitmap;
+	mOwnsBitmap = false;
+}
+
+GraphicsBuffer::~GraphicsBuffer()
+{
+	if (mOwnsBitmap)
+	{
+		al_destroy_bitmap(mpBitmap);
+	}
+}
+
+int GraphicsBuffer::getHeight()
+{
+	return al_get_bitmap_height(mpBitmap);
+}
+
+int GraphicsBuffer::getWidth()
+{
+	return al_get_bitmap_width(mpBitmap);
+}

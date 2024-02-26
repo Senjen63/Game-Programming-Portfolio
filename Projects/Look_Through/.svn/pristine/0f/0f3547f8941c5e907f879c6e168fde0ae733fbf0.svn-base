@@ -1,0 +1,42 @@
+#include "Segment.h"
+#include "Game.h"
+
+Segment::Segment()
+{
+	mX = 0;
+	mY = 0;
+	mDir = 0;
+}
+
+Segment::Segment(int x, int y, Animation* anim)
+{
+	mX = x;
+	mY = y;
+	mDir = 0;
+}
+
+Segment::~Segment()
+{
+	for (int i = 0; i < Game::DIR_COUNT; i++) { delete mSegmentAnimations[i]; }
+}
+
+void Segment::update(float elapsedTime)
+{
+	mSegmentAnimations[mDir / 90]->update(elapsedTime);
+}
+
+void Segment::draw()
+{
+	Game::instance()->getGraphics()->draw(mX, mY, mSegmentAnimations[mDir / 90]->getCurrentSprite());
+}
+
+bool Segment::collision(int colX, int colY)
+{
+	bool isWithinXBounds;
+	bool isWithinYBounds;
+
+	isWithinXBounds = (mX <= colX) && (colX < mX + mSegmentAnimations[mDir / 90]->getCurrentSprite().getWidth());
+	isWithinYBounds = (mY <= colY) && (colY < mY + mSegmentAnimations[mDir / 90]->getCurrentSprite().getHeight());
+
+	return isWithinXBounds && isWithinYBounds;
+}

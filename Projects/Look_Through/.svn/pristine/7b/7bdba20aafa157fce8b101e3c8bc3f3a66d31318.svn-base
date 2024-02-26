@@ -1,0 +1,100 @@
+#include "Sprite.h"
+
+Sprite::Sprite()
+{
+	mpBuffer = nullptr;
+	mAnchor = DEFAULT_SPRITE_LOC;
+	mHeight = DEFAULT_SPRITE_HEIGHT;
+	mWidth = DEFAULT_SPRITE_WIDTH;
+	mOwnsBuffer = true;
+}
+
+
+Sprite::Sprite(GraphicsBuffer* pBuffer, Vector2D anchor, int height, int width)
+{
+	mpBuffer = pBuffer; // Be careful not to delete the buffer before you're done with the sprite.
+
+	mAnchor = anchor;
+	mHeight = height;
+	mWidth = width;
+	mOwnsBuffer = false;
+}
+
+
+Sprite::Sprite(const string& filename, Vector2D anchor, int height, int width)
+{
+	mpBuffer = new GraphicsBuffer(filename);
+	
+	mAnchor = anchor;
+	mHeight = height;
+	mWidth = width;
+	mOwnsBuffer = true;
+}
+
+
+Sprite::~Sprite()
+{
+	if (mOwnsBuffer)
+	{
+		delete mpBuffer;
+	}
+}
+
+
+Vector2D Sprite::getAnchor() const
+{
+	return mAnchor;
+}
+
+
+int Sprite::getHeight() const
+{
+	return mHeight;
+}
+
+
+int Sprite::getWidth() const
+{
+	return mWidth;
+}
+
+
+GraphicsBuffer* Sprite::getBuffer() const
+{
+	return mpBuffer;
+}
+
+
+void Sprite::setAnchor(Vector2D anchor)
+{
+	mAnchor = anchor;
+}
+
+
+void Sprite::setHeight(int height)
+{
+	mHeight = height;
+}
+
+
+void Sprite::setWidth(int width)
+{
+	mWidth = width;
+}
+
+
+/*
+Set the graphics buffer for an existing sprite.
+Calling this will deallocate the current graphics buffer of this sprite if it was created through the filename constructor
+*/
+void Sprite::setBuffer(GraphicsBuffer* pBuffer)
+{
+	// Deallocate the current buffer if we own it.
+	if (mOwnsBuffer)
+	{
+		delete mpBuffer;
+		mpBuffer = nullptr;
+	}
+
+	mpBuffer = pBuffer;
+}

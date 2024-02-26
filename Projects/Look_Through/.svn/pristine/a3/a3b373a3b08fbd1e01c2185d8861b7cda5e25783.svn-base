@@ -1,0 +1,14 @@
+#pragma once
+#pragma once
+
+#include <string>
+#include "GameEvent.h"
+
+using namespace std;
+
+class DeadEvent : public GameEvent
+{
+public:
+	DeadEvent();
+	~DeadEvent();
+};

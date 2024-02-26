@@ -1,0 +1,52 @@
+﻿#include "include/InputSystem.hpp"
+
+#include <iostream>
+#include <SDL.h>
+
+InputSystem::InputSystem( std::shared_ptr< EventSystem > pEventSystem ) : mpEventSystem( std::move( pEventSystem ) ), mEvent()
+{
+}
+
+void InputSystem::pollInputs()
+{
+    Event event;
+
+    while ( SDL_PollEvent( &mEvent ) )
+    {
+        switch ( mEvent.type )
+        {
+        case SDL_QUIT:
+        case SDL_WINDOWEVENT_CLOSE:
+            event.type = EventType::Quit;
+            event.data = std::monostate();
+
+            // temporary until actual engine linking is done
+            SDL_Quit();
+            break;
+        case SDL_KEYDOWN:
+            event.type = EventType::KeyboardInput;
+            event.data = KeyboardEventData{ ButtonState::Pressed, static_cast< KeyCode >(mEvent.key.keysym.sym) };
+            break;
+        case SDL_KEYUP:
+            event.type = EventType::KeyboardInput;
+            event.data = KeyboardEventData{ ButtonState::Released, static_cast< KeyCode >(mEvent.key.keysym.sym) };
+            break;
+        case SDL_MOUSEBUTTONDOWN:
+            event.type = EventType::MouseInput;
+            event.data = MouseEventData{ ButtonState::Pressed, static_cast< MouseButton >(mEvent.button.button), mEvent.button.x, mEvent.button.y };
+            break;
+        case SDL_MOUSEBUTTONUP:
+            event.type = EventType::MouseInput;
+            event.data = MouseEventData{ ButtonState::Released, static_cast< MouseButton >(mEvent.button.button), mEvent.button.x, mEvent.button.y };
+            break;
+        case SDL_MOUSEMOTION:
+            event.type = EventType::MouseInput;
+            event.data = MouseEventData{ ButtonState::None, MouseButton::None, mEvent.motion.x, mEvent.motion.y };
+            break;
+        default:
+            break;
+        }
+
+        mpEventSystem->invokeEvent( event );
+    }
+}

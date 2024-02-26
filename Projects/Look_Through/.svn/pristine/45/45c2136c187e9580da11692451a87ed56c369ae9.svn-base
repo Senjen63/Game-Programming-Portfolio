@@ -1,0 +1,29 @@
+/*******************************************************
+* Author: Aven Presseisen
+* Class: GPR-250-02
+* Assignment: Assignment 3
+* Certification of Authenticity:
+* I certify that this assignment is entirely my own work.
+************/
+
+#pragma once
+
+#include <Trackable.h>
+#include <allegro5/bitmap_io.h>
+
+class GraphicsBuffer : public Trackable
+{
+    friend class GraphicsSystem;
+    ALLEGRO_BITMAP * mpBitmap;
+
+    explicit operator ALLEGRO_BITMAP *() const;
+
+public:
+    GraphicsBuffer( int width, int height );
+    explicit GraphicsBuffer( const char * pFilename );
+    ~GraphicsBuffer();
+
+    void cleanup();
+    [[nodiscard]] int getHeight() const;
+    [[nodiscard]] int getWidth() const;
+};

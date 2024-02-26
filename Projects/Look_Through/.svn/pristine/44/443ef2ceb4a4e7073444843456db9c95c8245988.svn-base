@@ -1,0 +1,55 @@
+#include "Animation.h"
+
+void Animation::Update(double dt)
+{
+	//timeleft -= dt
+	//if ( timeLeft <= 0)
+	//index++
+	//timeLeft = timePerFrame
+	mTimeLeft -= dt;
+	if (mTimeLeft <= 0)
+	{
+		mCurrentSprite++;
+		if (mCurrentSprite >= mSpriteList.size())
+		{
+			if (mShouldLoop)
+			{
+				mCurrentSprite = 0;
+			}
+			else
+			{
+				mCurrentSprite--;
+			}
+		}
+		mTimeLeft = mTimePerFrame;
+	}
+}
+
+void Animation::addSprite(GraphicsBuffer* frames, int columns, int rows, int fps, bool shouldLoop)
+{
+	for (int i = 0; i < columns; i++)
+	{
+		for (int j = 0; j < rows; j++)
+		{
+			Sprite thisFrame = Sprite(frames, Vector2D((frames->getWidth() / columns) * j, (frames->getHeight() / rows) * i),
+				Vector2D(frames->getWidth() / columns, frames->getHeight() / rows));
+			mSpriteList.push_back(thisFrame);
+		}
+	}
+
+	mCurrentSprite = 0;
+	mTimePerFrame = 1000.0 / fps;
+	mTimeLeft = mTimePerFrame;
+	mShouldLoop = shouldLoop;
+}
+
+void Animation::speedChange(double amount)
+{
+	mTimePerFrame += amount;
+
+	if (mTimePerFrame < 0.1)
+	{
+		mTimeLeft = 0.1;
+	}
+	//cout << mTimePerFrame << endl;
+}

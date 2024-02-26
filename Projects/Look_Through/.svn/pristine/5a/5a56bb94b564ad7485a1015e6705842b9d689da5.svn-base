@@ -1,0 +1,42 @@
+#pragma once
+
+#include "Trackable.h"
+#include "GraphicsBuffer.h"
+#include "Sprite.h"
+#include "Font.h"
+#include "Color.h"
+#include "Vector2D.h"
+#include <allegro5/allegro5.h>
+
+class GraphicsSystem : public Trackable
+{
+public:
+	GraphicsSystem(int height, int width);
+	~GraphicsSystem();
+
+	//Acessors for the values
+	int getDisplayWidth() { return al_get_display_width(mpDisplay); };
+	int getDisplayHeight() { return al_get_display_height(mpDisplay); };
+
+	GraphicsBuffer* getBackBuffer()
+	{
+		return new GraphicsBuffer(al_get_backbuffer(mpDisplay));
+	}
+
+	bool init();
+	void cleanUp();
+	void flip();
+	//scale defaults to 1.0f
+	void Draw(Vector2D loc, Sprite sprite, float scale);
+	void Draw(GraphicsBuffer* buff, Vector2D loc, Sprite sprite, float scale);
+	void WriteText(Vector2D loc, Font font, Color color, std::string text);
+	void WriteText(GraphicsBuffer* buff, Vector2D loc, Font font, Color color, std::string text);
+	bool SaveBuffer(GraphicsBuffer* buff, std::string fileName);
+
+
+private:
+	
+	GraphicsBuffer* mpBackBuffer;
+	ALLEGRO_DISPLAY* mpDisplay;
+	int mDisplayHeight, mDisplayWidth;
+};

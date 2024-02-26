@@ -1,0 +1,24 @@
+#pragma once
+#include <PerformanceTracker.h>
+#include <MemoryTracker.h>
+#include <Vector2D.h>
+#include "GraphicsBuffer.h"
+
+class Sprite
+{
+public:
+	Sprite();
+	Sprite(GraphicsBuffer*& pGraphicsBuff, Vector2D location, int width, int height);
+	~Sprite();
+
+	GraphicsBuffer* getBuff();
+	Vector2D getLocation();
+	int getHeight();
+	int getWidth();
+
+private:
+	GraphicsBuffer* mpGraphicsBuff;
+	Vector2D mLocation;
+	int mWidth;
+	int mHeight;
+};

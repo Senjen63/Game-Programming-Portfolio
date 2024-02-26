@@ -1,0 +1,30 @@
+//BP
+#pragma once
+#include <Trackable.h>
+#include <cassert>
+#include <string>
+#include <allegro5/allegro_font.h>
+#include <allegro5/allegro_ttf.h>
+
+using namespace std;
+
+enum TextAlignPositions
+{
+    CENTER_ALIGN = 0,
+    LEFT_ALIGN,
+    RIGHT_ALIGN
+};
+
+class Font : public Trackable
+{
+private:
+    friend class GraphicsSystem;
+    ALLEGRO_FONT* mpFont;
+    float  mSize;
+    int mFlag;
+public:
+    //Maybe switch order of params
+    Font(string path, int size, int flag);
+    ~Font();
+    float getSize() { return mSize; }
+};

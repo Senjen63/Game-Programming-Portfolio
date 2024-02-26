@@ -1,0 +1,154 @@
+#include "Game.h"
+
+
+Game* gpGame = nullptr;
+
+
+Game::~Game()
+{
+}
+
+
+void Game::init(Vector2D windowSize)
+{
+	mWindowSize = windowSize;
+
+	mpGraphicsSystem->init();
+	mpGraphicsSystem = new GraphicsSystem(windowSize.getX(), windowSize.getY());
+
+	mpInputSystem->init();
+	mpInputSystem = new InputSystem();
+}
+
+
+void Game::cleanup()
+{
+	mpInputSystem->cleanup();
+	delete mpInputSystem;
+
+	mpGraphicsSystem->cleanup();
+	delete mpGraphicsSystem;
+}
+
+
+void Game::doLoop()
+{
+	const Vector2D SPRITE_SHEET_NUM = Vector2D(4, 4);
+	const Vector2D SHEET_SPRITE_SIZE = Vector2D(60, 60);
+
+	const float START_ANIM_SPEED = 4;
+	const float ANIM_FPS_CHANGE_RATE = 5; // Increase fps by 1 every second
+
+	const std::string SMURF_ANIM_NAME = "SmurfWalk";
+	const std::string DEAN_ANIM_NAME = "DeanWalk";
+
+	const std::string ASSET_PATH = "..\\..\\common\\assets\\";
+	const std::string WOODS_IMAGE_NAME = "Woods.png";
+	const std::string SMURF_SPRITES_NAME = "smurf_sprites.png";
+	const std::string DEAN_SPRITES_NAME = "dean_sprites.png";
+
+	bool keepGoing = true;
+
+	Timer loopTimer;
+	PerformanceTracker* pPerformanceTracker = new PerformanceTracker();
+
+	InputSystem inputSys;
+	inputSys.init();
+
+	GraphicsBuffer* woodsBuffer = new GraphicsBuffer(ASSET_PATH + WOODS_IMAGE_NAME);
+	GraphicsBuffer* smurfBuffer = new GraphicsBuffer(ASSET_PATH + SMURF_SPRITES_NAME);
+	GraphicsBuffer* deanBuffer = new GraphicsBuffer(ASSET_PATH + DEAN_SPRITES_NAME);
+	
+	Sprite woodsSprite = Sprite(woodsBuffer);
+
+	std::vector<Sprite> smurfSprites;
+	std::vector<Sprite> deanSprites;
+
+	for (int y = 0; y < SPRITE_SHEET_NUM.getY(); y++)
+	{
+		for (int x = 0; x < SPRITE_SHEET_NUM.getX(); x++)
+		{
+			Sprite smurfSprite = Sprite(smurfBuffer, Vector2D(x * SHEET_SPRITE_SIZE.getX(), y * SHEET_SPRITE_SIZE.getY()), SHEET_SPRITE_SIZE);
+			smurfSprites.push_back(smurfSprite);
+
+			Sprite deanSprite = Sprite(deanBuffer, Vector2D(x * SHEET_SPRITE_SIZE.getX(), y * SHEET_SPRITE_SIZE.getY()), SHEET_SPRITE_SIZE);
+			deanSprites.push_back(deanSprite);
+		}
+	}
+
+	Animation smurfAnim = Animation(smurfSprites, START_ANIM_SPEED, true);
+	Animation deanAnim = Animation(deanSprites, START_ANIM_SPEED, true);
+
+	std::unordered_map<std::string, Animation*> unitAnims;
+	unitAnims[SMURF_ANIM_NAME] = &smurfAnim;
+	unitAnims[DEAN_ANIM_NAME] = &deanAnim;
+
+	Unit unit = Unit((mpGraphicsSystem->getWindowSize() / 2) - (SHEET_SPRITE_SIZE / 2), unitAnims, SMURF_ANIM_NAME);
+
+
+	while (keepGoing)
+	{
+		pPerformanceTracker->clearTracker(PERFORMANCE_TRACKER_STRING);
+		pPerformanceTracker->startTracking(PERFORMANCE_TRACKER_STRING);
+
+		loopTimer.start();
+
+
+		if (inputSys.getMouseButtonState(Mousecode::LEFT))
+		{
+			Vector2D mousePos = inputSys.getMousePos();
+			unit.setPos(mousePos - (unit.getCurrentAnimation()->getCurrentFrame().getSize() / 2));
+		}
+
+		if (inputSys.getKeyState(Keycode::F))
+		{
+			Animation* currentAnim = unit.getCurrentAnimation();
+			currentAnim->setFramesPerSecond(currentAnim->getFramesPerSecond() + 
+				(ANIM_FPS_CHANGE_RATE * Conversion::milToSec(mTargetTimeInMilliseconds)));
+		}
+
+		if (inputSys.getKeyState(Keycode::S))
+		{
+			Animation* currentAnim = unit.getCurrentAnimation();
+			currentAnim->setFramesPerSecond(currentAnim->getFramesPerSecond() -
+				(ANIM_FPS_CHANGE_RATE * Conversion::milToSec(mTargetTimeInMilliseconds)));
+		}
+
+		if (inputSys.getKeyState(Keycode::ENTER))
+		{
+			std::string currentAnimName = unit.getCurrentAnimationName();
+
+			if (currentAnimName == SMURF_ANIM_NAME) // Switch to Dean
+			{
+				unit.setCurrentAnimation(DEAN_ANIM_NAME);
+			}
+			else // Switch to Dean
+			{
+				unit.setCurrentAnimation(SMURF_ANIM_NAME);
+			}
+		}
+
+		if (inputSys.getKeyState(Keycode::ESCAPE))
+		{
+			keepGoing = false;
+		}
+
+
+		mpGraphicsSystem->draw(Vector2D(0, 0), woodsSprite, Vector2D(.5f, .5f));
+
+		unit.update(mTargetTimeInMilliseconds);
+		unit.draw(mpGraphicsSystem);
+
+
+
+		mpGraphicsSystem->flip();
+		loopTimer.sleepUntilElapsed(mTargetTimeInMilliseconds);
+
+		pPerformanceTracker->stopTracking(PERFORMANCE_TRACKER_STRING);
+	}
+
+	delete deanBuffer;
+	delete smurfBuffer;
+	delete woodsBuffer;
+	delete pPerformanceTracker;
+}

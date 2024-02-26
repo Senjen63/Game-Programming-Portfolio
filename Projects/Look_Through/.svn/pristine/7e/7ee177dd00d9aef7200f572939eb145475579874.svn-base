@@ -1,0 +1,25 @@
+﻿#include "include/Archetype.hpp"
+
+Archetype::Archetype( const ComponentMask mask )
+{
+    mComponentMask = mask;
+}
+
+Archetype::~Archetype()
+{
+    mEntities.clear();
+}
+
+void Archetype::addEntity( const Entity entityID, const std::vector< Component * > & components )
+{
+    mEntities[ entityID ] = {};
+    for ( auto & comp : components )
+    {
+        mEntities[ entityID ].emplace_back( comp );
+    }
+}
+
+std::vector< std::shared_ptr< Component > > & Archetype::getComponentsFromEntity( const Entity entity )
+{
+    return mEntities[ entity ];
+}

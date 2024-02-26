@@ -1,0 +1,75 @@
+/*
+Author: David Silverman
+Class: GPR-250-01
+Assignment: Assignment 2
+Certification of Authenticity:
+I certify that this assignment is entirely my own work.
+ */
+
+#pragma once
+#include <allegro5/allegro.h>
+#include <allegro5/allegro_font.h>
+#include <allegro5/allegro_ttf.h>
+#include <allegro5/allegro_audio.h>
+#include <allegro5/allegro_acodec.h>
+#include <allegro5/allegro_image.h>
+#include <allegro5/allegro_primitives.h>
+#include <Trackable.h>
+#include <PerformanceTracker.h>
+#include <Vector2D.h>
+
+#include "graphicssystem.h"
+#include "inputsystem.h"
+#include "animation.h"
+#include "unit.h"
+
+class Game : public Trackable
+{
+	    friend class Animation;
+		friend class Unit;
+		friend class GraphicsSystem;
+		friend class InputSystem;
+		PerformanceTracker* mpPerformanceTracker;
+		const string INIT_TRACKER_NAME = "init";
+		const string DRAW_TRACKER_NAME = "draw";
+		const string WAIT_TRACKER_NAME = "wait";
+		const int STAIRS_WIDTH = 1600;
+		const int STAIRS_HEIGHT = 1200;
+		const int DISPLAY_WIDTH = 800;
+		const int DISPLAY_HEIGHT = 600;
+		const int SMURF = 240;
+		const int SMARF = 60;
+		const float RATE = 0.03f;
+		const string SMURF_FILENAME = "smurf_sprites.png";
+		const string DEAN_FILENAME = "dean_sprites.png";
+		const string BACKGROUND_FILENAME = "steps.png";
+		const Vector2D TOP_LEFT = Vector2D(0, 0);
+		const float SIXTY_FRAMES = 16.67f;
+		const float HALF = 0.5f;
+		const float QUART = 0.25f;
+		const int SPRITE_HEIGHT = 4;
+		const int SPRITE_WIDTH = 4;
+		GraphicsSystem* mpGraphics;
+		InputSystem* mpInput;
+		Unit* mpUnit;
+		GraphicsBuffer* mpSmurfs;
+		GraphicsBuffer* mpDeans;
+		GraphicsBuffer* mpStairs;
+		Animation* mpSmurfAnimation;
+		Animation* mpDeanAnimation;
+		Sprite* mpBackground;
+		bool mIsSecondAnimation;
+		bool mContinue;
+		float mRate;
+	public:
+		Game();
+		~Game();
+		void Init();
+		void Cleanup();
+		void doLoop();
+		void setSmurfAnimation(Animation animation);
+		void setDeanAnimation(Animation animation);
+		bool clampRate();
+};
+
+extern Game* gpGame;

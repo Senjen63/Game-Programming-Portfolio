@@ -1,0 +1,18 @@
+#include "HUD.h"
+
+
+HUD::HUD(LevelManagerNew& levelManagerRef, Font& font, Color textColor, GraphicsBuffer* background)
+{
+	mLevelManagerRef = &levelManagerRef; 
+	mFont = &font;
+	mTextColor = textColor;
+
+	mBackground = background;
+}
+
+
+void HUD::draw(GraphicsSystem* gSys)
+{
+	gSys->draw(Vector2D(0, 0), Sprite(mBackground));
+	gSys->writeText(Vector2D(0, -8), mFont, mTextColor, "Score: ");
+}

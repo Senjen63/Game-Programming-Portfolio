@@ -1,0 +1,108 @@
+#pragma once
+
+#include "Trackable.h"
+#include <vector>
+#include "Vector2D.h"
+#include <assert.h>
+#include "Animation.h"
+#include "EventListener.h"
+
+class GraphicsSystem;
+class InputSystem;
+class Timer;
+class UnitManager;
+class GraphicsBufferManager;
+class PerformanceTracker;
+class Animation;
+class Sprite;
+class LevelManager;
+class HUD;
+class StartScreen;
+class DeathScreen;
+class WinScreen;
+class NextLevelScreen;
+class Snake;
+class PowerUps;
+class Walls;
+class Background;
+
+using namespace std;
+
+class Game : public EventListener
+{
+	private:
+		static Game* mpGameInstance;
+
+		GraphicsSystem* mpGraphicsSystem;
+		InputSystem* mpInputSystem;
+		UnitManager* mpUnitManager;
+		GraphicsBufferManager* mpGraphicsBufferManager;
+		LevelManager* mpLevelManager;
+
+		Timer* mpGameTimer;
+		double mGamePauseTime;
+		double mActualTime;
+
+		PerformanceTracker* mpPerformanceTracker;
+
+		Background* mpBackground;
+		HUD* mpHud;
+		StartScreen* mpStartScreen;
+		DeathScreen* mpDeathScreen;
+		WinScreen* mpWinScreen;
+		NextLevelScreen* mpNextLevelScreen;
+		Snake* mpSnake;
+		PowerUps* mpPowerUps;
+		Walls* mpWalls;
+
+		int mCurrentScore;
+		double mTime = 0;
+
+		bool mIsStart;
+		bool mIsDead;
+		bool mIsWin;
+		bool mIsNextLevel;
+		bool mGameContinue;
+		bool mIsTimeRun;
+
+		Vector2D mDisplaySize;
+		Vector2D mGridSize;
+		Vector2D mGridSlotSize;
+
+		Game();
+		~Game();
+	public:
+		static Game* getInstance() { assert(mpGameInstance != nullptr); return mpGameInstance; };
+		static void initInstance() { mpGameInstance = new Game; };
+		static void cleanUpInstance() { delete mpGameInstance; };
+
+		void init();
+		void cleanUp();
+
+		void doLoop();
+		void drawScreen(double, double);
+		void resetScore() { mCurrentScore = 0; }
+		void resetTime() { mTime = 0; }
+		void startTime() { mIsTimeRun = true; }
+		void endTime() { mIsTimeRun = false; }
+		void addTime(double);
+
+		void handleEvent(const Event& theEvent);
+
+		int getCurrentScore() { return mCurrentScore; }
+		GraphicsSystem* getGraphicsSystem() { return mpGraphicsSystem; }
+		UnitManager* getUnitManager() { return mpUnitManager; }
+		GraphicsBufferManager* getGraphicsBufferManager() { return mpGraphicsBufferManager; }
+		LevelManager* getLevelManager() { return mpLevelManager; }
+		Snake* getSnake() { return mpSnake; }
+		PowerUps* getPowerUps() { return mpPowerUps; }
+		bool getIsDead() { return mIsDead; }
+		bool getIsStart() { return mIsStart; }
+		bool getIsWin() { return mIsWin; }
+		bool getIsNextLevel() { return mIsNextLevel; }
+		Vector2D getGridSlotSize() { return mGridSlotSize; }
+		Vector2D getGridSize() { return mGridSize; }
+		double getTime() { return mTime; }
+		bool getIsTimeRun() { return mIsTimeRun; }
+		
+};

@@ -1,0 +1,12 @@
+#include "AddScoreEvent.h"
+
+AddScoreEvent::AddScoreEvent(int score) : HUDEvent((HUDEventType) ADD_SCORE_EVENT)
+{
+    mScore = score;
+}
+
+
+AddScoreEvent::~AddScoreEvent()
+{
+
+}

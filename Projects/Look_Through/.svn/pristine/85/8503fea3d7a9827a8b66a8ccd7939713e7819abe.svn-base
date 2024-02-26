@@ -1,0 +1,115 @@
+#include "UnitManager.h"
+
+UnitManager::UnitManager()
+{
+
+}
+
+UnitManager::~UnitManager()
+{
+	for (int i = 0; i < mUnitVector.size(); i++)
+	{
+		removeUnit(i);
+	}
+}
+
+void UnitManager::addUnit(std::pair<float, float>location, Animation* currentAnimation)
+{
+	Unit* newUnit = new Unit(location, currentAnimation);
+	mUnitVector.push_back(newUnit);
+}
+
+void UnitManager::addUnit(Unit* addedUnit)
+{
+	mUnitVector.push_back(addedUnit);
+}
+
+void UnitManager::removeUnit(int unitIndex)
+{
+	if (unitIndex > 0 && unitIndex < mUnitVector.size())
+	{
+		delete(mUnitVector[unitIndex]);
+		mUnitVector.erase(mUnitVector.begin() + unitIndex);
+	}
+
+	else
+	{
+		std::cout << "This index is out of range." << std::endl;
+	}
+}
+
+void UnitManager::removeUnit(Unit* targetUnit)
+{
+	// I feel that theres a better way of accessing the desired object
+	for (int i = 0; i < mUnitVector.size(); i++)
+	{
+		if (mUnitVector[i] == targetUnit)
+		{
+			delete(mUnitVector[i]);
+			mUnitVector.erase(mUnitVector.begin() + i);
+			return;
+		}
+	}
+
+	std::cout << "This unit isn't present." << std::endl;
+}
+
+void UnitManager::removeAllUnits()
+{
+	for (int i = 0; i < mUnitVector.size(); i++)
+	{
+		delete(mUnitVector[i]);
+	}
+
+	mUnitVector.erase(mUnitVector.begin(), mUnitVector.end());
+}
+
+Unit* UnitManager::getUnit(int unitIndex)
+{
+	return mUnitVector[unitIndex];
+}
+
+Unit* UnitManager::getUnit(std::pair<float, float>mousePos)
+{
+	for (int i = 0; i < mUnitVector.size(); i++)
+	{
+		Animation* unitAnim = mUnitVector[i]->getAnimation();
+		std::pair<float, float> unitPos = mUnitVector[i]->getLocation();
+
+		// Finds the bounds of the Unit's sprite
+		float unitWidth = unitAnim->getCurrentSprite().getWidth();
+		float unitHeight = unitAnim->getCurrentSprite().getWidth();
+
+		float minXBound = unitPos.first - (unitWidth / 2);
+		float maxXBound = unitPos.first + (unitWidth / 2);
+
+		float minYBound = unitPos.second - (unitWidth / 2);
+		float maxYBound = unitPos.second + (unitWidth / 2);
+
+		// Check if the mouse is actually hovering over this Unit
+		bool mouseInRangeX = (minXBound < mousePos.first && mousePos.first < maxXBound) ? true : false;
+		bool mouseInRangeY = (minYBound < mousePos.second && mousePos.second < maxYBound) ? true : false;
+
+		// If both statements above are true, return the unit
+		if (mouseInRangeX && mouseInRangeY)
+		{
+			return mUnitVector[i];
+		}
+	}
+}
+
+void UnitManager::updateAll(float deltaTime)
+{
+	for (int i = 0; i < mUnitVector.size(); i++)
+	{
+		mUnitVector[i]->update(deltaTime);
+	}
+}
+
+void UnitManager::drawAll(GraphicsSystem* currentGraphicsSystem)
+{
+	for (int i = 0; i < mUnitVector.size(); i++)
+	{
+		mUnitVector[i]->draw(currentGraphicsSystem);
+	}
+}

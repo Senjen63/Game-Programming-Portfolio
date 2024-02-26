@@ -1,0 +1,16 @@
+//BP
+#pragma once
+#include "Unit.h"
+#include "GameEvents.h"
+
+class Collision : public GameEvents
+{
+public:
+    Collision(Unit* hit, Unit* peice);
+    ~Collision();
+    Unit* getHitStatus() const { return mDetectHit; }
+    Unit* getPieceHit() const { return mPeiceHit; }
+private:
+    Unit* mDetectHit = nullptr;
+    Unit* mPeiceHit = nullptr;
+};

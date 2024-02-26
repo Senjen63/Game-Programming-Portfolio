@@ -1,0 +1,38 @@
+#pragma once
+
+#include <iostream>
+
+#include "Sprite.h"
+#include "Font.h"
+
+#include <Trackable.h>
+
+class GraphicsSystem : public Trackable
+{
+    private:
+        ALLEGRO_DISPLAY* mpDisplay;
+        GraphicsBuffer* mpBackBuffer;
+
+    public:
+        GraphicsSystem();
+        GraphicsSystem( int width, int height );
+        ~GraphicsSystem();
+
+        bool init();
+        void cleanup();
+
+        int getWidth();
+        int getHeight();
+        GraphicsBuffer* getBackBuffer();
+
+        void flip();
+
+        void draw( int xPos, int yPos, Sprite sprite, float xScale = 1.0f, float yScale = 1.0f );
+        void draw( GraphicsBuffer* pBackBuffer, int xPos, int yPos, float xScale = 1.0f, float yScale = 1.0f );
+        void draw( GraphicsBuffer* pBackBuffer, int xPos, int yPos, Sprite sprite, float xScale = 1.0f, float yScale = 1.0f );
+
+        void writeText( int xPos, int yPos, Font* font, Color color, string text );
+        void writeText( GraphicsBuffer* pBackBuffer, int xPos, int yPos, Font* font, Color color, string text );
+
+        bool saveBuffer( GraphicsBuffer* saveBuffer, string fileName );
+};

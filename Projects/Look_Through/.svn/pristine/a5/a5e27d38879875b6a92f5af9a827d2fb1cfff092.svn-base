@@ -1,0 +1,120 @@
+#include "UnitManager.h"
+
+
+UnitManager::UnitManager()
+{
+}
+
+
+Unit& UnitManager::createUnit(const UnitParameters& params, std::vector<Component*> &components)
+{
+	Unit* unit = new Unit(params);
+	
+	for (Component* comp : components)
+	{
+		unit->addComponent(comp->getIdentifier(), *comp);
+	}
+
+	mUnitsToAdd.push_back(unit);
+	return *unit;
+}
+
+
+bool UnitManager::deleteUnit(Unit& unit)
+{
+	mUnitsToDelete.push_back(&unit);
+
+	/*for (int i = 0; i < mUnits.size(); i++)
+	{
+		Unit* currentUnit = mUnits[i];
+		if (&*currentUnit == &unit)
+		{
+			delete currentUnit;
+			mUnits.erase(mUnits.begin() + i);
+			return true;
+		}
+	}
+
+    return false;*/
+
+	return true;
+}
+
+
+std::vector<Unit*> UnitManager::getUnitsAtPos(Vector2D point)
+{
+	std::vector<Unit*> hitUnits;
+
+	for (Unit* unit : mUnits)
+	{
+		Vector2D origin = unit->getPos();
+		Vector2D range = origin + unit->getCurrentAnimation()->getCurrentFrame().getSize();
+
+		if (point.getX() >= origin.getX() && point.getY() >= origin.getY() &&
+			point.getX() <= range.getX() && point.getY() <= range.getY())
+		{
+			hitUnits.push_back(unit);
+		}
+	}
+
+    return hitUnits;
+}
+
+
+void UnitManager::cleanup()
+{
+	for (auto it : mUnitsToAdd)
+	{
+		delete it;
+	}
+
+	for (auto it : mUnits)
+	{
+		delete it;
+	}
+
+	mUnitsToAdd.clear();
+	mUnits.clear();
+}
+
+
+void UnitManager::update(float dt)
+{
+	for (Unit* unitToAdd : mUnitsToAdd)
+	{
+		mUnits.push_back(unitToAdd);
+	}
+
+	mUnitsToAdd.clear();
+
+	for (Unit* unit : mUnits)
+	{
+		unit->doUpdate(dt);
+	}
+
+	for (unsigned int i = 0; i < mUnitsToDelete.size(); i++)
+	{
+		Unit* unitToDelete = mUnitsToDelete[i];
+
+		for (unsigned int v = 0; v < mUnits.size(); v++)
+		{
+			Unit* currentUnit = mUnits[v];
+			if (currentUnit == unitToDelete)
+			{
+				delete currentUnit;
+				mUnits.erase(mUnits.begin() + v);
+			}
+		}
+	}
+
+	mUnitsToDelete.clear();
+}
+
+
+void UnitManager::draw(GraphicsSystem* gSys)
+{
+	for (Unit* unit : mUnits)
+	{
+		unit->doDraw(gSys);
+	}
+}

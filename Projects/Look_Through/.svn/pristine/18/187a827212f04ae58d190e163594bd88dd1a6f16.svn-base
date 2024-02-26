@@ -1,0 +1,277 @@
+#include "StartScreen.h"
+#include <fstream>
+#include "Font.h"
+#include "Color.h"
+#include "GraphicsBufferManager.h"
+#include "GraphicsBuffer.h"
+#include "GraphicsSystem.h"
+#include "Game.h"
+#include "LanguageManager.h"
+#include "OptionsManager.h"
+
+StartScreen::StartScreen()
+{
+	Game* pGame = Game::getInstance();
+	
+	int r, g, b, a;
+
+	string fontFileName;
+	int fontTitleSize{}, fontOtherSize{};
+
+	ifstream input("../GalahadAssets/data/" + DATA_FILENAME);
+	if (input.good())
+	{
+		string key;
+
+		while (!input.eof())
+		{
+			input >> key;
+			if (key == "text_color")
+			{
+				input >> r >> g >> b >> a;
+				this->mpTextColor = new Color(r, g, b, a);
+			}
+			else if (key == "background_color")
+			{
+				input >> r >> g >> b >> a;
+				this->mpBackgroundColor = new Color(r, g, b, a);
+			}
+			else if (key == "font_filename")
+			{
+				input >> fontFileName;
+			}
+			else if (key == "title_font_size")
+			{
+				input >> fontTitleSize;
+			}
+			else if (key == "other_font_size")
+			{
+				input >> fontOtherSize;
+			}
+			else if (key == "x_loc")
+			{
+				input >> mCor;
+			}
+			else if (key == "title_loc")
+			{
+				input >> mCor1;
+			}
+			else if (key == "play_loc")
+			{
+				input >> mCor2;
+			}
+			else if (key == "option_loc")
+			{
+				input >> mCor3;
+			}
+			else if (key == "quit_loc")
+			{
+				input >> mCor4;
+			}
+			else if (key == "load_game_loc")
+			{
+				input >> mCor5;
+			}
+			else if (key == "last_loc")
+			{
+				input >> mCor6;
+			}
+			else if (key == "x")
+			{
+				input >> mX;
+			}
+			else if (key == "y")
+			{
+				input >> mY;
+			}
+		}
+
+		this->mpFontTitle = new Font(fontTitleSize, fontFileName);
+		this->mpFontOther = new Font(fontOtherSize, fontFileName);
+
+		pGame->getGraphicsBufferManager()->createAndAddGraphicsBuffer("background_start", mX, mY);
+
+		pGame->getGraphicsSystem()->setColor(pGame->getGraphicsBufferManager()->getGraphicsBuffer("background_start"), mpBackgroundColor);
+	}
+
+	this->mInOptions = false;
+}
+
+StartScreen::~StartScreen()
+{
+	delete mpTextColor;
+	delete mpBackgroundColor;
+	delete mpFontTitle;
+	delete mpFontOther;
+}
+
+void StartScreen::draw()
+{
+	Game* pGame = Game::getInstance();
+
+	pGame->getGraphicsSystem()->draw(&Vector2D(mCor, mCor1), &Sprite(pGame->getGraphicsBufferManager()->getGraphicsBuffer("background_start")->getWidth(), pGame->getGraphicsBufferManager()->getGraphicsBuffer("background_start")->getHeight(), &Vector2D(mCor, mCor), pGame->getGraphicsBufferManager()->getGraphicsBuffer("background_start")));
+
+	pGame->getGraphicsSystem()->writeText(&Vector2D(mCor, mCor2), mpFontTitle, mpTextColor, pGame->getLanguageManager()->getText("title_text"), true);
+	if (!mInOptions)
+	{
+		if (mSelectedMenuOption == PLAY)
+		{
+			drawMainMenu(pGame, true, false, false, false);
+		}
+		else if (mSelectedMenuOption == LOAD_SAVED_GAME)
+		{
+			drawMainMenu(pGame, false, true, false, false);
+		}
+		else if (mSelectedMenuOption == OPTIONS)
+		{
+			drawMainMenu(pGame, false, false, true, false);
+		}
+		else if (mSelectedMenuOption == QUIT)
+		{
+			drawMainMenu(pGame, false, false, false, true);
+		}
+	}
+	else
+	{
+		if (mSelectedMenuOption == SOUND_OPTION)
+		{
+			drawOptionsInnerMenu(pGame, true, false, false, false);
+		}
+		else if (mSelectedMenuOption == LANGUAGE_OPTION)
+		{
+			drawOptionsInnerMenu(pGame, false, true, false, false);
+		}
+		else if (mSelectedMenuOption == DIFFICULTY_OPTION)
+		{
+			drawOptionsInnerMenu(pGame, false, false, true, false);
+		}
+		else if (mSelectedMenuOption == BACK)
+		{
+			drawOptionsInnerMenu(pGame, false, false, false, true);
+		}
+	}
+	
+}
+
+void StartScreen::drawMainMenu(Game* pGame, bool isPlaySelected, bool isLoadSavedGameSelected, bool isOptionsSelected, bool isQuitSelected)
+{
+	pGame->getGraphicsSystem()->writeText(&Vector2D(mCor, mCor3), mpFontOther, mpTextColor, pGame->getLanguageManager()->getText("play_text"), true, isPlaySelected);
+
+	pGame->getGraphicsSystem()->writeText(&Vector2D(mCor, mCor4), mpFontOther, mpTextColor, pGame->getLanguageManager()->getText("load_game_text"), true, isLoadSavedGameSelected);
+
+	pGame->getGraphicsSystem()->writeText(&Vector2D(mCor, mCor5), mpFontOther, mpTextColor, pGame->getLanguageManager()->getText("option_text"), true, isOptionsSelected);
+
+	pGame->getGraphicsSystem()->writeText(&Vector2D(mCor, mCor6), mpFontOther, mpTextColor, pGame->getLanguageManager()->getText("quit_text"), true, isQuitSelected);
+}
+
+void StartScreen::drawOptionsInnerMenu(Game* pGame, bool isSoundSelected, bool isLanguageSelected, bool isDifficultySelected, bool isBackSelected)
+{
+	pGame->getGraphicsSystem()->writeText(&Vector2D(mCor, mCor3), mpFontOther, mpTextColor, pGame->getLanguageManager()->getText("sound_text") + getSound(), true, isSoundSelected);
+
+	pGame->getGraphicsSystem()->writeText(&Vector2D(mCor, mCor4), mpFontOther, mpTextColor, pGame->getLanguageManager()->getText("language_text") + getLanguage(), true, isLanguageSelected);
+
+	pGame->getGraphicsSystem()->writeText(&Vector2D(mCor, mCor5), mpFontOther, mpTextColor, pGame->getLanguageManager()->getText("difficulty_text") + getDifficulty(), true, isDifficultySelected);
+
+	pGame->getGraphicsSystem()->writeText(&Vector2D(mCor, mCor6), mpFontOther, mpTextColor, pGame->getLanguageManager()->getText("back_text") , true, isBackSelected);
+}
+
+void StartScreen::nextMenuOption(string direction)
+{
+	if (!mInOptions)
+	{
+		if (mSelectedMenuOption == QUIT && direction == "down")
+		{
+			mSelectedMenuOption = PLAY;
+			return;
+		}
+		else if (mSelectedMenuOption == PLAY && direction == "up")
+		{
+			mSelectedMenuOption = QUIT;
+			return;
+		}
+		else if (direction == "up")
+		{
+			mSelectedMenuOption--;
+		}
+		else if (direction == "down")
+		{
+			mSelectedMenuOption++;
+		}
+	}
+	else
+	{
+		if (mSelectedMenuOption == SOUND_OPTION && direction == "up")
+		{
+			mSelectedMenuOption = BACK;
+			return;
+		}
+		else if (mSelectedMenuOption == BACK && direction == "down")
+		{
+			mSelectedMenuOption = SOUND_OPTION;
+			return;
+		}
+		else if (direction == "up")
+		{
+			mSelectedMenuOption--;
+		}
+		else if (direction == "down")
+		{
+			mSelectedMenuOption++;
+		}
+	}
+}
+
+void StartScreen::setInOptions(bool isInOptions)
+{
+	mInOptions = isInOptions;
+}
+
+string StartScreen::getSound()
+{
+	Game* pGame = Game::getInstance();
+
+	if (pGame->getOptionsManager()->getSound() == pGame->getOptionsManager()->ON)
+	{
+		return pGame->getLanguageManager()->getText("sound_change_text_on");
+	}
+	else
+	{
+		return pGame->getLanguageManager()->getText("sound_change_text_off");
+	}
+}
+
+string StartScreen::getLanguage()
+{
+	Game* pGame = Game::getInstance();
+
+	if (pGame->getOptionsManager()->getLanguage() == pGame->getOptionsManager()->ENGLISH)
+	{
+		return pGame->getLanguageManager()->getText("language_change_text_english");
+	}
+	else if (pGame->getOptionsManager()->getLanguage() == pGame->getOptionsManager()->SPANISH)
+	{
+		return pGame->getLanguageManager()->getText("language_change_text_spanish");
+	}
+	else
+	{
+		return pGame->getLanguageManager()->getText("language_change_text_french");
+	}
+}
+
+string StartScreen::getDifficulty()
+{
+	Game* pGame = Game::getInstance();
+
+	if (pGame->getOptionsManager()->getDifficulty() == pGame->getOptionsManager()->EASY)
+	{
+		return pGame->getLanguageManager()->getText("difficulty_change_text_easy");
+	}
+	else if (pGame->getOptionsManager()->getDifficulty() == pGame->getOptionsManager()->NORMAL)
+	{
+		return pGame->getLanguageManager()->getText("difficulty_change_text_normal");
+	}
+	else
+	{
+		return pGame->getLanguageManager()->getText("difficulty_change_text_hard");
+	}
+}

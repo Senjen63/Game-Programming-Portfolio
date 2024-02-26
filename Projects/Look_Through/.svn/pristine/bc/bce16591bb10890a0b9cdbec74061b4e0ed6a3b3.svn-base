@@ -1,0 +1,18 @@
+//Evan Norzow, Nicolas Delbue, and Brandon Perry
+#pragma once
+#include <Trackable.h>
+#include "GraphicsBuffer.h"
+
+class Sprite : public Trackable 
+{
+private:
+	GraphicsBuffer* mpBmp;
+	Vector2D mSourcePosition;
+	Vector2D mHeightAndWidth;
+public:
+	Sprite(GraphicsBuffer* pBmp, Vector2D sourcePosition, Vector2D heightAndWidth);
+	~Sprite();
+	GraphicsBuffer getSpriteBuff();
+	Vector2D getSourcePosition();
+	Vector2D getHeightAndWidth();
+};

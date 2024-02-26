@@ -1,0 +1,51 @@
+/*
+Author: David Silverman
+Class: GPR-250-01
+Assignment: Assignment 3
+Certification of Authenticity:
+I certify that this assignment is entirely my own work.
+ */
+
+#pragma once
+#include <allegro5/allegro.h>
+#include <allegro5/allegro_font.h>
+#include <allegro5/allegro_ttf.h>
+#include <allegro5/allegro_audio.h>
+#include <allegro5/allegro_acodec.h>
+#include <allegro5/allegro_image.h>
+#include <allegro5/allegro_primitives.h>
+#include <Trackable.h>
+#include <Vector2D.h>
+
+class InputSystem : public Trackable
+{
+		ALLEGRO_EVENT_QUEUE* mpQueue;
+		Vector2D mPos;
+		bool mUp;
+		bool mDown;
+		bool mLeft;
+		bool mRight;
+		bool mEscape;
+	public:
+		enum mKeyCode
+		{
+			F_KEY = ALLEGRO_KEY_F,
+			S_KEY = ALLEGRO_KEY_S,
+			ENTER_KEY = ALLEGRO_KEY_ENTER,
+			ESCAPE_KEY = ALLEGRO_KEY_ESCAPE
+		};
+		InputSystem();
+		~InputSystem();
+		void Init();
+		void Cleanup();
+		void getKeyState();
+		bool getLeftMouseState();
+		bool getRightMouseState();
+		Vector2D getPosition();
+		ALLEGRO_EVENT_QUEUE* getQueue();
+		bool getUp();
+		bool getDown();
+		bool getLeft();
+		bool getRight();
+		bool getEscape();
+};

@@ -1,0 +1,12 @@
+#include "ActionEvent.h"
+
+ActionEvent::ActionEvent(int actionCode) : GameEvent((GameEventType) ACTION_GAME_EVENT)
+{
+    mAction = actionCode;
+}
+
+
+ActionEvent::~ActionEvent()
+{
+
+}

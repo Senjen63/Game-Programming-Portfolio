@@ -1,0 +1,11 @@
+#include "WinEvent.h"
+
+WinEvent::WinEvent() :GameEvent(WIN_EVENT)
+{
+
+}
+
+WinEvent::~WinEvent()
+{
+
+}

@@ -1,0 +1,10 @@
+#include "LevelEvent.h"
+
+LevelEvent::LevelEvent()
+	:GameEvent(LEVEL_EVENT)
+{
+}
+
+LevelEvent::~LevelEvent()
+{
+}

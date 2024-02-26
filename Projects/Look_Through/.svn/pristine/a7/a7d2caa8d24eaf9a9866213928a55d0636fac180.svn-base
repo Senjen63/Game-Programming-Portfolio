@@ -1,0 +1,443 @@
+#include "SceneManager.h"
+#include "Game.h"
+#include "Unit.h"
+
+#include <fstream>
+#include <iostream>
+#include <string>
+
+SceneManager::SceneManager()
+{
+	mpUManager = new UnitManager();
+	mpSnakeManager = new UnitManager();
+	mpItemManager = new UnitManager();
+}
+
+SceneManager::~SceneManager()
+{
+	mpSnakeManager = nullptr;
+	mpItemManager = nullptr;
+	mpUManager = nullptr;
+	delete mpSnakeManager;
+	delete mpItemManager;
+	delete mpUManager;
+	Clear();
+	std::map<std::string, Animation*>().swap(animationMap);
+}
+
+void SceneManager::init(int num)
+{
+	mNumLevels = num;
+
+}
+
+void SceneManager::createLevel(Levels level) //load level data without creating the level - used for initing game.cpp
+{
+	LevelData levelData;
+	ifstream input;
+	//mpGBM = gbm;
+
+	if (level == LEVEL_1) {
+		input.open(levelData.mLevel1);
+		mActiveLevel = LEVEL_1;
+	}
+	else if (level == LEVEL_2)
+	{
+		input.open(levelData.mLevel2);
+		mActiveLevel = LEVEL_2;
+	}
+	else if (level == LEVEL_3)
+	{
+		input.open(levelData.mLevel3);
+		mActiveLevel = LEVEL_3;
+	}
+
+
+	while (!input.eof()) {
+		string a;
+		input >> a;
+
+		if (a == "size")
+		{
+			int x, y;
+			input >> x >> y; //record size
+			mDISP_WIDTH = x;
+			mDISP_HEIGHT = y;
+		}
+		else if (a == "empty")
+		{
+			//record empty filename
+			string temp;
+			input >> temp;
+			mTILE_FILENAME = temp;
+		}
+		else if (a == "wall")
+		{
+			//record wall filename
+			string temp;
+			input >> temp;
+			mWALL_FILENAME = temp;
+		}
+		else if (a == "snake")
+		{
+			//record snake filename
+			string temp;
+			input >> temp;
+			mSNAKE_FILENAME = temp;
+		}
+		else if (a == "food")
+		{
+			//record food filename
+			string temp;
+			input >> temp;
+			mFOOD_FILENAME = temp;
+		}
+		else if (a == "pwr")
+		{
+			//record powerup filename
+			string temp;
+			input >> temp;
+			mPOWERUP_FILENAME = temp;
+		}
+		else if (a == "bkgrnd")
+		{
+			//record background filename
+			string temp;
+			input >> temp;
+			mBACKGROUND_FILENAME = temp;
+		}
+	}
+}
+
+void SceneManager::createLevel(Levels level, GraphicsBufferManager* gbm)
+{
+	LevelData levelData;
+	ifstream input;
+	mpGBM = gbm;
+
+	if (level == LEVEL_1) {
+		input.open(levelData.mLevel1);
+		mActiveLevel = LEVEL_1;
+	}
+	else if (level == LEVEL_2)
+	{
+		input.open(levelData.mLevel2);
+		mActiveLevel = LEVEL_2;
+	}
+	else if (level == LEVEL_3)
+	{
+		input.open(levelData.mLevel3);
+		mActiveLevel = LEVEL_3;
+	}
+
+
+	while (!input.eof()) {
+		string a;
+		input >> a;
+
+		if (a == "size")
+		{
+			int x, y;
+			input >> x >> y;
+			mDISP_WIDTH = x;
+			mDISP_HEIGHT = y;
+		}
+		else if (a == "empty")
+		{
+			string temp;
+			input >> temp;
+			mTILE_FILENAME = temp;
+		}
+		else if (a == "wall")
+		{
+			string temp;
+			input >> temp;
+			mWALL_FILENAME = temp;
+		}
+		else if (a == "snake")
+		{
+			string temp;
+			input >> temp;
+			mSNAKE_FILENAME == temp;
+		}
+		else if (a == "food")
+		{
+			string temp;
+			input >> temp;
+			mFOOD_FILENAME == temp;
+		}
+		else if (a == "pwr")
+		{
+			string temp;
+			input >> temp;
+			mPOWERUP_FILENAME == temp;
+		}
+		else if (a == "bkgrnd")
+		{
+			string temp;
+			input >> temp;
+			mBACKGROUND_FILENAME == temp;
+		}
+		else if (a == "map")
+		{
+			string code = "abcdefghi";
+			for (int i = 1; i < 18; i++)
+			{
+				for (int j = 1; j < 24; j++)
+				{
+					input >> a;
+
+					if (a == "0")
+					{
+						//create empty cell
+						Unit* empty = new Unit(gbm->getGraphicsBuffer("Tile")->getWidth()/2 * j, gbm->getGraphicsBuffer("Tile")->getHeight()/2 * i, getAnimation("tile"));
+						mpUManager->addUnit(empty);
+					}
+					else if (a == "1")
+					{
+						//create wall
+						Unit* wall = new Unit(gbm->getGraphicsBuffer("Wall")->getWidth()/2 * j, gbm->getGraphicsBuffer("Wall")->getHeight()/2 * i, getAnimation("wall"));
+						mpUManager->addUnit(wall);
+						wall->toggleWall(true);
+					}
+					else if (a == "2")
+					{
+						//create food
+						Unit* food = new Unit(gbm->getGraphicsBuffer("Food")->getWidth()/2 * j, gbm->getGraphicsBuffer("Food")->getHeight()/2 * i, getAnimation("food"));
+						mpUManager->addUnit(food);
+						food->toggleFood(true);
+						mNumFood++;
+					}
+					else if (a == "3")
+					{
+						//create powerup
+						Unit* empty = new Unit(gbm->getGraphicsBuffer("Tile")->getWidth() / 2 * j, gbm->getGraphicsBuffer("Tile")->getHeight() / 2 * i, getAnimation("tile"));
+						mpUManager->addUnit(empty);
+					}
+					else if (a == "H")
+					{
+						//create snake head
+						Unit* snakeHead = new Unit(gbm->getGraphicsBuffer("Snake")->getWidth()/2 * j, gbm->getGraphicsBuffer("Snake")->getHeight()/2 * i, getAnimation("snake"));
+						Unit* empty = new Unit(gbm->getGraphicsBuffer("Tile")->getWidth()/2 * j, gbm->getGraphicsBuffer("Tile")->getHeight()/2 * i, getAnimation("tile"));
+						mpUManager->addUnit(empty);
+
+						mpSnakeManager->addUnit(snakeHead);
+						snakeHead->toggleSnk(true);
+					}
+					else if (a == "T")
+					{
+						//create snake tail
+						Unit* snakeTail = new Unit(gbm->getGraphicsBuffer("Snake")->getWidth()/2 * j, gbm->getGraphicsBuffer("Snake")->getHeight()/2 * i, getAnimation("snake"));
+						Unit* empty = new Unit(gbm->getGraphicsBuffer("Tile")->getWidth()/2 * j, gbm->getGraphicsBuffer("Tile")->getHeight()/2 * i, getAnimation("tile"));
+						mpUManager->addUnit(empty);
+						
+						mpSnakeManager->addUnit(snakeTail);
+						snakeTail->toggleSnk(true);
+					}
+				}
+			}
+		}
+
+	}
+	mNumLevels++;
+}
+
+void SceneManager::loadLevel(Levels level, GraphicsBufferManager* gbm)
+{
+	LevelData levelData;
+	ifstream input;
+	mpGBM = gbm;
+
+	if (level == LEVEL_1) {
+		input.open(levelData.mLevel1);
+		mActiveLevel = LEVEL_1;
+	}
+	else if (level == LEVEL_2)
+	{
+		input.open(levelData.mLevel2);
+		mActiveLevel = LEVEL_2;
+	}
+	else if (level == LEVEL_3)
+	{
+		input.open(levelData.mLevel3);
+		mActiveLevel = LEVEL_3;
+	}
+
+
+	while (!input.eof()) {
+		string a;
+		input >> a;
+
+		if (a == "map")
+		{
+			string code = "abcdefghi";
+			for (int i = 1; i < 18; i++)
+			{
+				for (int j = 1; j < 24; j++)
+				{
+					input >> a;
+
+					if (a == "0")
+					{
+						//create empty cell
+						Unit* empty = new Unit(gbm->getGraphicsBuffer("Tile")->getWidth() / 2 * j, gbm->getGraphicsBuffer("Tile")->getHeight() / 2 * i, getAnimation("tile"));
+						mpUManager->addUnit(empty);
+					}
+					else if (a == "1")
+					{
+						//create wall
+						Unit* wall = new Unit(gbm->getGraphicsBuffer("Wall")->getWidth() / 2 * j, gbm->getGraphicsBuffer("Wall")->getHeight() / 2 * i, getAnimation("wall"));
+						mpUManager->addUnit(wall);
+						wall->toggleWall(true);
+					}
+					else if (a == "2")
+					{
+						//create food
+						Unit* food = new Unit(gbm->getGraphicsBuffer("Food")->getWidth() / 2 * j, gbm->getGraphicsBuffer("Food")->getHeight() / 2 * i, getAnimation("food"));
+						mpUManager->addUnit(food);
+						food->toggleFood(true);
+						mNumFood++;
+					}
+					else if (a == "3")
+					{
+						//create powerup
+						Unit* empty = new Unit(gbm->getGraphicsBuffer("Tile")->getWidth() / 2 * j, gbm->getGraphicsBuffer("Tile")->getHeight() / 2 * i, getAnimation("tile"));
+						mpUManager->addUnit(empty);
+					}
+					else if (a == "H")
+					{
+						//create snake head
+						Unit* food = new Unit(gbm->getGraphicsBuffer("Food")->getWidth() / 2 * j, gbm->getGraphicsBuffer("Food")->getHeight() / 2 * i, getAnimation("food"));
+						mpUManager->addUnit(food);
+						food->toggleFood(true);
+						mNumFood++;
+
+						mpSnakeManager->getUnit(0)->setPosition(food->getPosition());
+						
+						
+					}
+					else if (a == "T")
+					{
+						//create snake tail
+						Unit* snakeTail = new Unit(gbm->getGraphicsBuffer("Snake")->getWidth() / 2 * j, gbm->getGraphicsBuffer("Snake")->getHeight() / 2 * i, getAnimation("snake"));
+						Unit* empty = new Unit(gbm->getGraphicsBuffer("Tile")->getWidth() / 2 * j, gbm->getGraphicsBuffer("Tile")->getHeight() / 2 * i, getAnimation("tile"));
+						mpUManager->addUnit(empty);
+
+						mpSnakeManager->addUnit(snakeTail);
+						snakeTail->toggleSnk(true);
+					}
+				}
+			}
+		}
+
+	}
+	mNumLevels++;
+}
+
+void SceneManager::deleteLevel()
+{
+	mpUManager->Clear();
+	mpItemManager->Clear();
+
+	mpUManager = nullptr;
+	mpItemManager = nullptr;
+	delete mpUManager;
+	delete mpItemManager;
+
+	mpUManager = new UnitManager();
+	mpSnakeManager = new UnitManager();
+	mpItemManager = new UnitManager();
+	mNumFood = 0;
+	mNumPwrUps = 0;
+	//mpItemManager->Clear();
+}
+
+Levels SceneManager::getLevel()
+{
+	return mActiveLevel;
+}
+
+void SceneManager::changeScene(Levels level)
+{
+	if (getLevel() == level)
+	{
+	}
+	else if (level == LEVEL_1)
+	{
+		createLevel(LEVEL_1, mpGBM);
+	}
+	else if (level == LEVEL_2)
+	{
+		createLevel(LEVEL_2, mpGBM);
+	}
+	else if (level == LEVEL_3)
+	{
+		createLevel(LEVEL_3, mpGBM);
+	}
+}
+
+void SceneManager::setPwrLoc()
+{
+	int random = rand() % (mpUManager->getSize());
+	Vector2D temp = mpUManager->getUnit(random)->getPosition();
+
+	Unit* powerUp = new Unit(temp.getX(), temp.getY(), getAnimation("powerUp"));
+	mpItemManager->addUnit(powerUp);
+	powerUp->togglePwr(true);
+	mNumPwrUps++;
+
+	if (mpItemManager->checkCollision(mpSnakeManager->getUnit(0)->getPosition()))
+	{
+
+		int random = rand() % (mpUManager->getSize());
+		Vector2D temp = mpUManager->getUnit(random)->getPosition();
+		powerUp->setPosition(temp);
+		mNumPwrUps++;
+	}
+	for (int i = 0; i < mpUManager->getSize(); i++)
+	{
+		if (mpItemManager->checkCollision(mpUManager->getUnit(i)->getPosition()) && mpUManager->getUnit(i)->getWallStatus())
+		{
+			int random = rand() % (mpUManager->getSize());
+			Vector2D temp = mpUManager->getUnit(random)->getPosition();
+			powerUp->setPosition(temp);
+			mNumPwrUps++;
+		}
+	}
+}
+
+void SceneManager::setFoodLoc()
+{
+	int random = rand() % (mpUManager->getSize());
+	Vector2D temp = mpUManager->getUnit(random)->getPosition();
+
+	Unit* food = new Unit(temp.getX(), temp.getY(), getAnimation("food"));
+	mpItemManager->addUnit(food);
+	food->toggleFood(true);
+
+	if (mpItemManager->checkCollision(mpSnakeManager->getUnit(0)->getPosition()))
+	{
+		int random = rand() % (mpUManager->getSize());
+		Vector2D temp = mpUManager->getUnit(random)->getPosition();
+		food->setPosition(temp);
+	}
+	for (int i = 0; i < mpUManager->getSize(); i++)
+	{
+		if (mpItemManager->checkCollision(mpUManager->getUnit(i)->getPosition()) && mpUManager->getUnit(i)->getWallStatus())
+		{
+			int random = rand() % (mpUManager->getSize());
+			Vector2D temp = mpUManager->getUnit(random)->getPosition();
+			food->setPosition(temp);
+		}
+	}
+}
+
+void SceneManager::draw()
+{
+
+}
+
+void SceneManager::update()
+{
+
+}

@@ -1,0 +1,30 @@
+#pragma once
+#include "Animation.h"
+
+class Segment : public Trackable
+{
+public:
+	Segment();
+	Segment(int x, int y, Animation* anim);
+	~Segment();
+
+	void update(float elapsedTime);
+	void draw();
+
+	void setPosition(int x, int y) { mX = x; mY = y; }
+	void setDir(int dir) { mDir = dir; }
+	void setAnimation(Animation* anim, int num) { mSegmentAnimations[num] = anim; }
+	
+	int getX() { return mX; }
+	int getY() { return mY; }
+	int getDir() { return mDir; }
+	Animation* getAnimation(int i) { return mSegmentAnimations[i]; }
+	
+	bool collision(int colX, int colY);
+private:
+	int mX;
+	int mY;
+	int mDir;
+
+	Animation* mSegmentAnimations[4];
+};

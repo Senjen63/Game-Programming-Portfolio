@@ -1,0 +1,57 @@
+//BP
+#include "GameFood.h"
+
+GameFood::GameFood()
+{
+    //Empty Constructor
+}
+
+GameFood::~GameFood()
+{
+    cleaner();
+}
+
+void GameFood::init()
+{
+    mpEventSystem = EventSystem::getInstance();
+}
+
+void GameFood::cleaner()
+{
+
+}
+
+void GameFood::updateFoods()
+{
+
+    if (mThisFood == nullptr)
+    {
+
+        mpEventSystem->fireEvent(FoodCreation());
+
+    }
+
+    if (mEatFood)
+    {
+
+        mThisFood = nullptr;
+
+    }
+
+}
+
+void GameFood::levelFinish()
+{
+    mThisFood = nullptr;
+}
+
+void GameFood::setThisFood(Unit* thisFood)
+{
+    mEatFood = false;
+    mThisFood = thisFood;
+}
+
+void GameFood::setBeenEaten(bool beenEaten)
+{
+    mEatFood = beenEaten;
+}

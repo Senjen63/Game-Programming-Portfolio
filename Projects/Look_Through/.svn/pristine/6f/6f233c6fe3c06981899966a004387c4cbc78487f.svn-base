@@ -1,0 +1,33 @@
+#include "font.h"
+
+Font::Font()
+{
+	mFontSize = 0;
+	mpLoadedFont = NULL;
+}
+Font::Font(string fontFile, float fontSize)
+{
+	mFontSize = fontSize;
+	mpLoadedFont = al_load_ttf_font(fontFile.c_str(), mFontSize, 0);
+}
+Font::~Font()
+{
+	al_destroy_font(mpLoadedFont);
+	mFontSize = 0;
+}
+float Font::GetFontSize()
+{
+	return mFontSize;
+}
+void Font::SetFontSize(float fontSize)
+{
+	mFontSize = fontSize;
+}
+ALLEGRO_FONT* Font::GetFont()
+{
+	return mpLoadedFont;
+}
+void Font::SetFont(ALLEGRO_FONT* newFont)
+{
+	mpLoadedFont = newFont;
+}

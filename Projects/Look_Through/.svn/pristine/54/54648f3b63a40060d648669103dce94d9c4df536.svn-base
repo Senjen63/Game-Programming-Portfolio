@@ -1,0 +1,43 @@
+#pragma once
+
+#include "Trackable.h"
+#include <vector>
+#include "Timer.h"
+#include "Sprite.h"
+
+class Sprite;
+
+using namespace std;
+
+const string ANI_SPEED = "animation_speed.txt";
+
+class Animation : public Trackable
+{
+private:
+
+
+	vector<Sprite> mSprites;
+	double mTimeOfAnimation;
+	double mTimeRemainingOfAnimation;
+	unsigned int mCurrentSprite;
+	int mFirst;
+	bool mIsLoop;
+
+public:
+	Animation() {};
+	Animation(bool);
+	~Animation();
+
+	void addSprite(Sprite);
+
+	void update(double);
+
+	void slowDownAnimation();
+	void speedUpAnimation();
+
+	Sprite getCurrentSprite();
+	vector<Sprite> getSprites() { return mSprites; }
+	Vector2D getDimen() { return mSprites[mFirst].getSpriteDimen(); }
+	int getWidth() { return mSprites[mFirst].getSpriteWidth(); }
+	int getHeight() { return mSprites[mFirst].getSpriteHeight(); }
+};

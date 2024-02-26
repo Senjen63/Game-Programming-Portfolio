@@ -1,0 +1,15 @@
+#pragma once
+
+#include <Vector2D.h>
+#include "GameEvent.h"
+
+class MoveEvent : public GameEvent
+{
+public:
+	MoveEvent(int keycode);
+	~MoveEvent();
+
+	int getKeyBind() const { return mKeycode; };
+private:
+	int mKeycode = 0;
+};

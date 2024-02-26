@@ -1,0 +1,453 @@
+#include "Game.h"
+
+#include <fstream>
+
+#include <PerformanceTracker.h>
+#include <Timer.h>
+
+#include "GraphicsBufferManager.h"
+#include "LevelManager.h"
+#include "UnitManager.h"
+
+#include "GraphicsSystem.h"
+#include <EventSystem.h>
+#include "InputSystem.h"
+#include "InputTranslator.h"
+
+#include "ObjectCollisionEvent.h"
+#include "SecondPassedEvent.h"
+#include "PlayerActionEvent.h"
+#include "ScoreChangeEvent.h"
+#include "MouseInputEvent.h"
+#include "InputEvent.h"
+#include "GameEvent.h"
+
+#include "GraphicsBuffer.h"
+#include "Animation.h"
+#include "Sprite.h"
+#include "Level.h"
+#include "Font.h"
+#include "Unit.h"
+
+Game* Game::mpsGame = nullptr;
+
+Game* Game::getInstance()
+{
+	return mpsGame;
+}
+void Game::createInstance()
+{
+	if (mpsGame == nullptr)
+	{
+		mpsGame = new Game;
+	}	
+}
+void Game::destroyInstance()
+{
+	if (mpsGame != nullptr)
+	{
+		delete mpsGame;
+		mpsGame = nullptr;
+	}
+}
+
+GraphicsBufferManager* Game::getGraphicsBufferManager()
+{
+	return mpGraphicsBufferManager;
+}
+UnitManager* Game::getUnitManager()
+{
+	return mpUnitManager;
+}
+
+GraphicsSystem* Game::getGraphicsSystem()
+{
+	return mpGraphicsSystem;
+}
+EventSystem* Game::getEventSystem()
+{
+	return mpEventSystem;
+}
+InputSystem* Game::getInputSysyem()
+{
+	return mpInputSystem;
+}
+
+Game::~Game()
+{
+	cleanup();
+}
+
+void Game::init(int width, int height)
+{
+	mDispWidth = width;
+	mDispHeight = height;
+	mCurrentState = GameState::START_UP;
+
+	loadFile();
+
+	GraphicsSystem::createInstance();
+	mpGraphicsSystem = GraphicsSystem::getInstance();
+	mpGraphicsSystem->init(width, height);
+	
+	mpEventSystem = EventSystem::getInstance();	
+	mpEventSystem->addListener((EventType)GameEventType::PLAYER_ACTION_EVENT, this);
+	mpEventSystem->addListener((EventType)GameEventType::SCORE_CHANGE_EVENT, this);
+	mpEventSystem->addListener((EventType)GameEventType::LEVEL_COMPLETE_EVENT, this);
+	mpEventSystem->addListener((EventType)GameEventType::OBJECT_COLLISION_EVENT, this);
+	
+	mpInputSystem = new InputSystem;
+	mpInputSystem->init();
+
+	mpTranslator = new InputTranslator;
+
+	mpGraphicsBufferManager = new GraphicsBufferManager;
+
+	mpGraphicsBufferManager->addGraphicsBuffer(mSpriteSheetFilename, mSpriteSheetFilename);
+	mpGraphicsBufferManager->addGraphicsBuffer(mStartScreenFilename, mStartScreenFilename);
+	mpGraphicsBufferManager->addGraphicsBuffer(mWinScreenFilename, mWinScreenFilename);
+	mpGraphicsBufferManager->addGraphicsBuffer(mLoseScreenFilename, mLoseScreenFilename);
+	//mpGraphicsBufferManager->addGraphicsBuffer(mButtonSpritesFileName, mButtonSpritesFileName);
+	/*mpGraphicsBufferManager->addGraphicsBuffer(mAssetPath + SMURF_FILENAME, SMURF_FILENAME);
+	mpGraphicsBufferManager->addGraphicsBuffer(mAssetPath + DEAN_FILENAME, DEAN_FILENAME);*/
+
+	mpWallAnim = new Animation(mpGraphicsBufferManager->getGraphicsBuffer(mSpriteSheetFilename), mSpritesPerRow, ROWS_PER_ANIM, mSpriteWidth, mSpriteHeight, mWallRow);
+	mpSnakeAnim = new Animation(mpGraphicsBufferManager->getGraphicsBuffer(mSpriteSheetFilename), mSpritesPerRow, ROWS_PER_ANIM, mSpriteWidth, mSpriteHeight, mSnakeRow);
+	mpFoodAnim = new Animation(mpGraphicsBufferManager->getGraphicsBuffer(mSpriteSheetFilename), mSpritesPerRow, ROWS_PER_ANIM, mSpriteWidth, mSpriteHeight, mFoodRow);
+	mpPointsAmim = new Animation(mpGraphicsBufferManager->getGraphicsBuffer(mSpriteSheetFilename), mSpritesPerRow, ROWS_PER_ANIM, mSpriteWidth, mSpriteHeight, mPointsRow);
+	mpSpeedAnim = new Animation(mpGraphicsBufferManager->getGraphicsBuffer(mSpriteSheetFilename), mSpritesPerRow, ROWS_PER_ANIM, mSpriteWidth, mSpriteHeight, mSpeedRow);
+	mpSlowAnim = new Animation(mpGraphicsBufferManager->getGraphicsBuffer(mSpriteSheetFilename), mSpritesPerRow, ROWS_PER_ANIM, mSpriteWidth, mSpriteHeight, mSlowRow);
+	//mpButtonAnim = new Animation(mpGraphicsBufferManager->getGraphicsBuffer(mButtonSpritesFileName), 1, 1, mButtonWidth, mButtonHeight, 0, 0);
+
+	mpHUDFont = new Font(ASSET_PATH + FONT_FILENAME, HUD_FONT_SIZE);
+	mpHUD = new HUD(mpHUDFont, Color());
+
+	mpUnitManager = new UnitManager(mpWallAnim, mpSnakeAnim, mpFoodAnim, mpPointsAmim, mpSpeedAnim, mpSlowAnim, mpButtonAnim);
+
+	mpLevelManager = new LevelManager;
+	mpLevelManager->addFilename(m1stLevelFilename);
+	//mpLevelManager->addFilename(m2ndLevelFilename);
+	//mpLevelManager->addFilename(m3rdLevelFilename);	
+}
+void Game::cleanup()
+{
+	// Clean up game objects
+
+	mCurrentState = GameState::INVALID_STATE;
+
+	delete mpLevelManager;
+	if (mpCurrentLevel) { delete mpCurrentLevel; }
+
+	delete mpUnitManager;
+
+	delete mpHUD;
+	delete mpHUDFont;
+
+	delete mpWallAnim;
+	delete mpSnakeAnim;
+	delete mpFoodAnim;
+	delete mpPointsAmim;
+	delete mpSpeedAnim;
+	delete mpSlowAnim;
+	//delete mpButtonAnim;
+
+	// Clean up game system things
+	delete mpGraphicsBufferManager;
+
+	// Clean up game systems
+	delete mpTranslator;
+	delete mpInputSystem;	
+	mpEventSystem = nullptr;
+	GraphicsSystem::destroyInstance();	
+	mpGraphicsSystem = nullptr;
+}
+
+void Game::setState(GameState state)
+{
+	mCurrentState = state;
+}
+
+GameState Game::getState()
+{
+	return mCurrentState;
+}
+
+void Game::doLoop()
+{
+	bool makeLevel = true;
+	bool unitIsSmurf = true;
+
+	//double timeToSwap = ANIM_SWAP_DELAY_IN_MS;
+	double timeToPause = 100;
+
+	double timePassedInMS = 0;
+	int timePassedInSec = 0;
+	int framesThisSecond = 0;
+
+	Color offWhite = Color(240, 240, 240, 255);
+
+	PerformanceTracker performanceTracker;
+	string trackerName = "loop";
+	
+
+	while (mKeepGoing && mCurrentState != GameState::INVALID_STATE)
+	{
+		performanceTracker.clearTracker(trackerName);
+		performanceTracker.startTracking(trackerName);
+		Timer loopTimer;
+		loopTimer.start();
+		
+		// get input
+		
+		//bool didPressEnter = mpInputSystem->getKeyState(KeyCode::ENTER_KEY);
+		//bool didPressSpace = mpInputSystem->getKeyState(KeyCode::SPACE_KEY);		
+		//bool didLeftClick = mpInputSystem->getMouseState(MouseCode::LEFT_CLICK);
+		//bool didRightClick = mpInputSystem->getMouseState(MouseCode::RIGHT_CLICK);
+		//Vector2D mousePos = mpInputSystem->getMousePosition();
+		//
+		// do updates
+		//
+		//if (doSpeedUp && !doSlowDown)
+		//{
+		//	mpSmurfAnim->speedUp();
+		//	mpDeanAnim->speedUp();
+		//}
+		//
+		//if (doSlowDown && !doSpeedUp)
+		//{
+		//	mpSmurfAnim->slowDown();
+		//	mpDeanAnim->slowDown();
+		//}
+		//
+		//timeToSwap -= FRAME_INTERVAL_IN_MS;			
+		//timeToPause -= FRAME_INTERVAL_IN_MS;		
+		//
+		//if (didPressEnter && timeToSwap < 0)
+		//{
+		//	if (unitIsSmurf)
+		//	{
+		//		mpUnitManager->getLastUnit()->toggleAnimation();				
+		//	}
+		//	else
+		//	{
+		//		mpUnitManager->getLastUnit()->toggleAnimation();				
+		//	}
+		//	unitIsSmurf = !unitIsSmurf;
+		//	timeToSwap = ANIM_SWAP_DELAY_IN_MS;
+		//}
+		//
+		//if (didPressSpace && timeToPause < 0)
+		//{
+		//	
+		//}
+		//
+		//if (didLeftClick && !didRightClick)
+		//{
+		//	mpUnitManager->addUnitAt(mousePos, *mpSmurfAnim);
+		//}
+		//
+		//if (didRightClick && !didLeftClick)
+		//{
+		//	mpUnitManager->deleteAllUnitsAt(mousePos);
+		//}
+
+		mpInputSystem->update();
+		
+
+		switch (mCurrentState)
+		{
+		case GameState::START_UP:
+
+			mpGraphicsSystem->draw(ORIGIN, mpGraphicsBufferManager->getGraphicsBuffer(mStartScreenFilename));
+			break;
+
+		case GameState::PLAYING:
+
+			mpCurrentLevel->update(FRAME_INTERVAL_IN_MS);
+			mpUnitManager->updateAll(FRAME_INTERVAL_IN_MS);
+
+			mpGraphicsSystem->fillColor(offWhite);
+			mpUnitManager->drawAll();
+			mpHUD->draw();
+			break;
+
+		case GameState::IN_MENU:
+
+			break;
+
+		case GameState::GAME_LOST:
+
+			mpGraphicsSystem->draw(ORIGIN, mpGraphicsBufferManager->getGraphicsBuffer(mLoseScreenFilename));
+			break;
+
+		case GameState::GAME_WON:
+
+			mpGraphicsSystem->draw(ORIGIN, mpGraphicsBufferManager->getGraphicsBuffer(mWinScreenFilename));
+			break;
+
+		case GameState::QUITTING:
+			break;
+		default:
+			break;
+		}
+		
+
+		mpGraphicsSystem->flip();
+
+		timePassedInMS += FRAME_INTERVAL_IN_MS;
+		framesThisSecond++;
+
+		if (timePassedInMS - ((double)timePassedInSec * ONE_SECOND_IN_MS) > ONE_SECOND_IN_MS)
+		{
+			mpEventSystem->fireEvent(SecondPassedEvent(framesThisSecond));
+			timePassedInSec++;
+			framesThisSecond = 0;
+		}
+		
+		loopTimer.sleepUntilElapsed(FRAME_INTERVAL_IN_MS);
+		performanceTracker.stopTracking(trackerName);
+
+		//cout << "Frame took: " << pPerformanceTracker->getElapsedTime(trackerName) << "\n";
+	}	
+}
+
+void Game::handleEvent(const Event& theEvent)
+{
+	if (theEvent.getType() == (EventType)GameEventType::PLAYER_ACTION_EVENT)
+	{
+		const PlayerActionEvent& actionEvent = static_cast<const PlayerActionEvent&>(theEvent);
+		parsePlayerAction(actionEvent.getAction());
+	}
+	else if (theEvent.getType() == (EventType)GameEventType::SCORE_CHANGE_EVENT)
+	{
+		const ScoreChangeEvent& scoreEvent = static_cast<const ScoreChangeEvent&>(theEvent);		
+		mScore += scoreEvent.getScore();
+	}
+	else if (theEvent.getType() == (EventType)GameEventType::OBJECT_COLLISION_EVENT)
+	{
+		const ObjectCollisionEvent& collisionEvent = static_cast<const ObjectCollisionEvent&>(theEvent);
+		
+		if (collisionEvent.getType() == UnitType::WALL || collisionEvent.getType() == UnitType::SNAKE)
+		{
+			endGame();
+		}		
+	}
+	else if (theEvent.getType() == (EventType)GameEventType::LEVEL_COMPLETE_EVENT)
+	{
+		mLevelsCompleted++;
+		if (mLevelsCompleted >= mTotalNumLevels)
+		{
+			mCurrentState = GameState::GAME_WON;
+		}
+		else
+		{
+			mpHUD->resetTime();
+			delete mpCurrentLevel;
+			mpCurrentLevel = mpLevelManager->getNextLevel();
+		}		
+	}	
+}
+
+void Game::endGame()
+{
+	mCurrentState = GameState::GAME_LOST;	
+	mScore = 0;
+	mpHUD->resetScore();
+	mpHUD->resetTime();
+}
+
+void Game::restartGame()
+{
+	mLevelsCompleted = 0;		
+	mpLevelManager->restartAtFirstLevel();
+	if (mpCurrentLevel) { delete mpCurrentLevel; }
+	mpCurrentLevel = mpLevelManager->getCurrentLevel();
+
+	mCurrentState = GameState::PLAYING;
+}
+
+void Game::parsePlayerAction(PlayerAction action)
+{
+	switch (action)
+	{
+	case PlayerAction::QUIT_GAME:
+		mKeepGoing = false;
+		break;
+
+	case PlayerAction::START_GAME:
+		
+		if (mCurrentState != GameState::PLAYING)
+		{			
+			restartGame();
+		}		
+		break;
+
+	case PlayerAction::SKIP_LEVEL:
+
+		if (mCurrentState == GameState::PLAYING)
+		{
+			delete mpCurrentLevel;			
+			mpHUD->resetTime();
+			mpCurrentLevel = mpLevelManager->getNextLevel();
+		}		
+		break;
+
+	case PlayerAction::RESTART_LEVEL:
+
+		if (mCurrentState == GameState::PLAYING)
+		{
+			delete mpCurrentLevel;			
+			mpHUD->resetTime();
+			mpCurrentLevel = mpLevelManager->getCurrentLevel();
+		}		
+		break;
+					
+	default:		
+		break;
+	}
+}
+
+void Game::loadFile()
+{
+	ifstream input(mGameDataFilename);
+	if (input.good())
+	{
+		string key;
+		while (!input.eof())
+		{
+			input >> key;
+
+			if (key == "filenames")
+			{
+				input >> mSpriteSheetFilename;
+				input >> mStartScreenFilename;
+				input >> mWinScreenFilename;
+				input >> mLoseScreenFilename;
+				input >> m1stLevelFilename;
+				//input >> m2ndLevelFilename;
+				//input >> m3rdLevelFilename;
+			}
+			else if (key == "spriteinfo")
+			{
+				input >> mSpriteWidth;
+				input >> mSpriteHeight;
+				input >> mSpritesPerRow;
+
+				input >> mWallRow
+					>> mSnakeRow
+					>> mFoodRow
+					>> mPointsRow
+					>> mSpeedRow
+					>> mSlowRow;
+			}
+			else if (key == "size")
+			{
+
+			}
+		}
+		input.close();
+	}	
+}
+
+
+

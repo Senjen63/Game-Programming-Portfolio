@@ -1,0 +1,481 @@
+#include "Game.h"
+
+Game* Game::mpGameInstance = nullptr;
+
+Game::Game()
+{
+	mpGameInstance;
+
+	mPictures = "";
+	mKey, mBackground, mWorm, mWall = "";
+
+	loadFile();
+
+	mpGraphicsBufferManager = new GraphicsBufferManager;
+	//mpUnitManager = new UnitManager;
+
+	// initialize the member GraphicsSystem object
+	mpGraphics = new GraphicsSystem;
+	assert(mpGraphics);
+	mpGraphics->init(mWidth, mHeight);	
+
+	mpHUD = nullptr;
+
+	mLevelManager = new LevelManager;
+}
+
+Game::~Game()
+{
+	cleanup();
+}
+
+void Game::loadFile()
+{
+	std::ifstream input;
+	input.open(START_FILE);
+
+	if (input.good())
+	{
+		while (!input.eof())
+		{
+			input >> mKey;
+
+			if (mKey == "height")
+				input >> mHeight;
+			else if (mKey == "width")
+				input >> mWidth;
+			else if (mKey == "pics")
+				input >> mPictures;
+		}
+	}
+
+	input.close();
+
+	input.open(mPictures);
+
+	if (input.good())
+	{
+		while (!input.eof())
+		{
+			input >> mKey;
+
+			if (mKey == "bkgd")
+				input >> mBackground;
+			else if (mKey == "worm")
+				input >> mWorm;
+			else if (mKey == "wall")
+				input >> mWall;
+			else if (mKey == "food")
+				input >> mFood;
+		}
+	}
+
+	input.close();
+}
+
+void Game::handleEvent(const Event& theEvent)
+{
+	if (theEvent.getType() == FOOD_EVENT)
+	{
+		const FoodEvent& foodEvent = static_cast<const FoodEvent&>(theEvent);
+		if (foodEvent.getFoodEvent() == (int)FoodCode::FOOD)
+		{
+			mScore += mLevelManager->returnLevel()->getGainPoints();
+			mSnakeManager.createAndAddUnit(mSnakeSprite);
+			if (!mWinGame)
+			{
+				mFoodManager.createAndAddUnit(FOOD_GB, mFoodAnim);
+				mFoodManager.randomLoc(FOOD_GB, mCurrentLevel, mLevelManager);
+			}
+		}
+		if (foodEvent.getFoodEvent() == (int)FoodCode::PWRUP)
+		{
+			mSnakeManager.changeSpeed(mLevelManager->returnLevel()->getSpeedUp());
+
+			if (mSpawnUp < mLevelManager->returnLevel()->getPwrupFreq() && !mWinGame)
+			{
+				mFoodManager.createAndAddUnit(PWRUP_GB, mPwrUpAnim);
+				mFoodManager.randomLoc(PWRUP_GB, mCurrentLevel, mLevelManager);
+				mSpawnUp++;
+			}
+		}
+		if (foodEvent.getFoodEvent() == (int)FoodCode::PWRDWN)
+		{
+			mSnakeManager.changeSpeed(mLevelManager->returnLevel()->getSlowDown());
+
+			if (mSpawnDown < mLevelManager->returnLevel()->getPwrupFreq() && !mWinGame)
+			{
+				mFoodManager.createAndAddUnit(PWRDWN_GB, mPwrDwnAnim);
+				mFoodManager.randomLoc(PWRDWN_GB, mCurrentLevel, mLevelManager);
+				mSpawnDown++;
+			}	
+		}
+	}
+
+	if (theEvent.getType() == INPUT_EVENT)
+	{
+		const InputEvent& inputEvent = static_cast<const InputEvent&>(theEvent);
+
+		if (inputEvent.getKeyCode() == (int)MyKeyCode::SPACE)
+		{
+			mStartGame = true;
+			mWinGame = false;
+
+			mMovingUp = false;
+			mMovingDown = false;
+			mMovingRight = true;
+			mMovingLeft = false;
+
+			if (mLostGame)
+			{
+				mLostGame = false;
+			}
+
+			mLevelManager->changeLevel(mCurrentLevel);
+			
+		}
+		if (inputEvent.getKeyCode() == (int)MyKeyCode::UP)
+		{
+			if (!mMovingDown)
+			{
+				mMovingUp = true;
+				mMovingDown = false;
+				mMovingRight = false;
+				mMovingLeft = false;
+			}
+		}
+		if (inputEvent.getKeyCode() == (int)MyKeyCode::DOWN)
+		{
+			if (!mMovingUp)
+			{
+				mMovingUp = false;
+				mMovingDown = true;
+				mMovingRight = false;
+				mMovingLeft = false;
+			}
+		}
+		if (inputEvent.getKeyCode() == (int)MyKeyCode::LEFT)
+		{
+			if (!mMovingRight)
+			{
+				mMovingUp = false;
+				mMovingDown = false;
+				mMovingRight = false;
+				mMovingLeft = true;
+			}
+		}
+		if (inputEvent.getKeyCode() == (int)MyKeyCode::RIGHT)
+		{
+			if (!mMovingLeft)
+			{
+				mMovingUp = false;
+				mMovingDown = false;
+				mMovingRight = true;
+				mMovingLeft = false;
+			}
+		}
+		if (inputEvent.getKeyCode() == (int)MyKeyCode::ESCAPE)
+		{
+			mShouldContinue = false;
+		}
+	}
+}
+
+void Game::init()
+{
+	// initialize 3 GraphicsBuffers - background.png, square_worm.png, and wall.png
+	mpGraphicsBufferManager->createAndAddGraphicsBuffer(GREEN_GB, (mBackground).c_str());
+	mpGraphicsBufferManager->createAndAddGraphicsBuffer(WORM_GB, (mWorm).c_str());
+	mpGraphicsBufferManager->createAndAddGraphicsBuffer(WALL_GB, (mWall).c_str());
+	mpGraphicsBufferManager->createAndAddGraphicsBuffer(HUD_GB, 608, 100);
+	mpGraphicsBufferManager->createAndAddGraphicsBuffer(FOOD_GB, (mFood).c_str());
+	mpGraphicsBufferManager->createAndAddGraphicsBuffer(PWRUP_GB, (mFood).c_str());
+	mpGraphicsBufferManager->createAndAddGraphicsBuffer(PWRDWN_GB, (mFood).c_str());
+
+	// initialize 2 sprites for the snake and wall
+	mSnakeSprite.singleSprite(mpGraphicsBufferManager->getGraphicsBuffer(WORM_GB), ORIGIN_X, ORIGIN_Y,
+		mpGraphicsBufferManager->getGraphicsBuffer(WORM_GB)->getHeight(),
+		mpGraphicsBufferManager->getGraphicsBuffer(WORM_GB)->getWidth());
+
+	mWallSprite.singleSprite(mpGraphicsBufferManager->getGraphicsBuffer(WALL_GB), ORIGIN_X, ORIGIN_Y,
+		mpGraphicsBufferManager->getGraphicsBuffer(WALL_GB)->getHeight(),
+		mpGraphicsBufferManager->getGraphicsBuffer(WALL_GB)->getWidth());
+
+	// yellow, index 0
+	mFoodAnim.addSprite(mpGraphicsBufferManager->getGraphicsBuffer(FOOD_GB), 0, 0,
+		mpGraphicsBufferManager->getGraphicsBuffer(FOOD_GB)->getHeight(),
+		mpGraphicsBufferManager->getGraphicsBuffer(FOOD_GB)->getWidth());
+
+	// pink, index 1
+	mPwrUpAnim.addSprite(mpGraphicsBufferManager->getGraphicsBuffer(PWRUP_GB), 0, 128,
+		mpGraphicsBufferManager->getGraphicsBuffer(PWRUP_GB)->getHeight(),
+		mpGraphicsBufferManager->getGraphicsBuffer(PWRUP_GB)->getWidth());
+
+	// blue, index 2
+	mPwrDwnAnim.addSprite(mpGraphicsBufferManager->getGraphicsBuffer(PWRDWN_GB), 192, 128,
+		mpGraphicsBufferManager->getGraphicsBuffer(PWRDWN_GB)->getHeight(),
+		mpGraphicsBufferManager->getGraphicsBuffer(PWRDWN_GB)->getWidth());
+
+	// initialize the member InputSystem object
+	mpInput = new InputSystem;
+	assert(mpInput);
+
+	// initialize the event system object
+	mpEventSystem = EventSystem::getInstance();
+	mpEventSystem->init();
+
+	mpEventSystem->getInstance()->addListener((EventType)INPUT_EVENT, this);
+	mpEventSystem->getInstance()->addListener((EventType)FOOD_EVENT, this);
+}
+
+void Game::cleanup()
+{
+	// clean up the program
+	delete mpGraphicsBufferManager;
+	//delete mpUnitManager;
+
+	delete mpGraphics;
+	delete mpInput;
+	delete mpHUD;
+	delete mLevelManager;
+
+	mpGraphicsBufferManager = nullptr;
+	//mpUnitManager = nullptr;
+
+	mpInput = nullptr;
+	mpGraphics = nullptr;
+	mpHUD = nullptr;
+	mLevelManager = nullptr;
+
+	mpEventSystem->cleanup();
+}
+
+void Game::doLoop()
+{
+	double FPS = 60;
+	double targetTime = 1000.0 / FPS;
+	double hudFps = 0;
+
+	Color white(255, 255, 255, 255);
+	Color clearColor(68, 236, 108, 255);
+	Font* font = new Font("..\\..\\common\\assets\\cour.ttf", 20);
+
+	PerformanceTracker* pPerformanceTracker = new PerformanceTracker;
+	Timer loopTimer;
+	Timer elapsedTime;
+	elapsedTime.start();
+
+	mpHUD = new HUD(font);
+	mFoodManager.init();
+
+	mLevelManager->createAndAddLevel(0, mWallSprite, mpGraphics, mpGraphicsBufferManager->getGraphicsBuffer(WALL_GB));
+	mLevelManager->createAndAddLevel(1, mWallSprite, mpGraphics, mpGraphicsBufferManager->getGraphicsBuffer(WALL_GB));
+	mLevelManager->createAndAddLevel(2, mWallSprite, mpGraphics, mpGraphicsBufferManager->getGraphicsBuffer(WALL_GB));
+
+	for (int i = 0; i < mLevelManager->returnLevel()->getInitLength(); i++)
+	{
+		mSnakeManager.createAndAddUnit(mSnakeSprite);
+	}
+
+	mSnakeManager.setSpeed(mLevelManager->returnLevel()->getSpeed());
+
+	mFoodManager.createAndAddUnit(FOOD_GB, mFoodAnim);
+	mFoodManager.randomLoc(FOOD_GB, mCurrentLevel, mLevelManager);
+	mFoodManager.createAndAddUnit(PWRUP_GB, mPwrUpAnim);
+	mFoodManager.randomLoc(PWRUP_GB, mCurrentLevel, mLevelManager);
+	mFoodManager.createAndAddUnit(PWRDWN_GB, mPwrDwnAnim);
+	mFoodManager.randomLoc(PWRDWN_GB, mCurrentLevel, mLevelManager);
+
+	while (mShouldContinue)
+	{
+		pPerformanceTracker->clearTracker("loop");
+		pPerformanceTracker->startTracking("loop");
+
+		loopTimer.start();
+
+		// handle event
+		mpInput->getKeyEvent();
+
+		// update the input system during every loop
+		mpInput->update();
+
+		// update the animation (food, pwrup, pwrdwn)
+		mFoodManager.update(targetTime);
+
+		// draw the background
+		mpGraphics->draw(mpGraphicsBufferManager->getGraphicsBuffer(GREEN_GB), ORIGIN_X, ORIGIN_Y, 1);
+
+		if (mCurrentLevel > 3 || mWinGame)
+		{
+			mpHUD->winText(mpGraphics, mpGraphicsBufferManager->getGraphicsBuffer(HUD_GB));
+			mStartGame = false;
+			mCurrentLevel = 1;
+			mScore = 0;
+			mSpawnUp = 0;
+			mSpawnDown = 0;
+
+			//mFoodManager.cleanup();
+			mSnakeManager.cleanup();
+			mLevelManager->changeLevel(mCurrentLevel);
+
+			for (int i = 0; i < mLevelManager->returnLevel()->getInitLength(); i++)
+			{
+				mSnakeManager.createAndAddUnit(mSnakeSprite);
+				mSnakeManager.getUnit(i)->setLocation(mInitLocation);
+			}
+
+			mSnakeManager.setSpeed(mLevelManager->returnLevel()->getSpeed());
+			mPlayAgain = true;
+		}
+		else if ((!mStartGame && !mLostGame) && !mWinGame)
+		{
+			mpHUD->startText(mpGraphics, mpGraphicsBufferManager->getGraphicsBuffer(HUD_GB));
+		}
+		else if (mLostGame)
+		{
+			mpHUD->endText(mpGraphics, mpGraphicsBufferManager->getGraphicsBuffer(HUD_GB));
+			mFoodManager.cleanup();
+			mSnakeManager.cleanup();
+			mLevelManager->cleanup();
+			mLevelManager->createAndAddLevel(0, mWallSprite, mpGraphics, mpGraphicsBufferManager->getGraphicsBuffer(WALL_GB));
+			mLevelManager->createAndAddLevel(1, mWallSprite, mpGraphics, mpGraphicsBufferManager->getGraphicsBuffer(WALL_GB));
+			mLevelManager->createAndAddLevel(2, mWallSprite, mpGraphics, mpGraphicsBufferManager->getGraphicsBuffer(WALL_GB));
+			mLevelManager->changeLevel(mCurrentLevel);
+
+			mSpawnUp = 0;
+			mSpawnDown = 0;
+
+			mMovingUp = false;
+			mMovingDown = false;
+			mMovingRight = true;
+			mMovingLeft = false;
+
+			for (int i = 0; i < mLevelManager->returnLevel()->getInitLength(); i++)
+			{
+				mSnakeManager.createAndAddUnit(mSnakeSprite);
+				mSnakeManager.getUnit(i)->setLocation(mInitLocation);
+			}
+
+			mSnakeManager.setSpeed(mLevelManager->returnLevel()->getSpeed());
+			mFoodManager.createAndAddUnit(FOOD_GB, mFoodAnim);
+			mFoodManager.randomLoc(FOOD_GB, mCurrentLevel, mLevelManager);
+			mFoodManager.createAndAddUnit(PWRUP_GB, mPwrUpAnim);
+			mFoodManager.randomLoc(PWRUP_GB, mCurrentLevel, mLevelManager);
+			mFoodManager.createAndAddUnit(PWRDWN_GB, mPwrDwnAnim);
+			mFoodManager.randomLoc(PWRDWN_GB, mCurrentLevel, mLevelManager);
+		}
+		else
+		{
+
+			if (mPlayAgain == true)
+			{
+				mFoodManager.createAndAddUnit(FOOD_GB, mFoodAnim);
+				mFoodManager.randomLoc(FOOD_GB, mCurrentLevel, mLevelManager);
+				mFoodManager.createAndAddUnit(PWRUP_GB, mPwrUpAnim);
+				mFoodManager.randomLoc(PWRUP_GB, mCurrentLevel, mLevelManager);
+				mFoodManager.createAndAddUnit(PWRDWN_GB, mPwrDwnAnim);
+				mFoodManager.randomLoc(PWRDWN_GB, mCurrentLevel, mLevelManager);
+				mPlayAgain = false;
+			}
+
+			mpHUD->gamePlayText(mpGraphics, mpGraphicsBufferManager->getGraphicsBuffer(HUD_GB), elapsedTime.getElapsedTime() / 1000, hudFps * 3.6, mCurrentLevel, mScore);
+
+			if (mSnakeManager.getSize() > mLevelManager->returnLevel()->getInitLength() && mSnakeManager.collideWithSelf())
+			{
+				mLostGame = true;
+			}
+
+			if ((mSnakeManager.getSize() != 0) && mLevelManager->collisionWithWall(mSnakeManager.getHead()))
+			{
+				mLostGame = true;
+			}
+
+			if (mSnakeManager.getSize() == mLevelManager->returnLevel()->getEndLength())
+			{
+				mCurrentLevel += 1;
+				mSpawnDown = 0;
+				mSpawnUp = 0;
+
+				if (mCurrentLevel > 3)
+				{
+					mWinGame = true;
+					mFoodManager.cleanup();
+					continue;
+				}
+				else
+				{
+					mFoodManager.cleanup();
+					mSnakeManager.cleanup();
+					mLevelManager->cleanup();
+					mLevelManager->createAndAddLevel(0, mWallSprite, mpGraphics, mpGraphicsBufferManager->getGraphicsBuffer(WALL_GB));
+					mLevelManager->createAndAddLevel(1, mWallSprite, mpGraphics, mpGraphicsBufferManager->getGraphicsBuffer(WALL_GB));
+					mLevelManager->createAndAddLevel(2, mWallSprite, mpGraphics, mpGraphicsBufferManager->getGraphicsBuffer(WALL_GB));
+					mLevelManager->changeLevel(mCurrentLevel);
+
+					for (int i = 0; i < mLevelManager->returnLevel()->getInitLength(); i++)
+					{
+						mSnakeManager.createAndAddUnit(mSnakeSprite);
+						mSnakeManager.getUnit(i)->setLocation(mInitLocation);
+					}
+
+					mMovingUp = false;
+					mMovingDown = false;
+					mMovingRight = true;
+					mMovingLeft = false;
+
+					mSnakeManager.setSpeed(mLevelManager->returnLevel()->getSpeed());
+					mFoodManager.createAndAddUnit(FOOD_GB, mFoodAnim);
+					mFoodManager.randomLoc(FOOD_GB, mCurrentLevel, mLevelManager);
+					mFoodManager.createAndAddUnit(PWRUP_GB, mPwrUpAnim);
+					mFoodManager.randomLoc(PWRUP_GB, mCurrentLevel, mLevelManager);
+					mFoodManager.createAndAddUnit(PWRDWN_GB, mPwrDwnAnim);
+					mFoodManager.randomLoc(PWRDWN_GB, mCurrentLevel, mLevelManager);
+				}
+			}
+			
+			if (mSnakeManager.getSize() != 0)
+			{
+				mFoodManager.collisionWithFood(mSnakeManager.getHead());
+			}
+
+			if (mStartGame)
+			{
+				if (mMovingUp)
+				{
+					mSnakeManager.update(1, targetTime);
+				}
+				else if (mMovingDown)
+				{
+					mSnakeManager.update(2, targetTime);
+				}
+				else if (mMovingRight)
+				{
+					mSnakeManager.update(3, targetTime);
+				}
+				else if (mMovingLeft)
+				{
+					mSnakeManager.update(4, targetTime);
+				}
+			}
+			
+			// draw the animation
+			mFoodManager.draw(mpGraphics);
+			mSnakeManager.draw(mpGraphics);
+			mLevelManager->loadLevel(mpGraphics);
+		}
+
+		// flip the screen
+		mpGraphics->flip();
+
+		loopTimer.sleepUntilElapsed(targetTime);
+		pPerformanceTracker->stopTracking("loop");
+		hudFps = pPerformanceTracker->getElapsedTime("loop");
+		//std::cout << pPerformanceTracker->getElapsedTime("loop") << std::endl;
+		//std::cout << loopTimer.getElapsedTime() << std::endl;
+	}
+
+	delete font;
+	font = nullptr;
+	
+	delete pPerformanceTracker;
+}

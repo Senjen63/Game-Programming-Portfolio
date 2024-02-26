@@ -1,0 +1,157 @@
+#include "Game.h"
+#include "GraphicsSystem.h"
+#include "HUD.h"
+#include "LanguageManager.h"
+#include "Font.h"
+#include "ShotManager.h"
+#include "UnitManager.h"
+#include "Unit.h"
+#include "Animation.h"
+#include "Sprite.h"
+#include <fstream>
+
+ShotManager::ShotManager()
+{
+	mCanShoot = true;
+
+	ifstream inputDiff("../GalahadAssets/data/" + FILE_PATH);
+	if (inputDiff.good())
+	{
+		string key;
+
+		while (!inputDiff.eof())
+		{
+			inputDiff >> key;
+
+			if (key == "origin")
+			{
+				inputDiff >> mOrigin;
+			}
+			else if (key == "move")
+			{
+				inputDiff >> mMove;
+			}
+		}
+	}
+}
+
+ShotManager::ShotManager(int size) : UnitManager(size)
+{
+	mCanShoot = true;
+
+	ifstream inputDiff("../GalahadAssets/data/" + FILE_PATH);
+	if (inputDiff.good())
+	{
+		string key;
+
+		while (!inputDiff.eof())
+		{
+			inputDiff >> key;
+
+			if (key == "origin")
+			{
+				inputDiff >> mOrigin;
+			}
+			else if (key == "move")
+			{
+				inputDiff >> mMove;
+			}
+		}
+	}
+}
+
+ShotManager::~ShotManager()
+{
+
+}
+
+void ShotManager::activateUnit(Vector2D pos)
+{
+	
+	for (unsigned int i = mOrigin; i < mpUnits.size(); i++)
+	{
+		if (mpUnits[i]->mInUse == false && mCanShoot)
+		{
+			mpUnits[i]->init(pos, mpUnits[mOrigin]->mHitbox);
+
+			mpUnits[i]->setType(ASTEROID);
+
+			mCanShoot = false;
+		}
+	}
+}
+
+void ShotManager::createAndAddUnit(Vector2D location, Animation mainAnimation, Animation altAnimation)
+{
+	Unit* pUnit = new Unit(location);
+
+	pUnit->setType(BULLET);
+	pUnit->setMainAnimation(mainAnimation);
+	pUnit->setAltAnimation(altAnimation);
+	pUnit->mHitbox = mainAnimation.getDimen();
+
+	mpUnits.push_back(pUnit);
+}
+
+void ShotManager::createAndAddUnit(Vector2D location, Animation mainAnimation)
+{
+	Unit* pUnit = new Unit(location);
+
+	pUnit->setType(BULLET);
+	pUnit->setMainAnimation(mainAnimation);
+	pUnit->mHitbox = mainAnimation.getDimen();
+
+	mpUnits.push_back(pUnit);
+}
+
+void ShotManager::updateAll(double dt)
+{
+	if (!mCanShoot)
+	{
+		if (mCurrentTime <= mOrigin)
+		{
+			mCurrentTime = mReload;
+			mCanShoot = true;
+		}
+		else
+		{
+			mCurrentTime -= dt;
+		}
+	}
+
+	for each (Unit * ast in mpUnits)
+	{
+		if (ast->mInUse)
+		{
+			ast->draw();
+
+			ast->move(mOrigin, mMove);
+		}
+	}
+}
+
+void ShotManager::deallocate()
+{
+	float height = Game::getInstance()->getGraphicsSystem()->getTextSize(Game::getInstance()->getFont(), Game::getInstance()->getLanguageManager()->getText("lives_text")).getY();
+
+
+	for each (Unit * ast in mpUnits)
+	{
+		if (ast->mLocation.getY() <= height)
+			ast->deinit();
+	}
+}
+
+void ShotManager::detectCollisions(vector<Unit*> pUnArr)
+{
+
+}
+
+void ShotManager::setSpeed(float speed)
+{
+	mBulletSpeed = speed;
+	for each (Unit* shot in mpUnits)
+	{
+		shot->setSpeed(speed);
+	}
+}

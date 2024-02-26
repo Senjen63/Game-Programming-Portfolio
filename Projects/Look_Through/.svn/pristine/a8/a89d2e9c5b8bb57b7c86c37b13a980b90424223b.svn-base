@@ -1,0 +1,12 @@
+//BP
+#include "Collision.h"
+
+Collision::Collision(Unit* hit, Unit* piece) : GameEvents((GameEventVariations)COLLISION)
+{
+    mPeiceHit = piece;
+    mDetectHit = hit;
+}
+
+Collision::~Collision()
+{
+}

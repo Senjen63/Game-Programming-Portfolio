@@ -1,0 +1,253 @@
+#include "Level.h"
+
+#include <fstream>
+#include <random>
+
+#include <EventSystem.h>
+#include "GameEvent.h"
+#include "ObjectCollisionEvent.h"
+#include "ScoreChangeEvent.h"
+#include "LevelCompleteEvent.h"
+
+#include "SnakeManager.h"
+#include "UnitManager.h"
+#include "Game.h"
+#include "Unit.h"
+
+Level::Level(string filename, int cellSize)
+{
+	EventSystem::getInstance()->addListener((EventType)GameEventType::OBJECT_COLLISION_EVENT, this);
+
+	mpUnitManager = Game::getInstance()->getUnitManager();
+
+	mCellSize = cellSize;
+	mCenterOffset = Vector2D(mCellSize / 2, mCellSize / 2);
+
+	ifstream input(filename);
+	if (input.good())
+	{
+		string key;
+		while (!input.eof())
+		{
+			input >> key;
+
+			if (key == "PowerUps")
+			{
+				while (key != "endPowerUps")
+				{
+					input >> key;
+
+					if (key == "timer")
+					{
+						input >> mMaxSpawnTimeInSeconds;
+						mMaxSpawnTimeInSeconds *= ONE_SECOND_IN_MS;
+						mPowerUpSpawnTimer = mMaxSpawnTimeInSeconds;
+					}
+					else if(key == "points")
+					{
+						input >> mPointsPowerWeight;
+						input >> mPointsPowerValue;
+					}
+					else if (key == "speed")
+					{
+						input >> mSpeedPowerWeight;
+						input >> mSpeedPowerValue;
+					}
+					else if (key == "slow")
+					{
+						input >> mSlowPowerWeight;
+						input >> mSlowPowerValue;						
+					}
+				}
+			}
+			else if (key == "SnakeInfo")
+			{
+				while (key != "endSnakeInfo")
+				{
+					input >> key;
+
+					if (key == "speed")
+					{
+						input >> mSnakeSpeed;
+					}
+					else if (key == "startLength")
+					{
+						input >> mStartingLength;
+					}
+					else if (key == "targetLength")
+					{
+						input >> mTargetLength;
+					}
+					else if (key == "lengthPerFood")
+					{
+						input >> mLengthPerFood;
+					}
+					else if (key == "pointsPerFood")
+					{
+						input >> mPointsPerFood;
+					}
+				}
+			}
+			else if (key == "LevelLayout")
+			{
+				input >> mLevelWidth;
+				input >> mLevelHeight;
+
+				//mMaxHeight = mLevelHeight * mCellSize;
+				//mMaxWidth = mLevelWidth * mCellSize;
+
+				for(int i = 0; i < mLevelHeight; i ++)
+				{
+					for (int j = 0; j < mLevelWidth; j++)
+					{
+						if (input.eof() || key == "endLevelLayout") { break; }
+
+						input >> key;
+
+						Vector2D currentCell((mCellSize * j), (mCellSize * i));
+
+						if (key == "w")
+						{							
+							mpUnitManager->addUnitAt(currentCell, UnitType::WALL);
+						}
+						else if (key == "s")
+						{							
+							mSnakeStartingPos = currentCell;
+							//mpUnitManager->addUnitAt(currentCell, UnitType::SNAKE);
+						}
+					}
+				}
+			}
+		}
+		input.close();
+	}	
+
+	mpSnake = new SnakeManager(mStartingLength, mSnakeSpeed, mSnakeStartingPos, mCellSize, mLevelWidth, mLevelHeight);
+}
+
+Level::~Level()
+{
+	delete mpSnake;
+	mpUnitManager->clearUnits();
+	mpUnitManager = nullptr;
+}
+
+void Level::update(double dt)
+{
+	mPowerUpSpawnTimer -= dt;
+
+	mpSnake->update(dt);
+
+	if (mPowerUpSpawnTimer < 0)
+	{
+		spawnPowerUp();
+		mPowerUpSpawnTimer = mMaxSpawnTimeInSeconds;
+	}
+
+	if (!mFoodExists)
+	{
+		spawnFood();
+	}
+
+	if (mpSnake->getLength() >= mTargetLength)
+	{
+		EventSystem::getInstance()->fireEvent(LevelCompleteEvent());
+	}
+}
+
+//void Level::draw()
+//{
+//}
+
+void Level::spawnFood()
+{
+	mFoodExists = true;
+	spawnPickUp(UnitType::FOOD);	
+}
+
+void Level::spawnPowerUp()
+{
+	int totalWeight = mPointsPowerWeight + mSpeedPowerWeight + mSlowPowerWeight;
+
+	int roll = rand() % totalWeight + 1;
+
+	if (roll < mPointsPowerWeight)
+	{
+		spawnPickUp(UnitType::POINTS_POWER);
+		return;
+	}
+	roll -= mPointsPowerWeight;
+
+	if (roll < mSpeedPowerWeight)
+	{
+		spawnPickUp(UnitType::SPEED_POWER);
+		return;
+	}
+	roll -= mSpeedPowerWeight;
+
+	if (roll < mSlowPowerWeight)
+	{
+		spawnPickUp(UnitType::SLOW_POWER);
+		return;
+	}	
+}
+
+void Level::spawnPickUp(UnitType type)
+{
+	random_device device;
+	mt19937 generator(device());
+
+	uniform_int_distribution<int> heightDist(0, mLevelHeight - 1);
+	uniform_int_distribution<int> widthDist(0, mLevelWidth - 1);
+
+	Vector2D spawnPos(widthDist(generator) * mCellSize, heightDist(generator) * mCellSize);
+
+	while (mpUnitManager->getUnitAt(spawnPos + mCenterOffset) != nullptr)
+	{
+		spawnPos = Vector2D(widthDist(generator) * mCellSize, heightDist(generator) * mCellSize);
+	}
+
+	//cout << spawnPos << "\n";
+
+	mpUnitManager->addUnitAt(spawnPos, type);
+}
+
+void Level::handleEvent(const Event& theEvent)
+{
+	if (theEvent.getType() == (EventType)GameEventType::OBJECT_COLLISION_EVENT)
+	{
+		const ObjectCollisionEvent& collisionEvent = static_cast<const ObjectCollisionEvent&>(theEvent);
+		
+		switch (collisionEvent.getType())
+		{
+		case UnitType::FOOD:
+
+			EventSystem::getInstance()->fireEvent(ScoreChangeEvent(mPointsPerFood));
+			mpUnitManager->deleteAllUnitsAt(collisionEvent.getPos());
+			mpSnake->growSnake(mLengthPerFood);
+			mFoodExists = false;
+				
+			break;
+		case UnitType::POINTS_POWER:
+
+			EventSystem::getInstance()->fireEvent(ScoreChangeEvent(mPointsPowerValue));
+			mpUnitManager->deleteAllUnitsAt(collisionEvent.getPos());
+				
+			break;
+		case UnitType::SPEED_POWER:
+
+			mpUnitManager->deleteAllUnitsAt(collisionEvent.getPos());
+			mpSnake->changeSpeed((float)mSpeedPowerValue);
+
+			break;
+		case UnitType::SLOW_POWER:
+
+			mpUnitManager->deleteAllUnitsAt(collisionEvent.getPos());			
+			mpSnake->changeSpeed((float)-mSlowPowerValue);
+
+			break;
+		default:
+			break;
+		}
+	}
+}

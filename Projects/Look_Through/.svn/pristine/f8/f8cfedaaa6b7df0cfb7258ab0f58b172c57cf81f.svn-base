@@ -1,0 +1,17 @@
+#pragma once
+
+#include "GameEvent.h"
+#include "InputSystem.h"
+
+class KeyPressEvent : public GameEvent
+{
+	Keycode mKey;
+
+public:
+
+	KeyPressEvent(Keycode _key) : GameEvent(GameEventType::KEYBOARD_JUST_PRESS_EVENT), mKey(_key) {}
+	~KeyPressEvent() {}
+
+	Keycode getKey() const { return mKey; }
+};
+

@@ -1,0 +1,11 @@
+#include "FpsEvent.h"
+
+FpsEvent::FpsEvent(float fps) 
+	: HudEvent((HudEventType) FPS_EVENT)
+{
+	mFps = fps;
+}
+
+FpsEvent::~FpsEvent()
+{
+}

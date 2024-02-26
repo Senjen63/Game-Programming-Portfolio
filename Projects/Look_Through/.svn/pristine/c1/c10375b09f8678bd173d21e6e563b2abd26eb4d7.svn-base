@@ -1,0 +1,7 @@
+asteroid_normal_color 97 98 105 255
+asteroid_bonus_point_color 255 159 0 255
+asteroid_speed_color 255 0 0 255
+asteroid_slow_color 179 0 255 255
+asteroid_power_up_animation_speed 100
+asteroid_size 32 32
+asteroid_hits 1

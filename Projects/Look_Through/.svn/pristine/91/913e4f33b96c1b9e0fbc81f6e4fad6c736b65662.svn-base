@@ -1,0 +1,80 @@
+#include "Sprite.h"
+
+/// <summary>
+/// Creates a Sprite instance using a GraphicsBuffer and starting location.
+/// </summary>
+/// <param name="graphicsBuffer">: Buffer to point sprite to.</param>
+/// <param name="locX">: X location of left-side starting position of sprite.</param>
+/// <param name="locY">: Y location of top-side starting position of sprite.</param>
+/// <param name="width">: Width of sprite.</param>
+/// <param name="height">: Height of sprite.</param>
+Sprite::Sprite( GraphicsBuffer & graphicsBuffer, int locX, int locY, int width, int height )
+{
+	mpGraphicsBuffer = &graphicsBuffer;
+	mWidth = width;
+	mHeight = height;
+	mLOCX = locX;
+	mLOCY = locY;
+}
+
+/// <summary>
+/// Move constructor for sprite.
+/// </summary>
+/// <param name="src">: Sprite to move.</param>
+Sprite::Sprite( Sprite && src ) noexcept
+{
+	mLOCX = src.mLOCX;
+	mLOCY = src.mLOCY;
+	mWidth = src.mWidth;
+	mHeight = src.mHeight;
+	mpGraphicsBuffer = src.mpGraphicsBuffer;
+	src.mpGraphicsBuffer = nullptr;
+}
+
+/// <summary>
+/// Placeholder destructor.
+/// </summary>
+Sprite::~Sprite()
+{
+	mpGraphicsBuffer = nullptr;
+}
+
+/// <returns>
+/// GraphicsBuffer pointer to this sprite's buffer promising no changes.
+/// </returns>
+const GraphicsBuffer & Sprite::getGraphicsBuffer() const
+{
+	return *mpGraphicsBuffer;
+}
+
+/// <returns>
+/// int of height of the sprite promising no changes.
+/// </returns>
+int Sprite::getHeight() const
+{
+	return mHeight;
+}
+
+/// <returns>
+/// X position of the starting location of the sprite promising no changes.
+/// </returns>
+int Sprite::getLOCX() const
+{
+	return mLOCX;
+}
+
+/// <returns>
+/// Y position of the starting location of the sprite promising no changes.
+/// </returns>
+int Sprite::getLOCY() const
+{
+	return mLOCY;
+}
+
+/// <returns>
+/// int of width of the sprite promising no changes.
+/// </returns>
+int Sprite::getWidth() const
+{
+	return mWidth;
+}

@@ -1,0 +1,10 @@
+//BP
+#include "GameEvents.h"
+
+GameEvents::GameEvents(GameEventVariations type) : Event((EventType) type)
+{
+}
+
+GameEvents::~GameEvents()
+{
+}

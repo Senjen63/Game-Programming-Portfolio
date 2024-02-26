@@ -1,0 +1,38 @@
+#include "BulletMove.h"
+#include "Collider.h"
+#include "CollisionManager.h"
+#include "Game.h"
+#include "BulletFiring.h"
+
+BulletMove::BulletMove(const Vector2D& dir, float speed) :
+    Component(BULLET_MOVE_TYPE), mDirection(dir), mSpeed(speed)
+{}
+
+void BulletMove::Update(double deltaTime)
+{
+    Collider* collider = static_cast<Collider*>(mpParentEntity->getComponent(COLLIDER_TYPE));
+
+    if (Game::getInstance()->getCollisionManager()->testAddPosition(CollisionTag::WALL, collider, mDirection * mSpeed * (float)deltaTime))
+    {
+        Game::getInstance()->getBulletPool()->freeBullet(mpParentEntity);
+    }
+
+    const Collider* tankHit;
+    if (tankHit = Game::getInstance()->getCollisionManager()->testAddPosition(CollisionTag::TANK, collider, mDirection * mSpeed * (float)deltaTime))
+    {
+        const BulletFiring* bulletFiring = static_cast<const BulletFiring*>(tankHit->getParentEntity()->getComponent(BULLET_FIRING_TYPE));
+
+        if (bulletFiring->getPlayerNumber() != mShootingPlayer)
+        {
+            Game::getInstance()->getAudioManager()->play(SoundType::TANK_DESTROY);
+            EventSystem::getInstance()->fireEvent(PlayerHitEvent(bulletFiring->getPlayerNumber()));
+            Game::getInstance()->getBulletPool()->freeBullet(mpParentEntity);
+
+            //SCORE CODE HERE
+
+            Game::getInstance()->getLevelManager()->loadRandomLevel();
+        }
+    }
+
+    mpParentEntity->addPosition(mDirection * mSpeed * (float)deltaTime);
+}

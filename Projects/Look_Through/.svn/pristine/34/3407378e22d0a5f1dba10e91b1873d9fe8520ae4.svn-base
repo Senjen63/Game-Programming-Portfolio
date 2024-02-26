@@ -1,0 +1,96 @@
+#pragma once
+
+#include <PerformanceTracker.h>
+#include "UnitManager.h"
+#include "GraphicsBufferManager.h"
+#include "Animation.h"
+#include <map>
+#include <string>
+
+using namespace std;
+
+enum Levels
+{
+	LEVEL_1,
+	LEVEL_2,
+	LEVEL_3
+};
+
+struct LevelData
+{
+	UnitManager mLevels;
+	std::string mLevel1 = "level1.txt";
+	std::string mLevel2 = "level2.txt";
+	std::string mLevel3 = "level3.txt";
+};
+
+class SceneManager
+{
+public:
+	SceneManager();
+	~SceneManager();
+	
+	void init(int num);
+	void createLevel(Levels level);
+	void deleteLevel();
+	void createLevel(Levels level, GraphicsBufferManager* gbm);
+	void loadLevel(Levels level, GraphicsBufferManager* gbm);
+	int getNumLevels() { return mNumLevels; };
+	Levels getLevel();
+	std::string getSnakeFile() { return mSNAKE_FILENAME; };
+	std::string getFoodFile() { return mFOOD_FILENAME; };
+	std::string getPowerFile() { return mPOWERUP_FILENAME; };
+	std::string getWallFile() { return mWALL_FILENAME; };
+	std::string getTileFile() { return mTILE_FILENAME; };
+	std::string getBackFile() { return mBACKGROUND_FILENAME; };
+	std::string getFontFile() { return mFONT_FILENAME; };
+	std::string getAssetPath() { return mASSET_PATH; };
+	std::string getDeanAssetPath() { return mTEMP_FILE_PATH; };
+	int getDispHeight() { return mDISP_HEIGHT; };
+	int getDispWidth() { return mDISP_WIDTH; };
+	int getFontSize() { return mFONT_SIZE; };
+	UnitManager* getSnakeManager() { return mpSnakeManager; };
+	UnitManager* getUnitManager() { return mpUManager; };
+	UnitManager* getItemManager() { return mpItemManager; };
+	//UnitManager* getItemManager() { return mpItemManager; };
+	void changeScene(Levels level);
+	void draw();
+	void update();
+
+	void decreaseFood() { mNumFood--; };
+	void decreasePwr() { mNumPwrUps--; };
+	void increaseFood() { mNumFood++; };
+	int getNumFood() { return mNumFood; };
+	int getNumPwr() { return mNumPwrUps; };
+	void setPwrLoc();
+	void setFoodLoc();
+
+	void addAnimation(Animation* anim, std::string key) { animationMap.insert({ key, anim }); }
+	Animation* getAnimation(std::string anim) { return animationMap.at(anim); };
+	void deleteAnimation(std::string anim) { animationMap.erase(anim); };
+	void Clear() { animationMap.clear(); };
+
+private:
+	const std::string mFONT_FILENAME = "..\\..\\common\\assets\\cour.ttf";
+	const std::string mASSET_PATH = "..\\..\\pottmeyer.gerrit\\Assignment 4\\GameAssets\\";
+	const std::string mTEMP_FILE_PATH = "..\\..\\common\\assets\\";
+	const int mFONT_SIZE = 15;
+	int mDISP_HEIGHT = 600;
+	int mDISP_WIDTH = 800;
+	std::string mBACKGROUND_FILENAME;
+	std::string mSNAKE_FILENAME;
+	std::string mFOOD_FILENAME;
+	std::string mPOWERUP_FILENAME;
+	std::string mWALL_FILENAME;
+	std::string mTILE_FILENAME;
+	Levels mActiveLevel;
+	int mNumFood = 0;
+	int mNumPwrUps;
+	int mNumLevels = 0;
+	LevelData* mpLevel = nullptr;
+	UnitManager* mpItemManager;
+	UnitManager* mpSnakeManager;
+	UnitManager* mpUManager;
+	GraphicsBufferManager* mpGBM;
+	std::map<std::string, Animation*> animationMap;
+};

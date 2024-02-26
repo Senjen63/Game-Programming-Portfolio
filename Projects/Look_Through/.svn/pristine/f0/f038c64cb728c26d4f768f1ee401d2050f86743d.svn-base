@@ -1,0 +1,59 @@
+#include "Menu.h"
+
+Menu::Menu()
+{
+	mNumLines = 0;
+	mpGraphicsSystem = nullptr;
+	mpFont = nullptr;
+}
+
+Menu::Menu(GraphicsSystem* pSystem, Font* pFont)
+{
+	mNumLines = 0;
+	mpGraphicsSystem = pSystem;
+	mpFont = pFont;
+}
+
+Menu::~Menu()
+{
+	delete mpGraphicsSystem;
+	mpGraphicsSystem = nullptr;
+	delete mpFont;
+	mpFont = nullptr;
+}
+
+void Menu::addLine(Vector2D pos, string text)
+{
+	mLineLocations.push_back(pos);
+	mText.push_back(text);
+
+	mNumLines++;
+}
+
+void Menu::writeAll()
+{
+	for (int i = 0; i < mNumLines; i++)
+	{
+		mpGraphicsSystem->writeText(mLineLocations[i], mpFont, mBlack, mText[i]);
+	}
+}
+
+void Menu::writeLines(int startLine, int lineCount)
+{
+	for (int i = startLine; i < lineCount; i++)
+	{
+		mpGraphicsSystem->writeText(mLineLocations[i], mpFont, mBlack, mText[i]);
+	}
+}
+
+int Menu::getLineCount()
+{
+	return mNumLines;
+}
+
+void Menu::extendLine(int pos, string text)
+{
+	mText[pos] += text;
+	mText[pos + mNumLines / 3] += text;
+	mText[pos + 2 * mNumLines / 3] += text;
+}

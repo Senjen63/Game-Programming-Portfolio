@@ -1,0 +1,38 @@
+/*
+Author: David Silverman
+Class: GPR-250-01
+Assignment: Assignment 3
+Certification of Authenticity:
+I certify that this assignment is entirely my own work.
+ */
+
+#include "walls.h"
+
+using namespace std;
+
+Walls::Walls(WallManager* man, vector<Vector2D> vec, int choice) : GameEvent(WALLS)
+{
+	mpWalls = man;
+	mPos = vec;
+	mLevel = choice;
+}
+
+Walls::~Walls()
+{
+
+}
+
+WallManager* Walls::getWalls()
+{
+	return mpWalls;
+}
+
+vector<Vector2D> Walls::getPositions()
+{
+	return mPos;
+}
+
+int Walls::getLevel()
+{
+	return mLevel;
+}

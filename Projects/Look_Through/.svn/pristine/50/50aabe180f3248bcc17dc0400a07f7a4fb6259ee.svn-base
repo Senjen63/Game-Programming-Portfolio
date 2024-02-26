@@ -1,0 +1,52 @@
+#pragma once
+
+#include <Trackable.h>
+#include <string>
+
+class Sprite;
+
+using namespace std;
+
+class Asteroid : public Trackable
+{
+private:
+	int mLoc;
+
+	const string FILE_PATH = "sprite_data.txt";
+
+	Sprite* mpAsteroidSprite;
+	Sprite* mpFastSprite1;
+	Sprite* mpFastSprite2;
+	Sprite* mpSlowSprite1;
+	Sprite* mpSlowSprite2;
+	Sprite* mpPointsSprite1;
+	Sprite* mpPointsSprite2;
+
+	const string ASTEROID_KEY = "asteroid";
+	const string FAST_KEY = "fast1";
+	const string SMALL_FAST_KEY = "fast2";
+	const string SLOW_KEY = "slow1";
+	const string SMALL_SLOW_KEY = "slow2";
+	const string POINTS_KEY = "points1";
+	const string SMALL_POINTS_KEY = "points2";
+
+	const string ASTEROID_PATH = "Meteor.bmp";
+	const string FAST_PATH = "Fast1.bmp";
+	const string SMALL_FAST_PATH = "Fast2.bmp";
+	const string SLOW_PATH = "Slow1.bmp";
+	const string SMALL_SLOW_PATH = "Slow2.bmp";
+	const string POINTS_PATH = "Points1.bmp";
+	const string SMALL_POINTS_PATH = "Points2.bmp";
+
+public:
+	Asteroid();
+	~Asteroid();
+
+	Sprite* getAsteroid() { return mpAsteroidSprite; }
+	Sprite* getFast1() { return mpFastSprite1; }
+	Sprite* getFast2() { return mpFastSprite2; }
+	Sprite* getSlow1() { return mpSlowSprite1; }
+	Sprite* getSlow2() { return mpSlowSprite2; }
+	Sprite* getPoints1() { return mpPointsSprite1; }
+	Sprite* getPoints2() { return mpPointsSprite2; }
+};

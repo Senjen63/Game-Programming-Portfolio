@@ -1,0 +1,40 @@
+#pragma once
+
+#include "Animation.h"
+#include "Vector2D.h"
+#include <Trackable.h>
+
+class PowerUps : public Trackable
+{
+private:
+
+	Vector2D mFoodLocation;
+	Vector2D mBonusFoodLocation;
+	Vector2D mSpeedUpLocation;
+	Vector2D mSlowDownLocation;
+
+	Animation mFoodAnimation;
+	Animation mBonusFoodAnimation;
+	Animation mSpeedUpAnimation;
+	Animation mSlowDownAnimation;
+
+public:
+
+	PowerUps();
+	~PowerUps();
+
+	void initPowerUps();
+	void createPowerUps();
+	void drawPowerUps();
+	void resetPowerUp(std::string powerUpType);
+
+	Vector2D getFoodLocation() const { return mFoodLocation; };
+	Vector2D getBonusFoodLocation() const { return mBonusFoodLocation; };
+	Vector2D getSpeedUpLocation() const { return mSpeedUpLocation; };
+	Vector2D getSlowDownLocation() const { return mSlowDownLocation; };
+
+	Animation getFoodAnimation() const { return mFoodAnimation; };
+	Animation getBonusFoodAnimation() const { return mBonusFoodAnimation; };
+	Animation getSpeedUpAnimation() const { return mSpeedUpAnimation; };
+	Animation getSlowDownAnimation() const { return mSlowDownAnimation; };
+};

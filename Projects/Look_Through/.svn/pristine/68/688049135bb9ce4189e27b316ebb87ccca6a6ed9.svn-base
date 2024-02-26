@@ -1,0 +1,82 @@
+#include "Unit.h"
+#include "Game.h"
+
+Unit::Unit()
+{
+	mPos = Vector2D();
+	mCurrentAnimation = 1;
+	mPause = false;
+	mpAnimation1 = nullptr;
+	mpAnimation2 = nullptr;
+	mTime = 0;
+}
+
+Unit::Unit(Animation* pAnimation1, Animation* pAnimation2, Vector2D pos)
+{
+	mPos = pos;
+	mCurrentAnimation = 1;
+	mpAnimation1 = pAnimation1;
+	mpAnimation2 = pAnimation2;
+	mPause = false;
+	mTime = 0;
+}
+
+Unit::~Unit()
+{
+	delete mpAnimation1;
+	delete mpAnimation2;
+}
+
+float Unit::getTiming()
+{
+	return mpAnimation1->getTiming();
+}
+
+void Unit::update(float time)
+{
+	mTime += time;
+	if (mTime > getTiming() && !mPause)
+	{
+		mpAnimation1->update();
+		mpAnimation2->update();
+	}
+}
+
+void Unit::draw(GraphicsSystem* pGraphicsSystem)
+{
+	if (mCurrentAnimation == 1)
+		pGraphicsSystem->draw(mPos, mpAnimation1->getCurrentSprite(), mPos.getX(), mPos.getY());
+	else
+		pGraphicsSystem->draw(mPos, mpAnimation2->getCurrentSprite(), mPos.getX(), mPos.getY());
+}
+
+void Unit::setAnimation()
+{
+	if(this!=nullptr)
+		if (mCurrentAnimation == 1)
+			mCurrentAnimation = 0;
+		else
+			mCurrentAnimation = 1;
+}
+
+void Unit::setTiming(float timing)
+{
+	mpAnimation1->adjustTiming(timing);
+	mpAnimation2->adjustTiming(timing);
+}
+
+Vector2D Unit::getPosition()
+{
+	if (this != nullptr)
+		return mPos;
+}
+
+void Unit::setPosition(Vector2D pos)
+{
+		mPos = pos;
+}
+
+void Unit::setPaused()
+{
+	mPause = !mPause;
+}

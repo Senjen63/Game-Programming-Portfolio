@@ -1,0 +1,11 @@
+#include "EnemyDeathEvent.h"
+
+EnemyDeathEvent::EnemyDeathEvent(int scoreGiven) : GameEvent(ENEMY_DEATH_EVENT)
+{
+	mScoreGiven = scoreGiven;
+}
+
+EnemyDeathEvent::~EnemyDeathEvent()
+{
+
+}

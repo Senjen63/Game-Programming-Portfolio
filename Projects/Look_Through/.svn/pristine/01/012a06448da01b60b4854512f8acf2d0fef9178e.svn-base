@@ -1,0 +1,18 @@
+#pragma once
+
+#include "IButtonListener.h"
+
+enum class Languages
+{
+	INVALID_LANGUAGE = -1, ENGLISH_LANG, SPANISH_LANG, POLISH_LANG, NUM_OF_LANGUAGES
+};
+
+class Menu : public IButtonListener
+{
+public:
+	virtual void init() = 0;
+	virtual void cleanup() = 0;
+
+	Menu() {}
+	~Menu() {};
+};

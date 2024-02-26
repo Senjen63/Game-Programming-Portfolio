@@ -1,0 +1,18 @@
+#pragma once
+
+#include "GameEvent.h"
+#include "Unit.h"
+
+class CollideEvent : public GameEvent
+{
+public:
+	CollideEvent(Unit* col, int anim);
+	~CollideEvent();
+
+	Unit* getCollision() const { return mCollider; };
+	int getCurrentAnim() const { return currentAnim; };
+
+private:
+	Unit* mCollider;
+	int currentAnim;
+};

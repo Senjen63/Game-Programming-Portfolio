@@ -1,0 +1,46 @@
+//BP
+#pragma once
+#include "Unit.h"
+#include <vector>
+#include <Vector2D.h>
+#include "Collision.h"
+#include <Trackable.h>
+#include <EventSystem.h>
+#include <EventListener.h>
+
+using namespace std;
+
+class UnitManager : public EventListener
+{
+public:
+	UnitManager();
+	~UnitManager();
+	void drawAll();
+	void cleaner();
+	void clearAll();
+	void playAllChange();
+	Unit* getUnitAtEnd();
+	void playAll(bool isPlaying);
+	void deleteUnitByType(int type);
+	void nextAnimationForLastUnit();
+	void updateAll(float timePassed);
+	void deleteSingleUnit(Unit* unit);
+	Unit* addNewUnit(Vector2D location, int fps);
+	Unit* highlightedUnit(Vector2D mouseLocation);
+	void deleteMultipleUnits(vector<Unit*>* units);
+	virtual void handleEvent(const Event& thisEvent);
+	vector<Unit*> collisionCheck(Unit* thisUnit);
+	void deleteUnitByLocation(Vector2D mouseLocation);
+	vector<Unit*>* highlightedUnits(Vector2D mouseLocation);
+	vector<Unit*> checkCollisionByType(Unit* thisUnit, int type);
+	Unit* addNewUnit(Vector2D location, GraphicsBuffer* newBuff, int fps, bool loop, int type);
+	vector<Unit*> checkCollisionByLocation(Vector2D location, float horiDiameter, float vertDiameter);
+
+	//Inline Functions
+	int getUnitCount() { return mUnitList.size(); }
+	void addNewUnit(Unit* unit) { mUnitList.push_back(unit); }
+	void init() { mpEventSystem = EventSystem::getInstance(); }
+private:
+	vector<Unit*> mUnitList;
+	EventSystem* mpEventSystem = nullptr;
+};

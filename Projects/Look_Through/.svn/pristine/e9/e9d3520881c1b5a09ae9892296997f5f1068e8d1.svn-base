@@ -1,0 +1,19 @@
+
+#include "Sprite.h"
+
+//----------------------------------------Sprite----------------------------------------
+Sprite::Sprite() {
+	sX = 0;
+	sY = 0;
+	SpriteWidth = 0;
+	SpriteHeight = 0;
+	this->graphicsBuffer = nullptr;
+}
+
+Sprite::Sprite(int width, int height, int x, int y, GraphicsBuffer* gBuffer) {
+	this->SpriteWidth = width;
+	this->SpriteHeight = height;
+	this->sX = x;
+	this->sY = y;
+	this->graphicsBuffer = gBuffer;
+}

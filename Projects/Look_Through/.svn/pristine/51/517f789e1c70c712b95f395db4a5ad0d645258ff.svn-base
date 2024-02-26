@@ -1,0 +1,61 @@
+#include "Animation.h"
+
+Animation::Animation()
+{
+	mpSprites = nullptr;
+	mTimer = 0;
+	mCurrentTime = 0;
+	mCurrentSprite = 0;
+	mNumSprites = 0;
+	mShouldLoop = false;
+}
+
+Animation::Animation(GraphicsBuffer* pBuffer, int numSprites, float timer, bool loop)
+{
+	mpSprites = new Sprite[numSprites];
+	int localIndex = 0;
+
+	for (int i = 0; i < 4; i++)
+	{
+		for (int j = 0; j < 4; j++)
+		{
+			mpSprites[localIndex] = Sprite(pBuffer, i * 60, j * 60, 60, 60);
+			localIndex++;
+		}
+	}
+
+	mTimer = timer;
+	mCurrentTime = 0;
+	mCurrentSprite = 0;
+	mNumSprites = numSprites;
+	mShouldLoop = loop;
+}
+
+Animation::~Animation()
+{
+	delete[] mpSprites;
+
+	mpSprites = nullptr;
+	mTimer = 0;
+	mCurrentTime = 0;
+	mCurrentSprite = 0;
+	mNumSprites = 0;
+	mShouldLoop = false;
+}
+
+void Animation::update(double dt)
+{
+	if (mCurrentSprite < mNumSprites - 1)
+		mCurrentSprite++;
+	else if (mCurrentSprite == mNumSprites - 1)
+		if (mShouldLoop)
+			mCurrentSprite = 0;
+}
+
+void Animation::changeTimer(float timerChange)
+{
+	mTimer += timerChange;
+
+	if (mTimer <= 0)
+		mTimer = 0.0001;
+}

@@ -1,0 +1,13 @@
+//BP
+#pragma once
+#include "GameEvents.h"
+
+class InputEvents : public GameEvents
+{
+public:
+    InputEvents(int keyIndex);
+    ~InputEvents();
+    int getKeyIndex() const { return mKeyIndex; }
+private:
+    int mKeyIndex = 0;
+};

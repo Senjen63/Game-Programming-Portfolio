@@ -1,0 +1,11 @@
+#include "SnakeCollisionEvent.h"
+
+SnakeCollisionEvent::SnakeCollisionEvent() : GameEvent(SNAKE_COLLISION_EVENT)
+{
+
+}
+
+SnakeCollisionEvent::~SnakeCollisionEvent()
+{
+
+}

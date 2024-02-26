@@ -1,0 +1,13 @@
+#include "SpawnArrowTrapEvent.h"
+
+SpawnArrowTrapEvent::SpawnArrowTrapEvent(Vector2D pos, GraphicsBuffer* buffer) : SpawnEvent((SpawnEventType)SPAWN_ARROW_TRAP_EVENT)
+{
+    mPos = pos;
+    mpBuffer = buffer;
+}
+
+
+SpawnArrowTrapEvent::~SpawnArrowTrapEvent()
+{
+
+}

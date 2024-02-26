@@ -1,0 +1,53 @@
+#pragma once
+
+#include <PerformanceTracker.h>
+#include <MemoryTracker.h>
+#include <vector>
+#include "Sprite.h"
+
+using namespace std;
+
+const int SQUARE_SIZE = 60;
+
+class Square : public Trackable
+{
+public:
+	Square();
+	Square(int row, int column);
+	Square(bool wall, int row, int column);
+	~Square();
+
+	Vector2D getPosition();
+	bool isOccupied();
+	int getY();
+	int getX();
+	void setSnake();
+	void setSpeed();
+	void setSlow();
+	void setFood();
+	void setPoint();
+	void reset();
+	bool checkWall();
+	bool checkFood();
+	bool checkSlow();
+	bool checkPoint();
+	bool checkSpeed();
+	bool checkSnake();
+
+	void operator=(const Square& aSquare);
+
+private:
+
+	int mY, mX;
+	bool mHasSpeed;
+	bool mHasSlow;
+	bool mHasFood;
+	bool mHasPoint;
+	bool mHasSnake;
+	bool mHasWall;
+	Vector2D mPosition;
+	//Sprite mSpeedSprite;
+	//Sprite mSlowSprite;
+	//Sprite mFoodSprite;
+	//Sprite mPointSprite;
+};

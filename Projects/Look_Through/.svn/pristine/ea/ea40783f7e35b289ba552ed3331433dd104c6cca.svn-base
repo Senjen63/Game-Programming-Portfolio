@@ -1,0 +1,114 @@
+#include "UnitManager.h"
+#include "Game.h"
+
+UnitManager::UnitManager()
+{
+	//constructor
+}
+
+UnitManager::~UnitManager()
+{
+	//destructor
+	cleaner();
+}
+
+Unit* UnitManager::addNewUnit(int fps, Vector2D location)
+{
+	//add a new unit
+	Unit* pTmpUnit = new Unit(fps, location);
+	mpUnitList.push_back(pTmpUnit);
+	return getUnitAtEnd();
+}
+
+void UnitManager::deleteUnit(Unit* selectedUnit)
+{
+	//delete a unit
+	for (int i = 0; i < mpUnitList.size(); i++)
+	{
+		if (mpUnitList[i] == selectedUnit)
+		{
+			delete mpUnitList[i];
+			mpUnitList.erase(mpUnitList.begin() + i);
+			//return;
+		}
+	}
+}
+
+void UnitManager::deleteUnit(int unitID)
+{
+	//delete a unit
+}
+
+void UnitManager::updateAll(double doub)
+{
+	//update
+	for (int i = 0; i < mpUnitList.size(); i++)
+	{
+		mpUnitList[i]->update(doub);
+	}
+}
+
+void UnitManager::drawAll(GraphicsSystem* gameGraphics)
+{
+	//draw units to window
+	for (int i = 0; i < mpUnitList.size(); i++)
+	{
+		mpUnitList[i]->draw(gameGraphics);
+	}
+}
+
+void UnitManager::cleaner()
+{
+	//deletes all of the units and clears the unit list
+	for (int i = 0; i < mpUnitList.size(); i++)
+	{
+		delete mpUnitList[i];
+	}
+	mpUnitList.clear();
+}
+
+int UnitManager::getUnitCount()
+{
+	//fetches how many units are in the unit list
+	return mpUnitList.size();
+}
+
+Unit* UnitManager::getUnitAtEnd()
+{
+	//fetches unit at the end of the unit list
+	if (mpUnitList.size() > 0)
+	{
+		return mpUnitList[mpUnitList.size() - 1];
+	}
+	else
+	{
+		return nullptr;
+	}
+}
+
+Unit* UnitManager::getSpecificUnit(Unit* selectedUnit)
+{
+	for (int i = 0; i < mpUnitList.size(); i++)
+	{
+		Unit* pTmpUnit = mpUnitList[i];
+		if (pTmpUnit == selectedUnit)
+		{
+			return pTmpUnit;
+		}
+
+	}
+	return nullptr;
+}
+
+Unit* UnitManager::getSpecificUnit(Vector2D mouseLoc)
+{
+	//fetches a specific unit in the unit list
+	for (int i = 0; i < mpUnitList.size(); i++)
+	{
+		if (mpUnitList[i]->selected(mouseLoc))
+		{
+			return mpUnitList[i];
+		}
+	}
+	return nullptr;
+}

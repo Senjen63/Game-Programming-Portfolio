@@ -1,0 +1,58 @@
+﻿//     -------------------------------------------------------------------------
+//     Final Project
+//         System.hpp
+//     
+//             Created:
+//                 10-04-2022
+//             Author(s):
+//                 Aven Presseisen
+//     -------------------------------------------------------------------------
+
+#pragma once
+
+#include <vector>
+
+#include "AssetManager.hpp"
+#include "Camera.hpp"
+#include "EntityCommandBuffer.hpp"
+#include "EntityManager.hpp"
+#include "EntityQuery.hpp"
+#include "InputTranslator.hpp"
+#include "Time.hpp"
+
+class System
+{
+    friend class World;
+
+protected:
+    std::weak_ptr< AssetManager > mpAssetManager;
+    std::weak_ptr< EntityManager > mpEntityManager;
+    std::weak_ptr< EntityCommandBuffer > mpEntityCommandBuffer;
+    std::weak_ptr< Time > mpTime;
+    std::weak_ptr< InputTranslator > mpInputTranslator;
+    std::weak_ptr< Camera > mpCamera;
+
+    std::vector< std::shared_ptr< EntityQuery > > mQueries;
+public:
+    virtual ~System() = default;
+
+    virtual void createQueries()
+    {
+    }
+
+    virtual void onCreate()
+    {
+    }
+
+    virtual void onStart()
+    {
+    }
+
+    virtual void onUpdate()
+    {
+    }
+
+    virtual void onStop()
+    {
+    }
+};

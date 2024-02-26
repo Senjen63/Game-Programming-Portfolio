@@ -1,0 +1,10 @@
+//BP
+#include "SpawnEvents.h"
+
+SpawnEvents::SpawnEvents(SpawnEventVariations tag) : GameEvents((GameEventVariations)tag)
+{
+}
+
+SpawnEvents::~SpawnEvents()
+{
+}

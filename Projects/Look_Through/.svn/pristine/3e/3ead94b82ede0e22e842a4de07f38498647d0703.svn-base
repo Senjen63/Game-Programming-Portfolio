@@ -1,0 +1,24 @@
+#pragma once
+#include <SFML/Graphics.hpp>
+#include "Trackable.h"
+
+class Camera : public Trackable
+{
+	friend class GraphicsSystem;
+
+public:
+	Camera();
+	Camera(int width, int height);
+
+	float getX() { return mViewport.getCenter().x; }
+	float getY() { return mViewport.getCenter().y; }
+	int getWidth() { return mWidth; }
+	int getHeight() { return mHeight; }
+
+	void update();
+private:
+	sf::View mViewport;
+
+	int mWidth;
+	int mHeight;
+};

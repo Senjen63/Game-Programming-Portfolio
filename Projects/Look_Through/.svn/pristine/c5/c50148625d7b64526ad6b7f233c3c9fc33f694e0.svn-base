@@ -1,0 +1,150 @@
+#include "GraphicsSystem.h"
+
+void GraphicsSystem::cleanUp()
+{
+	al_destroy_display(mDisplay);
+}
+
+void GraphicsSystem::clearToColor(GraphicsBuffer& targetBuffer, Color& color)
+{
+	ALLEGRO_BITMAP* temp = al_get_target_bitmap();
+	al_set_target_bitmap(targetBuffer.getBitMap());
+
+	al_clear_to_color(color.getColor());
+
+	al_set_target_bitmap(temp);
+}
+
+void GraphicsSystem::drawCurrent(Vector2D& targetLocation, Sprite sprite, float scale = 1.0)
+{
+	al_draw_scaled_bitmap(sprite.getBuffer()->getBitMap(), sprite.getLocation().getX(), sprite.getLocation().getY(), sprite.getWidth(), sprite.getHeight(), targetLocation.getX(), targetLocation.getY(), sprite.getWidth() * scale, sprite.getHeight() * scale, 0);
+}
+
+void GraphicsSystem::drawPart(Vector2D targetLocation, Sprite*& sprite, float randX, float randY)
+{
+	al_draw_bitmap_region(sprite->getBuffer()->getBitMap(), targetLocation.getX(), targetLocation.getY(), sprite->getWidth(), sprite->getHeight(), randX, randY, 0);
+}
+
+void GraphicsSystem::drawTarget(GraphicsBuffer& targetBuffer, Vector2D& targetLocation, Sprite& sprite, float scale = 1.0)
+{
+	ALLEGRO_BITMAP* temp = al_get_target_bitmap();
+	al_set_target_bitmap(targetBuffer.getBitMap());
+
+	al_draw_scaled_bitmap(sprite.getBuffer()->getBitMap(), sprite.getLocation().getX(), sprite.getLocation().getY(), sprite.getWidth(), sprite.getHeight(), targetLocation.getX(), targetLocation.getY(), sprite.getWidth() * scale, sprite.getHeight() * scale, 0);
+
+	al_set_target_bitmap(temp);
+}
+
+void GraphicsSystem::flipDisplay()
+{
+	al_flip_display();
+}
+
+GraphicsBuffer* GraphicsSystem::getBackBuffer()
+{
+	return mBack;
+}
+
+int GraphicsSystem::getHeight()
+{
+	return mHeight;
+}
+
+int GraphicsSystem::getWidth()
+{
+	return mWidth;
+}
+
+GraphicsSystem::GraphicsSystem(int height, int width)
+{
+	this->mHeight = height;
+	this->mWidth = width;
+
+	mDisplay = nullptr;
+
+	mBack = nullptr;
+
+	mIsInit = false;
+}
+
+GraphicsSystem::~GraphicsSystem()
+{
+	cleanUp();
+
+	delete mBack;
+}
+
+void GraphicsSystem::init()
+{
+	if (!al_init())
+	{
+		cout << "error initting Allegro\n";
+		system("pause");
+	}
+	if (!al_init_image_addon())
+	{
+		cout << "error - Image Add-on not initted\n";
+		system("pause");
+	}
+	if (!al_init_font_addon())
+	{
+		cout << "error - Font Add-on not initted\n";
+		system("pause");
+	}
+	if (!al_init_ttf_addon())
+	{
+		cout << "error - TTF Add-on not initted\n";
+		system("pause");
+	}
+	if (!al_init_primitives_addon())
+	{
+		cout << "error - primitives Add-on not initted\n";
+		system("pause");
+	}
+	if (!al_install_audio())
+	{
+		cout << "error - Audio Add-on not initted\n";
+		system("pause");
+	}
+	if (!al_init_acodec_addon())
+	{
+		cout << "error - Audio Codec Add-on not initted\n";
+		system("pause");
+	}
+	if (!al_reserve_samples(1))
+	{
+		cout << "error - samples not reserved\n";
+		system("pause");
+	}
+
+	mDisplay = al_create_display(mWidth, mHeight);
+	assert(mDisplay);
+	mBack = new GraphicsBuffer(al_get_backbuffer(mDisplay));
+
+	mIsInit = true;
+}
+
+bool GraphicsSystem::isInit()
+{
+	return mIsInit;
+}
+
+void GraphicsSystem::saveBuffer(GraphicsBuffer& targetBuffer, const string& fileName)
+{
+	al_save_bitmap(fileName.c_str(), targetBuffer.getBitMap());
+}
+
+void GraphicsSystem::writeText(Vector2D targetLocation, Font* font, Color color, string text)
+{
+	al_draw_text(font->getFont(), color.getColor(), targetLocation.getX(), targetLocation.getY(), ALLEGRO_ALIGN_LEFT, text.c_str());
+}
+
+void GraphicsSystem::writeText(GraphicsBuffer* targetBuffer, int x, int y, Font* font, Color color, string text)
+{
+	ALLEGRO_BITMAP* temp = al_get_target_bitmap();
+	al_set_target_bitmap(targetBuffer->getBitMap());
+
+	al_draw_text(font->getFont(), color.getColor(), x, y, ALLEGRO_ALIGN_LEFT, text.c_str());
+
+	al_set_target_bitmap(temp);
+}

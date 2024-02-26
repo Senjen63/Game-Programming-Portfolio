@@ -1,0 +1,158 @@
+#pragma once
+
+#include <PerformanceTracker.h>
+#include <MemoryTracker.h>
+#include <Timer.h>
+
+#include "GraphicsSystem.h"
+#include "Animation.h"
+#include "AnimationManager.h"
+#include "InputSystem.h"
+#include "UnitManager.h"
+#include "LevelManager.h"
+#include "MenuManager.h"
+#include "GraphicsBufferManager.h"
+#include "Unit.h"
+#include "Hud.h"
+#include "Sound.h"
+
+#include "EventSystem.h"
+#include "EventListener.h"
+#include "InputEvent.h"
+#include "GameplayEvent.h"
+#include "MyMouseEvent.h"
+#include "Pieces/PieceManager.h"
+
+#include "HudEvent.h"
+#include "FpsEvent.h"
+#include "ScoreEvent.h"
+#include "TimeEvent.h"
+
+#include <stdlib.h>
+#include <fstream>
+#include <time.h>
+#include <string>
+
+using namespace std;
+
+const string LEVEL_DATA = "LevelData.txt";
+const string ASSET_DATA = "AssetData.txt";
+const string SAVE_FILE = "SaveData.txt";
+
+const string BACKGROUND = "Background";
+
+const float SLEEP_MS = 16.7f * 4.0f;
+
+class Game : public EventListener
+{
+private:
+	static Game* mpsGameSystem;
+	bool mExit = false;
+
+	GraphicsSystem* mpSystem;
+	InputSystem mInputSystem;
+
+	GraphicsBufferManager mBufferManager;
+
+	LevelManager mLevelManager;
+	MenuManager mMenuManager;
+
+	PieceManager mBlackPieces;
+	PieceManager mWhitePieces;
+
+	AnimationManager mAnimationManager;
+	UnitManager mFlashs;
+
+	EventSystem* mpEventSystem;
+	
+	Hud* mpHud;
+	Font* mpFont;
+
+	Color mBackgroundCol;
+	Sound mSounds;
+
+	string mAssetPath = "", mWhitePath = "", mBlackPath = "", mSoundPath = "",
+		mBBishop = "", mBKing = "", mBKnight = "", mBPawn = "", mBQueen = "", mBRook = "",
+		mWBishop = "", mWKing = "", mWKnight = "", mWPawn = "", mWQueen = "", mWRook = "",
+		mFontPath = "", mBackgroundFile = "", mFlash = "",
+		mYodaDeath = "", mMoveSound = "", mSelectSound = "", mBackgroundTheme = "", mAttackPtsFile = "", mMovePtsFile = "",
+		mBlackText = "Black", mWhiteText = "White";
+
+	int mSpriteWidth = 0, mSpriteHeight = 0, mNumFrames = 0, mFontSize = 0;
+
+	float mDefaultSpeed = 150,
+		mFastSpeed = 50,
+		mSlowSpeed = 50;
+
+	float mTimeScale = 1000.0;
+	float mElapsedTime = 0.0;
+	float mFps = 0.0;
+	int mScore = 0;
+
+	int mCurrentLevel = 0;
+	bool mHidLevel = false;
+	bool mContinueGame = false;
+	bool mFinishGame = false;
+	bool mWhiteTurn = true;
+
+	MenuState mMenuState = MenuState::DEFAULT;
+	Speed mGameSpeed = Speed::SLOW_SPEED;
+
+	Game();
+	~Game();
+
+	void checkTimer();
+
+public:
+	static Game* getInstance() { return mpsGameSystem; };
+	static void createInstance();
+	static void destroyInstance();
+
+	void init();
+	void cleanup();
+
+	void doLoop();
+	void loadAssets();
+	void loadLevels();
+	void saveGame();
+	void loadGame();
+	void draw();
+
+	string getAttackString()	{ return mAttackPtsFile;	};
+	string getMoveString()		{ return mMovePtsFile;		};
+	GraphicsBuffer* getGraphicsBuffer(string index) { return mBufferManager.getBuffer(index);		};
+	Animation* getAnimation(string index)			{ return mAnimationManager.getAnimation(index); };
+	float getDefaultTiming() { return mDefaultSpeed; };
+	float getFastTiming()    { return mFastSpeed;    };
+	float getSlowTiming()    { return mSlowSpeed;    };
+
+	string getWPawn()   { return mWPawn;   };
+	string getWKnight() { return mWKnight; };
+	string getWBishop() { return mWBishop; };
+	string getWRook()   { return mWRook;   };
+	string getWQueen()  { return mWQueen;  };
+	string getWKing()   { return mWKing;   };
+
+	string getBPawn()   { return mBPawn;   };
+	string getBKnight() { return mBKnight; };
+	string getBBishop() { return mBBishop; };
+	string getBRook()   { return mBRook;   };
+	string getBQueen()  { return mBQueen;  };
+	string getBKing()   { return mBKing;   };
+
+	int getSpriteWidth()   { return mSpriteWidth;  };
+	int getSpriteHeight()  { return mSpriteHeight; };
+
+	void setBlackText(string text) { mBlackText = text; };
+	void setWhiteText(string text) { mWhiteText = text; };
+
+	void playSound(int index) { mSounds.playSound(index); };
+
+	void hudEvents(float elapsedTime);
+
+	void endCurrentTurn();
+
+	virtual void handleEvent(const Event& event);
+
+	Font* getFont() { return mpFont; };
+};

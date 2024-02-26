@@ -1,0 +1,40 @@
+#pragma once
+
+#include <vector>
+
+#include <Trackable.h>
+
+#include "Sprite.h"
+
+class GraphicsBuffer;
+
+using namespace std;
+
+class Animation : public Trackable
+{
+public:
+
+	Animation(GraphicsBuffer* sprites, int sheetWidth, int sheetHeight, int spriteWidth, int spriteHeight, float frameRate = 16, bool doesLoop = true);
+	~Animation();
+
+	void update(double dt);
+
+	Sprite* getCurrentSprite();
+	void speedUp();
+	void slowDown();
+
+private:
+
+	vector<Sprite> mvpAnimSprites;	
+
+	int mNumFrames = 0;
+	int mCurrentFrame = 0;
+
+	double mTimePerFrameinMS = 16;
+	double mTimeRemaing = mTimePerFrameinMS;
+	
+	bool mDoesLoop = true;
+
+	const float SPEED_FACTOR = 8.0f; // should only be positive	
+};
+

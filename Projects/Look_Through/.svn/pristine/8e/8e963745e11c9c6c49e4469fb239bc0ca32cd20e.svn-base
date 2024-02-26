@@ -1,0 +1,46 @@
+#pragma once
+#include <SDL.h>
+#include "EventSystem.h"
+#include "InputEvent.h"
+
+enum class MyKeyCode
+{
+	W_KEY = SDLK_w,
+	A_KEY = SDLK_a,
+	S_KEY = SDLK_s,
+	D_KEY = SDLK_d,
+	SHIFT = SDLK_RSHIFT,
+	ENTER = SDLK_RETURN,
+	ESCAPE = SDLK_ESCAPE, 
+	SPACE = SDLK_SPACE,
+	ONE_KEY = SDLK_1,
+	TWO_KEY = SDLK_2,
+	THREE_KEY = SDLK_3,
+	FOUR_KEY = SDLK_4,
+	FIVE_KEY = SDLK_5,
+	SIX_KEY = SDLK_6
+};
+
+class InputSystem : public Trackable
+{
+private:
+	//ALLEGRO_KEYBOARD_STATE mState;
+	//ALLEGRO_MOUSE_STATE mMouseState;
+
+	//ALLEGRO_EVENT_QUEUE* mpQueue; //smash keyboard shows order of when things will happen
+
+	//SDL_CommonEvent mpSDL_Event;
+
+	EventSystem* mpEventSystem;
+
+public:
+	InputSystem();
+	~InputSystem();
+
+	void init();
+	void cleanup();
+
+	void getKeyEvent();
+
+	//bool getKeyState(MyKeyCode key);
+};

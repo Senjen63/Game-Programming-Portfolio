@@ -1,0 +1,58 @@
+#include "EntityManager.h"
+
+EntityManager::~EntityManager()
+{
+    clearAll();
+}
+
+void EntityManager::deleteEntity(int index)
+{
+    delete mEntities[index];
+
+    mEntities.erase(mEntities.begin() + index); // Make sure it removes the pointer too 
+}
+
+void EntityManager::addEntity(const Vector2D& position, const Animation& animation)
+{
+    Entity* temp = new Entity(position, animation);
+    mEntities.push_back(temp);
+}
+
+void EntityManager::addEntity(const Vector2D& position, const std::vector<Animation>& animations, int startingIndex)
+{
+    Entity* temp = new Entity(position, animations, startingIndex);
+    mEntities.push_back(temp);
+}
+
+void EntityManager::addEntity(const Vector2D& position, const Entity& other)
+{
+    Entity* temp = new Entity(other);
+    temp->setPosition(position);
+    mEntities.push_back(temp);
+}
+
+void EntityManager::updateAll(double deltaTime)
+{
+    for (Entity* pEntity : mEntities)
+    {
+        pEntity->update(deltaTime);
+    }
+}
+
+void EntityManager::drawAll(GraphicsSystem& sys) const
+{
+    for (Entity* pEntity : mEntities)
+    {
+        pEntity->draw(sys);
+    }
+}
+
+void EntityManager::clearAll()
+{
+    for (Entity* pEntity : mEntities)
+    {
+        delete pEntity;
+    }
+
+    mEntities.clear();
+}

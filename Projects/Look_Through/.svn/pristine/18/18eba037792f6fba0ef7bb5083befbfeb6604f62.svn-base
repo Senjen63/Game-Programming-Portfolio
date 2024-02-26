@@ -1,0 +1,31 @@
+#pragma once
+
+#include "Unit.h"
+#include "SpawnItemEvent.h"
+#include <Trackable.h>
+#include <EventSystem.h>
+
+class ItemSpawner : public Trackable
+{
+    public:
+        ItemSpawner();
+        ~ItemSpawner();
+
+        void init();
+        void cleanup();
+
+        void newLevel(float baseTime, float randomTime, float speedChance, float slowChance, float bonusChance);
+        void updateSpawner(float elapsedTime);
+        void spawnItem();
+private:
+    EventSystem* mpEventSystem = nullptr;
+
+    float mBaseTime = 0;
+    int mRandomTime = 1;
+
+    float mSpeedChance = 0;
+    float mSlowChance = 0;
+    float mBonusChance = 0;
+
+    float mTimer = 0;
+};

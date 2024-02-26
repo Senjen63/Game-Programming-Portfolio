@@ -1,0 +1,17 @@
+#pragma once
+
+#include "GameEvent.h"
+
+enum HUDEventType
+{
+    SCORE_EVENT = NUM_GAME_EVENT_TYPES,
+    TIME_EVENT,
+    FPS_EVENT,
+    NUM_HUD_EVENT_TYPES
+};
+class HUDEvent : public GameEvent
+{
+public:
+    HUDEvent(HUDEventType);
+    ~HUDEvent();
+};

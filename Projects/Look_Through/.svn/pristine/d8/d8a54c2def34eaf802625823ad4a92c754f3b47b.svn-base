@@ -1,0 +1,29 @@
+#pragma once
+#include <PerformanceTracker.h>
+#include <Timer.h>
+#include <Trackable.h>
+#include "GraphicsBuffer.h"
+#include "GraphicsSystem.h"
+#include "Font.h"
+#include "Color.h"
+
+#include <iostream>
+#include <string>
+
+using namespace std;
+
+class HUDClass : public Trackable
+{
+
+public:
+	HUDClass(Font* font);
+	~HUDClass();
+
+	void timeAndFPSText(GraphicsSystem* mpGraphics, GraphicsBuffer* gBuffer, double timeElapsed, double fps);
+	void scoreText(GraphicsSystem* mpGraphics, GraphicsBuffer* gBuffer, int score);
+
+private:
+	Font* mpFont;
+	Color mWhite = Color(255, 255, 255, 255);
+	Color mClearColor = Color(68, 236, 108, 255);
+};

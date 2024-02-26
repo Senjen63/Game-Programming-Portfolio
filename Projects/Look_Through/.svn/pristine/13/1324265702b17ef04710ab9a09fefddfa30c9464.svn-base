@@ -1,0 +1,266 @@
+#include "SnakeComponent.h"
+#include "Game.h"
+
+
+#include <iostream>
+
+
+void SnakeComponent::moveSnake(Keycode pressedKey)
+{
+	assert(mpUnit != nullptr);
+
+	// Change direction code
+	if (pressedKey == Keycode::D || pressedKey == Keycode::RIGHT_ARROW)
+	{
+		mCurrentDirection = Vector2D(1, 0);
+	}
+	else if (pressedKey == Keycode::A || pressedKey == Keycode::LEFT_ARROW)
+	{
+		mCurrentDirection = Vector2D(-1, 0);
+	}
+	else if (pressedKey == Keycode::S || pressedKey == Keycode::DOWN_ARROW)
+	{
+		mCurrentDirection = Vector2D(0, 1);
+	}
+	else if (pressedKey == Keycode::W || pressedKey == Keycode::UP_ARROW)
+	{
+		mCurrentDirection = Vector2D(0, -1);
+	}
+
+	if (mTimePassedSinceLastMove >= mMoveDelay)
+	{
+		mpUnit->setPos(mpUnit->getPos() + (mCurrentDirection * MOVE_AMOUNT)); // Move to new position
+		mTimePassedSinceLastMove = 0.0f;
+		mJumpSound.play();
+	}
+	
+	checkInLevel();
+}
+
+
+/*void SnakeComponent::moveSnake()
+{
+	mLoaded = true;
+
+	if (mBodyComponents.size() != 0) // Move each body segment where it should be
+	{
+		auto currentData = mBodyComponents.end();
+		currentData--;
+
+		for (int i = mBodyComponents.size() - 1; i > 0; i--)
+		{
+			auto prevData = currentData;
+			currentData--;
+
+			(*prevData)->UpdateData((*currentData)->mpUnit->getPos(), (*currentData)->dir);
+		}
+
+		currentData = mBodyComponents.begin();
+		(*currentData)->UpdateData(mpUnit->getPos(), mPrevDirection);
+	}
+
+	mPrevPosition = mpUnit->getPos();
+	mPrevDirection = mCurrentDirection;
+	mpUnit->setPos(mpUnit->getPos() + (mCurrentDirection * MOVE_AMOUNT)); // Move head to new position
+
+	Vector2D newPos = mpUnit->getPos();
+	Vector2D windowSize = Game::getInstance()->getWindowSize();
+	if (newPos.getX() < 0 || newPos.getX() >= windowSize.getX() || newPos.getY() < 0 || newPos.getY() >= windowSize.getY())
+	{
+		EventSystem::getInstance()->fireEvent(SnakeDiedEvent());
+	}
+}*/
+
+
+SnakeComponent::SnakeComponent(Vector2D startDirection, float moveDelay)
+{
+	mCurrentDirection = startDirection; 
+	mMoveDelay = moveDelay;
+}
+
+
+void SnakeComponent::init()
+{
+	EventSystem::getInstance()->addListener((EventType)GameEventType::KEYBOARD_JUST_PRESS_EVENT, this);
+
+	CollisionDriver* colDriver = static_cast<CollisionDriver*>(&mpUnit->getComponent(CollisionDriver::COLLISION_DRIVER_COMPONENT_NAME));
+	colDriver->addCollisionObserver(this);
+
+	mJumpSound.init("Jump", false, Game::getInstance()->getGameVolume());
+}
+
+
+void SnakeComponent::update(float dt)
+{
+	mTimePassedSinceLastMove += dt;
+
+	vector<Unit*> units = Game::getInstance()->getUnitManager()->getUnitsAtPos(getAttachedUnit()->getPos());
+	for (int i = 0; i < units.size(); i++)
+	{
+		if (units[i]->getCollisionLayer() == CollisionLayer::LOG)
+		{
+			setOnLog(true);
+			return;
+		}
+	}
+	setOnLog(false);
+}
+
+
+void SnakeComponent::draw(GraphicsSystem* gSys)
+{
+	assert(mpUnit != nullptr);
+
+	gSys->draw(mpUnit->getPos(), mpUnit->getCurrentAnimation()->getCurrentFrame());
+}
+
+
+void SnakeComponent::handleEvent(const Event& theEvent)
+{
+	if (theEvent.getType() != (EventType)GameEventType::KEYBOARD_JUST_PRESS_EVENT)
+	{
+		return;
+	}
+
+	const KeyPressEvent& kEvent = static_cast<const KeyPressEvent&>(theEvent);
+
+	moveSnake(kEvent.getKey());
+}
+
+
+void SnakeComponent::spawnNewSegment()
+{
+	mLoaded = false;
+
+	UnitManager* um = Game::getInstance()->getUnitManager();
+
+	UnitParameters snakeBodyParams;
+
+	Vector2D newPos;
+	Vector2D newDir;
+
+	if (mBodyComponents.size() > 0)
+	{
+		newPos = (*mBodyComponents.back()).getAttachedUnit()->getPos() - ((*mBodyComponents.back()).dir * MOVE_AMOUNT);
+ 		newDir = (*mBodyComponents.back()).prevDirection;
+	}
+	else
+	{
+		newPos = mpUnit->getPos() - (mCurrentDirection * MOVE_AMOUNT);
+		newDir = mPrevDirection;
+	}
+
+	std::unordered_map<std::string, Animation> newAnim;
+	newAnim[mpUnit->getCurrentAnimationName()] = *mpUnit->getCurrentAnimation();
+
+	snakeBodyParams = UnitParameters(newPos, newAnim, mpUnit->getCurrentAnimationName(), CollisionLayer::SNAKE_BODY);
+
+	std::vector<Component*> snakeBodyComponents;
+	snakeBodyComponents.push_back(new SnakeBodyComponent(newDir));
+
+	Unit& newBody = um->createUnit(snakeBodyParams, snakeBodyComponents);
+
+	Component* bodyComp = &newBody.getComponent(SnakeBodyComponent::SNAKE_BODY_COMPONENT_NAME);
+
+	mBodyComponents.push_back(static_cast<SnakeBodyComponent*>(bodyComp));
+}
+
+bool SnakeComponent::checkIfOnLog()
+{
+	return false;
+}
+
+
+void SnakeComponent::moveSnakeOnLog(float speed, Vector2D dir)
+{
+	if (mpUnit != nullptr)
+	{
+		mpUnit->setPos(mpUnit->getPos() + (dir * speed)); // Move to new position
+	}
+}
+
+
+std::string SnakeComponent::getIdentifier()
+{
+	return "SnakeComponent";
+}
+
+
+void SnakeComponent::checkInLevel()
+{
+	Vector2D newPos = mpUnit->getPos();
+	Vector2D windowSize = Game::getInstance()->getWindowSize();
+	if (newPos.getX() < 0 || newPos.getX() >= windowSize.getX() || newPos.getY() >= windowSize.getY())
+	{
+		EventSystem::getInstance()->fireEvent(SnakeDiedEvent());
+	}
+	if (newPos.getY() < 0)
+	{
+		EventSystem::getInstance()->fireEvent(SnakeWonEvent());
+	}
+	cout << "Y:" << newPos.getY();
+}
+
+
+void SnakeComponent::onCollision(Unit* unit, CollisionLayer layer)
+{
+	std::cout << "Collision Received" << std::endl;
+
+	switch (layer)
+	{ 
+	case(CollisionLayer::WATER):
+		//setOnLog(false);
+		update(0);
+		if (!getIfOnLog())
+			EventSystem::getInstance()->fireEvent(SnakeDiedEvent());
+		break;
+
+	case(CollisionLayer::LOG):
+		//setOnLog(true);
+		break;
+
+	case(CollisionLayer::TRUCK):
+		EventSystem::getInstance()->fireEvent(SnakeDiedEvent());
+	}
+}
+
+
+bool SnakeComponent::checkCollision(CollisionLayer layer)
+{
+	return false;
+}
+
+
+void SnakeComponent::speedPowerUpCollected(Unit* unit)
+{
+	SpeedPowerUpComponent* speedPowerUp = static_cast<SpeedPowerUpComponent*>(&unit->getComponent(SpeedPowerUpComponent::SPEED_POWER_UP_COMPONENT_NAME));
+	
+	float newDelay = mMoveDelay + speedPowerUp->getDelayAdjustment();
+
+	if (newDelay < 0.0f)
+	{
+		newDelay = 0.0f;
+	}
+
+	setMoveDelay(newDelay);
+
+	Game::getInstance()->getUnitManager()->deleteUnit(*unit);
+}
+
+
+void SnakeComponent::scorePowerUpCollected(Unit* unit)
+{
+	ScoreModPowerUpComponent* powerUp = static_cast<ScoreModPowerUpComponent*>(&unit->getComponent(ScoreModPowerUpComponent::SCORE_MOD_POWER_UP_COMPONENT_NAME));
+
+	Game::getInstance()->getUnitManager()->deleteUnit(*unit);
+	EventSystem::getInstance()->fireEvent(ScoreChangeEvent(powerUp->getScoreMod()));
+}
+
+
+void SnakeComponent::fruitCollected(Unit* unit)
+{
+	spawnNewSegment();
+	Game::getInstance()->getUnitManager()->deleteUnit(*unit);
+	EventSystem::getInstance()->fireEvent(ScoreChangeEvent());
+	EventSystem::getInstance()->fireEvent(FruitCollectedEvent());
+}

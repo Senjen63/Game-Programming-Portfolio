@@ -1,0 +1,40 @@
+#pragma once
+#include "GraphicsSystem.h"
+#include <string>
+
+class HUD : public Trackable
+{
+public:
+	HUD(Font* font);
+	~HUD();
+
+
+	void friendState(std::string counter, int changeState, bool changeCurrentState);
+	void writeFriendState(GraphicsSystem* mpGraphics, std::string sadWords, std::string mehWords, std::string happyWords, int happyFriends, int sadFriends);
+	void elapsedTime(GraphicsSystem* graphics, float time, std::string words);
+
+	// DON'T FORGET TO PUT IN THE LANGUAGE SETTINGS
+	void displayLevel(GraphicsSystem* graphics, std::string difficulty, std::string level);
+
+	//void endText(GraphicsSystem* mpGraphics);
+	void winText(GraphicsSystem* mpGraphics);
+
+	
+	int getMehFriends();
+	int getSadFriends();
+	int getHappyFriends();
+
+private:
+	Font* mpFont;
+	Color mpWhite = Color(255, 255, 255, 255);
+	Color mClearColor = Color(68, 236, 108, 255);
+
+	std::string mOver;
+	std::string mAgain;
+	std::string mWin;
+
+	bool mChange;
+	int mSadF = 0;
+	int mMehF = 0;
+	int mHappyF = 0;
+};

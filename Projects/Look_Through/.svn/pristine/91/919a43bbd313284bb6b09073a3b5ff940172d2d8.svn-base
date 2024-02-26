@@ -1,0 +1,54 @@
+#include "Penguin.h"
+#include "Game.h"
+
+Penguin::Penguin(Direction dir, Vector2D location, Animation* anim) : EnemyBase{ dir, location, anim }
+{
+	mSpeed = PENGUIN_SPEED;
+	
+	mMaxHealth = PENGUIN_HEALTH;
+	if (Game::getInstance()->getDifficulty() == NORMAL) { mMaxHealth = int(mMaxHealth * HEALTH_MULT_NORMAL); }
+	if (Game::getInstance()->getDifficulty() == HARD) { mMaxHealth = int(mMaxHealth * HEALTH_MULT_HARD); }
+	mCurrentHealth = mMaxHealth;
+	
+	mInvFrames = PENGUIN_INV;
+}
+
+void Penguin::move()
+{
+	switch (mDirection)
+	{
+		case UP:
+		{
+			Vector2D locationToMoveTo = Vector2D(mLocation.getX(), mLocation.getY() - mSpeed);
+
+			if (isColliding(locationToMoveTo)) { mDirection = DOWN; }
+			else { mLocation.setY(locationToMoveTo.getY()); }
+			break;
+		}
+		case DOWN:
+		{
+			Vector2D locationToMoveTo = Vector2D(mLocation.getX(), mLocation.getY() + mSpeed);
+
+			if (isColliding(locationToMoveTo)) { mDirection = UP; }
+			else { mLocation.setY(locationToMoveTo.getY()); }
+			break;
+		}
+		case LEFT:
+		{
+			Vector2D locationToMoveTo = Vector2D(mLocation.getX() - mSpeed, mLocation.getY());
+
+			if (isColliding(locationToMoveTo)) { mDirection = RIGHT; }
+			else { mLocation.setX(locationToMoveTo.getX()); }
+			break;
+		}
+		case RIGHT:
+		{
+			Vector2D locationToMoveTo = Vector2D(mLocation.getX() + mSpeed, mLocation.getY());
+
+			if (isColliding(locationToMoveTo)) { mDirection = LEFT; }
+			else { mLocation.setX(locationToMoveTo.getX()); }
+			break;
+		}
+	}
+	
+}

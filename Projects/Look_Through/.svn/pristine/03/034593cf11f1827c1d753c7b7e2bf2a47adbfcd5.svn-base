@@ -1,0 +1,57 @@
+#include "GraphicsBuffer.h"
+#include "Color.h"
+
+GraphicsBuffer::GraphicsBuffer(std::string fileName)
+{
+	mpBitmap = al_load_bitmap(fileName.c_str());
+	mOwnsBitmap = true;
+}
+
+GraphicsBuffer::GraphicsBuffer(ALLEGRO_BITMAP* pBitmap)
+{
+	mpBitmap = pBitmap;
+	mOwnsBitmap = false;
+}
+
+GraphicsBuffer::GraphicsBuffer(Color* color, int width, int height)
+{
+	ALLEGRO_BITMAP* temp = al_get_target_bitmap();
+
+	mpBitmap = al_create_bitmap(width, height);
+	al_set_target_bitmap(mpBitmap);
+	al_clear_to_color(color->getColor());
+	assert(mpBitmap);
+
+	al_set_target_bitmap(temp);
+	mOwnsBitmap = false;
+}
+
+int GraphicsBuffer::getWidth()
+{
+	return al_get_bitmap_width(mpBitmap);
+}
+
+ALLEGRO_BITMAP* GraphicsBuffer::getBackBuffer()
+{
+	return mpBitmap;
+}
+int GraphicsBuffer::getHeight()
+{
+	return al_get_bitmap_height(mpBitmap);
+}
+
+void GraphicsBuffer::setColor(Color* col)
+{
+	ALLEGRO_BITMAP* temp = al_get_target_bitmap();
+	al_set_target_bitmap(mpBitmap);
+	al_clear_to_color(col->getColor());
+	al_set_target_bitmap(temp);
+}
+
+
+GraphicsBuffer::~GraphicsBuffer()
+{
+	if (mOwnsBitmap) {
+		al_destroy_bitmap(mpBitmap);
+	}
+}

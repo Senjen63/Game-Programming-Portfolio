@@ -1,0 +1,10 @@
+#include "TimeEvent.h"
+
+TimeEvent::TimeEvent(float time) : HudEvent((HudEventTypes)TIME_EVENT)
+{
+	mTime = time;
+}
+
+TimeEvent::~TimeEvent()
+{
+}

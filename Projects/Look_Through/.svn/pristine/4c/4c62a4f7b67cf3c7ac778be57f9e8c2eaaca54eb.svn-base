@@ -1,0 +1,33 @@
+#pragma once
+#include <Trackable.h>
+#include <EventSystem.h>
+
+#include "Unit.h"
+#include "SpawnFoodEvent.h"
+
+class Food : public Trackable
+{
+    private:
+        EventSystem* mpEventSystem = nullptr;
+
+        //float mTimer = 0;
+        Unit* mCurrentFood = nullptr;
+
+        bool mEaten = false;
+
+    public:
+        Food();
+        ~Food();
+
+        void init();
+        void cleanup();
+
+        bool getEaten() { return mEaten; }
+        Unit* getCurrentFood() { return mCurrentFood; }
+
+        void setEaten(bool eaten);
+        void setCurrentFood(Unit* food);
+
+        void updateFood();
+        void endLevel();
+};

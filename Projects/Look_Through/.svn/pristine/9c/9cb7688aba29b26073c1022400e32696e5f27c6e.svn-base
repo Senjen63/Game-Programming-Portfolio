@@ -1,0 +1,17 @@
+#pragma once
+
+#include <Vector2D.h>
+#include "Unit.h"
+#include "SpawnEvent.h"
+#include "GraphicsBuffer.h"
+
+class SpawnSnakeEvent : public SpawnEvent
+{
+public:
+    SpawnSnakeEvent(Unit*);
+    ~SpawnSnakeEvent();
+
+    Unit* getUnit() const { return mpUnit; }
+private:
+    Unit* mpUnit = nullptr;
+};

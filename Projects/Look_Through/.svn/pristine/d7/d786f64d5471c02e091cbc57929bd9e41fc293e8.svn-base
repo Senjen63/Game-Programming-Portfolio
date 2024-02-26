@@ -1,0 +1,41 @@
+#include "GraphicsBufferManager.h"
+
+GraphicsBufferManager::~GraphicsBufferManager()
+{
+    clearAll();
+}
+
+GraphicsBuffer* GraphicsBufferManager::getBuffer(const BufferKey& key) const
+{
+    return mMap.at(key);
+}
+
+void GraphicsBufferManager::deleteBuffer(const BufferKey& key)
+{
+    delete mMap[key];
+    mMap.erase(key); // Ensure the pointer is erased too 
+}
+
+void GraphicsBufferManager::addBuffer(const BufferKey& key, int width, int height)
+{
+    GraphicsBuffer* temp = new GraphicsBuffer(width, height);
+    mMap.insert({ key, temp }); // inserts an std::pair 
+}
+
+void GraphicsBufferManager::addBuffer(const BufferKey& key, const std::string& pathToAsset)
+{
+    GraphicsBuffer* temp = new GraphicsBuffer(pathToAsset);
+    mMap.insert({ key, temp });
+}
+
+void GraphicsBufferManager::clearAll()
+{
+    // Delete each entry 
+    for (std::pair<const BufferKey, GraphicsBuffer*>& bufferKeyPair : mMap)
+    {
+        delete bufferKeyPair.second;
+    }
+
+    // Clear the list 
+    mMap.clear();
+}

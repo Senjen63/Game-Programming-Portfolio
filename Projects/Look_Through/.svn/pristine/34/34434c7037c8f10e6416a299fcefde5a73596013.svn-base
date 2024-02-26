@@ -1,0 +1,75 @@
+#include "UnitManager.h"
+#include "Animation.h"
+#include <algorithm>
+#include "Unit.h"
+
+UnitManager::~UnitManager()
+{
+	clearUnits();
+}
+
+Unit* UnitManager::getLastUnit()
+{
+	return mvpUnits.back();
+}
+
+void UnitManager::addUnitAt(Vector2D location, Animation mainAnim, Animation altAnim)
+{
+	mvpUnits.push_back(new Unit(location, mainAnim, altAnim));
+}
+
+void UnitManager::deleteUnitAt(Vector2D location)
+{
+	int localX = location.getX();
+	int localY = location.getY();
+
+	int unitNum = 0;
+
+	for each (auto iter in mvpUnits)
+	{
+		int sprtLocationX = iter->mDrawLocation.getX();
+		int sprtLocationY = iter->mDrawLocation.getY();				
+
+		bool isWithinWidth = localX > sprtLocationX && localX < sprtLocationX + iter->mAnimWidth;
+		bool isWithinHeight = localY > sprtLocationY && localY < sprtLocationY + iter->mAnimHeight;
+
+		if (isWithinWidth && isWithinHeight)
+		{
+			delete iter;
+			mvpUnits[unitNum] = nullptr;
+		}
+
+		unitNum++;
+	}
+
+	auto removeAfterIter = remove_if(mvpUnits.begin(), mvpUnits.end(),
+		[](Unit* const u) { return u == nullptr; });
+
+	mvpUnits.erase(removeAfterIter, mvpUnits.end());	
+}
+
+void UnitManager::clearUnits()
+{
+	for each (auto iter in mvpUnits)
+	{
+		delete iter;
+	}
+
+	mvpUnits.clear();
+}
+
+void UnitManager::updateAll(double dt)
+{
+	for each (auto iter in mvpUnits)
+	{
+		iter->update(dt);
+	}
+}
+
+void UnitManager::drawAll()
+{
+	for each (auto iter in mvpUnits)
+	{
+		iter->draw();
+	}
+}

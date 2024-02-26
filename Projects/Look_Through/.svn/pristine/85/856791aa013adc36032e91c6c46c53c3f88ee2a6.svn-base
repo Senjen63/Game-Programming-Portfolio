@@ -1,0 +1,15 @@
+#pragma once
+#include "Sound.h"
+
+class AudioManager
+{
+public:
+	AudioManager();
+	~AudioManager();
+
+	void loadSounds();
+	void playSound(std::string soundName);
+
+private:
+	std::map<std::string, Sound*> mSoundMap;
+};

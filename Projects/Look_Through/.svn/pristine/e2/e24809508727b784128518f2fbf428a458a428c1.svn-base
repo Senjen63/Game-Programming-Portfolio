@@ -1,0 +1,180 @@
+#include <allegro5/allegro.h>
+#include <allegro5/allegro_font.h>
+#include <allegro5/allegro_ttf.h>
+#include <allegro5/allegro_audio.h>
+#include <allegro5/allegro_acodec.h>
+#include <allegro5/allegro_image.h>
+#include <allegro5/allegro_primitives.h>
+
+#include <iostream>
+#include <cassert>
+#include <string>
+
+#include <PerformanceTracker.h>
+#include <MemoryTracker.h>
+#include <Vector2D.h>
+#include <Timer.h>
+
+#include "Game.h"
+#include "Unit.h"
+//#include "Buffer.h"
+using namespace std;
+
+
+//----------------------------------------Game----------------------------------------
+
+Game::Game()
+{
+	Width = 0;
+	Height = 0;
+	FPS = 16.66f; //60fps
+}
+
+Game::Game(int width, int height, float fps)
+{
+	gSystem = new GraphicsSystem(width, height);
+	iSystem = new InputSystem();
+	
+	Width = width;
+	Height = height;
+	FPS = fps;
+}
+
+Game::~Game()
+{
+	gSystem = nullptr;
+	iSystem = nullptr;
+	delete gSystem;
+	delete iSystem;
+}
+
+bool Game::init()
+{
+	if (gSystem->setup() == 1)
+	{
+		return 1;
+	}
+	iSystem->init();
+
+	return 0;
+}
+
+void Game::cleanup()
+{
+	gSystem->cleanup();
+	iSystem->cleanup();
+}
+
+void Game::doLoop()
+{
+	//run the full game here
+	
+	//file names
+	const string ASSET_PATH = "..\\..\\common\\assets\\";
+	const string BACKGROUND_FILENAME = "woods.png";
+	const string SMURF_FILENAME = "smurf_sprites.png"; //Animation 1
+	const string DEAN_FILENAME = "dean_sprites.png"; //Animation 2
+	const string FONT_FILENAME = "cour.ttf";
+	const int SMURF_ROWS = 4;
+	const int SMURF_COLS = 4;
+	const int SMURF_SIZE = 64;
+	const float FRAME_SPEED = 3.00f; //time
+	bool isUnitOne = true;
+	bool looping = true;
+
+
+	GraphicsBuffer* backgroundBuffer = new GraphicsBuffer(BACKGROUND_FILENAME);
+	GraphicsBuffer* smurfBuffer = new GraphicsBuffer(SMURF_FILENAME);
+	GraphicsBuffer* deanBuffer = new GraphicsBuffer(DEAN_FILENAME);
+
+	Sprite backgroundSprite = Sprite(backgroundBuffer->getWidth(), backgroundBuffer->getHeight(), 0, 0, backgroundBuffer);
+
+	Animation* uAnimOne = new Animation(FRAME_SPEED, smurfBuffer, 1); //create animation 1
+	Animation* uAnimTwo = new Animation(FRAME_SPEED, deanBuffer, 1); //create animation 2
+
+	Unit unit = Unit(gSystem->getWidth()/2, gSystem->getHeight()/2, uAnimOne); //create unit
+
+	PerformanceTracker* pPerformanceTracker = new PerformanceTracker;
+	
+	Timer timer;
+	timer.start();
+
+	//do gameplay loop
+	while (looping)
+	{
+		pPerformanceTracker->clearTracker("loop");
+		pPerformanceTracker->startTracking("loop");
+
+		//--------------------Get user input--------------------
+		if (iSystem->getKeyState(keyF))
+		{
+			//increase animation speed
+			if (isUnitOne)
+			{
+				uAnimOne->increaseSpeed();
+			}
+			else
+			{
+				uAnimTwo->increaseSpeed();
+			}
+		}
+		else if (iSystem->getKeyState(keyS))
+		{
+			//slow animation speed
+			if (isUnitOne)
+			{
+				uAnimOne->decreaseSpeed();
+			}
+			else
+			{
+				uAnimTwo->decreaseSpeed();
+			}
+		}
+		else if (iSystem->getKeyState(keyEnter))
+		{
+			//swap animation
+			if (isUnitOne)
+			{
+				unit.setAnimation(uAnimTwo);
+				isUnitOne == false;
+			}
+			else
+			{
+				unit.setAnimation(uAnimOne);
+				isUnitOne == true;
+			}
+		}
+		else if (iSystem->getKeyState(keyESC))
+		{
+			//quit
+			looping = false; //break out of loop to end in main.cpp
+		}
+		
+
+		if (iSystem->getMouseState(LMB))
+		{
+			//place unit
+			unit.setPosition(iSystem->getMouseX() - (SMURF_SIZE / 2), iSystem->getMouseY() - (SMURF_SIZE / 2));
+		}
+
+		//--------------------Update--------------------
+		unit.update(FRAME_SPEED);
+
+		//--------------------Draw--------------------
+		gSystem->draw(0, 0, backgroundSprite, (gSystem->getWidth() / float(backgroundBuffer->getWidth())));
+		unit.draw();
+		gSystem->flip();
+
+		//--------------------Wait--------------------
+		timer.sleepUntilElapsed(FPS);
+		pPerformanceTracker->stopTracking("loop");
+		cout << "Time to Process Frame:" << pPerformanceTracker->getElapsedTime("loop") << " ms" << endl;
+	}
+	
+	delete smurfBuffer;
+	delete deanBuffer;
+	delete backgroundBuffer;
+	delete uAnimOne;
+	delete uAnimTwo;
+}
+Game* game = nullptr;

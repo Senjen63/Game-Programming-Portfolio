@@ -1,0 +1,100 @@
+#include "Unit.h"
+
+// for tobb
+Unit::Unit(AnimationPrototype* anim1, AnimationPrototype* anim2, AnimationPrototype* anim3, AnimationPrototype* anim4)
+{
+	Animation anim11(anim1, 1000 / 3, true);
+	Animation anim12(anim2, 1000 / 3, true);
+	Animation anim13(anim3, 1000 / 3, true);
+	Animation anim14(anim4, 1000 / 3, true);
+	mAnimations.push_back(anim11);
+	mAnimations.push_back(anim12);
+	mAnimations.push_back(anim13);
+	mAnimations.push_back(anim14);
+
+	mTimePerFrame = 1000.0 / 12;
+	mTimeUntilNextFrame = 0;
+
+	mCurrentAnimation = 0;
+	mLocation = Vector2D(0, 0);
+}
+
+// for friends
+Unit::Unit(AnimationPrototype* anim1, AnimationPrototype* anim2, AnimationPrototype* anim3)
+{
+	Animation anim11(anim1, 1000 / 3, true);
+	Animation anim12(anim2, 1000 / 3, true);
+	Animation anim13(anim3, 1000 / 3, true);
+	mAnimations.push_back(anim11);
+	mAnimations.push_back(anim12);
+	mAnimations.push_back(anim13);
+
+	mTimePerFrame = 1000.0 / 12;
+	mTimeUntilNextFrame = 0;
+
+	mCurrentAnimation = 0;
+	mLocation = Vector2D(0, 0);
+}
+
+// for tree
+Unit::Unit(AnimationPrototype* anim1, AnimationPrototype* anim2)
+{
+	Animation anim11(anim1, 1000 / 3, true);
+	Animation anim12(anim2, 1000 / 3, true);
+	mAnimations.push_back(anim11);
+	mAnimations.push_back(anim12);
+
+	mTimePerFrame = 1000.0 / 12;
+	mTimeUntilNextFrame = 0;
+
+	mCurrentAnimation = 0;
+	mLocation = Vector2D(0, 0);
+}
+
+// for babb
+Unit::Unit(AnimationPrototype* anim1)
+{
+	Animation anim11(anim1, 1000 / 3, true);
+	mAnimations.push_back(anim11);
+
+
+	mTimePerFrame = 1000.0 / 12;
+	mTimeUntilNextFrame = 0;
+
+	mCurrentAnimation = 0;
+	mLocation = Vector2D(0, 0);
+}
+
+Unit::~Unit() {}
+
+void Unit::update(double dt)
+{
+	// update the current animation
+	mAnimations[mCurrentAnimation].update(dt);
+}
+
+void Unit::update(double dt, Vector2D dir)
+{
+	// update the current animation
+	if (mPause == false)
+	{
+		mLocation = dir;
+		mAnimations[mCurrentAnimation].update(dt);
+	}
+}
+
+void Unit::draw(GraphicsSystem* graphics)
+{
+	// draw the animtion to the screen
+	graphics->draw(mLocation.getX(), mLocation.getY(), mAnimations[mCurrentAnimation].getCurrentSprite(), 1, 1);
+}
+
+void Unit::setAnimation(int index)
+{
+	mCurrentAnimation = index;
+}
+
+void Unit::setLocation(Vector2D loc)
+{
+	mLocation = loc;
+}

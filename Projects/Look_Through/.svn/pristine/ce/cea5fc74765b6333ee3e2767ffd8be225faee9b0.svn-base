@@ -1,0 +1,99 @@
+#include "Level.h"
+
+Level::Level()
+{
+	int i, j;
+	for (i = 0; i < 10; i++)
+	{
+		for (j = 0; j < 14; j++)
+		{
+			wallArray1[i][j] = 0;
+		}
+	}
+
+	mHUD = new HUD("Press Space to Start", Vector2D(400, 300));
+	mFont = new Font("assets\\cour.ttf", 30);
+}
+
+Level::Level(string message)
+{
+	int i, j;
+	for (i = 0; i < 10; i++)
+	{
+		for (j = 0; j < 14; j++)
+		{
+			wallArray1[i][j] = 0;
+		}
+	}
+
+	mHUD = new HUD(message, Vector2D(400, 300));
+	mFont = new Font("assets\\cour.ttf", 30);
+}
+
+
+Level::Level(int wallArray[10][14], string path, string sprite)
+{
+	mSprite = sprite;
+
+	int i, j;
+	for (i = 0; i < 10; i++)
+	{
+		for (j = 0; j < 14; j++)
+		{
+			wallArray1[i][j] = wallArray[i][j];
+		}
+	}
+
+	/*for (i = 0; i < 10; i++)
+	{
+		for (j = 0; j < 14; j++)
+		{
+			if (wallArray1[i][j] == 1)
+			{
+				mWallMan.addUnit(Vector2D(i * 60, j * 60), path + sprite);
+			}
+		}
+	}*/
+
+	mHUD = new HUD();
+	mFont = new Font("assets\\cour.ttf", 30);
+}
+
+Level::~Level()
+{
+	cleanup();
+}
+
+void Level::cleanup()
+{
+	delete mHUD;
+	delete mFont;
+}
+
+void Level::draw(ALLEGRO_DISPLAY* backBuff, GraphicsBuffer* pBuff, int scale)
+{
+	int i, j;
+	Vector2D location;
+	for (i = 0; i < 10; i++)
+	{
+		for (j = 0; j < 14; j++)
+		{
+			if (wallArray1[i][j] == 1)
+			{
+				location = Vector2D(j * 60, i * 60);
+				al_set_target_bitmap(al_get_backbuffer(backBuff));
+				al_draw_scaled_bitmap(pBuff->getBitmap(), 0, 0, pBuff->getWidth(), pBuff->getHeight(), location.getX(), location.getY(), pBuff->getWidth() * scale, pBuff->getHeight() * scale, 0);
+			}
+		}
+	}
+}
+
+void Level::drawHUD(Font* font)
+{
+	mHUD->update(font);
+}
+
+void Level::drawHUD(Font* pFont, int score, float FPS, float time)
+{
+	mHUD->update(pFont, score, FPS, time);
+}

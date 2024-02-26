@@ -1,0 +1,70 @@
+
+#include "InputSystem.h"
+#include "InputEvent.h"
+#include "MyMouseEvent.h"
+
+InputSystem::InputSystem()
+{
+    mpEventSystem = nullptr;
+}
+
+InputSystem::~InputSystem()
+{
+	cleanup();
+}
+
+void InputSystem::init()
+{
+    //mpQueue = al_create_event_queue();
+    //al_register_event_source(mpQueue, al_get_keyboard_event_source());
+
+    mpEventSystem = EventSystem::getInstance();
+    mpEventSystem->init();
+}
+
+void InputSystem::cleanup()
+{
+    mpEventSystem->cleanup();
+}
+
+void InputSystem::getInputEvent()
+{
+    SDL_Event theEvent;
+    Uint32 mouse;
+    int x = 0, y = 0;
+
+    while (SDL_PollEvent(&theEvent))
+    {
+        if (theEvent.type == SDL_KEYDOWN)
+        {
+            if (theEvent.key.repeat == 0)
+                mpEventSystem->fireEvent(InputEvent((int)theEvent.key.keysym.sym));
+        }
+        
+        if (theEvent.type == SDL_MOUSEBUTTONDOWN)
+        {
+            mouse = SDL_GetMouseState(&x, &y);
+
+            if (theEvent.key.repeat == 0)
+                mpEventSystem->fireEvent(MyMouseEvent((int)theEvent.button.button, Vector2D(x, y)));
+        }
+    }
+}
+
+bool InputSystem::getKeyState(KeyCode keyCode)
+{
+    const Uint8* mKeyboardState = SDL_GetKeyboardState(NULL);
+    return mKeyboardState[(int)keyCode];
+}
+
+Vector2D InputSystem::getMousePosition()
+{
+    int x = 0, y = 0;
+    Uint32 mouse;
+
+    SDL_PumpEvents();
+
+    mouse = SDL_GetMouseState(&x, &y);
+
+    return Vector2D(x,y);
+}

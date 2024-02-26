@@ -1,0 +1,101 @@
+#include "UnitManager.h"
+#include "Unit.h"
+#include "Sprite.h"
+#include "Animation.h"
+
+UnitManager::~UnitManager()
+{
+	clearAllUnits();
+}
+
+void UnitManager::clearAllUnits()
+{
+	for (auto u : mpUnits)
+	{
+		delete u;
+	}
+
+	mpUnits.clear();
+}
+
+void UnitManager::createUnit(Vector2D location, Animation primaryAnim, Animation secondaryAnim)
+{
+	Unit* pNewUnit = new Unit(location);
+
+	pNewUnit->setPrimaryAnim(primaryAnim);
+	pNewUnit->setSecondaryAnim(secondaryAnim);
+
+	mpUnits.push_back(pNewUnit);
+}
+
+void UnitManager::createUnit(Vector2D location, Animation primaryAnim)
+{
+	Unit* pNewUnit = new Unit(location);
+
+	pNewUnit->setPrimaryAnim(primaryAnim);
+
+	mpUnits.push_back(pNewUnit);
+}
+
+void UnitManager::deleteUnit(Unit* pUnitToDelete)
+{
+	for (int i = 0; i < mpUnits.size(); i++)
+	{
+		Unit* pTempUnit = mpUnits[i];
+
+		if (pTempUnit == pUnitToDelete)
+		{
+			delete pTempUnit;
+
+			mpUnits.erase(mpUnits.begin() + i);
+
+			break;
+		}
+	}
+}
+
+void UnitManager::deleteUnit(Vector2D deleteUnitAtLocation)
+{
+	int width = 0;
+	int height = 0;
+
+	Vector2D topLeftCorner;
+	Vector2D bottomRightCorner;
+
+	for (int i = 0; i < mpUnits.size(); i++)
+	{
+		Unit* pTempUnit = mpUnits[i];
+
+		width = pTempUnit->getCurrentAnim().getCurrentSprite().getSpriteWidth();
+		height = pTempUnit->getCurrentAnim().getCurrentSprite().getSpriteHeight();
+
+		topLeftCorner = Vector2D(pTempUnit->getLocation().getX(), pTempUnit->getLocation().getY());
+		bottomRightCorner = Vector2D(pTempUnit->getLocation().getX() + width, pTempUnit->getLocation().getY() + height);
+
+		if (deleteUnitAtLocation.getX() >= topLeftCorner.getX() && deleteUnitAtLocation.getX() <= bottomRightCorner.getX())
+		{
+			if (deleteUnitAtLocation.getY() >= topLeftCorner.getY() && deleteUnitAtLocation.getY() <= bottomRightCorner.getY())
+			{
+				delete pTempUnit;
+				mpUnits.erase(mpUnits.begin() + i);
+				break;
+			}
+		}
+	}
+}
+
+void UnitManager::updateAllUnits(double tickTime)
+{
+	for (auto u : mpUnits)
+	{
+		u->update(tickTime);
+	}
+}
+
+void UnitManager::drawAllUnits()
+{
+	for (auto u : mpUnits)
+	{
+		u->draw();
+	}
+}

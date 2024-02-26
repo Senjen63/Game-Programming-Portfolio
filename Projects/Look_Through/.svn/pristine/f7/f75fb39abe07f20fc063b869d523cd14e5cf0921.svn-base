@@ -1,0 +1,42 @@
+#pragma once
+
+#include "Sprite.h"
+#include <Trackable.h>
+#include <Timer.h>
+#include <vector>
+
+class Animation : public Trackable
+{
+public:
+    Animation() = default;
+    Animation(const Animation&) = default;
+    Animation& operator=(const Animation&) = default;
+    ~Animation() = default;
+
+    Animation(const std::vector<Sprite>& sprites, float frameRate, bool loops = true);
+    Animation(const GraphicsBuffer* pSpriteSheetBuffer, int spriteWidth, int spriteHeight, float frameRate, bool loops = true);
+    Animation(Sprite sprite);
+
+    void update(double deltaTime);
+    void setFrameRate(float frameRate) { mFrameRate = frameRate; }
+    void addFrameRate(float deltaFrameRate) { if (mFrameRate + deltaFrameRate >= 0) { mFrameRate += deltaFrameRate; } }
+
+    float getFrameRate() const { return mFrameRate; }
+    float getFramesPast() const { return mFramesPast; }
+    Vector2D getMaxSize() const;
+
+    void setTimingInfo(const Animation& other) { mFrameRate = other.mFrameRate; mFramesPast = other.mFramesPast; }
+
+    /// <summary>
+    /// Gets the sprite that the animation is currently on. 
+    /// Returns last sprite if it does not loop and there is no more sprites to show. 
+    /// </summary>
+    const Sprite& getCurrentSprite() const;
+
+private:
+    std::vector<Sprite> mSprites;
+    bool mLoops = false;
+
+    float mFrameRate = 0;
+    double mFramesPast = 0;
+};

@@ -1,0 +1,74 @@
+#pragma once
+#include <iostream>
+#include <string>
+#include <cstring>
+#include <fstream>
+#include <Vector2D.h>
+
+#include "Trackable.h"
+#include "FriendManager.h"
+
+using namespace std;
+
+const string TREE_DATA = "tree";
+const string TOBB_DATA = "tobb";
+const string BABB_DATA = "babb";
+const string FRIEND_POS_DATA = "friendPos";
+const string FRIEND_STATE_DATA = "friendState";
+
+const string HARD_FILE = "HardLevel.txt";
+const string MEDIUM_FILE = "MediumLevel.txt";
+const string EASY_FILE = "EasyLevel.txt";
+const string SAVED_DATA = "SavedData.txt";
+
+const std::string SAD_FRIEND = "sadFri";
+const std::string HAPPY_FRIEND = "happyFri";
+
+//take in constant key names
+//background, babb, treeFull, treeWithOut, happyFriend, mehFriend, sadFriend,
+//backTobb, frontTobb, leftTobb, rightTobb, backTobbWithApple, frontTobbWithApple,
+//leftTobbWithApple, rightTobbWithApple;
+
+class DataManager : public Trackable
+{
+private:
+	string mFileKeyName;
+	string mFilePath;
+	string mSearchValue;
+	string mNumOfObjects;
+
+	int mCount = 0;
+	int mCountMedium = 0;
+	int mCountHard = 0;
+
+	int mNumOfMoods = 0;
+
+	Vector2D mLocation[6];
+	Vector2D mLocationMedium[6];
+	Vector2D mLocationHard[7];
+
+	//string* mFriendsMoods = NULL;
+
+public:
+
+	DataManager();
+	~DataManager() { cleanUp(); };
+
+	void cleanUp(); 
+
+	void LoadingSpriteInfo(string textFile);
+
+	string getFile(string textFile, const string KEY_NAME);
+	string getLevelFileValue(string textFile, string key);
+
+	Vector2D getLocationTree(int num);
+	Vector2D getLocationFriend(string levelDifficulty, int num);
+	Vector2D getLocationTobb(string levelDifficulty, int num);
+	Vector2D getLocationBabb(string levelDifficulty, int num);
+
+	int getFriendMood(string levelDifficulty);
+
+	void saveGame(string levelDifficulty, int NumOfFriends, FriendManager& friendManager);
+	Vector2D getSavedLocation(int index);
+	int getFriendSavedMood(int index);
+};

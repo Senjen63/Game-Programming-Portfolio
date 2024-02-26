@@ -1,0 +1,22 @@
+#include "Font.h"
+
+Font::Font(string filePath, int fontSize)
+{
+	size = fontSize;
+	mFont = al_load_ttf_font(filePath.c_str(), fontSize, 0);
+}
+
+Font::~Font()
+{
+	al_destroy_font(mFont);
+}
+
+ALLEGRO_FONT* Font::getFont()
+{
+	return mFont;
+}
+
+int Font::getSize()
+{
+	return size;
+}

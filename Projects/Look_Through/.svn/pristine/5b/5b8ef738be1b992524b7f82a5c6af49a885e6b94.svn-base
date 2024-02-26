@@ -1,0 +1,31 @@
+#pragma once
+
+#include <string>
+#include <trackable.h>
+#include "LevelEvent.h"
+
+using namespace std;
+
+enum InputEventType
+{
+	UP_EVENT = NUM_BASE_EVENT_TYPES,
+	LEFT_EVENT,
+	DOWN_EVENT,
+	RIGHT_EVENT,
+	SHIFT_EVENT,
+	SPACEBAR_EVENT,
+	QUIT_EVENT
+};
+
+class InputEvent : public LevelEvent
+{
+public:
+	InputEvent(InputEventType type, bool releasing = false);
+	~InputEvent();
+
+	InputEventType getInput() const { return mType; }
+	bool isReleasing() const { return mReleased; }
+private:
+	InputEventType mType;
+	bool mReleased;
+};

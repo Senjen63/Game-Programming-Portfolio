@@ -1,0 +1,47 @@
+#include "Entity.h"
+#include "InputSystem.h"
+
+const float HALF = 0.5f;
+
+Entity::~Entity()
+{
+    if (mCreatedAnimation)
+    {
+        delete mpAnimation;
+    }
+}
+
+Entity::Entity(Vector2D position, Animation* pAnimation)
+{
+    mCreatedAnimation = false;
+
+    mPosition = position;
+    mpAnimation = pAnimation;
+}
+
+Entity::Entity(Vector2D position, const std::string& pathToSpriteSheet, int spriteWidth, int spriteHeight, int numSprites, float frameRate, bool loops)
+{
+    mCreatedAnimation = true; // Set to delete animation later 
+
+    mPosition = position;
+    mpAnimation = new Animation(pathToSpriteSheet, spriteWidth, spriteWidth, numSprites, frameRate, loops);
+}
+
+void Entity::update(double deltaTime)
+{
+    // This is game specific right now :/ 
+    if (InputSystem::getMouseButtonDown(MouseButton::LEFT))
+    {
+        mPosition = InputSystem::getMousePosition();
+    }
+
+    mpAnimation->update(deltaTime);
+}
+
+void Entity::draw(const GraphicsSystem& sys, float scale) const
+{
+    const Sprite* currentSprite = mpAnimation->getCurrentSprite();
+    Vector2D offsetToCenter = Vector2D(currentSprite->getWidth() * HALF, currentSprite->getHeight() * HALF);
+
+    sys.draw(mPosition - offsetToCenter, *currentSprite, scale);
+}

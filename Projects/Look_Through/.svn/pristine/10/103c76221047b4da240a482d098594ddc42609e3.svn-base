@@ -1,0 +1,15 @@
+#pragma once
+
+enum class CollisionLayer
+{
+	NONE,
+	SNAKE_HEAD,
+	WALL,
+	SNAKE_BODY,
+	SPEED_POWER_UP,
+	SCORE_POWER_UP,
+	FRUIT,
+	WATER,
+	TRUCK,
+	LOG
+};

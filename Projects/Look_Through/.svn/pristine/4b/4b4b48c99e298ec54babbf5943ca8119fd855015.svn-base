@@ -1,0 +1,28 @@
+﻿//     -------------------------------------------------------------------------
+//     Final Project
+//         SoundSystem.hpp
+//     
+//             Created:
+//                 06-05-2022
+//             Author(s):
+//                 Aven Presseisen
+//     -------------------------------------------------------------------------
+
+#pragma once
+
+#include <unordered_map>
+
+#include "SDL_mixer.h"
+
+class SoundSystem
+{
+    std::unordered_map< std::string, Mix_Chunk * > mSounds;
+public:
+    SoundSystem();
+    ~SoundSystem();
+
+    void addSound( const std::string & filename, const std::string & name );
+    void deleteSound( const std::string & name );
+
+    void playSound( const std::string & name );
+};

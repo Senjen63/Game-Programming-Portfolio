@@ -1,0 +1,133 @@
+#pragma once
+
+#include <allegro5/allegro.h>
+#include <allegro5/allegro_font.h>
+#include <allegro5/allegro_ttf.h>
+#include <allegro5/allegro_audio.h>
+#include <allegro5/allegro_acodec.h>
+#include <allegro5/allegro_image.h>
+#include <allegro5/allegro_primitives.h>
+
+#include <Trackable.h>
+#include <Vector2D.h>
+#include <EventSystem.h>
+
+#include <iostream>
+#include <cassert>
+#include <string>
+#include <fstream>
+
+#include <PerformanceTracker.h>
+#include <Timer.h>
+#include <EventSystem.h>
+
+#include "GraphicsSystem.h"
+#include "InputSystem.h"
+#include "Unit.h"
+#include "Animation.h"
+#include "InputSystem.h"
+#include "UnitManager.h"
+#include "GraphicsBufferManager.h"
+#include "HudManager.h"
+#include "Orbs.h"
+
+#include "CollideEvent.h"
+#include "EventListener.h"
+#include "CollideListener.h"
+#include "SoundSystem.h"
+
+using namespace std;
+
+class CollideListener;
+
+//Initialize variables
+const string ASSET_PATH = "..\\assets\\";
+
+const int DISP_WIDTH = 800;
+const int DISP_HEIGHT = 600;
+
+const float TIME_PER_FRAME = 0.005;
+const int NUM_FRAMES = 24;
+
+class Game : public Trackable
+{
+public:
+	~Game();
+
+	void Init();
+	void cleanUp();
+
+	void doLoop();
+	void setShouldLoop(bool loop);
+	void setShouldStart();
+
+	void render();
+	void inputs(Vector2D pos);
+	void update(double dt);
+
+	static Game* getInstance();
+	static void createInstance();
+	static void destroyInstance();
+
+	void displayStart();
+	void displaySettings();
+	void endGame();
+	void resetGame();
+	void checkIfLost();
+
+	void readFiles();
+	void addScore(int value);
+	void saveGameState();
+	void loadGameState();
+
+	void setDifficulty(string diff);
+	void setLanguage(string lang);
+	void setSound();
+	void setCurrentOption(string dir);
+	int getDifficulty();
+	int getLanguage();
+	int getCurrentOption();
+
+private:
+	Game();
+
+	static Game* mpGameInstance;
+
+	GraphicsBufferManager* mpBufferManager;
+	GraphicsSystem* mpDisplay;
+	InputSystem mInput;
+	UnitManager* mpOrbUnitManager;
+	HudManager* mpHud;
+
+	Orbs* mpOrbs;
+
+	AnimationManager* mpOrbTemplate;
+	Animation* mpRedOrbAnimation;
+	Animation* mpBlueOrbAnimation;
+
+	bool isInit;
+	bool shouldLoop;
+	bool shouldStart;
+	bool shouldEndGame;
+	bool shouldPlayAgain;
+
+	string backgroundFileName;
+	string redOrbFileName;
+	string blueOrbFileName;
+
+	int mScore;
+	int mFrameCount;
+
+	EventSystem* pEventSystem;
+	CollideListener* pCollideListener;
+	SoundSystem* pSoundSystem;
+
+	Timer levelTimer;
+	double elapsedTime;
+	double savedTime;
+
+	int currentDifficulty;
+	int currentLanguage;
+	int currentSound;
+	int currentOption;
+};

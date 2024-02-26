@@ -1,0 +1,73 @@
+#include "Unit.h"
+
+Unit::Unit()
+{
+	mPosition = Vector2D();
+	mCurrentAnim = 1;
+	mpAnim1 = nullptr;
+	mpAnim2 = nullptr;
+}
+
+
+Unit::Unit(Animation* pAnim1, Animation* pAnim2, Vector2D position)
+{
+	mPosition = position;
+	mCurrentAnim = 1;
+	mpAnim1 = pAnim1;
+	mpAnim2 = pAnim2;
+}
+
+
+Unit::~Unit()
+{
+	mCurrentAnim = 1;
+	mpAnim1 = nullptr;
+	mpAnim2 = nullptr;
+}
+
+
+float Unit::GetTime()
+{
+	//since both animations are getting updated at the same time, we can grab the one that isn't drawing and we're still gucci
+	return mpAnim1->GetTime();
+}
+
+
+void Unit::Update()
+{
+	mpAnim1->Update();
+	mpAnim2->Update();
+}
+
+
+Sprite* Unit::Draw()
+{
+	if (mCurrentAnim == 1)
+	{
+		return mpAnim1->GetCurrentSprite();
+	}
+	else
+	{
+		return mpAnim2->GetCurrentSprite();
+	}
+}
+
+
+void Unit::SwitchAnimation()
+{
+	if (mCurrentAnim == 1)
+	{
+		mCurrentAnim = 0;
+	}
+	else
+	{
+		mCurrentAnim = 1;
+	}
+}
+
+
+void Unit::SetTime(float timing)
+{
+	mpAnim1->AdjustTime(timing);
+	mpAnim2->AdjustTime(timing);
+}

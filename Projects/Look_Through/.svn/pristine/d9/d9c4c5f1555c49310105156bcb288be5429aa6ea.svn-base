@@ -1,0 +1,60 @@
+#include "GraphicsBufferManager.h"
+
+/// <summary>
+/// Placeholder constructor.
+/// </summary>
+GraphicsBufferManager::GraphicsBufferManager()
+{
+}
+
+/// <summary>
+/// Clears all graphics buffers from memory.
+/// </summary>
+GraphicsBufferManager::~GraphicsBufferManager()
+{
+	clear();
+}
+
+/// <summary>
+/// Adds new graphics buffer to memory using given key.
+/// </summary>
+/// <param name="newKey">: Key to access graphics buffer.</param>
+/// <param name="newBuffer">: GraphicsBuffer pointer.</param>
+void GraphicsBufferManager::addGraphicsBuffer( std::string newKey, GraphicsBuffer * pNewBuffer )
+{
+	mBufferMap[ newKey ] = pNewBuffer;
+}
+
+/// <summary>
+/// Clears all graphics buffers from memory.
+/// </summary>
+void GraphicsBufferManager::clear()
+{
+	for( auto i = mBufferMap.begin(); i != mBufferMap.end(); ++i )
+	{
+		i->second->cleanup();
+		delete i->second;
+	}
+	mBufferMap.clear();
+}
+
+/// <summary>
+/// Gets the graphics buffer using the given key.
+/// </summary>
+/// <param name="bufferKey">: Key used to access GraphicsBuffer.</param>
+/// <returns>GraphicsBuffer ptr.</returns>
+GraphicsBuffer * GraphicsBufferManager::getGraphicsBuffer( std::string bufferKey )
+{
+	return mBufferMap[ bufferKey ];
+}
+
+/// <summary>
+/// Removes a graphics buffer from memory with given key.
+/// </summary>
+/// <param name="bufferKey">: Key used to access GraphicsBuffer.</param>
+void GraphicsBufferManager::removeGraphicsBuffer( std::string bufferKey )
+{
+	mBufferMap[ bufferKey ]->cleanup();
+	delete mBufferMap[ bufferKey ];
+	mBufferMap.erase( bufferKey );
+}

@@ -1,0 +1,28 @@
+//Evan Norzow, Nicolas Delbue, and Brandon Perry
+#pragma once
+#include "Trackable.h"
+#include "Animation.h"
+#include "GraphicsSystem.h"
+#include <map>
+
+class AnimationManager : public Trackable
+{
+	//could possibly make this a friend of graphicsbuffer, might be heavy handed. 
+private:
+	map<string, Animation*> mpAnimations;
+public:
+	AnimationManager() {};
+	~AnimationManager() { removeAllAnims(); };
+
+	void createAnim(string animName, GraphicsBuffer* frames, int columns, int rows, int fps, bool shouldLoop);
+
+	Animation* getAnim(string buffName) { return mpAnimations[buffName]; };
+	void delBuffer(string buffName);
+
+	void removeAllAnims();
+
+
+	/* GraphicsBuffer(string path);
+	GraphicsBuffer(Color color, int height, int width);
+	GraphicsBuffer(ALLEGRO_BITMAP* pBitmap); */
+};

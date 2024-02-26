@@ -1,0 +1,138 @@
+#include "GraphicsSystem.h"
+#include <allegro5/allegro.h>
+#include <allegro5/allegro_font.h>
+#include <allegro5/allegro_ttf.h>
+#include <allegro5/allegro_audio.h>
+#include <allegro5/allegro_acodec.h>
+#include <allegro5/allegro_image.h>
+#include <allegro5/allegro_primitives.h>
+
+GraphicsSystem::GraphicsSystem()
+{
+	this->mpDisplay = nullptr;
+	this->mWidth = NULL;
+	this->mHeight = NULL;
+}
+
+GraphicsSystem::~GraphicsSystem()
+{
+	cleanup();
+}
+
+void GraphicsSystem::init(int newWidth, int newHeight)
+{
+	if (!al_init())
+	{
+		std::cout << "error initting Allegro\n";
+		//system("pause");
+		return;
+	}
+	if (!al_init_image_addon())
+	{
+		std::cout << "error - Image Add-on not initted\n";
+		//system("pause");
+		return;
+	}
+	if (!al_init_font_addon())
+	{
+		std::cout << "error - Font Add-on not initted\n";
+		//system("pause");
+		return;
+	}
+	if (!al_init_ttf_addon())
+	{
+		std::cout << "error - TTF Add-on not initted\n";
+		//system("pause");
+		return;
+	}
+	if (!al_init_primitives_addon())
+	{
+		std::cout << "error - primitives Add-on not initted\n";
+		//system("pause");
+		return;
+	}
+	if (!al_install_audio())
+	{
+		std::cout << "error - Audio Add-on not initted\n";
+		//system("pause");
+		return;
+	}
+	if (!al_init_acodec_addon())
+	{
+		std::cout << "error - Audio Codec Add-on not initted\n";
+		//system("pause");
+		return;
+	}
+	if (!al_reserve_samples(1))
+	{
+		std::cout << "error - samples not reserved\n";
+		//system("pause");
+		return;
+	}
+
+	this->mpDisplay = al_create_display(newWidth, newHeight);
+	this->mWidth = newWidth;
+	this->mHeight = newHeight;
+}
+
+void GraphicsSystem::flip()
+{
+	al_flip_display();
+}
+
+void GraphicsSystem::cleanup()
+{
+	al_destroy_display(mpDisplay);
+}
+
+void GraphicsSystem::draw(Vector2D location, Sprite sprite, double defaultScale)
+{
+	al_set_target_bitmap(getBackBuffer());
+	al_draw_scaled_bitmap(sprite.getSpriteBuffer()->mpBitmap, 
+		sprite.getSpriteSourceLocation().getX(), sprite.getSpriteSourceLocation().getY(),
+		sprite.getSpriteWidth(), sprite.getSpriteHeight(),
+		location.getX(), location.getY(),
+		sprite.getSpriteWidth() * defaultScale, sprite.getSpriteHeight() * defaultScale, 0);
+}
+
+void GraphicsSystem::draw(GraphicsBuffer* pBuffer, Vector2D location, Sprite sprite, double defaultScale)
+{
+	al_set_target_bitmap(pBuffer->mpBitmap);
+	al_draw_scaled_bitmap(sprite.getSpriteBuffer()->mpBitmap,
+		sprite.getSpriteSourceLocation().getX(), sprite.getSpriteSourceLocation().getY(),
+		sprite.getSpriteWidth(), sprite.getSpriteHeight(),
+		location.getX(), location.getY(),
+		sprite.getSpriteWidth() * defaultScale, sprite.getSpriteHeight() * defaultScale, 0);
+}
+
+void GraphicsSystem::writeText(Vector2D location, Font* pFont, Color color, std::string text, int alignment)
+{
+	al_set_target_bitmap(getBackBuffer());
+	al_draw_text(pFont->mpFont, color.getColor(), 
+		location.getX(), location.getY(),
+		alignment, text.c_str());
+}
+
+void GraphicsSystem::writeText(GraphicsBuffer* pBuffer, Vector2D location, Font* pFont, Color color, std::string text, int alignment)
+{
+	al_set_target_bitmap(pBuffer->mpBitmap);
+	al_draw_text(pFont->mpFont, color.getColor(),
+		location.getX(), location.getY(),
+		alignment, text.c_str());
+}
+
+ALLEGRO_COLOR GraphicsSystem::createColor(Color* pColor)
+{
+	return al_map_rgba(pColor->getColor().r, pColor->getColor().g, pColor->getColor().b, pColor->getColor().a);
+}
+
+void GraphicsSystem::setColor(GraphicsBuffer* pBuffer, Color* pColor)
+{
+	al_set_target_bitmap(pBuffer->mpBitmap);
+	al_clear_to_color(createColor(pColor));
+}
+
+void GraphicsSystem::saveBuffer(GraphicsBuffer* pBufferToSave, std::string filename)
+{
+	al_save_bitmap(filename.c_str(), pBufferToSave->mpBitmap);
+}

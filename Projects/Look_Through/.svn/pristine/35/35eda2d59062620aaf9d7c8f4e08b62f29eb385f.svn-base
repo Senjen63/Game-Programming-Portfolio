@@ -1,0 +1,16 @@
+#pragma once
+
+#include "LevelEvent.h"
+#include "Powerup.h"
+
+class SpawnEvent : public LevelEvent
+{
+public:
+	SpawnEvent(const PowerupType& type);
+	~SpawnEvent();
+
+	PowerupType getType() const { return mType; };
+
+private:
+	PowerupType mType;
+};

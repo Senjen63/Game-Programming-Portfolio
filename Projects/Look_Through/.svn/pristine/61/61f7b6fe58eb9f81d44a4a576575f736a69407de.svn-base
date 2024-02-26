@@ -1,0 +1,30 @@
+#include "Font.h"
+Font::Font(int fontSize, string fileName, int flags)
+{
+	mFontSize = fontSize;
+
+	if (flags == 1)
+	{
+		mFlag = ALLEGRO_ALIGN_RIGHT;
+		mFontType = al_load_ttf_font(fileName.c_str(), fontSize, ALLEGRO_ALIGN_RIGHT);
+	}
+	else if (flags == 2)
+	{
+		mFlag = ALLEGRO_ALIGN_CENTER;
+		mFontType = al_load_ttf_font(fileName.c_str(), fontSize, ALLEGRO_ALIGN_CENTER);
+	}
+	else
+	{
+		mFlag = 0;
+		mFontType = al_load_ttf_font(fileName.c_str(), fontSize, 0);
+	}
+}
+Font::~Font()
+{
+	mFontSize = 0;
+	al_destroy_font(mFontType);
+}
+int Font::getSize()
+{
+	return mFontSize;
+}

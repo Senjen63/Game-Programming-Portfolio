@@ -1,0 +1,44 @@
+#include "UI.h"
+#include "Game.h"
+
+using namespace std;
+
+UI::UI(Texture* hearts)
+{
+	mpHeartTexture = hearts;
+
+	for (int i = 0; i < MAX_NUM_HEARTS; i++)
+	{
+		mpHearts.push_back(new Sprite(mpHeartTexture));
+		mpHearts[i]->setPosition(UI_OFFSET + (UI_SPACING * i), UI_OFFSET);
+	}
+}
+
+UI::~UI()
+{
+	for (size_t i = 0; i < mpHearts.size(); i++) { delete mpHearts[i]; }
+}
+
+void UI::draw()
+{
+	//set UI pos to match position in camera
+	Camera c = Game::getInstance()->getGraphics()->getCamera();
+	float x;
+	float y;
+
+	for (int i = 0; i < MAX_NUM_HEARTS; i++)
+	{
+		x = UI_OFFSET + (UI_SPACING * i);
+		y = UI_OFFSET;
+
+		x += c.getX() - (c.getWidth() / 2);
+		y += c.getY() - (c.getHeight() / 2);
+
+		mpHearts[i]->setPosition(x,y);
+	}
+
+	for (int i = 0; i < Game::getInstance()->getPlayer()->getHP(); i++)
+	{
+		Game::getInstance()->getGraphics()->draw(mpHearts[i]);
+	}
+}

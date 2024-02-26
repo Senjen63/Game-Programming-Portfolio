@@ -1,0 +1,64 @@
+#include "Level.h"
+
+Level::Level()
+{
+	mScore = 0;
+	mSnakeFrames = 0;
+	mEnemyMoveDistance = 0;
+	mEnemyFireOdds = 0;
+}
+
+Level::~Level()
+{
+
+}
+
+void Level::setScore(int change)
+{
+	mScore = change;
+}
+
+int Level::getScore()
+{
+	return mScore;
+}
+
+void Level::setSnakeFrames(int frames)
+{
+	mSnakeFrames = frames;
+}
+
+int Level::getSnakeFrames()
+{
+	return mSnakeFrames;
+}
+
+void Level::setEnemyMoveDistance(int distance)
+{
+	mEnemyMoveDistance = distance;
+}
+
+int Level::getEnemyMoveDistance()
+{
+	return mEnemyMoveDistance;
+}
+
+void Level::setEnemyFireOdds(int odds)
+{
+	mEnemyFireOdds = odds;
+}
+
+int Level::getEnemyFireOdds()
+{
+	return mEnemyFireOdds;
+}
+
+void Level::setEnemyBulletLocation(Vector2D location)
+{
+	mEnemyBulletLocation = location;
+}
+
+Vector2D Level::getEnemyBulletLocation()
+{
+	return mEnemyBulletLocation;
+}

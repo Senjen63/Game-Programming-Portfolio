@@ -1,0 +1,48 @@
+#include "GraphicsSystem.h"
+#include "ReleaseEvent.h"
+#include "EventSystem.h"
+
+using namespace std;
+
+GraphicsSystem::GraphicsSystem(int width, int height, std::string title)
+{
+	mWidth = width;
+	mHeight = height;
+
+	//Close, Titlebar, Resize means you can move the window around, change the size, and hit the X button
+	mpDisplay = new sf::RenderWindow(sf::VideoMode(width*2, height*2), title.c_str(), sf::Style::Close | sf::Style::Titlebar | sf::Style::Resize);
+	mCamera = Camera(width, height);
+}
+
+GraphicsSystem::~GraphicsSystem() 
+{
+	cleanup();
+}
+
+void GraphicsSystem::init() 
+{
+	
+}
+
+void GraphicsSystem::cleanup()
+{
+	mpDisplay->close();
+
+	delete mpDisplay;
+}
+
+void GraphicsSystem::display()
+{
+	mCamera.update();
+	mpDisplay->setView(mCamera.mViewport);
+
+	sf::Event event;
+	while (mpDisplay->pollEvent(event)) //this is only to check if the spacebar has been released -- this is the only way to do this in sfml
+	{
+		if (event.type == sf::Event::KeyReleased)
+		{
+			EventSystem::getInstance()->fireEvent(ReleaseEvent(event.key.code));
+		}
+	}
+	mpDisplay->display(); //display current frame
+}

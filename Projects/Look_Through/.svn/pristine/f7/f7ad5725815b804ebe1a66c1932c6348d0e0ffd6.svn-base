@@ -1,0 +1,15 @@
+#pragma once
+#include "EventSystem.h"
+#include "SnakeCollisionEvent.h"
+#include "MoveEvent.h"
+#include "Unit.h"
+
+class CollisionObj : public Unit, public EventListener
+{
+public:
+	CollisionObj(std::pair<float, float>location, Animation* currentAnimation);
+
+	virtual void handleEvent(const Event& theEvent);
+
+private:
+};

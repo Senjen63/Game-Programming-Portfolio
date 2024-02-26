@@ -1,0 +1,32 @@
+#define SDL_MAIN_HANDLED
+#include <SDL.h>
+
+#include <iostream>
+#include <Timer.h>
+#include <MemoryTracker.h>
+
+#include "Game.h"
+
+using namespace std;
+
+const int SCREEN_WIDTH = 600;
+const int SCREEN_HEIGHT = 400;
+const float FRAME_RATE = 60;
+
+int main()
+{
+    PerformanceTracker* pPerformanceTracker = new PerformanceTracker;
+
+    Game::createInstance(SCREEN_WIDTH, SCREEN_HEIGHT, FRAME_RATE);
+    Game::getInstance()->init();
+
+    Game::getInstance()->doLoop();
+
+    Game::destoryInstance();
+
+    delete pPerformanceTracker;
+    MemoryTracker::getInstance()->reportAllocations(std::cout);
+    system("pause");
+
+    return 0;
+}

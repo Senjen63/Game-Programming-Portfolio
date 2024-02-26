@@ -1,0 +1,39 @@
+	#pragma once
+
+#include "Animation.h"
+#include "GraphicsSystem.h"
+#include "GraphicsBufferManager.h"
+
+#include <Vector2D.h>
+#include <string>
+
+const int SPRITE_HEIGHT = 60;
+const int SPRITE_WIDTH = 60;
+const int WALL_HEIGHT = 50;
+const int WALL_WIDTH = 50;
+
+class Unit : public Trackable
+{
+private:
+	Animation* mpSmurfAnim = nullptr;
+	Animation* mpDeanAnim = nullptr;
+	int mX, mY, mCurrentAnim;
+	bool enabled = true;
+public:
+	Unit();
+	Unit(Animation* pSmurf, Animation* pDean, int x, int y);
+	Unit(string smurfKey, string deanKey, Vector2D pos);
+	Unit(string wallKey, Vector2D pos);
+	Unit(string foodKey, Vector2D pos, int width, int height);
+	~Unit();
+
+	float getTime();
+
+	void update(double dt);
+	void draw(GraphicsSystem* display);
+	void setAnimation();
+	void changeTiming(float timerChange);
+	void toggleEnable();
+	Vector2D getPos();
+	void setPos(Vector2D pos);
+};

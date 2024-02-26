@@ -1,0 +1,25 @@
+#pragma once
+
+#include <SFML/Graphics.hpp>
+#include <string>
+
+#include <Trackable.h>
+
+class Texture : public Trackable
+{
+	friend class Sprite;
+
+public:
+	Texture(int width, int height);
+	Texture(std::string filename);
+	~Texture();
+
+	Texture(Texture&) = delete;
+
+	//accessors
+	int getHeight() { return mTexture->getSize().x; }
+	int getWidth() { return mTexture->getSize().y; }
+private:
+	sf::Texture* mTexture; //stores file OR a rectangle of a given width + height, can be filled with a color and stuff
+	std::string mFile; //name of the file
+};

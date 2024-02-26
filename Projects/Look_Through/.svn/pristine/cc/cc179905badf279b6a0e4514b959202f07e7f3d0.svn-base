@@ -1,0 +1,39 @@
+#pragma once
+#include <iostream>
+#include <string>
+#include <SFML/Graphics.hpp> 
+
+#include "Animation.h"
+#include "Font.h"
+#include "Text.h"
+#include "Trackable.h"
+#include "Color.h"
+#include "Camera.h"
+
+class GraphicsSystem : public Trackable
+{
+
+public:
+	GraphicsSystem(int width, int height, std::string title); //creates a sf::RenderWindow of a given width and height (title is the thing the in the window's title bar)
+	~GraphicsSystem();
+
+	void init();
+	void cleanup();
+
+	int getWidth() { return mpDisplay->getSize().x; } //gets width of display
+	int getHeight() { return mpDisplay->getSize().y; } //gets height of display
+	Camera getCamera() { return mCamera; }
+	
+	void clear() { mpDisplay->clear(); } //reset display -- DO THIS EVERY FRAME BEFORE DRAWING STUFF
+	void display();
+
+	void draw(Sprite* spr) { mpDisplay->draw(*(spr->mSprite)); } //draws a Sprite (position is contained within the sprite object)
+	void draw(Animation* anim) { mpDisplay->draw(*(anim->getCurrentSprite()->mSprite)); } //draws an animation's current sprite
+	void draw(Text* txt) { mpDisplay->draw(*(txt->mText)); } //draws text (position is contained within the text object)
+private:
+	int mWidth;
+	int mHeight;
+
+	sf::RenderWindow* mpDisplay;
+	Camera mCamera;
+};

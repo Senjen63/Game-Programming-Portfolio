@@ -1,0 +1,68 @@
+#pragma once
+#include <string>
+#include <iostream>
+#include "graphicsbuffer.h"
+
+using namespace std;
+
+/* Pre:  Nothing
+*  Post:  An array of 100 longs
+*  Purpose:  Create a random array of longs
+*********************************************************/
+ALLEGRO_BITMAP* GraphicsBuffer::getBuffer()
+{
+	return gBuffer;
+}
+
+GraphicsBuffer::GraphicsBuffer()
+{
+	gBuffer = nullptr;
+	width = DEFAULT_WIDTH;
+	height = DEFAULT_HEIGHT;
+}
+
+GraphicsBuffer::~GraphicsBuffer()
+{
+	al_destroy_bitmap(gBuffer);
+	gBuffer = nullptr;
+}
+
+
+GraphicsBuffer::GraphicsBuffer(string gBuff, int wi, int hi)
+{
+	gBuffer = al_load_bitmap((ASSET_PATH + gBuff).c_str());
+	cout << ASSET_PATH + gBuff << endl;
+	assert(gBuffer);
+	width = wi;
+	height = hi;
+}
+
+GraphicsBuffer::GraphicsBuffer(Color col, int wi, int hi)
+{
+	gBuffer = al_create_bitmap(wi, hi);
+	assert(gBuffer);
+	al_set_target_bitmap(gBuffer);
+	al_clear_to_color(col.getColor());
+	width = wi;
+	height = hi;
+}
+
+void GraphicsBuffer::setHeight(int hi)
+{
+	height = hi;
+}
+
+void GraphicsBuffer::setWidth(int wi)
+{
+	width = wi;
+}
+
+int GraphicsBuffer::getHeight()
+{
+	return height;
+}
+
+int GraphicsBuffer::getWidth()
+{
+	return width;
+}

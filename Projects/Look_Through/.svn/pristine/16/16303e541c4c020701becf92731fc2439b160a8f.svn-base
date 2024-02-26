@@ -1,0 +1,307 @@
+#include "MenuManager.h"
+#include "Game.h"
+
+MenuManager::MenuManager()
+{
+	mCurrentState = MenuState::MAIN_MENU;
+	mSoundOn = true;
+}
+
+MenuManager::~MenuManager()
+{
+	cleanUp();
+}
+
+void MenuManager::drawOptionsButtons(GraphicsSystem* pDisplay)
+{
+	for (int i = 0; i < mOptionsMenuButtons.getNumUnits(); i++)
+	{
+		mOptionsMenuButtons.drawWithText(pDisplay, i);
+	}
+}
+
+void MenuManager::drawMenuButtons(GraphicsSystem* pDisplay)
+{ 
+	for (int i = 0; i < mMainMenuButtons.getNumUnits(); i++)
+	{
+		mMainMenuButtons.drawWithText(pDisplay, i);
+	}
+}
+
+void MenuManager::loadAssets(string filePath)
+{
+	readText(LANGUAGE_ONE);
+
+	mBufferManager.createAndManageBuffer(GREEN, Color(0, 255, 0), BUTTON_WIDTH, BUTTON_HEIGHT);
+	mBufferManager.createAndManageBuffer(BLUE, Color(0, 0, 255), BUTTON_WIDTH, BUTTON_HEIGHT);
+	mBufferManager.createAndManageBuffer(RED, Color(255, 0, 0), BUTTON_WIDTH, BUTTON_HEIGHT);
+	mBufferManager.createAndManageBuffer(PURPLE, Color(255,0 , 255), BUTTON_WIDTH, BUTTON_HEIGHT);
+
+	mBufferManager.createAndManageBuffer(GREEN + DIM, Color(0, 255 - COLOR_DIFFERENCE, 0), BUTTON_WIDTH, BUTTON_HEIGHT);
+	mBufferManager.createAndManageBuffer(BLUE + DIM, Color(0, 0, 255 - COLOR_DIFFERENCE), BUTTON_WIDTH, BUTTON_HEIGHT);
+	mBufferManager.createAndManageBuffer(RED + DIM, Color(255 - COLOR_DIFFERENCE, 0, 0), BUTTON_WIDTH, BUTTON_HEIGHT);
+	mBufferManager.createAndManageBuffer(PURPLE + DIM, Color(255 - COLOR_DIFFERENCE, 0, 255 - COLOR_DIFFERENCE), BUTTON_WIDTH, BUTTON_HEIGHT);
+
+	//Main Menu
+	mMainMenuButtons.createAndAddUnit(mBufferManager.getBuffer(GREEN), Vector2D(350,300),BUTTON_WIDTH, BUTTON_HEIGHT, mPlayText);
+	mMainMenuButtons.createAndAddUnit(mBufferManager.getBuffer(PURPLE), Vector2D(700, 300), BUTTON_WIDTH, BUTTON_HEIGHT, mLoadText);
+	mMainMenuButtons.createAndAddUnit(mBufferManager.getBuffer(BLUE), Vector2D(350, 600), BUTTON_WIDTH, BUTTON_HEIGHT, mOptionsText);
+	mMainMenuButtons.createAndAddUnit(mBufferManager.getBuffer(RED), Vector2D(700, 600), BUTTON_WIDTH, BUTTON_HEIGHT, mExitText);
+
+	//Return
+	mOptionsMenuButtons.createAndAddUnit(mBufferManager.getBuffer(GREEN), Vector2D(350, 300), BUTTON_WIDTH, BUTTON_HEIGHT, mReturnText);
+	//Language
+	mOptionsMenuButtons.createAndAddUnit(mBufferManager.getBuffer(PURPLE), Vector2D(700, 500), BUTTON_WIDTH, BUTTON_HEIGHT, mLanguage1);
+	mOptionsMenuButtons.createAndAddUnit(mBufferManager.getBuffer(PURPLE), Vector2D(700, 600), BUTTON_WIDTH, BUTTON_HEIGHT, mLanguage2);
+	mOptionsMenuButtons.createAndAddUnit(mBufferManager.getBuffer(PURPLE), Vector2D(700, 700), BUTTON_WIDTH, BUTTON_HEIGHT, mLanguage3);
+	//Sound Toggle
+	mOptionsMenuButtons.createAndAddUnit(mBufferManager.getBuffer(BLUE), Vector2D(350, 600), BUTTON_WIDTH, BUTTON_HEIGHT, mSoundText + ": " + mOnText);
+	//Speeds
+	mOptionsMenuButtons.createAndAddUnit(mBufferManager.getBuffer(RED), Vector2D(700, 300), BUTTON_WIDTH, BUTTON_HEIGHT, mSlowSpeed);
+}
+
+MenuState MenuManager::checkMainMenuCollision(Vector2D mousePos)
+{
+	for(int i = 0; i < mMainMenuButtons.getNumUnits(); i++)
+	{
+		if (mMainMenuButtons.getUnit(i)->checkMouseCollision(mousePos))
+		{
+			switch(i)
+			{
+			case 0:
+				mCurrentState = MenuState::PLAY_GAME;
+				return MenuState::PLAY_GAME;
+				break;
+			case 1:
+				mCurrentState = MenuState::LOAD_SAVE;
+				return MenuState::LOAD_SAVE;
+				break;
+			case 2:
+				mCurrentState = MenuState::OPTIONS_MENU;
+				return MenuState::OPTIONS_MENU;
+				break;
+			case 3:
+				mCurrentState = MenuState::EXIT;
+				return MenuState::EXIT;
+				break;
+			}
+		}
+	}
+	return MenuState::DEFAULT;
+}
+
+MenuState MenuManager::checkOptionsMenuCollision(Vector2D mousePos, int desiredButton)
+{
+	for (int i = 0; i < mOptionsMenuButtons.getNumUnits(); i++)
+	{
+		if (mOptionsMenuButtons.getUnit(i)->checkMouseCollision(mousePos) && i == desiredButton)
+		{
+			switch (i)
+			{
+			case 0:
+				mCurrentState = MenuState::MAIN_MENU;
+				return MenuState::MAIN_MENU;
+			case 1:
+				readText(LANGUAGE_ONE);
+				changeText();
+				break;
+			case 2:
+				readText(LANGUAGE_TWO);
+				changeText();
+				break;
+			case 3:
+				readText(LANGUAGE_THREE);
+				changeText();
+				break;
+			case 4:
+				mSoundOn = !mSoundOn;
+				swapSoundText();
+				return MenuState::TOGGLE_SOUND;
+				break;
+			case 5:
+				changeSpeed();
+				swapSpeedText();
+				return MenuState::CHANGE_SPEED;
+				break;
+			}
+		}
+	}
+	return MenuState::DEFAULT;
+}
+
+void MenuManager::mouseOverButton(Vector2D mousePos)
+{
+	//Main Menu
+	if (mCurrentState == MenuState::MAIN_MENU)
+	{
+		//Play
+		if (mMainMenuButtons.getUnit(0)->checkMouseCollision(mousePos))
+			mMainMenuButtons.changeBuffer(0, mBufferManager.getBuffer(GREEN + DIM));
+		else
+			mMainMenuButtons.changeBuffer(0, mBufferManager.getBuffer(GREEN));
+		//Load
+		if (mMainMenuButtons.getUnit(1)->checkMouseCollision(mousePos))
+			mMainMenuButtons.changeBuffer(1, mBufferManager.getBuffer(PURPLE + DIM));
+		else
+			mMainMenuButtons.changeBuffer(1, mBufferManager.getBuffer(PURPLE));
+		//Options
+		if (mMainMenuButtons.getUnit(2)->checkMouseCollision(mousePos))
+			mMainMenuButtons.changeBuffer(2, mBufferManager.getBuffer(BLUE + DIM));
+		else
+			mMainMenuButtons.changeBuffer(2, mBufferManager.getBuffer(BLUE));
+		//Exit
+		if (mMainMenuButtons.getUnit(3)->checkMouseCollision(mousePos))
+			mMainMenuButtons.changeBuffer(3, mBufferManager.getBuffer(RED + DIM));
+		else
+			mMainMenuButtons.changeBuffer(3, mBufferManager.getBuffer(RED));
+	}
+	//Options
+	else if (mCurrentState == MenuState::OPTIONS_MENU)
+	{
+		//Return
+		if (mOptionsMenuButtons.getUnit(0)->checkMouseCollision(mousePos))
+			mOptionsMenuButtons.changeBuffer(0, mBufferManager.getBuffer(GREEN + DIM));
+		else
+			mOptionsMenuButtons.changeBuffer(0, mBufferManager.getBuffer(GREEN));
+
+		//Language
+		if (mOptionsMenuButtons.getUnit(1)->checkMouseCollision(mousePos))
+			mOptionsMenuButtons.changeBuffer(1, mBufferManager.getBuffer(PURPLE + DIM));
+		else
+			mOptionsMenuButtons.changeBuffer(1, mBufferManager.getBuffer(PURPLE));
+		if (mOptionsMenuButtons.getUnit(2)->checkMouseCollision(mousePos))
+			mOptionsMenuButtons.changeBuffer(2, mBufferManager.getBuffer(PURPLE + DIM));
+		else
+			mOptionsMenuButtons.changeBuffer(2, mBufferManager.getBuffer(PURPLE));
+		if (mOptionsMenuButtons.getUnit(3)->checkMouseCollision(mousePos))
+			mOptionsMenuButtons.changeBuffer(3, mBufferManager.getBuffer(PURPLE + DIM));
+		else
+			mOptionsMenuButtons.changeBuffer(3, mBufferManager.getBuffer(PURPLE));
+
+		//Sound
+		if (mOptionsMenuButtons.getUnit(4)->checkMouseCollision(mousePos))
+			mOptionsMenuButtons.changeBuffer(4, mBufferManager.getBuffer(BLUE + DIM));
+		else
+			mOptionsMenuButtons.changeBuffer(4, mBufferManager.getBuffer(BLUE));
+
+		//Speed
+		if (mOptionsMenuButtons.getUnit(5)->checkMouseCollision(mousePos))
+			mOptionsMenuButtons.changeBuffer(5, mBufferManager.getBuffer(RED + DIM));
+		else
+			mOptionsMenuButtons.changeBuffer(5, mBufferManager.getBuffer(RED));
+	}
+
+}
+
+void MenuManager::readText(string file)
+{
+	ifstream fin(file);
+	string tmp;
+
+	if (!fin.fail())
+	{
+		while (!fin.eof())
+		{
+			fin >> tmp;
+			if (tmp == "Play=")
+				getline(fin, mPlayText);
+			else if (tmp == "Options=")
+				getline(fin, mOptionsText);
+			else if (tmp == "Exit=")
+				getline(fin, mExitText);
+			else if (tmp == "Load=")
+				getline(fin, mLoadText);
+			else if (tmp == "Return=")
+				getline(fin, mReturnText);
+			else if (tmp == "Lang1=")
+				getline(fin, mLanguage1);
+			else if (tmp == "Lang2=")
+				getline(fin, mLanguage2);
+			else if (tmp == "Lang3=")
+				getline(fin, mLanguage3);
+			else if (tmp == "Sound=")
+				getline(fin, mSoundText);
+			else if (tmp == "On=")
+				getline(fin, mOnText);
+			else if (tmp == "Off=")
+				getline(fin, mOffText);
+			else if (tmp == "Fast=")
+				getline(fin, mFastSpeed);
+			else if (tmp == "Med=")
+				getline(fin, mMediumSpeed);
+			else if (tmp == "Slow=")
+				getline(fin, mSlowSpeed);
+			else if (tmp == "White=")
+				getline(fin, mWhiteText);
+			else if (tmp == "Black=")
+				getline(fin, mBlackText);
+		}
+	}
+
+	fin.close();
+}
+
+void MenuManager::changeText()
+{
+	mMainMenuButtons.setText(0, mPlayText);
+	mMainMenuButtons.setText(1, mLoadText);
+	mMainMenuButtons.setText(2, mOptionsText);
+	mMainMenuButtons.setText(3, mExitText);
+
+	//Return
+	mOptionsMenuButtons.setText(0, mReturnText);
+
+	//Language
+	mOptionsMenuButtons.setText(1, mLanguage1);
+	mOptionsMenuButtons.setText(2, mLanguage2);
+	mOptionsMenuButtons.setText(3, mLanguage3);
+
+	Game::getInstance()->setWhiteText(mWhiteText);
+	Game::getInstance()->setBlackText(mBlackText);
+
+	//Sound
+	swapSoundText();
+	//Speed
+	swapSpeedText();
+}
+
+void MenuManager::swapSoundText()
+{
+	if(mSoundOn)
+		mOptionsMenuButtons.setText(4, mSoundText + ": " + mOnText);	
+	else
+		mOptionsMenuButtons.setText(4, mSoundText + ": " + mOffText);
+}
+
+void MenuManager::swapSpeedText()
+{
+	if (mCurrentSpeed == Speed::SLOW_SPEED)
+	{
+		mOptionsMenuButtons.setText(5, mSlowSpeed);
+	}
+	else if (mCurrentSpeed == Speed::MEDIUM_SPEED)
+	{
+		mOptionsMenuButtons.setText(5, mMediumSpeed);
+	}
+	else if (mCurrentSpeed == Speed::FAST_SPEED)
+	{
+		mOptionsMenuButtons.setText(5, mFastSpeed);
+	}
+}
+
+void MenuManager::changeSpeed()
+{
+	if (mCurrentSpeed == Speed::SLOW_SPEED)
+		mCurrentSpeed = Speed::MEDIUM_SPEED;
+	else if (mCurrentSpeed == Speed::MEDIUM_SPEED)
+		mCurrentSpeed = Speed::FAST_SPEED;
+	else if (mCurrentSpeed == Speed::FAST_SPEED)
+		mCurrentSpeed = Speed::SLOW_SPEED;
+}
+
+void MenuManager::cleanUp()
+{
+	mMainMenuButtons.cleanup();
+	mOptionsMenuButtons.cleanup();
+	mBufferManager.cleanup();
+}

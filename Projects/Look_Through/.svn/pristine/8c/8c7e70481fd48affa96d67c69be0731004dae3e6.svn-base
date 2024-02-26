@@ -1,0 +1,46 @@
+#include "Walls.h"
+#include "Game.h"
+#include "GraphicsBuffer.h"
+#include "GraphicsBufferManager.h"
+#include "GraphicsSystem.h"
+#include "Level.h"
+#include "LevelManager.h"
+#include "Color.h"
+#include <fstream>
+
+Walls::Walls()
+{
+	Game* pGame = Game::getGameInstance();
+
+	this->mpWallSprite = nullptr;
+	this->mWallSize = pGame->TILE_SIZE;
+
+	createWall();
+}
+
+Walls::~Walls()
+{
+	delete mpWallSprite;
+}
+
+void Walls::createWall()
+{
+	Game* pGame = Game::getGameInstance();
+
+	const std::string WALL_KEY = "walls";
+	const std::string WALL_SPRITE = "wall_tile.png";
+
+	pGame->getGraphicsBufferManager()->createGraphicsBuffer(WALL_KEY, WALL_SPRITE);
+
+	mpWallSprite = new Sprite(Vector2D(0, 0), pGame->getGraphicsBufferManager()->getGraphicsBuffer(WALL_KEY), mWallSize, mWallSize);
+}
+
+void Walls::drawAllWalls()
+{
+	Game* pGame = Game::getGameInstance();
+
+	for (auto wallCoord : pGame->getLevelManager()->getLevelList()[pGame->getLevelManager()->getCurrentLevelIndex() - 1]->getWallCoordinates())
+	{
+		pGame->getGraphicsSystem()->draw(wallCoord, *mpWallSprite);
+	}
+}

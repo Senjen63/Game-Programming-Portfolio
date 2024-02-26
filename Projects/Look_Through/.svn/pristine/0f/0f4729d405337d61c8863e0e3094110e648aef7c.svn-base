@@ -1,0 +1,55 @@
+#pragma once
+
+#include <Trackable.h>
+#include <Vector2D.h>
+#include <SDL.h>
+
+#include "GraphicsBuffer.h"
+#include "Sprite.h"
+#include "Font.h"
+
+enum class SpriteFlipping
+{
+    NONE = SDL_FLIP_NONE,
+    HORIZONTAL = SDL_FLIP_HORIZONTAL,
+    VERTICAL = SDL_FLIP_VERTICAL,
+};
+
+class GraphicsSystem : public Trackable
+{
+public:
+    GraphicsSystem(int width, int height);
+
+    GraphicsSystem() = delete;
+    GraphicsSystem(const GraphicsSystem& other);
+
+    ~GraphicsSystem();
+
+    GraphicsBuffer* getBackBuffer() const { return mpBackBuffer; };
+    int getWidth() const { return mWidth; }
+    int getHeight() const { return mHeight; }
+    bool isInitted() const { return mIsInitted; }
+
+    void resizeDisplay(int width, int height);
+
+    void flip() const;
+
+    void clearToColor(Color color);
+    void draw(const Vector2D& pos, const Sprite& sprite, float angle = 0, float scale = 1.0f, SpriteFlip flip = SpriteFlip::NONE);
+    void drawText(const Vector2D& pos, const Font& font, const std::string& text, const Color& color);
+
+    void init();
+    void cleanUp();
+
+private:
+    //ALLEGRO_DISPLAY* getDisplay() { return mpDisplay; }
+    void setRenderDrawColor(Color color);
+
+    SDL_Window* mpWindow = nullptr;
+    SDL_Renderer* mpRenderer = nullptr;
+    GraphicsBuffer* mpBackBuffer = nullptr;
+    int mWidth;
+    int mHeight;
+
+    bool mIsInitted = false;
+};

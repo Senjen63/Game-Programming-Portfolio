@@ -1,0 +1,10 @@
+//BP
+#include "HUDEvents.h"
+
+HUDEvents::HUDEvents(HUDEventVariations type) : GameEvents((GameEventVariations) type)
+{
+}
+
+HUDEvents::~HUDEvents()
+{
+}

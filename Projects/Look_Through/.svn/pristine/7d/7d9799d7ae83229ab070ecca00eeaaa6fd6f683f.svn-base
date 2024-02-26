@@ -1,0 +1,44 @@
+#pragma once
+
+#include <Trackable.h>
+#include "Animation.h"
+#include "GraphicsSystem.h"
+#include "Vector2D.h"
+#include <vector>
+
+class Unit : public Trackable
+{
+	private:
+		bool mPause;
+
+		//only Unit Manager can add or delete Units
+		Unit(Animation aniSprite);
+		~Unit();
+
+		Vector2D mLocation;
+		int mCurrentAnimation;
+		std::vector<Animation> mAnimations;
+
+	public:
+		friend class UnitManager;
+		/*void createNewUnit(Animation);*/
+
+		void update(double dt);
+		void draw(GraphicsSystem* graphSys);
+		void drawWall(GraphicsSystem* graphSys, Vector2D location);
+
+		void setAnimation();
+		void setLocation(Vector2D loc);
+		void setAnimationSpeed(int opt);
+		void unitPause();
+
+		Vector2D getLocation();
+
+		//Snake Movement
+		//*****************
+		void Up();
+		void Down();
+		void Right();
+		void Left();
+		//*****************
+};

@@ -1,0 +1,13 @@
+#include "SpawnCollectibleEvent.h"
+
+SpawnCollectibleEvent::SpawnCollectibleEvent(Vector2D pos, GraphicsBuffer* buffer) : SpawnEvent((SpawnEventType)SPAWN_COLLECTIBLE_EVENT)
+{
+    mPos = pos;
+    mpBuffer = buffer;
+}
+
+
+SpawnCollectibleEvent::~SpawnCollectibleEvent()
+{
+
+}

@@ -1,0 +1,27 @@
+#include "GraphicsBufferManager.h"
+
+GraphicsBufferManager::GraphicsBufferManager()
+{
+
+}
+
+GraphicsBufferManager::~GraphicsBufferManager()
+{
+	
+}
+
+void GraphicsBufferManager::addGraphicsBuffer(string key, GraphicsBuffer* buffer)
+{
+	pair<string, GraphicsBuffer*> pair(key, buffer);
+	mpGraphicsBuffers.insert(pair);
+}
+
+void GraphicsBufferManager::removeGraphicsBuffer(string key)
+{
+	mpGraphicsBuffers.erase(key);
+}
+
+void GraphicsBufferManager::deleteAll()
+{
+	mpGraphicsBuffers.clear();
+}

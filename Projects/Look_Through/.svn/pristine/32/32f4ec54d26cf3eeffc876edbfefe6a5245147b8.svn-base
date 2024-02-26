@@ -1,0 +1,31 @@
+#pragma once
+
+#include <vector>
+#include <Trackable.h>
+#include "Vector2D.h"
+#include "Animation.h"
+
+using namespace std;
+
+class Unit;
+
+class UnitManager : public Trackable 
+{
+	private:
+		vector<Unit*> mpUnits;
+	public:
+		UnitManager();
+		~UnitManager();
+
+		void createAndAddUnit(Vector2D location, Animation, Animation altAnimation);
+		void createAndAddUnit(Vector2D location, Animation);
+		void deleteUnit(Unit*);
+		void deleteUnit(Vector2D);
+
+		void clearUnits();
+
+		void updateAll(double);
+		void drawAll();
+
+		vector<Unit*> getUnits() { return mpUnits; }
+};

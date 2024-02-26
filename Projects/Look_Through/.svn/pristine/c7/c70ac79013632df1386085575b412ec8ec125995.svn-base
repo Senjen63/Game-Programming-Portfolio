@@ -1,0 +1,11 @@
+#include "InputEvents.h"
+
+KeyInputEvent::KeyInputEvent( KeyCode key, InputEventTypes type ) : Event( ( EventType )type )
+{
+	mKey = key;
+}
+
+MouseInputEvent::MouseInputEvent( KeyCode but, InputEventTypes type ) : Event( ( EventType )type )
+{
+	mBut = but;
+}

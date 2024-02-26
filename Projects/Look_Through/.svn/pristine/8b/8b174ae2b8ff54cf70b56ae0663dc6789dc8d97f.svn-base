@@ -1,0 +1,51 @@
+#pragma once
+
+#include <vector>
+#include <unordered_map>
+#include <Trackable.h>
+#include "Food.h"
+#include "Entity.h"
+#include "EventListener.h"
+
+class Level;
+
+class FoodManager : public EventListener
+{
+public:
+    FoodManager(const Level* pParentLevel);
+    ~FoodManager();
+
+    void handleEvent(const Event& theEvent);
+
+    void init();
+    void cleanUp();
+    void clearPowerUps();
+
+    void update(double deltaTime);
+
+    void placePowerup();
+    void placeFood();
+
+    void setParentLevel(const Level* pParentLevel);
+
+    friend std::istream& operator>>(std::istream& istream, FoodManager& foodManager);
+
+    static void addAnimation(FoodType type, const Animation& anim);
+
+private:
+    void placeAny(const Vector2D& randPos, const Food* food);
+    void fireFoodEvent(const Food& food);
+
+    const Level* mpParentLevel;
+
+    std::vector<Food*> mPowerups;
+    Food* mpFood = nullptr;
+    float mPowerupTime = 0;
+    float mFoodTime = 0;
+
+    double mTimePast = 0;
+
+    std::vector<std::pair<Entity*, const Food*>> mFoodEntities;
+
+    static std::unordered_map<FoodType, Animation> smFoodAnimations;
+};

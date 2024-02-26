@@ -1,0 +1,11 @@
+//BP
+#include "InputEvents.h"
+
+InputEvents::InputEvents(int keyIndex) : GameEvents((GameEventVariations) GAME_INPUT)
+{
+    mKeyIndex = keyIndex;
+}
+
+InputEvents::~InputEvents()
+{
+}

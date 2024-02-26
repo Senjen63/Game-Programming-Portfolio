@@ -1,0 +1,39 @@
+#pragma once
+
+#include <PerformanceTracker.h>
+#include <MemoryTracker.h>
+#include <time.h>
+
+#include "Animation.h"
+#include "Level.h"
+#include "Unit.h"
+#include "GraphicsSystem.h"
+
+class PowerUp : public Trackable
+{
+public:
+	PowerUp();
+	PowerUp(Animation slow, Animation speed, Animation point, Animation food);
+	~PowerUp();
+
+	void setSlow(Animation slow);
+	void setSpeed(Animation speed);
+	void setScore(Animation score);
+	void setFood(Animation food);
+	void setFrequency(float frequency);
+	void setSlowChance(int chance);
+	void setPointChance(int chance);
+	void setSpeedChance(int chance);
+	void update(Level level, float timePassed);
+	void draw(GraphicsSystem* system, Level level);
+
+private:
+	int mSlowChance;
+	int mSpeedChance;
+	int mPointChance;
+	float mFrequency;
+	float mTimeRemaining;
+	const float MILLISECOND_TO_SECOND = 1000;
+	const float FRAMES_PER_SECOND = 60;
+	Animation mSlow, mSpeed, mPoint, mFood;
+};

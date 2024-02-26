@@ -1,0 +1,71 @@
+#include "ItemSpawner.h"
+
+ItemSpawner::ItemSpawner()
+{
+
+}
+
+
+ItemSpawner::~ItemSpawner()
+{
+    cleanup();
+}
+
+
+void ItemSpawner::init()
+{
+    mpEventSystem = EventSystem::getInstance();
+}
+
+
+void ItemSpawner::cleanup()
+{
+
+}
+
+
+void ItemSpawner::newLevel(float baseTime, float randomTime, float speedChance, float slowChance, float bonusChance)
+{
+    mBaseTime = baseTime;
+    mRandomTime = randomTime;
+
+    mSpeedChance = speedChance;
+    mSlowChance = slowChance;
+    mBonusChance = bonusChance;
+
+    mTimer = 0;
+}
+
+
+void ItemSpawner::updateSpawner(float elapsedTime)
+{
+    if (mTimer <= 0)
+    {
+        mTimer = mBaseTime + (rand() % (int)ceil(mRandomTime));
+
+        spawnItem();
+    }
+    else
+    {
+        mTimer -= elapsedTime;
+    }
+}
+
+
+void ItemSpawner::spawnItem()
+{
+    int random = rand() % 100 + 1;
+
+    if (random <= mSpeedChance) //1% - speed%
+    {
+        mpEventSystem->fireEvent(SpawnItemEvent(SPEED_UP_UNIT_TYPE));
+    }
+    else if (random <= mSpeedChance + mSlowChance) //speed% - slow%
+    {
+        mpEventSystem->fireEvent(SpawnItemEvent(SLOW_DOWN_UNIT_TYPE));
+    }
+    else //above slow% = bonus%
+    {
+        mpEventSystem->fireEvent(SpawnItemEvent(BONUS_POINTS_UNIT_TYPE));
+    }
+}

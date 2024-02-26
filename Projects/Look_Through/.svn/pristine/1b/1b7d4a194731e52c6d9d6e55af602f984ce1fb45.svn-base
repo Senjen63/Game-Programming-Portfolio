@@ -1,0 +1,30 @@
+#pragma once
+
+#include "..\Unit.h"
+
+class PieceManager;
+
+class Knight : public Unit
+{
+private:
+	bool mSelected = false;
+	/*Sprite* mpRedSprite = nullptr;
+	Sprite* mpGreenSprite = nullptr;*/
+	vector<Unit*> mpMovePts;
+	vector<Unit*> mpAttackPts;
+
+public:
+	Knight();
+	Knight(GraphicsBuffer* pBuffer, Vector2D location);
+	~Knight();
+
+	void cleanUp();
+	void createMovePts();
+	void draw(GraphicsSystem* pGraphicsSystem, PieceManager& team, PieceManager& otherTeam);
+	void selected(bool selected);
+	void checkMovePts(Vector2D mousePos, PieceManager& team, PieceManager& otherTeam);
+	bool checkAttackPts(Vector2D position, Vector2D& location);
+
+	bool getSelected() { return mSelected; };
+	unsigned int getNumAttackPts() { return mpAttackPts.size(); };
+};

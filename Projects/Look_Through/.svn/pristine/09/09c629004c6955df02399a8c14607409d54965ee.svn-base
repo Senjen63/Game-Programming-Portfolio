@@ -1,0 +1,11 @@
+//BP
+#include "GameMessages.h"
+
+GameMessages::GameMessages(string messageText) : GameEvents((GameEventVariations) MESSAGE)
+{
+    mMessage = messageText;
+}
+
+GameMessages::~GameMessages()
+{
+}

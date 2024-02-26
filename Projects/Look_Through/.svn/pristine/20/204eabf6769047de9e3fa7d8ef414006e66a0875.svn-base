@@ -1,0 +1,149 @@
+#include "SoundSystem.h"
+#include <EventSystem.h>
+#include "ClickEvent.h"
+#include "CollideEvent.h"
+
+SoundSystem::SoundSystem(UnitManager* orbs)
+{
+	if (!al_init())
+	{
+		cout << "error initting Allegro\n";
+		system("pause");
+		//return 1;
+	}
+	if (!al_init_image_addon())
+	{
+		cout << "error - Image Add-on not initted\n";
+		system("pause");
+		//return 1;
+	}
+	if (!al_init_font_addon())
+	{
+		cout << "error - Font Add-on not initted\n";
+		system("pause");
+		//return 1;
+	}
+	if (!al_init_ttf_addon())
+	{
+		cout << "error - TTF Add-on not initted\n";
+		system("pause");
+		//return 1;
+	}
+	if (!al_init_primitives_addon())
+	{
+		cout << "error - primitives Add-on not initted\n";
+		system("pause");
+		//return 1;
+	}
+	if (!al_install_audio())
+	{
+		cout << "error - Audio Add-on not initted\n";
+		system("pause");
+		//return 1;
+	}
+	if (!al_init_acodec_addon())
+	{
+		cout << "error - Audio Codec Add-on not initted\n";
+		system("pause");
+		//return 1;
+	}
+	if (!al_reserve_samples(10))
+	{
+		cout << "error - samples not reserved\n";
+		system("pause");
+		//return 1;
+	}
+
+	EventSystem::getInstance()->addListener((EventType)CLICK_EVENT, this);
+	EventSystem::getInstance()->addListener((EventType)COLLIDE_EVENT, this);
+
+	orbManager = orbs;
+	shouldPlaySounds = true;
+	readSoundFiles();
+}
+
+void SoundSystem::handleEvent(const Event& theEvent)
+{
+	if (theEvent.getType() == CLICK_EVENT)
+	{
+		const ClickEvent& clickEvent = static_cast<const ClickEvent&>(theEvent);
+
+		if (shouldPlaySounds)
+		{
+			if (orbManager->doesClick(clickEvent.getLocation()))
+			{
+				ALLEGRO_SAMPLE* sample = al_load_sample((ASSET_PATH + popFileName).c_str());
+				assert(sample);
+				al_play_sample(sample, 1.0f, ALLEGRO_AUDIO_PAN_NONE, 1.0f, ALLEGRO_PLAYMODE_ONCE, nullptr);
+			}
+		}
+	}
+	else if (theEvent.getType() == COLLIDE_EVENT)
+	{
+		const CollideEvent& collideEvent = static_cast<const CollideEvent&>(theEvent);
+
+		if (shouldPlaySounds)
+		{
+			if (collideEvent.getCurrentAnim() == 1)
+			{
+				ALLEGRO_SAMPLE* sample = al_load_sample((ASSET_PATH + wrongFileName).c_str());
+				assert(sample);
+				al_play_sample(sample, 1.0f, ALLEGRO_AUDIO_PAN_NONE, 1.0f, ALLEGRO_PLAYMODE_ONCE, nullptr);
+			}
+			else if (collideEvent.getCurrentAnim() == 2)
+			{
+
+				ALLEGRO_SAMPLE* sample = al_load_sample((ASSET_PATH + correctFileName).c_str());
+				assert(sample);
+				al_play_sample(sample, 1.0f, ALLEGRO_AUDIO_PAN_NONE, 1.0f, ALLEGRO_PLAYMODE_ONCE, nullptr);
+
+			}
+		}
+	}
+}
+
+void SoundSystem::readSoundFiles()
+{
+	string keyCode;
+
+	//loads buffers
+	ifstream fin;
+	fin.open("soundFiles.txt");
+
+	if (!fin.is_open())
+	{
+		cout << "Failed to Load Texture File" << endl;
+	}
+
+	while (!fin.eof())
+	{
+		fin >> keyCode;
+
+		if (keyCode == "pop")
+		{
+			fin >> popFileName;
+		}
+		else if (keyCode == "correct")
+		{
+			fin >> correctFileName;
+		}
+		else if (keyCode == "wrong")
+		{
+			fin >> wrongFileName;
+		}
+	}
+
+	fin.close();
+}
+
+void SoundSystem::setShouldPlay()
+{
+	if (shouldPlaySounds)
+	{
+		shouldPlaySounds = false;
+	}
+	else
+	{
+		shouldPlaySounds = true;
+	}
+}

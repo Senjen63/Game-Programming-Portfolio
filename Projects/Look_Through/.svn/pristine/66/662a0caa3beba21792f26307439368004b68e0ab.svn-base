@@ -1,0 +1,12 @@
+#include "GameplayEvents.h"
+
+GameplayEvents::GameplayEvents(int event)
+	:GameEvents(GAMEPLAY_EVENT)
+{
+	mEvent = event;
+}
+
+GameplayEvents::~GameplayEvents()
+{
+
+}

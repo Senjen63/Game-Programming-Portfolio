@@ -1,0 +1,33 @@
+#pragma once
+
+#include "Trackable.h"
+#include "Vector2D.h"
+#include <unordered_map>
+
+using namespace std;
+
+typedef string TextKey;
+
+class DataLoader : public Trackable
+{
+private:
+	unordered_map<TextKey, float> mFloatMap;
+	unordered_map<TextKey, int> mIntMap;
+	unordered_map<TextKey, double> mDoubleMap;
+	unordered_map<TextKey, Vector2D> mVectorMap;
+
+	int mBackup;
+
+	const string GAME_DATA = "base_game.txt";
+
+public:
+	DataLoader();
+	~DataLoader();
+
+	void init();
+
+	float getFloat(const TextKey& key);
+	int getInt(const TextKey& key);
+	double getDouble(const TextKey& key);
+	Vector2D getVector(const TextKey& key);
+};

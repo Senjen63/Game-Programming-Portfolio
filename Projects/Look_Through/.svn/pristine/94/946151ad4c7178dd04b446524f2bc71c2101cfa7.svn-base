@@ -1,0 +1,274 @@
+//BP
+#include "Snake.h"
+#include "Game.h"
+
+Snake::Snake()
+{
+    mOriginPoint = Vector2D(0, 0);
+}
+
+Snake::Snake(Vector2D originPoint, Vector2D startingPath, GraphicsBuffer* headBuff, GraphicsBuffer* bodyBuff)
+{
+    mpSnakeHeadBuff = headBuff;
+    mpSnakeBodyBuff = bodyBuff;
+    mpEventSystem = nullptr;
+    mStartingPath = startingPath;
+    mOriginPoint = originPoint;
+}
+
+Snake::~Snake()
+{
+    cleaner();
+}
+
+void Snake::init() 
+{
+    mpEventSystem = EventSystem::getInstance();
+    mpEventSystem->addListener((EventType)TURN, this);
+    mpEventSystem->addListener((EventType)COLLISION, this);
+}
+
+void Snake::cleaner()
+{
+    mpSnakeHeadBuff = nullptr;
+    mpSnakeBodyBuff = nullptr;
+}
+
+void Snake::clearSnakeParts()
+{
+    mBodyParts.clear();
+}
+
+void Snake::resetSnakeParts()
+{
+    mHasDied = false;
+    SnakeUnit* head = new SnakeUnit(mStartingPath,
+        mOriginPoint, mpSnakeHeadBuff, FPS,
+        0, 0, true, HEAD_UNIT);
+    mBodyParts.push_back(head);
+    mpEventSystem->fireEvent(SnakeCreation(head));
+    addBodyParts(mBodyPartsAtStart - 1, false);
+}
+
+SnakeUnit* Snake::getSnakeHead()
+{
+    if (mBodyParts.size() > 0)
+    {
+
+        return mBodyParts[0];
+
+    }
+    return nullptr;
+}
+
+SnakeUnit* Snake::getSnakeBody()
+{
+    if (mBodyParts.size() > 0)
+    {
+
+        return mBodyParts[mBodyParts.size() - 1];
+
+    }
+    return nullptr;
+}
+
+void Snake::addScore(int count)
+{
+    mPlayerScore += count;
+}
+
+void Snake::updatePlayerSnake(float timePassed)
+{
+    for (unsigned int i = 0; i < mBodyParts.size(); i++)
+    {
+        SnakeUnit* thisBodyPart = mBodyParts[i];
+        thisBodyPart->moveLocation(thisBodyPart->getPosition() + (thisBodyPart->getDirection() * mSpeed));
+
+        if (i > 0)
+        {
+            Vector2D currentPath = mBodyParts[i]->getDirection();
+            Vector2D oppositePath = mBodyParts[i - 1]->getDirection();
+            Vector2D currentLocation = mBodyParts[i]->getPosition();
+            Vector2D oppositeLocation = mBodyParts[i - 1]->getPosition();
+            if (currentPath == oppositePath && mBodyParts[i]->getTurnListSize() == mBodyParts[i - 1]->getTurnListSize() && mBodyParts[i]->getStartTimer() <= 0)
+            {
+
+                if (abs(currentPath.getY()) == 1)
+                {
+
+                    mBodyParts[i]->moveLocation(Vector2D(abs
+                    (currentPath.getY()) * oppositeLocation.getX(),
+                        oppositeLocation.getY() - (mpSnakeBodyBuff->
+                            getHeight() * currentPath.getY())));
+
+                }
+                else if (abs(currentPath.getX()) == 1)
+                {
+
+                    mBodyParts[i]->moveLocation(Vector2D
+                    (oppositeLocation.getX() - (mpSnakeBodyBuff->
+                        getWidth() * currentPath.getX()),
+                        abs(currentPath.getX()) * oppositeLocation.getY()));
+
+                }
+
+            }
+        }
+    }
+
+    if (mBodyParts.size() >= mBodyPartsAtEnd)
+    {
+
+        mpEventSystem->fireEvent(EndGameLevel(true));
+
+    }
+    mpEventSystem->fireEvent(GameScore(mPlayerScore));
+}
+
+void Snake::setSnakeSpeed(float speed) 
+{ 
+    if (speed < LOWEST_MOVEMENT_SPEED)
+    {
+
+        speed = LOWEST_MOVEMENT_SPEED;
+
+    }
+
+    for (unsigned int i = 1; i < mBodyParts.size(); i++)
+    {
+
+        float frames = (mpSnakeBodyBuff->getWidth() / speed);
+        if (i == 1)
+        {
+
+            frames = (mpSnakeHeadBuff->getWidth() / speed);
+
+        }
+        mBodyParts[i]->speedChange(mSpeed, speed, frames);
+
+    }
+    mSpeed = speed;
+}
+
+void Snake::handleEvent(const Event& thisEvent)
+{
+    if (mBodyParts.size() > 0)
+    {
+        if (thisEvent.getType() == COLLISION)
+        {
+
+            const Collision& hit = 
+                static_cast<const Collision&>(thisEvent);
+            if (hit.getPieceHit()->getUnitType() == BODY_UNIT)
+            {
+
+                if (mBodyParts.size() > 2)
+                {
+
+                    SnakeUnit* partHit = 
+                        static_cast<SnakeUnit*>(hit.getPieceHit());
+                    if (partHit != mBodyParts[1] 
+                        && partHit != mBodyParts[2] 
+                        && partHit->getStartTimer() <= 0)
+                    {
+
+                        mHasDied = true;
+
+                    }
+
+                }
+
+            }
+
+            if (hit.getPieceHit()->getUnitType() == BONUS_UNIT)
+            {
+
+                addScore(mFoodPoints);
+
+            }
+
+            if (hit.getPieceHit()->getUnitType() == WALL_UNIT)
+            {
+
+                mHasDied = true;
+
+            }
+
+            if (hit.getPieceHit()->getUnitType() == FOOD_UNIT)
+            {
+
+                addBodyParts(1, true);
+
+            }
+
+        }
+
+        if (thisEvent.getType() == TURN)
+        {
+
+            const DirectionChange& changeDirection =
+                static_cast<const DirectionChange&>(thisEvent);
+            getSnakeHead()->setDirection(changeDirection.getPath());
+            for (unsigned int i = 1; i < mBodyParts.size(); i++)
+            {
+
+                mBodyParts[i]->
+                    addTurn(changeDirection.getPath(), i);
+
+            }
+
+        }
+
+    }
+}
+
+void Snake::addBodyParts(unsigned int count, bool usePoints)
+{
+    SnakeUnit* bodyPartAtEnd = getSnakeBody();
+    for (unsigned int i = 0; i < count; i++)
+    {
+
+        float frame = (mpSnakeBodyBuff->getWidth() / mSpeed);
+        if (mBodyParts.size() < 2)
+        {
+
+            frame = (mpSnakeHeadBuff->getWidth() / mSpeed);
+
+        }
+
+        float timerTime = mBodyParts[mBodyParts.size() - 1]->getStartTimer() + frame; 
+        SnakeUnit* newSnakeBodyPart = new SnakeUnit
+        (getSnakeBody()->getDirection(),
+            getSnakeBody()->getPosition(),
+            mpSnakeBodyBuff, FPS, timerTime,
+            frame, true, BODY_UNIT);
+        if (bodyPartAtEnd->getDirection() != Vector2D(0, 0))
+        {
+
+            newSnakeBodyPart->addTurn(bodyPartAtEnd->getDirection(), i);
+
+        }
+        newSnakeBodyPart->syncTurnList(bodyPartAtEnd, i + 1);
+        mBodyParts.push_back(newSnakeBodyPart);
+        mpEventSystem->fireEvent(SnakeCreation(newSnakeBodyPart));
+
+    }
+    
+    if (usePoints)
+    {
+
+        addScore(count * mFoodPoints);
+
+    }
+}
+
+void Snake::beginLevel(float snakeSpeed, unsigned int startSegments, unsigned int endSegments, int foodValue)
+{
+    mPlayerScore = 0;
+    mSpeed = snakeSpeed;
+    mStartSpeed = snakeSpeed;
+    mBodyPartsAtStart = startSegments;
+    mBodyPartsAtEnd = endSegments;
+    mFoodPoints = foodValue;
+    resetSnakeParts();
+}

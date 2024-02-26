@@ -1,0 +1,15 @@
+#include "Color.h"
+
+Color::Color(int red, int green, int blue, int alpha)
+{
+	this->mRed = red;
+	this->mGreen = green;
+	this->mBlue = blue;
+	this->mAlpha = alpha;
+	mColor = { static_cast<Uint8>(red), static_cast<Uint8>(green), static_cast<Uint8>(blue), static_cast<Uint8>(alpha) };
+}
+
+Color::~Color() 
+{
+	
+}

@@ -1,0 +1,46 @@
+/*
+Author: Nicholas Kasprzak
+Class: GPR-250-02
+Assignment: Assignment 4 / Midterm
+Certification of Authenticity:
+I certify that this assignment is entirely my own work.
+ */
+
+#include <iostream>
+#include <cassert>
+#include <string>
+
+#include <PerformanceTracker.h>
+#include <MemoryTracker.h>
+#include <Vector2D.h>
+#include <Timer.h>
+#include <EventSystem.h>
+
+#include "GraphicsSystem.h"
+#include "GraphicsBuffer.h"
+#include "Sprite.h"
+#include "Font.h"
+#include "Color.h"
+#include "Game.h"
+
+using namespace std;
+
+int main()
+{	
+	EventSystem::initInstance();
+	EventSystem* pEventSystem = EventSystem::getInstance();
+
+	pEventSystem->init();
+
+	static Game* gpGame = new Game(780, 780);
+	gpGame->init();
+	gpGame->doLoop();
+	gpGame->clean();
+	delete gpGame;
+
+	EventSystem::cleanupInstance();
+
+	MemoryTracker::getInstance()->reportAllocations(cout);
+	system("pause");
+	return 0;
+}

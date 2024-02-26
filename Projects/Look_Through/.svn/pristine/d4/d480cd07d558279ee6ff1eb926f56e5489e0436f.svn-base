@@ -1,0 +1,179 @@
+#include "DifficultyLoader.h"
+#include <fstream>
+#include <algorithm>
+#include <string>
+#include "Game.h"
+#include "OptionsManager.h"
+
+
+DifficultyLoader::DifficultyLoader()
+{
+
+}
+
+DifficultyLoader::~DifficultyLoader()
+{
+
+}
+
+void DifficultyLoader::init(int opo)
+{
+	Game* pGame = Game::getInstance();
+
+	string difficulty;
+
+	if (opo == pGame->getOptionsManager()->EASY)
+	{
+		difficulty = EASY_FILENAME;
+	}
+	else if (opo == pGame->getOptionsManager()->NORMAL)
+	{
+		difficulty = NORMAL_FILENAME;
+	}
+	else if (opo == pGame->getOptionsManager()->HARD)
+	{
+		difficulty = HARD_FILENAME;
+	}
+
+	float inFloat;
+	int inInt;
+	double inDouble;
+
+	ifstream inputDiff("../GalahadAssets/data/" + difficulty);
+	if (inputDiff.good())
+	{
+		string key;
+
+		while (!inputDiff.eof())
+		{
+			inputDiff >> key;
+
+			if (key == "positions")
+			{
+				inputDiff >> inInt;
+
+				mIntMap[key] = inInt;
+			}
+			else if (key == "power_numerator")
+			{
+				inputDiff >> inInt;
+
+				mIntMap[key] = inInt;
+			}
+			else if (key == "power_denominator")
+			{
+				inputDiff >> inInt;
+
+				mIntMap[key] = inInt;
+			}
+			else if (key == "normal_asteroid")
+			{
+				inputDiff >> inFloat;
+
+				mTextMap[key] = inFloat;
+			}
+			else if (key == "special_asteroid")
+			{
+				inputDiff >> inFloat;
+
+				mTextMap[key] = inFloat;
+			}
+			else if (key == "drop_point")
+			{
+				inputDiff >> inFloat;
+
+				mTextMap[key] = inFloat;
+			}
+			else if (key == "reload")
+			{
+				inputDiff >> inDouble;
+
+				mDoubleMap[key] = inDouble;
+			}
+			else if (key == "power_time")
+			{
+				inputDiff >> inDouble;
+
+				mDoubleMap[key] = inDouble;
+			}
+			else if (key == "falling")
+			{
+				inputDiff >> inDouble;
+
+				mDoubleMap[key] = inDouble;
+			}
+			else if (key == "low_gravity")
+			{
+				inputDiff >> inFloat;
+
+				mTextMap[key] = inFloat;
+			}
+			else if (key == "medium_gravity")
+			{
+				inputDiff >> inFloat;
+
+				mTextMap[key] = inFloat;
+			}
+			else if (key == "high_gravity")
+			{
+				inputDiff >> inFloat;
+
+				mTextMap[key] = inFloat;
+			}
+			else if (key == "low_spawn")
+			{
+				inputDiff >> inInt;
+
+				mIntMap[key] = inInt;
+			}
+			else if (key == "over_spawn")
+			{
+				inputDiff >> inInt;
+
+				mIntMap[key] = inInt;
+			}
+		}
+	}
+}
+
+float DifficultyLoader::getFloat(const TextKey& key)
+{
+	auto text = mTextMap.find(key);
+
+	if (text != mTextMap.end())
+	{
+		return text->second;
+	}
+	else
+	{
+		return NULL;
+	}
+}
+
+int DifficultyLoader::getInt(const IntKey& key)
+{
+	auto text = mIntMap.find(key);
+
+	if (text != mIntMap.end())
+	{
+		return text->second;
+	}
+	else
+	{
+		return NULL;
+	}
+}
+
+double DifficultyLoader::getDouble(const DoubleKey& key)
+{
+	auto text = mDoubleMap.find(key);
+
+	if (text != mDoubleMap.end())
+	{
+		return text->second;
+	}
+	else
+	{
+		return NULL;
+	}
+}

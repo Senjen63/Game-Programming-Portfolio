@@ -1,0 +1,13 @@
+text_color 0 0 0 255
+font_filename cour.ttf
+background_color 128 0 0 255
+title_font_size 108
+other_font_size 48
+x_loc 0
+title_loc 0
+play_loc 100
+option_loc 350
+quit_loc 450
+load_game_loc 550
+x 1280
+y 768

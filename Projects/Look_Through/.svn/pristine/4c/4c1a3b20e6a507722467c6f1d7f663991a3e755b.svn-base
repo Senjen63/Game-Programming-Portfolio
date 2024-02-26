@@ -1,0 +1,11 @@
+#include "SpawnWallEvent.h"
+
+SpawnWallEvent::SpawnWallEvent(Vector2D pos, GraphicsBuffer* buffer) : SpawnEvent((SpawnEventType)SPAWN_WALL_EVENT)
+{
+    mPos = pos;
+    mpBuffer = buffer;
+}
+SpawnWallEvent::~SpawnWallEvent()
+{
+
+}

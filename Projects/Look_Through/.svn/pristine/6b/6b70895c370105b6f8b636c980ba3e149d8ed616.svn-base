@@ -1,0 +1,430 @@
+#include "Game.h"
+
+Game* gpGame = NULL;
+
+Game::Game()
+{
+	mpDisplay = NULL;
+	mpUnitList = NULL;
+	mControls = NULL;
+	mpBuffList= NULL;
+	mpDeans = NULL;
+	mpSmurfs = NULL;
+	mpSnake = NULL;
+
+}
+
+Game::~Game()
+{
+	clean();
+}
+
+void Game::init()
+{
+	mpDisplay->init();
+	mControls->init();
+
+	mpDisplay = new GraphicsSystem(DISP_WIDTH, DISP_HEIGHT);
+	mControls = new InputSystem();
+	
+}
+
+void Game::doLoop()
+{
+	Vector2D pos = Vector2D(DISP_WIDTH / 2, DISP_HEIGHT / 2);
+
+	Sprite food = Sprite();
+	Sprite speed = Sprite();
+	Sprite slow = Sprite();
+	Sprite bonus = Sprite();
+	mpBuffList = new GraphicsBufferManager();
+	mpBuffList->addBuff((ASSETS + SNAKE_BODY), 'b');
+	mpBuffList->addBuff((ASSETS + SNAKE_HEAD), 's');
+	mpBuffList->addBuff((ASSETS + WALL_PATH), 'w');
+	mpBuffList->addBuff((ASSETS + FOOD_PATH), 'f');
+	mpBuffList->addBuff((ASSETS + SPEED_PATH), 'p');
+	mpBuffList->addBuff((ASSETS + SLOW_PATH), 'l');
+	mpBuffList->addBuff((ASSETS + BONUS_PATH), 'o');
+	mpBuffList->addBuff(BLACK, DISP_HEIGHT, DISP_WIDTH, 'g');
+	Sprite head = Sprite(mpBuffList->getBuff('s'));
+	Sprite wall = Sprite(mpBuffList->getBuff('w'));
+	
+	mpFont = new Font(25, (ASSET_PATH + FONT_FILE), 0);
+	Animation* foodA = new Animation(mpBuffList->getBuff('f'), 50, 6, 60, true, food);
+	Animation* speedA = new Animation(mpBuffList->getBuff('p'), 100, 6, 60, true, speed);
+	Animation* slowA = new Animation(mpBuffList->getBuff('l'), 100, 6, 60, true, slow);
+	Animation* bonusA = new Animation(mpBuffList->getBuff('o'), 100, 6, 60, true, bonus);
+	mpFoodMan = new UnitManager();
+	mpFoodMan->addUnit(rand() % DISP_WIDTH, rand() % DISP_HEIGHT, foodA);
+	mpSpeedMan = new UnitManager();
+	mpSlowMan = new UnitManager();
+	mpBonusMan = new UnitManager();
+
+	mpLevelMan = new LevelManager();
+	mpLevelMan->addLevel("Level1.txt", wall);
+	mpLevelMan->addLevel("Level2.txt", wall);
+	mpLevelMan->addLevel("Level3.txt", wall);
+	mpLevelMan->addLevel("empty.txt", wall);
+
+	PerformanceTracker* pTracker = new PerformanceTracker();
+	string looped = "looped";
+	float currentTime = 0;
+	Timer timer;
+	bool quit = false;
+	float speedAdjust = -20.0;
+	float slowDown = 20.0;
+	float updateSpeed = 5.0;
+	int total = 0;
+	int dir = 1;
+	Vector2D move = Vector2D(head.getSize().getX(), 0.0);
+	int frameToMove = 0;
+	Vector2D randPos = Vector2D(rand() % DISP_WIDTH, rand() % DISP_HEIGHT);
+	Vector2D randSpeedPos = Vector2D(rand() % DISP_WIDTH, rand() % DISP_HEIGHT);
+	Vector2D randSlowPos = Vector2D(rand() % DISP_WIDTH, rand() % DISP_HEIGHT);
+	Vector2D randBonusPos = Vector2D(rand() % DISP_WIDTH, rand() % DISP_HEIGHT);
+	bool toRandom = false;
+	int currentLevel = 0;
+	int powerSpawn = 1;
+	bool startMenu = true; 
+	bool dead = false;
+	bool win = false;
+	int powerUpDrawn =0;
+	int goMove = 0;
+	bool faster = false;
+	bool slower = false;
+
+	mpSnake = new Snake(head.getSize().getX());
+	mpSnake->addUnit(head, pos);
+	Sprite body = Sprite(mpBuffList->getBuff('b'));
+	//mpSnake->addUnit(body, Vector2D(pos.getX() + head.getSize().getX(), pos.getY() + 1));
+	//mpSnake->addUnit(body, Vector2D(pos.getX() + head.getSize().getX(), pos.getY() + 1));
+	//mpSnake->addUnit(body, Vector2D(pos.getX() + head.getSize().getX(), pos.getY() + 1));
+	Level Level1("Level1.txt", wall);
+	mpLevelMan->setLevel(currentLevel);
+	mpLevelMan->getLevel()->loadLevel();
+
+	
+	while (!quit)
+	{
+		if (startMenu)
+		{
+			mpDisplay->draw(mpBuffList->getBuff('g'), 0, 0);
+			mpDisplay->write(pos.getX(), pos.getY(), mpFont, WHITE, "PRESS SPACE TO START");
+			mpDisplay->flip();
+			if (mControls->getKeyState(75))
+			{
+				startMenu = false;
+			}
+			if (mControls->getKeyState(59))
+			{
+				quit = true;
+			}
+		}
+		else if (dead)
+		{
+			mpDisplay->draw(mpBuffList->getBuff('g'), 0, 0);
+			mpDisplay->write(pos.getX(), pos.getY(), mpFont, RED, "L");
+			mpDisplay->write(pos.getX(), pos.getY() + 100, mpFont, WHITE, "Press Space to restart");
+			mpDisplay->flip();
+			if (mControls->getKeyState(75))
+			{
+				dead = false;
+				frameToMove = 0;
+				dir = 1;
+				currentLevel = 0;
+				mpSnake->addUnit(head, pos);
+				mpFoodMan->addUnit(randPos.getX(), randPos.getY(), foodA);
+				mpLevelMan->setLevel(currentLevel);
+				mpLevelMan->getLevel()->loadLevel();
+				faster = false;
+				slower = false;
+			}
+			if (mControls->getKeyState(59))
+			{
+				quit = true;
+			}
+		}
+		else if (win)
+		{
+			mpDisplay->draw(mpBuffList->getBuff('g'), 0, 0);
+			mpDisplay->write(pos.getX(), pos.getY(), mpFont, GOLD, "YOU WIN!");
+			mpDisplay->write(pos.getX(), pos.getY() + 100, mpFont, WHITE, "Press Space to Play Again");
+			mpDisplay->flip();
+			if (mControls->getKeyState(75))
+			{
+				win = false;
+				currentLevel = 0;
+				mpLevelMan->getLevel()->clearLevel();
+				mpSnake->clearAll();
+				mpFoodMan->clearAll();
+				frameToMove = 0;
+				mpSnake->addUnit(head, pos);
+				mpLevelMan->setLevel(currentLevel);
+				mpLevelMan->getLevel()->loadLevel();
+				mpFoodMan->addUnit(randPos.getX(), randPos.getY(), foodA);
+				faster = false;
+				slower = false;
+			}
+			if (mControls->getKeyState(59))
+			{
+				quit = true;
+			}
+		}
+		else
+		{
+			if (randPos.getX() > DISP_WIDTH - wall.getSize().getX() * 2 || randPos.getX() < 0 + wall.getSize().getX() * 2 || randPos.getY() < 0 + wall.getSize().getY() * 2 || randPos.getX() > DISP_HEIGHT - wall.getSize().getX() * 2)
+			{
+				randPos = Vector2D(rand() % DISP_WIDTH, rand() % DISP_HEIGHT);
+			}
+
+			if (randSpeedPos.getX() > DISP_WIDTH - wall.getSize().getX() * 2 || randSpeedPos.getX() < 0 + wall.getSize().getX() * 2 || randSpeedPos.getY() < 0 + wall.getSize().getY() * 2 || randSpeedPos.getX() > DISP_HEIGHT - wall.getSize().getX() * 2)
+			{
+				randSpeedPos = Vector2D(rand() % DISP_WIDTH, rand() % DISP_HEIGHT);
+			}
+
+			if (randSlowPos.getX() > DISP_WIDTH - wall.getSize().getX() * 2 || randSlowPos.getX() < 0 + wall.getSize().getX() * 2 || randSlowPos.getY() < 0 + wall.getSize().getY() * 2 || randSlowPos.getX() > DISP_HEIGHT - wall.getSize().getX() * 2)
+			{
+				randSlowPos = Vector2D(rand() % DISP_WIDTH, rand() % DISP_HEIGHT);
+			}
+
+			if (randBonusPos.getX() > DISP_WIDTH - wall.getSize().getX() * 2 || randBonusPos.getX() < 0 + wall.getSize().getX() * 2 || randBonusPos.getY() < 0 + wall.getSize().getY() * 2 || randBonusPos.getX() > DISP_HEIGHT - wall.getSize().getX() * 2)
+			{
+				randBonusPos = Vector2D(rand() % DISP_WIDTH, rand() % DISP_HEIGHT);
+			}
+
+
+			pTracker->clearTracker(looped);
+			pTracker->startTracking(looped);
+			timer.start();
+			if (mControls->getKeyState(59))
+			{
+				quit = true;
+			}
+			if (mControls->getKeyState(84))
+			{
+				if (dir != 2)
+				{
+					dir = 0;
+					move = Vector2D(0.0, -head.getSize().getY());
+				}
+			}
+			if (mControls->getKeyState(83))
+			{
+				if (dir != 3)
+				{
+					dir = 1;
+					move = Vector2D(head.getSize().getX(), 0.0);
+				}
+			}
+			if (mControls->getKeyState(85))
+			{
+				if (dir != 0)
+				{
+					dir = 2;
+					move = Vector2D(0.0, head.getSize().getY());
+				}
+			}
+			if (mControls->getKeyState(82))
+			{
+				if (dir != 1)
+				{
+					dir = 3;
+					move = Vector2D(-head.getSize().getX(), 0.0);
+				}
+			}
+				
+			if (!mpLevelMan->getLevel()->getSpeedUps() == 0)
+			{
+				if (powerSpawn % mpLevelMan->getLevel()->getSpeedUps() == 0)
+				{
+					randSpeedPos = Vector2D(rand() % DISP_WIDTH, rand() % DISP_HEIGHT);
+					mpSpeedMan->addUnit(randSpeedPos.getX(), randSpeedPos.getY(), speedA);
+				}
+			}
+			if (!mpLevelMan->getLevel()->getSlowDowns() == 0)
+			{
+				if (powerSpawn % mpLevelMan->getLevel()->getSlowDowns() == 0)
+				{
+					randSlowPos = Vector2D(rand() % DISP_WIDTH, rand() % DISP_HEIGHT);
+					mpSlowMan->addUnit(randSlowPos.getX(), randSlowPos.getY(), slowA);
+				}
+			}
+			if (!mpLevelMan->getLevel()->getBonusPoints() == 0)
+			{		
+				if (powerSpawn % mpLevelMan->getLevel()->getBonusPoints() == 0)
+				{
+					randBonusPos = Vector2D(rand() % DISP_WIDTH, rand() % DISP_HEIGHT);
+					mpBonusMan->addUnit(randBonusPos.getX(), randBonusPos.getY(), bonusA);
+				}
+			}
+			currentTime += pTracker->getElapsedTime(looped);
+			mpLevelMan->getLevel()->setTime(currentTime / 1000);
+			mpLevelMan->getLevel()->setFPS(pTracker->getElapsedTime(looped));
+
+			mpLevelMan->setLevel(currentLevel);
+			mpLevelMan->getLevel()->loadLevel();
+
+			mpDisplay->draw(mpBuffList->getBuff('g'), 0, 0);
+			mpFoodMan->updateAll(updateSpeed);
+			mpSpeedMan->updateAll(updateSpeed);
+			mpSlowMan->updateAll(updateSpeed);
+			mpBonusMan->updateAll(updateSpeed);
+			if (1 <= mpSpeedMan->getSize())
+			{
+				mpSpeedMan->getUnit(0)->draw(mpDisplay, randSpeedPos);
+				if (!dead)
+				{
+					if (mpSnake->isColliding(mpSpeedMan->getUnit(0)))
+					{
+						randSpeedPos = Vector2D(rand() % DISP_WIDTH, rand() % DISP_HEIGHT);
+						faster = true;
+						slower = false;
+					}
+				}
+			}
+			if (1 <= mpBonusMan->getSize())
+			{
+				mpSlowMan->getUnit(0)->draw(mpDisplay, randSlowPos);
+				if (!dead)
+				{
+					if (mpSnake->isColliding(mpSlowMan->getUnit(0)))
+					{
+						randSlowPos = Vector2D(rand() % DISP_WIDTH, rand() % DISP_HEIGHT);
+						slower = true;
+						faster = false;
+					}
+				}
+			}
+			if (1 <= mpBonusMan->getSize())
+			{
+				mpBonusMan->getUnit(0)->draw(mpDisplay, randBonusPos);
+				if (!dead)
+				{
+					if (mpSnake->isColliding(mpBonusMan->getUnit(0)))
+					{
+						randBonusPos = Vector2D(rand() % DISP_WIDTH, rand() % DISP_HEIGHT);
+						slower = false;
+						faster = false;
+						mpLevelMan->getLevel()->addScore(250);
+					}
+				}
+			}
+			mpFoodMan->getUnit(mpFoodMan->getSize()-1)->draw(mpDisplay, randPos);
+			mpLevelMan->getLevel()->drawLevel(mpDisplay);
+			mpSnake->drawAll(mpDisplay);
+			mpHUD->writeHUD(mpDisplay, mpLevelMan->getLevel()->getScore(), mpLevelMan->getLevel()->getTime(), mpLevelMan->getLevel()->getFPS(), mpBuffList->getBuff('g'), wall.getSize().getX(), wall.getSize().getY(), mpFont, WHITE);
+			mpDisplay->flip();
+			goMove = mpLevelMan->getLevel()->getSpeed();
+			if(faster)
+			{
+				goMove = mpLevelMan->getLevel()->getSpeed() - 3;
+			}
+			if (slower)
+			{
+				goMove = mpLevelMan->getLevel()->getSpeed() + 3;
+			}
+			//Noah showed me how he did this
+			if (frameToMove % goMove == 0)
+			{
+				mpSnake->move(dir, mpDisplay);
+			}
+
+			frameToMove++;
+			powerSpawn++;
+
+			
+
+			if (mpLevelMan->getLevel()->isColliding(mpSnake->getUnit(0)->getPos()))
+			{
+				dead = true;
+				mpLevelMan->getLevel()->clearLevel();
+				mpSnake->clearAll();
+				mpFoodMan->clearAll();
+				mpBonusMan->clearAll();
+				mpSpeedMan->clearAll();
+				mpSlowMan->clearAll();
+			}
+			if (mpSnake->isColliding())
+			{
+				mpLevelMan->getLevel()->clearLevel();
+				dead = true;
+				mpSnake->clearAll();
+				mpFoodMan->clearAll();
+				mpBonusMan->clearAll();
+				mpSpeedMan->clearAll();
+				mpSlowMan->clearAll();
+			}
+			
+			
+			
+
+			if (!dead)
+			{
+				if (mpSnake->isColliding(mpFoodMan->getUnit(0)))
+				{
+					randPos = Vector2D(rand() % DISP_WIDTH, rand() % DISP_HEIGHT);
+					mpSnake->addUnit(body, Vector2D(pos.getX() + head.getSize().getX(), pos.getY() + 1));
+					mpLevelMan->getLevel()->addScore(1);
+					slower = false;
+					faster = false;
+				}
+				else if(mpSnake->getSize() >= mpLevelMan->getLevel()->getWin())
+				{
+					mpLevelMan->getLevel()->clearLevel();
+					currentLevel++;
+					if (currentLevel == 3)
+					{
+						win = true;
+					}
+					mpLevelMan->setLevel(currentLevel);
+					mpLevelMan->getLevel()->loadLevel();
+					frameToMove = 0;
+					mpSnake->clearAll();
+					mpFoodMan->clearAll();
+					mpBonusMan->clearAll();
+					mpSpeedMan->clearAll();
+					mpSlowMan->clearAll();
+					dir = 1;
+					mpSnake->addUnit(head, pos);
+					mpFoodMan->addUnit(randPos.getX(), randPos.getY(), foodA);
+					faster = false;
+					slower = false;
+
+				
+			}
+
+				timer.sleepUntilElapsed(TIME_TIL_SLEEP);
+				pTracker->stopTracking(looped);
+				cout << "Time of Frame: " << pTracker->getElapsedTime(looped) << "\n";
+			}
+					
+				
+		}
+	}
+}
+
+void Game::clean()
+{
+	mpDisplay->cleanUp();
+	mControls->cleanUp();
+	mpBuffList->clearAll();
+	//mpUnitList->clearAll();
+	mpSpeedMan->clearAll();
+	mpSlowMan->clearAll();
+	mpBonusMan->clearAll();
+	mpFoodMan->clearAll();
+	mpSnake->clearAll();
+	mpLevelMan->cleanUp();
+	delete mpSnake;
+	delete mpBuffList;
+	delete mpSmurfs;
+	delete mpDeans;
+	delete mpUnitList;
+	delete mpFoodMan;
+	delete mpSpeedMan;
+	delete mpSlowMan;
+	delete mpBonusMan;
+	delete mpFont;
+	delete mpLevelMan;
+	
+}

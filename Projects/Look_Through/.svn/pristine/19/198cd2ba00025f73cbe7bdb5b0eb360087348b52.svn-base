@@ -1,0 +1,127 @@
+#include <allegro5/allegro.h>
+#include <allegro5/allegro_font.h>
+#include <allegro5/allegro_ttf.h>
+#include <allegro5/allegro_audio.h>
+#include <allegro5/allegro_acodec.h>
+#include <allegro5/allegro_image.h>
+#include <allegro5/allegro_primitives.h>
+
+#include <iostream>
+#include <cassert>
+#include <string>
+
+#include <PerformanceTracker.h>
+#include <MemoryTracker.h>
+#include <Vector2D.h>
+#include <Timer.h>
+
+#include "Graphics.h"
+#include "Buffer.h"
+#include "Assets.h"
+#include "Sprite.h"
+
+using namespace std;
+
+int main()
+{
+	PerformanceTracker* pPerformanceTracker = new PerformanceTracker;
+
+	const string INIT_TRACKER_NAME = "init";
+	const string DRAW_TRACKER_NAME = "draw";
+	const string WAIT_TRACKER_NAME = "wait";
+
+	//display size
+	const int DISP_WIDTH = 800;
+	const int DISP_HEIGHT = 600;
+
+	//file names
+	const string ASSET_PATH = "..\\..\\common\\assets\\";
+	const string BACKGROUND_FILENAME = "steps.png";
+	const string QUIMBY_FILENAME = "Mayor_Quimby.png";
+	const string SMURF_FILENAME = "smurf_sprites.png";
+	const string FONT_FILENAME = "cour.ttf";
+	const int FONT_SIZE = 48;
+	const float SQUARE_SCALE = 0.66f;
+	const int SMURF_ROWS = 4;
+	const int SMURF_COLS = 4;
+	const int SMURF_SIZE = 64;
+	const string SAMPLE_FILENAME = "clapping.wav";
+	const double SLEEP_TIME = 5.0;
+	const string MESSAGE = "Curse you Papa smurf!";
+
+
+	GraphicsSystem* graphicsSystem = new GraphicsSystem(DISP_WIDTH, DISP_HEIGHT);
+	//graphicsSystem->setup();
+
+	//initialize new variables/objects
+	Color Black = Color(0, 0, 0, 0);
+	Color Red = Color(255, 0, 0, 0);
+	Font* Cour = new Font(FONT_SIZE, FONT_FILENAME);
+
+	GraphicsBuffer* stepsBuffer = new GraphicsBuffer(BACKGROUND_FILENAME);
+	GraphicsBuffer* smurfBuffer = new GraphicsBuffer(SMURF_FILENAME);
+	GraphicsBuffer* quimbyBuffer = new GraphicsBuffer(QUIMBY_FILENAME);
+	GraphicsBuffer* squareBuffer = new GraphicsBuffer(DISP_WIDTH, DISP_HEIGHT, Red);
+
+	Sprite quimbySprite = Sprite(quimbyBuffer->getWidth(), quimbyBuffer->getHeight(), 0, 0, quimbyBuffer);
+	Sprite stepsSprite = Sprite(stepsBuffer->getWidth(), stepsBuffer->getHeight(), 0, 0, stepsBuffer);
+	Sprite squareSprite = Sprite(squareBuffer->getWidth(), squareBuffer->getHeight(), 0, 0, squareBuffer);
+	Sprite smurfs[16];
+
+
+	//load and play sound
+	ALLEGRO_SAMPLE* sample = al_load_sample((ASSET_PATH + SAMPLE_FILENAME).c_str());
+	assert(sample);
+
+	al_play_sample(sample, 1.0f, ALLEGRO_AUDIO_PAN_NONE, 1.0f, ALLEGRO_PLAYMODE_LOOP, nullptr);
+
+
+	//close image after 5 seconds
+	Timer timer;
+
+
+	//Draw sprites
+	graphicsSystem->draw(squareBuffer, 0, 0, quimbySprite, 1.0f);
+	graphicsSystem->writeText(squareBuffer, 305, 0, Cour, Black, "Curse you Papa smurf!");
+
+	graphicsSystem->draw(0, 0, stepsSprite);
+	graphicsSystem->draw(125, 100, squareSprite, SQUARE_SCALE);
+
+	int a, b;
+	for (int i = 0; i < SMURF_ROWS; i++) {
+		for (int j = 0; j < SMURF_COLS; j++) {
+			a = rand() % (DISP_WIDTH - SMURF_SIZE);
+			b = rand() % (DISP_WIDTH - SMURF_SIZE);
+
+			//int width, int height, int x, int y, GraphicsBuffer*& gBuffer
+			smurfs[i] = Sprite(SMURF_SIZE, SMURF_SIZE, (i * SMURF_SIZE), (j * SMURF_SIZE), smurfBuffer);
+			graphicsSystem->draw(a, b, smurfs[i], 1.0f);
+		}
+	}
+
+	graphicsSystem->saveBuffer(graphicsSystem->getBuffer(), "backBuffer.png");
+	graphicsSystem->saveBuffer(squareBuffer, "squareBuffer.png");
+
+
+	//show what has been drawn
+	graphicsSystem->flip();
+
+	timer.sleep(5000.0);
+
+	
+	//cleanup / destroy stuff
+	pPerformanceTracker->stopTracking("loop");
+	pPerformanceTracker->clearTracker("loop");
+
+	delete Cour;
+	delete stepsBuffer;
+	delete smurfBuffer;
+	delete quimbyBuffer;
+	delete squareBuffer;
+	delete graphicsSystem;
+	delete pPerformanceTracker;
+	MemoryTracker::getInstance()->reportAllocations(cout);
+
+	system("pause");
+	return 0;
+}

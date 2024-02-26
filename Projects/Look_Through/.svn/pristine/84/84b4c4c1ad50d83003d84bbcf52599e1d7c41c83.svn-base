@@ -1,0 +1,174 @@
+#include "Level.h"
+
+Level::Level()
+{
+	mSnakeSpeed = 0;
+	mStartLength = 0;
+	mStartX = 6;
+	mStartY = 11;
+	mWinLength = 0;
+	mFoodPoints = 0;
+	mPowerFrequency = 0;
+	mSpeedChance = 0;
+
+	for (int row = 0; row < LEVEL_HEIGHT; row++)
+	{
+		for (int column = 0; column < LEVEL_WIDTH; column++)
+		{
+			mpGrid[row][column] = new Square(column, row);
+			cout << row << " " << column;
+		}
+		cout << endl;
+	}
+}
+
+Level::Level(string level)
+{
+	ifstream levelData(level);
+	if (levelData.good())
+	{
+		string key;
+		bool wall;
+
+		while (!levelData.eof())
+		{
+			levelData >> key;
+
+			if (key == "speed")
+			{
+				levelData >> mSnakeSpeed;
+			}
+			else if (key == "startlength")
+			{
+				levelData >> mStartLength;
+			}
+			else if (key == "startposition")
+			{
+				levelData >> mStartX;
+				levelData >> mStartY;
+			}
+			else if (key == "endlength")
+			{
+				levelData >> mWinLength;
+			}
+			else if (key == "point")
+			{
+				levelData >> mFoodPoints;
+			}
+			else if (key == "frequency")
+			{
+				levelData >> mPowerFrequency;
+			}
+			else if (key == "speedchance")
+			{
+				levelData >> mSpeedChance;
+				cout << endl << "Speed " << mSpeedChance << endl;
+			}
+			else if (key == "slow")
+			{
+				levelData >> mSlowChance;
+				cout << endl << "Slow " << mSlowChance << endl;
+			}
+			else if (key == "pointchance")
+			{
+				levelData >> mPointChance;
+				cout << endl << "Point " << mPointChance << endl;
+			}
+			else if (key == "walllocation")
+			{
+				for (int row = 0; row < LEVEL_HEIGHT; row++)
+				{
+					for (int column = 0; column < LEVEL_WIDTH; column++)
+					{
+						levelData >> wall;
+						mpGrid[row][column] = new Square(wall, row, column);
+						cout << wall;
+					}
+					cout << endl;
+				}
+			}
+		}
+	}
+}
+
+Level::~Level()
+{
+
+}
+
+void Level::cleanUp()
+{
+	for (int i = 0; i < LEVEL_HEIGHT; i++)
+	{
+		for (int j = 0; j < LEVEL_WIDTH; j++)
+		{
+			delete mpGrid[i][j];
+		}
+	}
+}
+
+int Level::getSnakeSpeed()
+{
+	return mSnakeSpeed;
+}
+
+int Level::getStartLength()
+{
+	return mStartLength;
+}
+
+int Level::getFoodPoints()
+{
+	return mFoodPoints;
+}
+
+int Level::getSpeedChance()
+{
+	return mSpeedChance;
+}
+
+int Level::getPointChance()
+{
+	return mPointChance;
+}
+
+int Level::getSlowChance()
+{
+	return mSlowChance;
+}
+
+float Level::getFrequency()
+{
+	return mPowerFrequency;
+}
+
+int Level::getWinLength()
+{
+	return mWinLength;
+}
+
+Square* Level::getSquare(int x, int y)
+{
+	return mpGrid[x][y];
+}
+
+int Level::getStartX()
+{
+	return mStartX;
+}
+
+int Level::getStartY()
+{
+	return mStartY;
+}
+
+void Level::reset()
+{
+	for (int i = 0; i < LEVEL_HEIGHT; i++)
+	{
+		for (int j = 0; j < LEVEL_WIDTH; j++)
+		{
+			mpGrid[i][j]->reset();
+		}
+	}
+}

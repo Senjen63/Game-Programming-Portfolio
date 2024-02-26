@@ -1,0 +1,86 @@
+#include "AnimationManager.h"
+
+AnimationManager::AnimationManager()
+{
+	//Initializes values
+	timePerFrame = 0.05;
+	shouldLoop = true;
+	numSprites = 10;
+	spriteWidth = 5;
+	spriteHeight = 5;
+	spriteSize = 16;
+
+	//Loads values
+	string keyCode;
+
+	//loads buffers
+	ifstream fin;
+	fin.open("animationData.txt");
+
+	if (!fin.is_open())
+	{
+		cout << "Failed to Load Texture File" << endl;
+	}
+
+	while (!fin.eof())
+	{
+		fin >> keyCode;
+
+		if (keyCode == "tpf")
+		{
+			fin >> timePerFrame;
+		}
+		else if (keyCode == "numFrm")
+		{
+			fin >> numSprites;
+		}
+		else if (keyCode == "width")
+		{
+			fin >> spriteWidth;
+		}
+		else if (keyCode == "height")
+		{
+			fin >> spriteHeight;
+		}
+		else if (keyCode == "size")
+		{
+			fin >> spriteSize;
+		}
+	}
+
+	fin.close();
+}
+
+AnimationManager::~AnimationManager()
+{
+}
+
+int AnimationManager::getNumSprites()
+{
+	return numSprites;
+}
+
+bool AnimationManager::getShouldLoop()
+{
+	return shouldLoop;
+}
+
+int AnimationManager::getSpriteHeight()
+{
+	return spriteHeight;
+}
+
+int AnimationManager::getSpriteWidth()
+{
+	return spriteWidth;
+}
+
+int AnimationManager::getSpriteSize()
+{
+	return spriteSize;
+}
+
+float AnimationManager::getTimePerFrame()
+{
+	return timePerFrame;
+}

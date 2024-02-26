@@ -1,0 +1,107 @@
+#include "InputSystem.h"
+
+InputSystem::InputSystem()
+{
+	mpEventSystem = nullptr;
+}
+
+InputSystem::~InputSystem()
+{
+	cleanup();
+}
+
+Vector2D InputSystem::getMousePosition()
+{
+	return Vector2D(mMouseState.x, mMouseState.y);
+}
+
+void InputSystem::init()
+{
+	if (!al_init())
+	{
+		cout << "error initting Allegro\n";
+		system("pause");
+	}
+	if (!al_install_keyboard())
+	{
+		cout << "error installing keyboard\n";
+		system("pause");
+	}
+	if (!al_install_mouse())
+	{
+		cout << "error installing mouse\n";
+		system("pause");
+	}
+
+	mpQueue = al_create_event_queue();
+	al_register_event_source(mpQueue, al_get_keyboard_event_source());
+
+	mpEventSystem = EventSystem::getInstance();
+	mpEventSystem->init();
+}
+
+void InputSystem::cleanup()
+{
+	al_uninstall_keyboard();
+	al_uninstall_mouse();
+
+	mpEventSystem->cleanup();
+}
+
+void InputSystem::getKeyEvent()
+{
+	while (!al_is_event_queue_empty(mpQueue))
+	{
+		ALLEGRO_EVENT theEvent;
+		al_get_next_event(mpQueue, &theEvent);
+
+		if (theEvent.type == ALLEGRO_EVENT_KEY_DOWN)
+		{
+			mpEventSystem->fireEvent(InputEvent((int)theEvent.keyboard.keycode));
+		}
+	}
+}
+
+bool InputSystem::getKeyState(int keyCode)
+{
+	al_get_keyboard_state(&mKeyboardState);
+	return al_key_down(&mKeyboardState, keyCode);
+}
+
+bool InputSystem::getMouseState(int keyCode)
+{
+	al_get_mouse_state(&mMouseState);
+	return al_mouse_button_down(&mMouseState, keyCode);
+}
+
+void InputSystem::inputEvents()
+{
+	ALLEGRO_EVENT_QUEUE* queue = al_create_event_queue();
+	al_register_event_source(queue, al_get_keyboard_event_source());
+
+	while (!al_is_event_queue_empty(queue))
+	{
+		ALLEGRO_EVENT theEvent;
+		al_get_next_event(queue, &theEvent);
+		if (theEvent.keyboard.keycode == 83)
+		{
+			//right
+			cout << theEvent.keyboard.keycode << " key down" << endl;
+		}
+		else if (theEvent.keyboard.keycode == 82)
+		{
+			//left
+			cout << theEvent.keyboard.keycode << " key up" << endl;
+		}
+		else if (theEvent.keyboard.keycode == 84)
+		{
+			//up
+			cout << theEvent.keyboard.keycode << " key up" << endl;
+		}
+		else if (theEvent.keyboard.keycode == 85)
+		{
+			//down
+			cout << theEvent.keyboard.keycode << " key up" << endl;
+		}
+	}
+}

@@ -1,0 +1,471 @@
+#include "Player.h"
+#include "Game.h"
+#include "GraphicsSystem.h"
+#include "Sprite.h"
+#include "Texture.h"
+#include "Animation.h"
+#include "FlyingFist.h"
+#include "LevelEvent.h"
+#include <stdlib.h>
+#include <fstream>
+
+Player::Player(std::string filename)
+{
+	Game* pGame = Game::getInstance();
+
+	this->mpFlyingFist = nullptr;
+
+	this->mColor = BASE_COLOR;
+
+	if (pGame->getDifficulty() == EASY) { this->mMaxHP = PLAYER_HP_EASY; }
+	else if (pGame->getDifficulty() == NORMAL) { this->mMaxHP = PLAYER_HP_NORMAL; }
+	else { this->mMaxHP = PLAYER_HP_HARD; }
+
+	this->mHP = mMaxHP;
+	this->mCurrentIFrames = 0;
+	this->mCurrentFlashFrames = 0;
+
+	ifstream input(filename);
+
+	if (input.good())
+	{
+		string key;
+
+		while (!input.eof())
+		{
+			input >> key;
+
+			if (key == "player_speed:")
+			{
+				input >> this->mCurrentMoveSpeed;
+			}
+			else if (key == "player_scale:")
+			{
+				input >> this->mScale;
+			}
+		}
+	}
+
+	input.close();
+
+	this->mCurrentSize = SPRITE_SIZE * mScale;
+
+	this->mpCurrentAnimationBase = nullptr;
+	this->mpCurrentAnimation = nullptr; // set current animation
+	this->mDirection = DOWN;
+
+	this->mLocation = Vector2D(500, 500); // change this to level spawning location later
+
+	// movement timers
+	this->mDefaultMoveTick = Game::getInstance()->GAME_FPS;
+	this->mCurrentMoveTick = mDefaultMoveTick;
+	this->mRemainingMoveTick = mDefaultMoveTick;
+
+	this->mState = IDLE;
+
+	this->mCanPunch = true;
+	this->mCanRoll = true;
+}
+
+Player::~Player()
+{
+	delete mpCurrentAnimation;
+	if (mpFlyingFist != nullptr) { delete mpFlyingFist; }
+}
+
+void Player::loadAssets()
+{
+	const int ROWS = 13;
+	const int COLUMNS = 4;
+	Game* pGame = Game::getInstance();
+	AssetManager* pAssets = pGame->getAssets();
+
+	// create textures
+	pAssets->createTexture(pGame->ASSET_PATH + PLAYER_SPRITE_SHEET, "player");
+	pAssets->createTexture(pGame->ASSET_PATH + FIST_SPRITE_SHEET, "fist");
+
+	// create animations
+	int sprIndex = 0;
+	for (int i = 0; i < 4; i++)
+	{
+		pAssets->createAnimation("player_idle_" + to_string(i));
+		pAssets->createAnimation("player_walk_" + to_string(i));
+		pAssets->createAnimation("player_punch_" + to_string(i), false);
+		pAssets->createAnimation("player_roll_" + to_string(i), false);
+		pAssets->createAnimation("player_fist_" + to_string(i));
+	}
+
+	// create sprites + apply to animations
+	for (int r = 0; r < ROWS; r++)
+	{
+		for (int c = 0; c < COLUMNS; c++)
+		{
+			pAssets->createSprite(pAssets->getTexture("player"),"p_spr_" + to_string(sprIndex), c * SPRITE_SIZE, r * SPRITE_SIZE, SPRITE_SIZE, SPRITE_SIZE);
+
+			// flying fist
+			if (r < 1 && c < 4)
+			{
+				pAssets->createSprite(pAssets->getTexture("fist"), "f_spr_" + to_string(c), c * SPRITE_SIZE, r * SPRITE_SIZE, SPRITE_SIZE, SPRITE_SIZE);
+				pAssets->getAnimation("player_fist_" + to_string(c))->addSprite(pAssets->getSprite("f_spr_" + to_string(c)));
+			}
+
+			int currentRow = r * COLUMNS;
+
+			if (r < 1)
+			{
+				// idle animation
+				pAssets->getAnimation("player_idle_" + to_string(c))->addSprite(pAssets->getSprite("p_spr_" + to_string(c)));
+			}
+			else if (r < 5)
+			{
+				// walk animation
+				pAssets->getAnimation("player_walk_" + to_string(r - 1))->addSprite(pAssets->getSprite("p_spr_" + to_string((currentRow + c))));
+			}
+			else if (r < 9)
+			{
+				// attack animation
+				pAssets->getAnimation("player_punch_" + to_string(r - 5))->addSprite(pAssets->getSprite("p_spr_" + to_string(currentRow + c)));
+			}
+			else if (r < ROWS)
+			{
+				// roll animation
+				pAssets->getAnimation("player_roll_" + to_string(r - 9))->addSprite(pAssets->getSprite("p_spr_" + to_string(currentRow + c)));
+			}
+
+			sprIndex++;
+		}
+	}
+
+	//set default animations
+	this->mpCurrentAnimationBase = pAssets->getAnimation("player_idle_0");
+	this->mpCurrentAnimation = new Animation(PLAYER_ANIM_SPEED, mpCurrentAnimationBase);
+}
+
+void Player::update()
+{
+	if (mCanPunch && mCanRoll) mState = IDLE;
+	if (mCurrentIFrames > 0) { mCurrentIFrames--; }
+	checkEnemyCollisions(mLocation);
+
+	if (mState == ROLLING) { movePlayerRoll(); }
+	if (mpFlyingFist != nullptr) mpFlyingFist->update();
+}
+
+void Player::drawPlayer()
+{
+	Game* pGame = Game::getInstance();
+
+	animatePlayer();
+
+	mpCurrentAnimation->setPosition(mLocation.getX(), mLocation.getY());
+	mpCurrentAnimation->setScale(mScale, mScale);
+	mpCurrentAnimation->setColor(mColor);
+	mpCurrentAnimation->update(pGame->GAME_FPS);
+	pGame->getGraphics()->draw(mpCurrentAnimation);
+
+	if (mpFlyingFist != nullptr) { 
+		mpFlyingFist->draw();
+	}
+}
+
+void Player::changePlayerAnimation(AnimationBase* newAnimBase)
+{
+	if (mpCurrentAnimationBase == newAnimBase) return;
+	mpCurrentAnimationBase = newAnimBase;
+
+	delete mpCurrentAnimation;
+	mpCurrentAnimation = new Animation(PLAYER_ANIM_SPEED, mpCurrentAnimationBase);
+}
+
+bool Player::isColliding(Vector2D locationColliding)
+{
+	Game* pGame = Game::getInstance();
+
+	float currentXPos = locationColliding.getX();
+	float currentYPos = locationColliding.getY();
+
+	for (auto wall : pGame->getLevels()->getWalls())
+	{
+		if (currentXPos < wall->getX() + wall->getSize() &&
+			currentXPos + mCurrentSize > wall->getX() &&
+			currentYPos < wall->getY() + wall->getSize() &&
+			currentYPos + mCurrentSize > wall->getY())
+		{
+			//check for wall type
+			if (mState != ROLLING && wall->getType() == PIT) { die(); return false; }
+			else if (wall->getType() == EXIT) { nextLevel(); return true; }
+			else if (wall->getType() == WALL) { return true; }
+		}
+	}
+
+	return false;
+}
+
+void Player::checkEnemyCollisions(Vector2D locationColliding)
+{
+	if (mCurrentIFrames > 0) { return; }
+
+	Game* pGame = Game::getInstance();
+
+	float currentXPos = locationColliding.getX();
+	float currentYPos = locationColliding.getY();
+
+	for (auto enemy : pGame->getLevels()->getEnemies())
+	{
+		if (currentXPos < enemy->getX() + enemy->getSize() &&
+			currentXPos + mCurrentSize > enemy->getX() &&
+			currentYPos < enemy->getY() + enemy->getSize() &&
+			currentYPos + mCurrentSize > enemy->getY())
+		{
+			if (mState != ROLLING)
+			{
+				mHP--;
+				mCurrentIFrames += PLAYER_IFRAMES;
+
+				Game::getInstance()->playSound(HIT);
+			}
+
+			if (mHP == 0) { die(); }
+
+			return;
+		}
+	}
+}
+
+void Player::die()
+{
+	EventSystem::getInstance()->fireEvent(LevelEvent(DIE_EVENT));
+}
+
+void Player::nextLevel()
+{
+	//reset player stats
+	mCurrentIFrames = 0;
+	mHP = mMaxHP;
+
+	Game::getInstance()->playSound(WIN);
+	EventSystem::getInstance()->fireEvent(LevelEvent(NEXT_LEVEL_EVENT));
+}
+
+void Player::movePlayerRoll()
+{
+	Game* pGame = Game::getInstance();
+
+	mRemainingMoveTick -= pGame->GAME_FPS;
+
+	int rollSpeed = mCurrentMoveSpeed * 2;
+
+	if (mRemainingMoveTick <= 0)
+	{
+		float currentXPos = mLocation.getX();
+		float currentYPos = mLocation.getY();
+
+		switch (mDirection)
+		{
+		case UP:
+		{
+			Vector2D locationToMoveTo = Vector2D(currentXPos, currentYPos - rollSpeed);
+			if (!isColliding(locationToMoveTo)) mLocation = locationToMoveTo;
+
+			break;
+		}
+
+		case LEFT:
+		{
+			Vector2D locationToMoveTo = Vector2D(currentXPos - rollSpeed, currentYPos);
+			if (!isColliding(locationToMoveTo)) mLocation = locationToMoveTo;
+
+			break;
+		}
+
+		case DOWN:
+		{
+			Vector2D locationToMoveTo = Vector2D(currentXPos, currentYPos + rollSpeed);
+			if (!isColliding(locationToMoveTo)) mLocation = locationToMoveTo;
+
+			break;
+		}
+
+		case RIGHT:
+		{
+			Vector2D locationToMoveTo = Vector2D(currentXPos + rollSpeed, currentYPos);
+			if (!isColliding(locationToMoveTo)) mLocation = locationToMoveTo;
+
+			break;
+		}
+		}
+	}
+}
+
+void Player::movePlayer(Direction newDir)
+{
+	Game* pGame = Game::getInstance();
+
+	if (mState == ROLLING) { return; }
+
+	if (mDirection != newDir && mState != ATTACKING && mState != ROLLING)
+	{
+		setPlayerDirection(newDir);
+	}
+
+	mRemainingMoveTick -= pGame->GAME_FPS;
+
+	if (mRemainingMoveTick <= 0)
+	{
+		float currentXPos = mLocation.getX();
+		float currentYPos = mLocation.getY();
+		
+		if (mState != ROLLING)
+		{
+			switch (newDir)
+			{
+			case UP:
+			{
+				Vector2D locationToMoveTo = Vector2D(currentXPos, currentYPos - mCurrentMoveSpeed);
+				if (!isColliding(locationToMoveTo)) mLocation = locationToMoveTo;
+				if (mState == IDLE) mState = MOVING;
+
+				break;
+			}
+
+			case LEFT:
+			{
+				Vector2D locationToMoveTo = Vector2D(currentXPos - mCurrentMoveSpeed, currentYPos);
+				if (!isColliding(locationToMoveTo)) mLocation = locationToMoveTo;
+				if (mState == IDLE) mState = MOVING;
+
+				break;
+			}
+
+			case DOWN:
+			{
+				Vector2D locationToMoveTo = Vector2D(currentXPos, currentYPos + mCurrentMoveSpeed);
+				if (!isColliding(locationToMoveTo)) mLocation = locationToMoveTo;
+				if (mState == IDLE) mState = MOVING;
+
+				break;
+			}
+
+			case RIGHT:
+			{
+				Vector2D locationToMoveTo = Vector2D(currentXPos + mCurrentMoveSpeed, currentYPos);
+				if (!isColliding(locationToMoveTo)) mLocation = locationToMoveTo;
+				if (mState == IDLE) mState = MOVING;
+
+				break;
+			}
+			}
+		}
+
+		mRemainingMoveTick = mCurrentMoveTick;
+	}
+}
+
+void Player::punchPlayer()
+{
+	mCanPunch = false;
+	mState = ATTACKING;
+	AssetManager* pAssets = Game::getInstance()->getAssets();
+
+	delete mpFlyingFist;
+	mpFlyingFist = new FlyingFist(pAssets->getAnimation("player_fist_" + to_string(mDirection)), mDirection, mLocation, SPRITE_SIZE, mCurrentMoveSpeed * 2);
+
+	Game::getInstance()->playSound(PUNCH);
+}
+
+void Player::rollPlayer()
+{
+	mCanRoll = false;
+	mState = ROLLING;
+
+	Game::getInstance()->playSound(ROLL);
+}
+
+void Player::animatePlayer()
+{
+	AssetManager* pAssets = Game::getInstance()->getAssets();
+
+	//flash while invincible
+	if (mCurrentIFrames > 0)
+	{
+		mCurrentFlashFrames++;
+		if (mCurrentFlashFrames > PLAYER_FLASH_TIME * 2)
+		{
+			mColor = BASE_COLOR;
+			mCurrentFlashFrames = 0;
+		}
+		else if (mCurrentFlashFrames > PLAYER_FLASH_TIME) { mColor = FLASH_COLOR; }
+	}
+	else { mColor = BASE_COLOR; }
+
+	//update animation
+	switch (mState)
+	{
+		case IDLE:
+		{
+			changePlayerAnimation(pAssets->getAnimation("player_idle_" + to_string(mDirection)));
+
+			break;
+		}
+
+		case MOVING:
+		{
+			changePlayerAnimation(pAssets->getAnimation("player_walk_" + to_string(mDirection)));
+
+			break;
+		}
+
+		case ATTACKING:
+		{
+			changePlayerAnimation(pAssets->getAnimation("player_punch_" + to_string(mDirection)));
+
+			if (mpCurrentAnimation->getIsFinished())
+			{
+				mCanPunch = true;
+				mState = IDLE;
+
+				//mpFlyingFistAnimation = nullptr;
+				delete mpFlyingFist;
+				mpFlyingFist = nullptr;
+			}
+
+			break;
+		}
+
+		case ROLLING:
+		{
+			changePlayerAnimation(pAssets->getAnimation("player_roll_" + to_string(mDirection)));
+
+			if (mpCurrentAnimation->getIsFinished())
+			{
+				mCanRoll = true;
+				mState = IDLE;
+			}
+
+			break;
+		}
+
+		case HURTING:
+		{
+			break;
+		}
+	}
+}
+
+void Player::setPlayerDirection(Direction newDir)
+{
+	mDirection = newDir;
+}
+
+void Player::resetHP()
+{
+	Game* pGame = Game::getInstance();
+
+	if (pGame->getDifficulty() == EASY) { mMaxHP = PLAYER_HP_EASY; }
+	else if (pGame->getDifficulty() == NORMAL) { mMaxHP = PLAYER_HP_NORMAL; }
+	else { mMaxHP = PLAYER_HP_HARD; }
+
+	mHP = mMaxHP;
+
+	mCurrentIFrames = 0;
+}

@@ -1,0 +1,68 @@
+#include "Animation.h"
+
+
+Animation::Animation(float fps, bool shouldLoop)
+{
+	setFramesPerSecond(fps);
+	mMillisecondsOnCurrentFrame = 0;
+	mLoop = shouldLoop;
+}
+
+
+Animation::Animation(std::vector<Sprite> startFrames, float fps, bool shouldLoop) : Animation(fps, shouldLoop)
+{
+	mFrames = startFrames;
+}
+
+
+void Animation::setFramesPerSecond(float fps)
+{
+	fps = std::max(0.0f, fps);
+	mFramesPerSecond = fps;
+	mMillisecondsBetweenFrames = 1000.0f / fps; 
+}
+
+
+void Animation::setMillisecondsBetweenFrames(float ms)
+{
+	ms = std::max(0.0f, ms);
+	mMillisecondsBetweenFrames = ms;
+	mFramesPerSecond = 1000.0 / ms;
+}
+
+
+int Animation::addFrame(Sprite newFrame)
+{
+	mFrames.push_back(newFrame);
+	return mFrames.size();
+}
+
+
+Sprite Animation::removeFrame(int index)
+{
+	assert(index >= 0 && index < (int) mFrames.size());
+
+	Sprite removedSprite = mFrames[index];
+	mFrames.erase(mFrames.begin() + index);
+	return removedSprite;
+}
+
+
+void Animation::update(float dt)
+{
+	mMillisecondsOnCurrentFrame += dt;
+
+	if (mMillisecondsOnCurrentFrame >= mMillisecondsBetweenFrames)
+	{
+		if (mLoop)
+		{
+			mCurrentFrameIndex = (mCurrentFrameIndex + 1) % mFrames.size();
+		}
+		else
+		{
+			mCurrentFrameIndex = std::min(mCurrentFrameIndex + 1, (int) mFrames.size());
+		}
+
+		mMillisecondsOnCurrentFrame = 0;
+	}
+}

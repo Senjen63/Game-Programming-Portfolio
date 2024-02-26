@@ -1,0 +1,124 @@
+#include "Square.h"
+
+Square::Square()
+{
+	mHasWall = false;
+	mHasSpeed = false;
+	mHasSlow = false;
+	mHasFood = false;
+	mHasPoint = false;
+	mHasSnake = false;
+	mRow = 0;
+	mColumn = 0;
+	mPosition = Vector2D(0, 0);
+}
+
+Square::Square(bool wall, int row, int column)
+{
+	mHasWall = wall;
+	mHasSpeed = false;
+	mHasSlow = false;
+	mHasFood = false;
+	mHasPoint = false;
+	mHasSnake = false;
+	mRow = row;
+	mColumn = column;
+	mPosition = Vector2D((mRow * SQUARE_SIZE), (mColumn * SQUARE_SIZE));
+}
+
+Square::~Square()
+{
+
+}
+
+void Square::operator=(const Square& aSquare)
+{
+	this->mHasWall = aSquare.mHasWall;
+	this->mHasSpeed = aSquare.mHasSpeed;
+	this->mHasSlow = aSquare.mHasSlow;
+	this->mHasFood = aSquare.mHasFood;
+	this->mHasPoint = aSquare.mHasPoint;
+	this->mHasSnake = aSquare.mHasSnake;
+	this->mRow = aSquare.mRow;
+	this->mColumn = aSquare.mColumn;
+	this->mPosition = aSquare.mPosition;
+}
+
+int Square::getRow()
+{
+	return mRow;
+}
+int Square::getColumn()
+{
+	return mColumn;
+}
+
+bool Square::checkWall()
+{
+	return mHasWall;
+}
+
+bool Square::checkFood()
+{
+	return mHasFood;
+}
+bool Square::checkSlow()
+{
+	return mHasSlow;
+}
+bool Square::checkPoint()
+{
+	return mHasPoint;
+}
+bool Square::checkSpeed()
+{
+	return mHasSpeed;
+}
+bool Square::checkSnake()
+{
+	return mHasSnake;
+}
+
+Vector2D Square::getPosition()
+{
+	return mPosition;
+}
+
+bool Square::isOccupied()
+{
+	if (mHasSpeed || mHasSlow || mHasFood || mHasPoint || mHasSnake || mHasWall)
+	{
+		return true;
+	}
+	return false;
+}
+
+void Square::reset()
+{
+	mHasSnake = false;
+	mHasSlow = false;
+	mHasSpeed = false;
+	mHasFood = false;
+	mHasPoint = false;
+}
+
+void Square::setSnake()
+{
+	mHasSnake = true;
+}
+void Square::setSpeed()
+{
+	mHasSpeed = true;
+}
+void Square::setSlow()
+{
+	mHasSlow = true;
+}
+void Square::setFood()
+{
+	mHasFood = true;
+}
+void Square::setPoint()
+{
+	mHasPoint = true;
+}

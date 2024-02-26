@@ -1,0 +1,45 @@
+#include "NextLevelScreen.h"
+#include "Font.h"
+#include "Color.h"
+#include "Game.h"
+#include "GraphicsSystem.h"
+#include "GraphicsBuffer.h"
+#include "GraphicsBufferManager.h"
+#include <string>
+
+NextLevelScreen::NextLevelScreen()
+{
+	
+}
+
+NextLevelScreen::~NextLevelScreen()
+{
+	delete mpScreenSprite;
+}
+
+void NextLevelScreen::drawNextLevelScreen()
+{
+	Game* pGame = Game::getGameInstance();
+
+	const std::string FONT_FILE = "cour.ttf";
+	const int FONT_SIZE = 32;
+	Font font = Font(FONT_FILE, FONT_SIZE);
+	Color black = Color(0, 0, 0, 255);
+	Color white = Color(255, 255, 255, 255);
+
+	const std::string NEXT_LEVEL_SCREEN_KEY = "nextLevel";
+	const std::string NEXT_LEVEL_SCREEN_INSTRUCTIONS = "YOU WIN! Press Enter to continue to Level " +
+		to_string(pGame->getLevelManager()->getCurrentLevelIndex());
+
+	pGame->getGraphicsBufferManager()->createGraphicsBuffer(NEXT_LEVEL_SCREEN_KEY, pGame->DISP_WIDTH, pGame->DISP_HEIGHT);
+	pGame->getGraphicsSystem()->setColor(pGame->getGraphicsBufferManager()->getGraphicsBuffer(NEXT_LEVEL_SCREEN_KEY), &black);
+	pGame->getGraphicsSystem()->writeText(pGame->getGraphicsBufferManager()->getGraphicsBuffer(NEXT_LEVEL_SCREEN_KEY),
+		pGame->CENTER_LOCATION, &font, white, NEXT_LEVEL_SCREEN_INSTRUCTIONS, ALLEGRO_ALIGN_CENTER);
+
+	this->mpScreenSprite = new Sprite(pGame->ORIGIN_LOCATION,
+		pGame->getGraphicsBufferManager()->getGraphicsBuffer(NEXT_LEVEL_SCREEN_KEY),
+		pGame->getGraphicsBufferManager()->getGraphicsBuffer(NEXT_LEVEL_SCREEN_KEY)->getBitmapWidth(),
+		pGame->getGraphicsBufferManager()->getGraphicsBuffer(NEXT_LEVEL_SCREEN_KEY)->getBitmapHeight());
+
+	Game::getGameInstance()->getGraphicsSystem()->draw(Game::getGameInstance()->ORIGIN_LOCATION, *mpScreenSprite);
+}

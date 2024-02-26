@@ -1,0 +1,49 @@
+﻿#ifndef EVENT_AVEN_H
+#define EVENT_AVEN_H
+
+    
+#include "InputStates.h"
+
+enum class EventType
+{
+    None,
+    Input,
+    ScoreChange,
+    MenuSelect,
+    MoveUp,
+    MoveRight,
+    MoveDown,
+    MoveLeft,
+    MenuOpen,
+};
+
+struct InputData final : Trackable
+{
+    MouseState mMouseState;
+    KeyState mKeyState;
+};
+
+struct EventAven : Trackable
+{
+    EventAven()
+    {
+    }
+
+    EventAven( const EventType type ) : mType( type )
+    {
+    }
+
+    ~EventAven()
+    {
+    }
+
+    EventType mType = EventType::None;
+
+    union
+    {
+        InputData mInput;
+        int mScore{};
+    };
+};
+
+#endif /* EVENT_AVEN_H */

@@ -1,0 +1,84 @@
+﻿#include "Game.hpp"
+
+#include "BaseSystems.hpp"
+
+Game::Game()
+{
+    mpGraphicsSystem = new GraphicsSystem;
+    mpInputTranslator = std::make_shared< InputTranslator >();
+
+    mpInputTranslator->mpEventSystem->addListener( EventType::KeyboardInput, mpInputTranslator );
+    mpInputTranslator->mpEventSystem->addListener( EventType::MouseInput, mpInputTranslator );
+
+    mpAssetManager = std::make_shared< AssetManager >();
+    mpTime = std::make_shared< Time >();
+}
+
+Game::~Game()
+{
+    mWorlds.clear();
+
+    mpAssetManager.reset();
+
+    delete mpGraphicsSystem;
+    mpGraphicsSystem = nullptr;
+}
+
+void Game::createGame( const char * name, const int width, const int height, const char * pIconPath ) const
+{
+    mpGraphicsSystem->init( name, width, height, pIconPath );
+}
+
+std::shared_ptr< World > Game::createWorld()
+{
+    auto pWorld = std::shared_ptr< World >( new World( mpAssetManager, mpGraphicsSystem, mpTime, mpInputTranslator ) );
+
+    pWorld->createSystem( new SpriteSystem( mpGraphicsSystem ) );
+
+    mWorlds.push_back( pWorld );
+    return pWorld;
+}
+
+void Game::startGame() const
+{
+    mpAssetManager->generateAssets( mpGraphicsSystem );
+
+    if ( !mWorlds.empty() )
+    {
+        mWorlds[ 0 ]->generateQueries();
+        // have input per world instead of gamewide
+        for ( const auto & system : mWorlds[ 0 ]->mSystems )
+        {
+            system->onCreate();
+        }
+
+        mWorlds[ 0 ]->generateQueries();
+
+        int mCurrentWorld = 0;
+
+        while ( true )
+        {
+            mpTime->update();
+            const int changeWorld = mWorlds[ mCurrentWorld ]->update();
+            if ( changeWorld )
+            {
+                mCurrentWorld++;
+                mWorlds[ mCurrentWorld ]->generateQueries();
+                // have input per world instead of gamewide
+                for ( const auto & system : mWorlds[ mCurrentWorld ]->mSystems )
+                {
+                    system->onCreate();
+                }
+
+                mWorlds[ mCurrentWorld ]->generateQueries();
+            }
+            if ( SDL_QuitRequested() ) break;
+            mpInputTranslator->update();
+        }
+    }
+}
+
+void Game::createAsset( Asset * pAsset ) const
+{
+    mpAssetManager->importAsset( pAsset );
+}

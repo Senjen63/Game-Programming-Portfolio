@@ -1,0 +1,42 @@
+/***
+* Author: Quincy Gomes-Cedeno
+* Class: GPR-250-02
+* Assignment: Assignment 2
+* Certification of Authenticity:
+* I certify that this assignment is entirely my own work.
+**/
+
+#include "Game.h" 
+using namespace std;
+
+int main()
+{
+	PerformanceTracker* pPerformanceTracker = new PerformanceTracker;
+
+	Game* gpGame;
+	gpGame = new Game;// created at very bottom of game.h
+	
+	gpGame->initialize(DISP_WIDTH, DISP_HEIGHT);//get the screen display size set up
+	gpGame->doLoop();//run program
+
+	/*
+	Create and init a Game object – 800x600 windowed
+• Create 3 GraphicsBuffers – one containing the woods.png image, one containing
+smurf_sprites.png, and one containing dean_sprites.png
+• Create Sprites from smurf_sprites and dean_sprites buffers, create Animations to hold sprites
+and Unit to hold animations
+• Unit should start in center of screen
+• Game loop should run at 60 frames/second
+• Each “frame” draw the woods buffer as a background scaled to fit 800x600
+• Each “frame” draw the Unit in the appropriate location using the appropriate sprite from the
+current animation
+• Once user indicates they want to exit application – close down the application (gracefully and
+without memory leaks).
+	*/
+
+	delete gpGame;
+	delete pPerformanceTracker;
+	MemoryTracker::getInstance()->reportAllocations(cout);
+	system("pause");
+	return 0;
+}

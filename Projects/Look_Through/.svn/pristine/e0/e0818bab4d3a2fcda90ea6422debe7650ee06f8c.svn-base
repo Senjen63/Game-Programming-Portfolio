@@ -1,0 +1,37 @@
+#pragma once
+
+#include "Trackable.h"
+#include <allegro5/allegro.h>
+
+class Vector2D;
+
+class InputSystem : public Trackable
+{
+public:
+
+	enum KeyInputs
+	{
+		KEY_F = ALLEGRO_KEY_F,
+		KEY_S = ALLEGRO_KEY_S,
+		KEY_ENTER = ALLEGRO_KEY_ENTER,
+		KEY_ESCAPE = ALLEGRO_KEY_ESCAPE,
+		KEY_SPACE = ALLEGRO_KEY_SPACE
+	};
+
+	enum MouseInputs
+	{
+		LEFT_MOUSE_BUTTON = 1,
+		RIGHT_MOUSE_BUTTON = 2,
+		MIDDLE_MOUSE_BUTTON = 4
+	};
+
+	InputSystem();
+	~InputSystem();
+
+	void init();
+	void cleanup();
+
+	Vector2D getMousePosition();
+	bool getCurrentInput(KeyInputs currentKeyInput);
+	bool getCurrentInput(MouseInputs currentMouseInput);
+};

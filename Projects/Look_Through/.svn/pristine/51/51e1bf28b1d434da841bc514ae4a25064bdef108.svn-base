@@ -1,0 +1,23 @@
+#pragma once
+#include <PerformanceTracker.h>
+#include <MemoryTracker.h>
+#include "Font.h"
+#include <Vector2D.h>
+#include "GraphicsSystem.h"
+#include "Color.h"
+#include <math.h>
+const int HUD_FONT_SIZE = 20;
+const int FPS_DISPLAY_OFFSET = 50;
+class HUD : public Trackable
+{
+private:
+	Font* mpHUDFont;
+	GraphicsSystem* mpGraphSystem;
+public:
+	HUD();
+	HUD(GraphicsSystem* graphSystem);
+	~HUD();
+	void CleanUp();
+	void UpdateHUD(int newScore, float FPS, float time);
+	friend class Game;
+};

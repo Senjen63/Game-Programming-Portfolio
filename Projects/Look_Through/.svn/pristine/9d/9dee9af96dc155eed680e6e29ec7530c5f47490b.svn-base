@@ -1,0 +1,23 @@
+#pragma once
+
+#include "Trackable.h"
+#include "Color.h"
+#include "Font.h"
+
+class Sprite;
+class Color;
+class Font;
+
+class StartScreen : public Trackable
+{
+private:
+
+	Sprite* mpScreenSprite;
+
+public:
+
+	StartScreen();
+	~StartScreen();
+
+	void drawStartScreen();
+};

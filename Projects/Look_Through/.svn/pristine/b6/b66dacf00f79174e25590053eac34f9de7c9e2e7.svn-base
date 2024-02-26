@@ -1,0 +1,15 @@
+#pragma once
+
+#include "GameEvent.h"
+
+class VolumeChangeEvent : public GameEvent
+{
+	int mNewVolume;
+
+public:
+	VolumeChangeEvent(int newVolume = 50) : GameEvent(GameEventType::VOLUME_CHANGE_EVENT), mNewVolume(newVolume) {}
+	~VolumeChangeEvent() {}
+
+	int getNewVolume() const { return mNewVolume; }
+};
+

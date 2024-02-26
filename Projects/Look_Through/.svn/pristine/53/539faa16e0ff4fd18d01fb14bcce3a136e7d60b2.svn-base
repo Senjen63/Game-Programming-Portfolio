@@ -1,0 +1,284 @@
+#include "SnakeManager.h"
+
+#include "Game.h"
+#include "Unit.h"
+#include "UnitManager.h"
+
+#include "EventSystem.h"
+#include "GameEvent.h"
+#include "ObjectCollisionEvent.h"
+#include "PlayerActionEvent.h"
+
+SnakeManager::SnakeManager(int length, float speed, Vector2D startPos, int cellSize, int lvlWidth, int lvlHeight)
+{
+	mpEventSystem = EventSystem::getInstance();
+	mpEventSystem->addListener((EventType)GameEventType::PLAYER_ACTION_EVENT, this);
+
+	mpUnitManager = Game::getInstance()->getUnitManager();
+	
+	mLength = length;
+	mSpeed = speed;
+	mTimeRemaing = ONE_SECOND_IN_MS / mSpeed;
+	mHeadPos = startPos;
+	mTailPos = startPos;
+	mCellSize = cellSize;
+	mLevelHeight = lvlHeight;
+	mLevelWidth = lvlWidth;
+
+	mCenterOffset = Vector2D(mCellSize / 2, mCellSize / 2);
+
+	mTopCell = Vector2D(0, -mCellSize);
+	mBottomCell = Vector2D(0, mCellSize);
+	mLeftCell = Vector2D(-mCellSize, 0);
+	mRightCell = Vector2D(mCellSize, 0);
+}
+
+SnakeManager::~SnakeManager()
+{
+	mpEventSystem = nullptr;
+	mpUnitManager = nullptr;
+}
+
+void SnakeManager::update(double dt)
+{
+	mTimeRemaing -= dt;
+
+	if (mTimeRemaing <= 0)
+	{
+		mTimeRemaing = ONE_SECOND_IN_MS / mSpeed;
+				
+
+		if (!checkCollision(mDirection))
+		{
+			checkHeadCollision();
+
+			moveHead();
+
+			if (mCurrentLength >= mLength)
+			{
+				moveTail();
+			}
+			else
+			{
+				mCurrentLength++;
+			}
+		}			
+	}
+}
+
+void SnakeManager::handleEvent(const Event& theEvent)
+{
+	if (theEvent.getType() == (EventType)GameEventType::PLAYER_ACTION_EVENT)
+	{
+		const PlayerActionEvent& actionEvent = static_cast<const PlayerActionEvent&>(theEvent);
+
+		switch (actionEvent.getAction())
+		{
+		case PlayerAction::MOVE_UP:
+
+			if (!checkCollision(Direction::UP))
+			{
+				mDirection = Direction::UP;
+			}
+
+			break;
+		case PlayerAction::MOVE_DOWN:
+
+			if (!checkCollision(Direction::DOWN))
+			{
+				mDirection = Direction::DOWN;
+			}
+
+			break;
+		case PlayerAction::MOVE_LEFT:
+
+			if (!checkCollision(Direction::LEFT))
+			{
+				mDirection = Direction::LEFT;
+			}
+
+			break;
+		case PlayerAction::MOVE_RIGHT:
+
+			if (!checkCollision(Direction::RIGHT))
+			{
+				mDirection = Direction::RIGHT;
+			}
+
+			break;
+		default:
+			break;
+		}
+	}	
+}
+
+int SnakeManager::getLength()
+{
+	return mCurrentLength;
+}
+
+void SnakeManager::changeSpeed(float change)
+{
+	mSpeed += change;
+
+	if (mSpeed < MIN_SPEED)
+	{
+		mSpeed = MIN_SPEED;
+	}
+}
+
+void SnakeManager::growSnake(int amount)
+{
+	mLength += amount;
+}
+
+void SnakeManager::checkHeadCollision()
+{
+	Unit* theUnit = nullptr;
+
+	Vector2D posToCheck = mHeadPos + mCenterOffset;
+
+	switch (mDirection)
+	{
+	case Direction::UP:
+
+		posToCheck += mTopCell;
+		
+		break;
+	case Direction::DOWN:
+
+		posToCheck += mBottomCell;
+		
+		break;
+	case Direction::LEFT:
+
+		posToCheck += mLeftCell;		
+
+		break;
+	case Direction::RIGHT:
+
+		posToCheck += mRightCell;		
+
+		break;
+	default:
+		break;
+	}	
+
+	theUnit = mpUnitManager->getUnitAt(posToCheck);
+
+	if (theUnit != nullptr)
+	{
+		mpEventSystem->fireEvent(ObjectCollisionEvent(theUnit->getType(), posToCheck));
+	}
+}
+
+bool SnakeManager::checkCollision(Direction dir)
+{
+	Unit* theUnit = nullptr;
+
+	Vector2D posToCheck = mHeadPos + mCenterOffset;
+
+	switch (dir)
+	{
+	case Direction::UP:
+
+		posToCheck += mTopCell;
+
+		break;
+	case Direction::DOWN:
+
+		posToCheck += mBottomCell;
+
+		break;
+	case Direction::LEFT:
+
+		posToCheck += mLeftCell;
+
+		break;
+	case Direction::RIGHT:
+
+		posToCheck += mRightCell;
+
+		break;
+	default:
+		break;
+	}
+
+	theUnit = mpUnitManager->getUnitAt(posToCheck);
+
+	if (theUnit != nullptr)
+	{
+		if (theUnit->getType() == UnitType::WALL)
+		{
+			return true;
+		}		
+	}
+
+	return false;
+}
+
+void SnakeManager::moveHead()
+{
+	Vector2D newPos = mHeadPos;
+
+	switch (mDirection)
+	{
+	case Direction::UP:
+
+		newPos += mTopCell;
+
+		break;
+	case Direction::DOWN:
+
+		newPos += mBottomCell;
+
+		break;
+	case Direction::LEFT:
+
+		newPos += mLeftCell;
+
+		break;
+	case Direction::RIGHT:
+
+		newPos += mRightCell;
+
+		break;
+	default:
+		break;
+	}
+
+	if (newPos.getX() < 0)
+	{
+		newPos.setX(float(mLevelWidth * mCellSize));
+	}
+	else if (newPos.getY() < 0)
+	{
+		newPos.setY(float(mLevelHeight * mCellSize));
+	}
+	else if (newPos.getX() > mLevelWidth * mCellSize)
+	{
+		newPos.setX(0);
+	}
+	else if (newPos.getY() > mLevelHeight * mCellSize)
+	{
+		newPos.setY(0);
+	}
+
+	mSnakeBody.push(newPos);
+
+	mpUnitManager->addUnitAt(newPos, UnitType::SNAKE);
+	mHeadPos = newPos;
+}
+
+void SnakeManager::moveTail()
+{
+	Vector2D newPos = mSnakeBody.front();
+	mSnakeBody.pop();
+
+	if (newPos != mTailPos)
+	{
+		mpUnitManager->deleteAllUnitsAt(mTailPos + mCenterOffset);
+
+		mTailPos = newPos;
+	}	
+}

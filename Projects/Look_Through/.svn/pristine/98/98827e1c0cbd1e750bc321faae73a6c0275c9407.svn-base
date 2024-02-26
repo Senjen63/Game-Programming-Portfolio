@@ -1,0 +1,17 @@
+#pragma once
+
+#include "Unit.h"
+
+class PowerUp : public Unit
+{
+public:
+	PowerUp(std::pair<float, float>location, Animation* currentAnimation, int powerUpType);
+	~PowerUp();
+
+	bool updateEventStatus() { mEventObj = true; }
+	float getPowerUpType() const { return mPowerUpType; }
+
+private:
+	int mPowerUpType;
+	bool mEventObj = false;
+};

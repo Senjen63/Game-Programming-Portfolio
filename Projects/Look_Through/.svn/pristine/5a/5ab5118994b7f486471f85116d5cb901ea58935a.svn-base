@@ -1,0 +1,30 @@
+#pragma once
+#include "graphicsBuffer.h"
+
+#include<unordered_map>
+#include<string>
+#include<Trackable.h>
+
+using namespace std;
+
+typedef string GraphicsBufferKey;
+
+class GraphicsBufferManager : public Trackable
+{
+public:
+	GraphicsBufferManager();
+	~GraphicsBufferManager();
+
+	void cleanup();
+
+	void addGraphicsBuffer(GraphicsBufferKey, GraphicsBuffer*);
+	void deleteBuffer(GraphicsBuffer*);
+	void deleteBuffer(GraphicsBufferKey);
+
+	GraphicsBuffer* getBuffer(GraphicsBufferKey);
+
+	void clear();
+
+private:
+	unordered_map< GraphicsBufferKey, GraphicsBuffer*> mBufferMap;
+};

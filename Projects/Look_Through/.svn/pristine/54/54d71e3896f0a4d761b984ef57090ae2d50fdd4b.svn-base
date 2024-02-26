@@ -1,0 +1,98 @@
+#include "InputSystem.h"
+#include "Game.h"
+#include "GraphicsSystem.h"
+
+InputSystem::InputSystem()
+{
+    mpDisplay = nullptr;
+    mpEventSystem = nullptr;
+}
+
+
+InputSystem::~InputSystem()
+{
+    cleanup();
+}
+
+
+void InputSystem::init()
+{
+    if (!mInitialized)
+    {
+        mpDisplay = new sf::RenderWindow();
+        mpDisplay = Game::getGame()->getGraphicsSystem()->mpDisplay;
+
+        mpEventSystem = EventSystem::getInstance();
+
+        mInitialized = true;
+    }
+}
+
+
+void InputSystem::cleanup()
+{
+    if (!mCleaned)
+    {
+        
+
+        mCleaned = true;
+    }
+}
+
+
+bool InputSystem::getKeyState(int keyNum)
+{
+
+    if (sf::Keyboard::isKeyPressed((sf::Keyboard::Key)keyNum))
+    {
+        return true;
+    }
+
+    return false;
+}
+
+
+bool InputSystem::getMouseState(int mouseNum)
+{
+    if (sf::Mouse::isButtonPressed((sf::Mouse::Button)mouseNum))
+    {
+        return true;
+    }
+
+    return false;
+}
+
+
+Vector2D InputSystem::getMousePosition()
+{
+    //mouse position relative to window requires reference to the window
+    return Vector2D(sf::Mouse::getPosition(*mpDisplay).x, sf::Mouse::getPosition(*mpDisplay).y);
+}
+
+
+void InputSystem::fireInputEvents()
+{
+    sf::Event inputEvent; //read current input events
+
+    mpEventSystem->fireEvent(CursorEvent(getMousePosition())); //fire out mouse cursor position
+
+    //loop through event queue
+    while (mpDisplay->pollEvent(inputEvent))
+    {
+        if (inputEvent.type == sf::Event::KeyPressed)
+        {
+            mpEventSystem->fireEvent(InputEvent((int)inputEvent.key.code + 1)); //+ 1 so A starts at 1 not 0
+        }
+
+        if (inputEvent.type == sf::Event::KeyReleased)
+        {
+            mpEventSystem->fireEvent(InputEvent(((int)inputEvent.key.code + 1) * -1));
+        }
+
+        if (inputEvent.type == sf::Event::MouseButtonPressed)
+        {
+            //add left mouse key code since left mouse SFML keycode is 0, otherwise the translator will receive a 0 keycode which is also the A key
+            mpEventSystem->fireEvent(InputEvent((int)inputEvent.mouseButton.button + KeyCodes::LEFT_MOUSE));
+        }
+    }
+}

@@ -1,0 +1,53 @@
+#include "Animation.h"
+
+Animation::Animation(float framerate)
+{
+	mFps = framerate;
+	mTimeBetweenFrame = 1000.0/mFps;
+	mPlaceInQueue = 0;
+	mTimeLeft = mTimeBetweenFrame;
+}
+
+Animation::~Animation()
+{
+	
+}
+
+void Animation::addSprite(Sprite sprite)
+{
+	mFrames.push(sprite);
+}
+
+void Animation::update(double dt)
+{
+	mTimeLeft -= dt;
+	if (mTimeLeft <= 0)
+	{
+		Sprite lastInQueue = mFrames.front();
+		mFrames.pop();
+		mPlaceInQueue++;
+		mFrames.push(lastInQueue);
+		mTimeLeft = mTimeBetweenFrame;
+	}
+}
+
+Sprite Animation::getCurrentSprite()
+{
+	return mFrames.front();
+}
+
+void Animation::speedUpAnim(int newFPS)
+{
+	cout << mFps << endl;
+	mFps = newFPS;
+	cout << mFps << endl;
+	mTimeBetweenFrame = 1000.0 / mFps; 
+}
+
+void Animation::slowDownAnim(int newFPS)
+{
+	cout << mFps << endl;
+	mFps = newFPS;
+	cout << mFps << endl;
+	mTimeBetweenFrame = 1000.0 / mFps;
+}

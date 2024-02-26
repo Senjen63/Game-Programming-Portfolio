@@ -1,0 +1,251 @@
+/*
+Author: David Silverman
+Class: GPR-250-01
+Assignment: Assignment 3
+Certification of Authenticity:
+I certify that this assignment is entirely my own work.
+ */
+
+#include "game.h"
+#include "gameevent.h"
+#include "gamelistener.h"
+#include <Event.h>
+#include <EventSystem.h>
+#include "collision.h"
+#include "escape.h"
+#include "food.h"
+#include "fps.h"
+#include "move.h"
+#include "score.h"
+#include "grow.h"
+#include "victory.h"
+
+GameListener::GameListener()
+{
+	EventSystem* pEventSystem = EventSystem::getInstance();
+	pEventSystem->addListener((EventType)COLLISION, this);
+	pEventSystem->addListener((EventType)MOVE, this);
+	pEventSystem->addListener((EventType)ESCAPE, this);
+	pEventSystem->addListener((EventType)SCORE, this);
+	pEventSystem->addListener((EventType)EAT, this);
+	pEventSystem->addListener((EventType)FRAME, this);
+	pEventSystem->addListener((EventType)BUTTON, this);
+	pEventSystem->addListener((EventType)MOUSE, this);
+	pEventSystem->addListener((EventType)GROW, this);
+	pEventSystem->addListener((EventType)MOUSE, this);
+}
+
+GameListener::~GameListener()
+{
+
+}
+
+void GameListener::handleEvent(const Event& theEvent)
+{
+	if (theEvent.getType() == COLLISION)
+	{
+		const Collision& colli = static_cast<const Collision&>(theEvent);
+		Game::setCollision(colli.hasCollided());
+	}
+	else if (theEvent.getType() == MOVE)
+	{
+		ALLEGRO_KEYBOARD_STATE mState;
+		al_get_keyboard_state(&mState);
+
+		while (!al_is_event_queue_empty(Game::getISystem()->getQueue()))
+		{
+			ALLEGRO_EVENT evnt;
+			al_get_next_event(Game::getISystem()->getQueue(), &evnt);
+			if (evnt.type == ALLEGRO_EVENT_KEY_DOWN)
+			{
+				switch (evnt.keyboard.keycode)
+				{
+				case ALLEGRO_KEY_W:
+					if (mDown == false)
+					{
+						mUp = true;
+						mDown = false;
+						mLeft = false;
+						mRight = false;
+					}
+					break;
+				case ALLEGRO_KEY_UP:
+					if (mDown == false)
+					{
+						mUp = true;
+						mDown = false;
+						mLeft = false;
+						mRight = false;
+					}
+					break;
+				case ALLEGRO_KEY_S:
+					if (mUp == false)
+					{
+						mUp = false;
+						mDown = true;
+						mLeft = false;
+						mRight = false;
+					}
+					break;
+				case ALLEGRO_KEY_DOWN:
+					if (mUp == false)
+					{
+						mUp = false;
+						mDown = true;
+						mLeft = false;
+						mRight = false;
+					}
+					break;
+				case ALLEGRO_KEY_A:
+					if (mRight == false)
+					{
+						mUp = false;
+						mDown = false;
+						mLeft = true;
+						mRight = false;
+					}
+					break;
+				case ALLEGRO_KEY_LEFT:
+					if (mRight == false)
+					{
+						mUp = false;
+						mDown = false;
+						mLeft = true;
+						mRight = false;
+					}
+					break;
+				case ALLEGRO_KEY_D:
+					if (mLeft == false)
+					{
+						mUp = false;
+						mDown = false;
+						mLeft = false;
+						mRight = true;
+					}
+					break;
+				case ALLEGRO_KEY_RIGHT:
+					if (mLeft == false)
+					{
+						mUp = false;
+						mDown = false;
+						mLeft = false;
+						mRight = true;
+					}
+					break;
+				}
+			}
+
+			else if (evnt.type == ALLEGRO_EVENT_KEY_UP)
+			{
+				switch (evnt.keyboard.keycode)
+				{
+				case ALLEGRO_KEY_W:
+					mUp = false;
+					break;
+				case ALLEGRO_KEY_UP:
+					mUp = false;
+					break;
+				case ALLEGRO_KEY_S:
+					mDown = false;
+					break;
+				case ALLEGRO_KEY_DOWN:
+					mDown = false;
+					break;
+				case ALLEGRO_KEY_A:
+					mLeft = false;
+					break;
+				case ALLEGRO_KEY_LEFT:
+					mLeft = false;
+					break;
+				case ALLEGRO_KEY_D:
+					mRight = false;
+					break;
+				case ALLEGRO_KEY_RIGHT:
+					mRight = false;
+					break;
+				}
+			}
+		}
+
+		if (mUp)
+			mMoving = UP;
+		if (mDown)
+			mMoving = DOWN;
+		if (mLeft)
+			mMoving = LEFT;
+		if (mRight)
+			mMoving = RIGHT;
+
+		Game::setHeadDirection(mMoving);
+
+	}
+	else if (theEvent.getType() == ESCAPE)
+	{
+		ALLEGRO_KEYBOARD_STATE mState;
+		al_get_keyboard_state(&mState);
+
+		while (!al_is_event_queue_empty(Game::getISystem()->getQueue()))
+		{
+			ALLEGRO_EVENT evnt;
+			al_get_next_event(Game::getISystem()->getQueue(), &evnt);
+			if (evnt.type == ALLEGRO_EVENT_KEY_DOWN)
+			{
+				switch (evnt.keyboard.keycode)
+				{
+				case ALLEGRO_KEY_ESCAPE:
+					mUp = false;
+					mDown = false;
+					mLeft = false;
+					mRight = true;
+					break;
+				}
+			}
+		}
+	}
+	else if (theEvent.getType() == SCORE)
+	{
+		
+	}
+	else if (theEvent.getType() == EAT)
+	{
+
+	}
+	else if (theEvent.getType() == FRAME)
+	{
+
+	}
+	else if (theEvent.getType() == BUTTON)
+	{
+
+	}
+	else if (theEvent.getType() == MOUSE)
+	{
+
+	}
+	else if (theEvent.getType() == WALLS)
+	{
+
+	}
+	else if (theEvent.getType() == FOOD)
+	{
+		const Food& headOver = static_cast<const Food&>(theEvent);
+		if (headOver.eating())
+		{
+			Game::removeFood();
+			Game::placeNewFood();
+			// confusing issue
+			//Game::addScore(Game::foodScore());
+		}
+
+		if (Game::getScore() <= Game::neededScore())
+			Game::toNextLevel();
+	}
+	else if (theEvent.getType() == POWERUP)
+	{
+
+	}
+	else if (theEvent.getType() == GROW)
+	{
+
+	}
+}

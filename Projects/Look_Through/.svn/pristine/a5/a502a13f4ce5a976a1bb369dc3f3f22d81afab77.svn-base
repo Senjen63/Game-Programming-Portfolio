@@ -1,0 +1,14 @@
+#include "InputEvents.h"
+#include "InputSystem.h"
+
+KeyboardEvent::KeyboardEvent(KeyEventType type, KeyCode keyCode) :
+    Event((EventType)type), mKeyCode(keyCode)
+{}
+
+MouseEvent::MouseEvent(MouseEventType type, Vector2D mousePos, Vector2D deltaMousePos) :
+    Event((EventType)type), mMousePos(mousePos), mDeltaMousePos(deltaMousePos), mMouseButton(MouseButton::INVALID)
+{}
+
+MouseEvent::MouseEvent(MouseEventType type, Vector2D mousePos, MouseButton mouseButton) :
+    Event((EventType)type), mMousePos(mousePos), mDeltaMousePos(Vector2D()), mMouseButton(mouseButton)
+{}

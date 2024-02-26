@@ -1,0 +1,104 @@
+/*
+Author: Dillon Drummond, Samuel Dansereau
+Class: GPR 250 Section 01
+Assignment: Final Project
+Certification of Authenticity:
+We certify that this assignment is entirely our own work.
+ */
+
+#include "Game.h"
+
+#include <iostream>
+#include <cassert>
+#include <string>
+#include<SFML/Graphics.hpp>
+
+#include <PerformanceTracker.h>
+#include <MemoryTracker.h>
+#include <Vector2D.h>
+#include <stdlib.h>
+#include <time.h>
+#include <Timer.h>
+
+using namespace std;
+
+int main()
+{
+	srand(time(NULL));
+
+	const int DISP_WIDTH = 1600;
+	const int DISP_HEIGHT = 960;
+
+	EventSystem::initInstance();
+	 
+	Game::createGame(Vector2D(DISP_WIDTH, DISP_HEIGHT));
+	Game* pGame = Game::getGame();
+	pGame->init();
+
+	pGame->gameLoop();
+
+	Game::destroyGame();
+
+	EventSystem::cleanupInstance();
+
+	/*GraphicsSystem* pSystem = new GraphicsSystem(DISP_WIDTH, DISP_HEIGHT);
+	pSystem->init();
+
+	Font* font = new Font("..\\..\\common\\assets\\cour.ttf", 24, 0);
+
+	GraphicsBuffer* imageA = new GraphicsBuffer("..\\Assets\\SpeedUp.png", Vector2D(2, 2));
+	GraphicsBuffer* imageB = new GraphicsBuffer(imageA);
+	GraphicsBuffer* imageC = new GraphicsBuffer(Color(100, 100, 100, 255), 128, 128);
+	GraphicsBuffer* imageD = new GraphicsBuffer(Color(255, 255, 255, 255), 300, 300);
+	GraphicsBuffer* back = new GraphicsBuffer(Color(0, 0, 0, 255), 1024, 768);
+
+	Sprite sp = Sprite(imageB, Vector2D(0, 0), Vector2D(64, 64));
+
+	Animation* anim = new Animation(imageA, 1, true);
+
+	//pSystem->draw(imageA, 0, 0, 1, 1); //draw imageA
+	//pSystem->draw(80, 0, sp, 1, 1); //draw sprite of imageB which copied imageA
+
+	//pSystem->draw(imageC, 0, 0, sp, 1, 1); //draw sprite of imageB to imageC
+	//pSystem->draw(imageC, 0, 100, 1, 1); //draw imageC
+
+	//pSystem->writeText(0, 300, font, Color(100, 100, 100, 255), "Some Text"); //write text to window
+
+	//pSystem->writeText(imageD, 20, 10, font, Color(100, 100, 100, 255), "On Buffer"); //write text to imageD
+	//pSystem->draw(imageD, 200, 100, 1, 1); //draw imageD
+
+	while (true)
+	{
+		
+		Timer timer;
+		timer.start();
+
+		
+
+		pSystem->draw(back, 0, 0, 1, 1);
+		pSystem->draw(200, 200, anim->getCurrentSprite(), 1, 1);
+		pSystem->flip();
+
+		timer.sleepUntilElapsed(1000.f / 60.f);
+		
+		anim->update(timer.getElapsedTime());
+		
+		
+		cout << timer.getElapsedTime() << endl;
+	}
+
+	
+	delete anim;
+	delete back;
+	delete imageD;
+	delete imageC;
+	delete imageB;
+	delete imageA;
+	delete font;
+	delete pSystem;*/
+
+	MemoryTracker::getInstance()->reportAllocations(cout);
+	system("pause");
+	
+	return 0;
+}

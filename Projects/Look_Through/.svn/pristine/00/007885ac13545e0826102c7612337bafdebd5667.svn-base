@@ -1,0 +1,32 @@
+//BP
+#pragma once
+#include <allegro5/allegro.h>
+#include "GraphicsSystem.h"
+#include "GameMessages.h"
+#include <EventSystem.h>
+#include "InputEvents.h"
+#include <Trackable.h>
+#include <Vector2D.h>
+
+class InputSystem : public Trackable
+{
+private:
+    bool mIsInit = false;
+    bool mIsClean = false;
+    EventSystem* mpEventSystem;
+    ALLEGRO_EVENT_QUEUE* mpEventsList;
+public:
+    InputSystem();
+    ~InputSystem();
+    void init();
+    void cleaner();
+    void fireInputs();
+    Vector2D getMouse();
+    bool getKeyPress(int key);
+    bool getMouseButtonPress(int mouseButton);
+    struct
+    {
+        bool mEnterDown = false;
+        bool mSpaceDown = false;
+    } PressedKeys;
+};

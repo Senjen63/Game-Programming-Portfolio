@@ -1,0 +1,31 @@
+//Assignment 1
+#include <iostream>
+
+#include <PerformanceTracker.h>
+#include <MemoryTracker.h>
+#include "GraphicsSystem.h"
+
+using namespace std;
+
+int main()
+{
+    PerformanceTracker* pPerformanceTracker = new PerformanceTracker;
+
+    const string INIT_TRACKER_NAME = "init";
+    const string DRAW_TRACKER_NAME = "draw";
+    const string WAIT_TRACKER_NAME = "wait";
+
+    const string ASSET_PATH = "..\\..\\common\\assets\\";
+    const string STEPS_FILENAME = "steps.png";
+    const string SMURFS_FILENAME = "smurf_sprites.png";
+    const string QUIMBY_FILENAME = "Mayor_Quimby.png";
+    const string FONT_FILENAME = "cour.ttf";
+    const int FONT_SIZE = 24;
+
+    GraphicsSystem gs = GraphicsSystem(800, 600);
+
+    delete pPerformanceTracker;
+    MemoryTracker::getInstance()->reportAllocations(std::cout);
+    system("pause");
+    return 0;
+}

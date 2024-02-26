@@ -1,0 +1,23 @@
+#pragma once
+
+#include <EventListener.h>
+#include "InputEvent.h"
+#include "GameEvent.h"
+
+enum class Direction
+{
+    UP, DOWN, LEFT, RIGHT
+};
+
+class InputTranslator : public EventListener
+{
+public:
+    InputTranslator() = default;
+    InputTranslator(const InputTranslator&) = default;
+    ~InputTranslator() = default;
+
+    void init();
+    void cleanUp();
+
+    void handleEvent(const Event& theEvent);
+};

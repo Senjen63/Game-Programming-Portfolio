@@ -1,0 +1,254 @@
+#include "Game.h"
+#include <fstream>
+
+Game* Game::mpsInstance = nullptr;
+
+Game* Game::getGameInstance()
+{
+	//assert(mpsInstance);
+	if (mpsInstance == nullptr)
+		mpsInstance = new Game;
+	return mpsInstance;
+}
+
+void Game::destroyGameInstance()
+{
+	delete mpsInstance;
+	mpsInstance = nullptr;
+};
+
+void Game::createGameInstance()
+{
+	if (mpsInstance == nullptr)
+	{
+		mpsInstance = new Game;
+	}
+}
+
+Game::Game()
+{
+	const int DISP_WIDTH = 800;
+	const int DISP_HEIGHT = 600;
+
+	mpGraphicsBuffManager = new GraphicsBufferManager();
+	mpUnitManager = new UnitManager();
+	mpGraphicsSystem = new GraphicsSystem(600, 800);
+	mpInputSystem = new InputSystem();
+}
+
+Game::~Game()
+{
+	delete mpGraphicsBuffManager;
+	delete mpUnitManager;
+	delete mpGraphicsSystem;
+	delete mpInputSystem;
+	mpGraphicsBuffManager = nullptr;
+	mpUnitManager = nullptr;
+	mpGraphicsSystem = nullptr;
+	mpInputSystem = nullptr;
+}
+
+bool Game::init()
+{
+	if (!mpGraphicsSystem->init())
+	{
+		std::cout << "Issues with Graphics system." << std::endl;
+		system("pause");
+		return false;
+	}
+	if (!mpInputSystem->init())
+	{
+		std::cout << "Issues with Input system." << std::endl;
+		system("pause");
+		return false;
+	}
+	return true;
+}
+
+void Game::cleanUp()
+{
+	mpGraphicsSystem->cleanup();
+	mpInputSystem->cleanUp();
+}
+
+void Game::doLoop()
+{
+	int snakeSpeed;
+	int snakeSegments;
+	int endLength;
+	int foodPoints;
+	//powerup info
+	bool level1[10][10];
+	bool level2[10][10];
+	bool level3[10][10];
+
+	ifstream input("data.txt");
+	if (input.good())
+	{
+		string key;
+
+		while (!input.eof())
+		{
+			input >> key;
+
+			if (key == "speed")
+			{
+				input >> snakeSpeed;
+
+			}
+			else if (key == "segments")
+			{
+				input >> snakeSegments;
+			}
+			else if (key == "length")
+			{
+				input >> endLength;
+			} 
+			else if (key == "food")
+			{
+				input >> foodPoints;
+			}
+		}
+
+	}
+	else
+	{
+		return;
+	}
+
+	//Time in milliseconds.
+	double targetTime = 16.7;
+	const string ASSET_PATH = "..\\..\\common\\assets\\";
+	const string DEANSPRITE_FILENAME = "dean_sprites.png";
+	const string SMURFSPRITE_FILENAME = "smurf_sprites.png";
+	const string BACKGROUND_FILENAME = "woods.png";
+	int spriteNum = 4;
+	double fps = 30;
+
+	mpGraphicsBuffManager->createBuffer("backgroundImg", ASSET_PATH + BACKGROUND_FILENAME);
+	mpGraphicsBuffManager->createBuffer("smurfImg", ASSET_PATH + SMURFSPRITE_FILENAME);
+	mpGraphicsBuffManager->createBuffer("deanImg", ASSET_PATH + DEANSPRITE_FILENAME);
+	
+	bool isSmurf = true;
+	bool isPaused = false;
+
+
+	while (mShouldContinue)
+	{
+		Timer theTimer;
+		theTimer.start();
+
+		bool spaceKeyDown = mpInputSystem->getKeyState(ALLEGRO_KEY_SPACE);
+		bool enterKeyDown = mpInputSystem->getKeyState(ALLEGRO_KEY_ENTER);
+		bool escapeKeyDown = mpInputSystem->getKeyState(ALLEGRO_KEY_ESCAPE);
+
+		int mouseState = mpInputSystem->getMouseState();
+		bool mouseLeftButtonDown = false;
+		if (mouseState == 1)
+		{
+			mouseLeftButtonDown = true;
+		}
+		bool mouseRightButtonDown = false;
+		if (mouseState == 2)
+		{
+			mouseRightButtonDown = true;
+		}
+
+		Vector2D mousePosition = mpInputSystem->getMousePosition();
+
+		mShouldContinue = !escapeKeyDown;
+
+		if (mouseLeftButtonDown)
+		{
+			mpUnitManager->addUnit(mousePosition.getX(), mousePosition.getY(), 1, 1);
+			Unit* object = mpUnitManager->getLastUnit();
+			Animation* anim = new Animation;
+			anim->addSprite(mpGraphicsBuffManager->getBuffer("smurfImg"), spriteNum, spriteNum, fps, true);
+			object->setAnimation(anim);
+
+			Sprite spr = anim->getCurrentSprite();
+			Vector2D offset = spr.getHeightAndWidth() / 2;
+			object->setLocation(mousePosition - offset);
+		} 
+
+		if (mouseRightButtonDown)
+		{
+			int mouseX = mousePosition.getX();
+			int mouseY = mousePosition.getY();
+
+			int numUnits = mpUnitManager->getNumUnits();
+			for (int i = 0; i < numUnits; i++)
+			{
+				Unit* object = mpUnitManager->getTargetUnit(i);
+				Animation* anim = object->getAnimation();
+				Sprite sprite = anim->getCurrentSprite();
+				//Vector2D sourceLoc = sprite.getSourcePosition();
+				Vector2D size = sprite.getHeightAndWidth();
+				Vector2D loc = object->getLocation();
+				Vector2D scale = object->getScale();
+
+				//topleft is 0,0
+				int xMin = loc.getX();
+				int xMax = loc.getX() + (size.getX() * scale.getX());
+				int yMin = loc.getY();
+				int yMax = loc.getY() + (size.getY() * scale.getY());
+
+				if (mouseX >= xMin && mouseX <= xMax)
+				{
+					if (mouseY >= yMin && mouseY <= yMax)
+					{
+						mpUnitManager->delUnit(object);
+						break;
+					}
+				}
+
+			}
+		}
+
+		if (enterKeyDown)
+		{
+			Unit* object = mpUnitManager->getLastUnit();
+
+			if (!isSmurf)
+			{
+				Animation* anim = new Animation;
+				anim->addSprite(mpGraphicsBuffManager->getBuffer("smurfImg"), spriteNum, spriteNum, fps, true);
+				object->setAnimation(anim);
+				isSmurf = true;
+			}
+			else
+			{
+				Animation* anim = new Animation;
+				anim->addSprite(mpGraphicsBuffManager->getBuffer("deanImg"), spriteNum, spriteNum, fps, true);
+				object->setAnimation(anim);
+				isSmurf = false;
+			}
+		}
+
+		if (spaceKeyDown)
+		{
+			if (isPaused)
+			{
+				isPaused = false;
+			}
+			else
+			{
+				isPaused = true;
+			}
+		}
+		
+		getGraphicsSystem()->draw(mpGraphicsBuffManager->getBuffer("backgroundImg"), 0, 0, 1, 1);
+
+		if (!isPaused)
+		{
+			mpUnitManager->updateAll(targetTime);
+		}
+		mpUnitManager->drawAll();
+
+		mpGraphicsSystem->flip();
+
+		theTimer.sleepUntilElapsed(targetTime);
+	}
+
+	mpGraphicsBuffManager->removeAllBuffers();
+}

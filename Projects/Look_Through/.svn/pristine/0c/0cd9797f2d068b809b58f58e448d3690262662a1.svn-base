@@ -1,0 +1,21 @@
+#include "HUD.h"
+
+
+HUD::HUD(LevelManager& levelManagerRef, Font& font, Color textColor, GraphicsBuffer* background)
+{
+	mLevelManagerRef = &levelManagerRef; 
+	mFont = &font;
+	mTextColor = textColor;
+
+	mBackground = background;
+}
+
+
+void HUD::draw(GraphicsSystem* gSys)
+{
+	gSys->draw(Vector2D(0, 0), Sprite(mBackground));
+	gSys->writeText(Vector2D(0, 0), mFont, mTextColor, "Score: " + to_string(mLevelManagerRef->getScore()));
+	gSys->writeText(Vector2D(200, 0), mFont, mTextColor, "FPS: " + to_string((int) mFPS));
+	gSys->writeText(Vector2D(400, 0), mFont, mTextColor, "Elapsed Time: " + to_string(mLevelManagerRef->getTimeInLevel()));
+	gSys->draw(Vector2D(0, 0), Sprite(&Game::getInstance()->getGraphicsBufferManager()->getBackBuffer(), Vector2D(0, 0), Game::getInstance()->getWindowSize()));
+}

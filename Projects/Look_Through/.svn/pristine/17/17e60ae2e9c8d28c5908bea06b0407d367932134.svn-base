@@ -1,0 +1,36 @@
+#pragma once
+#include <allegro5/allegro.h>
+
+#include <iostream>
+#include <cassert>
+#include <string>
+
+#include <PerformanceTracker.h>
+#include <MemoryTracker.h>
+#include <Vector2D.h>
+#include <Timer.h>
+
+#include "Color.h"
+
+using namespace std;
+
+class GraphicsBuffer : public Trackable
+{
+private:
+	ALLEGRO_BITMAP* mpBitmap;
+	bool mIsBackBuff;
+
+	// This is only to be used by the GraphicsSystem class
+	GraphicsBuffer(ALLEGRO_BITMAP* pBuffer);
+
+public:
+	GraphicsBuffer(const Color& color, int height, int width);
+	GraphicsBuffer(const string& filename);
+	GraphicsBuffer(const GraphicsBuffer& obj);
+	~GraphicsBuffer();
+
+	int getHeight() const;
+	int getWidth() const;
+
+	friend class GraphicsSystem;
+};

@@ -1,0 +1,155 @@
+#include "UnitManager.h"
+#include "Game.h"
+#include "GraphicsBufferManager.h"
+
+UnitManager::UnitManager()
+{
+	mNumUnits = 0;
+
+	/*Animation* anim1 = new Animation(Game::startUp()->getGraphicsBuffer(SMURF), FRAMES_PER_SECOND, START_TIME, true);
+	Animation* anim2 = new Animation(Game::startUp()->getGraphicsBuffer(DEAN), FRAMES_PER_SECOND, START_TIME, true);*/
+}
+
+UnitManager::~UnitManager()
+{
+	cleanup();
+}
+
+void UnitManager::cleanup()
+{
+	int i;
+	for (i = 0; i < mNumUnits; i++)
+	{
+		delete mpUnits[i];
+	}
+
+	mNumUnits = 0;
+	mpUnits.clear();
+}
+
+void UnitManager::addUnit(Vector2D mousePos, string name)
+{
+
+	mpUnits.push_back(new Unit(mousePos, name));
+	mNumUnits++;
+}
+
+//void UnitManager::deleteUnit(int target)
+//{
+//	mpUnits.erase(mpUnits.begin() + target);
+//	delete mpUnits[target];
+//	mpUnits[target] = nullptr;
+//	mNumUnits--;
+//}
+
+int UnitManager::getCount()
+{
+	return mNumUnits;
+}
+
+void UnitManager::clear()
+{
+	int i;
+	for (i = 1; i < mpUnits.size(); i++)
+	{
+		delete mpUnits[i];
+	}
+
+	//mpUnits.clear();
+}
+
+
+void UnitManager::updateAll(float time, int xMove, int yMove, Vector2D foodPos, string playerSprite)
+{
+	Vector2D range;
+	int i;
+	for (i = 0; i < mpUnits.size(); i++)
+	{
+		mpUnits[i]->update(time, xMove, yMove);
+	}
+
+	if (range.getDistanceBetween(mpUnits[0]->getPos(), foodPos) <= mpUnits[0]->getSprite()->getWidth())
+	{
+		addUnit(mpUnits[0]->getPos(), playerSprite);
+	}
+}
+
+void UnitManager::updateTime(float time)
+{
+	int i;
+	for (i = 0; i < mpUnits.size(); i++)
+	{
+		mpUnits[i]->setTime(time);
+	}
+}
+
+void UnitManager::drawAll(GraphicsSystem* pSystem)
+{
+	int i;
+	for (i = 0; i < mpUnits.size(); i++)
+	{
+		mpUnits[i]->draw(pSystem);
+	}
+}
+
+void UnitManager::pauseUnits()
+{
+	int i;
+	for (i = 0; i < mpUnits.size(); i++)
+	{
+		mpUnits[i]->togglePause();
+	}
+}
+
+void UnitManager::move(int xMove, int yMove)
+{
+	int i;
+	Unit* unit;
+	for (i = mpUnits.size() - 1; i > 0; i--)
+	{
+		unit = mpUnits[i - 1];
+		mpUnits[i]->setPos(unit->getPos());
+	}
+
+	mpUnits[0]->setPos(Vector2D(mpUnits[0]->getPos().getX() + xMove, mpUnits[0]->getPos().getY() + yMove));
+}
+
+Vector2D UnitManager::getHeadPos()
+{
+	return mpUnits[0]->getPos();
+}
+
+void UnitManager::setHeadPos(Vector2D pos)
+{
+	mpUnits[0]->setPos(pos);
+}
+
+Unit* UnitManager::getHeadUnit()
+{
+	return mpUnits[0];
+}
+
+Unit* UnitManager::getUnit(int target)
+{
+	return mpUnits[target];
+}
+
+bool UnitManager::checkCollision(int wallArray[10][14])
+{
+	Vector2D range;
+	int i, j;
+	for (i = 0; i < 10; i++)
+	{
+		for (j = 0; j < 14; j++)
+		{
+			if (wallArray[j][i] == 1)
+			{
+				if (range.getDistanceBetween(getHeadPos(), Vector2D(i * 60, j * 60)) <= getHeadUnit()->getSprite()->getWidth() - 10)
+				{
+					return true;
+				}
+			}
+		}
+	}
+	return false;
+}

@@ -1,0 +1,35 @@
+#pragma once
+
+#include <Trackable.h>
+
+#include"sprite.h"
+#include"graphicsSystem.h"
+
+#include<vector>
+#include<iostream>
+
+class Animation : public Trackable
+{
+public:
+	Animation();
+	Animation(float time, bool);//May need constructor with sprites
+	~Animation();
+
+	void addSprite(Sprite sprite);
+
+	void animUpdate(float time);
+
+	Sprite getCurrentSprite();
+
+	void changeAnimationSpeed(int);
+
+private:
+	vector<Sprite> mpSprites;
+	int mCurrentSprite;
+	float mFrameTime;
+	float mTime;
+	float mFps;
+	
+	bool mLoop = true;
+
+};

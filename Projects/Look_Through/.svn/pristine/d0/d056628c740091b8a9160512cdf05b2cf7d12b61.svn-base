@@ -1,0 +1,69 @@
+#include "GraphicsBufferManager.h"
+
+GraphicsBufferManager::GraphicsBufferManager()
+{
+
+}
+GraphicsBufferManager::~GraphicsBufferManager()
+{
+	cleanUp();
+}
+
+GraphicsBuffer* GraphicsBufferManager::makeBuffer(const std::string& index, std::string fileName)
+{
+	GraphicsBuffer* pTemp = NULL;
+	if (mMap.find(index) == mMap.end())
+	{
+		pTemp = new GraphicsBuffer(fileName);
+		mMap[index] = pTemp;
+	}
+
+	return pTemp;
+}
+
+GraphicsBuffer* GraphicsBufferManager::getBuffer(const std::string& index)
+{
+	auto i = mMap.find(index);
+	if (i != mMap.end())
+	{
+		return i->second;
+	}
+	else
+	{
+		return NULL;
+	}
+}
+
+void GraphicsBufferManager::clearBuffer(const std::string& index)
+{
+	auto i = mMap.find(index);
+	if (i == mMap.end())
+	{
+		delete i->second;
+		mMap.erase(i);
+	}
+}
+
+void GraphicsBufferManager::clearBuffer(GraphicsBuffer* pBuff)
+{
+	for (auto i : mMap)
+	{
+		if (pBuff == i.second)
+		{
+			delete pBuff;
+			mMap.erase(i.first);
+			return;
+		}
+	}
+}
+
+void GraphicsBufferManager::cleanUp()
+{
+	for (auto i : mMap)
+	{
+		GraphicsBuffer* pTemp = i.second;
+		delete pTemp;
+	}
+	mMap.clear();
+}
+

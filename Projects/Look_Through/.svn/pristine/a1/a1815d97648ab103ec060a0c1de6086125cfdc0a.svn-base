@@ -1,0 +1,46 @@
+#pragma once
+
+#include <allegro5/allegro.h>
+#include <allegro5/allegro_font.h>
+#include <allegro5/allegro_ttf.h>
+#include <allegro5/allegro_audio.h>
+#include <allegro5/allegro_acodec.h>
+#include <allegro5/allegro_image.h>
+#include <allegro5/allegro_primitives.h>
+
+#include <iostream>
+#include <cassert>
+#include <string>
+#include "GraphicsBuffer.h"
+
+using namespace std;
+
+const string ASSET_PATH = "..\\..\\common\\assets\\";
+const string WOODS_FILENAME = "Woods.png";
+const string SMURF_FILENAME = "smuf_sprites.png";
+const string DEAN_FILENAME = "dean_sprites.png";
+
+const int DISP_WIDTH = 800;
+const int DISP_HEIGHT = 600;
+const int SMURF_DIMENSIONS = 60;
+const int SMURF_ROW_COLUMN = 4;
+const int MAX_SMURF = 16;
+const int FPS = 16.7;
+
+class Game
+{
+private: 
+	GraphicsSystem* mGraphics;
+	InputSystem* mInput;
+
+public: 
+	Game();
+	Game(int width, int height);
+	~Game();
+
+	void cleanUp();
+
+	void doLoop();
+};
+
+extern Game* gGame;

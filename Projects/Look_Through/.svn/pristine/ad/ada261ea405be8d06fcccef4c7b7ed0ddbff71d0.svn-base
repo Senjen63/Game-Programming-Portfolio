@@ -1,0 +1,39 @@
+#pragma once
+#include "EventListener.h"
+#include "EventSystem.h"
+#include "Unit.h"
+
+enum class Direction
+{
+	INVALID_DIR = -1, UP, DOWN, LEFT, RIGHT, NUM_OF_DIR
+};
+
+class Snake : public EventListener
+{
+public:
+	Snake();
+	~Snake();
+
+	void init( Unit* head, int tT );
+	void addUnit( Unit* unit );
+	void removeUnit( Unit* unit );
+	void removeUnit( int index );
+
+	vector< Unit* > getUnits() { return mpSnake; };
+	Unit* getHead() { return mpHead; };
+	Unit* getUnit( int index ) { return mpSnake[ index ]; };
+	Unit* getLastUnit() { return mpSnake[ mpSnake.size() - 1 ]; };
+	Direction getCurDir() { return mCurDir; };
+	int getCurTT() { return mTargetTime; };
+
+	void handleEvent(const Event& theEvent);
+	void setCurDir( Direction dir );
+	void setCurTT( int tT );
+	void updateAll( float deltaTime );
+
+private:
+	int mElapTime, mTargetTime;
+	Direction mCurDir;
+	Unit* mpHead = nullptr;
+	vector< Unit* > mpSnake;
+};

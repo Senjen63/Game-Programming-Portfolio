@@ -1,0 +1,47 @@
+#include "Sprite.h"
+
+Sprite::Sprite(Vector2D location, int wide, int tall, GraphicsBuffer* graphicsBuffer)
+{
+	spriteLocation = location;
+	width = wide;
+	height = tall;
+	mpGraphicsBuffer = graphicsBuffer;
+}
+
+Sprite::Sprite(Vector2D location, GraphicsBuffer* graphicsBuffer)
+{
+	spriteLocation = location;
+	width = graphicsBuffer->getWidth();
+	height = graphicsBuffer->getHeight();
+	mpGraphicsBuffer = graphicsBuffer;
+}
+
+Sprite::Sprite(GraphicsBuffer* pBuffer) :
+	Sprite(Vector2D(), pBuffer->getWidth(), pBuffer->getHeight(), pBuffer) {}
+
+Vector2D Sprite::getLocation()
+{
+	return spriteLocation;
+}
+
+int Sprite::getWidth()
+{
+	return width;
+}
+
+int Sprite::getHeight()
+{
+	return height;
+}
+
+GraphicsBuffer* Sprite::getBuffer()
+{
+	return mpGraphicsBuffer;
+}
+
+
+
+Sprite::~Sprite()
+{
+
+}

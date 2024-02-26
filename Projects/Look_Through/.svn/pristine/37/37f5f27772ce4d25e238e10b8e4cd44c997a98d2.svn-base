@@ -1,0 +1,198 @@
+#include "Level.h"
+#include "Game.h"
+#include "PlayerInfo.h"
+
+#include "PlayerMovement.h"
+#include "BulletFiring.h"
+#include "BoxCollider.h"
+#include "CircleCollider.h"
+
+#include <sstream>
+#include <cassert>
+
+const float WALL_COLLIDER_SCALE = 0.75f;
+
+Level::Level(const std::string& filePath)
+{
+    ifstream fin;
+    fin.open(filePath);
+    assert(fin.good());
+    fin >> *this;
+    fin.close();
+
+    mpEntityManager = std::shared_ptr<EntityManager>(new EntityManager());
+}
+
+void Level::init()
+{
+    mpEntityManager->init();
+}
+
+void Level::load(std::vector<Vector2D> tankPos)
+{
+    if (mIsLoaded)
+        return; // Don't load more than once 
+
+    /* ---=======================--- */
+    /* ---=== Find Animations ===--- */
+    /* ---=======================--- */
+    const Animation* pWallAnimation = Game::getInstance()->getLevelManager()->getWallAnimation();
+    assert(pWallAnimation);
+
+    const Animation* pTankAnimation = Game::getInstance()->getLevelManager()->getTankAnimation();
+    assert(pTankAnimation);
+
+    /* ---======================--- */
+    /* ---=== Resize Display ===--- */
+    /* ---======================--- */
+    Game::getInstance()->getGraphicsSystem()->resizeDisplay(mLevelGridSize * (mLevelWidth - 1), mLevelGridSize * (mLevelHeight - 1));
+
+    /* ---====================--- */
+    /* ---=== Create Tanks ===--- */
+    /* ---====================--- */
+    assert(tankPos.size() == MAX_PLAYERS);
+
+    float tankSpeed = Game::getInstance()->getLevelManager()->getCurrentTankSpeed();
+    float turnSpeed = Game::getInstance()->getLevelManager()->getTurnSpeed();
+    float bulletSpeed = Game::getInstance()->getLevelManager()->getCurrentBulletSpeed();
+
+    for (unsigned int i = 0; i < MAX_PLAYERS; i++)
+    {
+        // Copy Animation 
+        Animation* pTempAnim = new Animation(*pTankAnimation); // Make a copy of the tank animation 
+        mAnimationsToDelete.push_back(pTempAnim);
+
+        // Assumes tank animation is square 
+        Entity* pTempEntity = mpEntityManager->makeEntity(pTempAnim, tankPos[i], (mLevelGridSize / pTempAnim->getMaxSize().getX()));
+        pTempEntity->addComponent(new PlayerMovement((PlayerNumber)(i + 1), tankSpeed, turnSpeed));
+        pTempEntity->addComponent(new BulletFiring(bulletSpeed, (PlayerNumber)(i + 1)));
+        pTempEntity->addComponent(new CircleCollider(CollisionTag::TANK, pTempEntity->getMaxSize().getX() * 0.5f));
+    }
+
+    /* ---===================--- */
+    /* ---=== Create Wall ===--- */
+    /* ---===================--- */
+    for (const Vector2D& pos : mWallPositions)
+    {
+        // Copy Animation 
+        Animation* pTempAnim = new Animation(*pWallAnimation);
+        mAnimationsToDelete.push_back(pTempAnim);
+
+        // Assumes wall animation is square 
+        Entity* pTempEntity = mpEntityManager->makeEntity(pTempAnim, pos, (mLevelGridSize / pTempAnim->getMaxSize().getX()));
+        pTempEntity->addComponent(new BoxCollider(CollisionTag::WALL, pTempEntity->getMaxSize() * 0.5f * WALL_COLLIDER_SCALE));
+    }
+
+    mIsLoaded = true;
+}
+
+void Level::cleanUp()
+{
+    if (!mIsLoaded)
+        return;
+
+    // Clear Entities 
+    mpEntityManager->clearAllEntities();
+    mpEntityManager->cleanUp();
+
+    // Clean up Animations 
+    for (Animation* anim : mAnimationsToDelete)
+    {
+        delete anim;
+    }
+    mAnimationsToDelete.clear();
+
+    mIsLoaded = false;
+}
+
+void Level::update(double deltaTime)
+{
+    mpEntityManager->UpdateAll(deltaTime);
+}
+
+void Level::draw(GraphicsSystem* display)
+{
+    mpEntityManager->DrawAll(display);
+}
+
+Vector2D Level::getGridPos(int x, int y) const
+{
+    int xPos = (x * mLevelGridSize) + (int)(mLevelGridSize * 0.5f);
+    int yPos = (y * mLevelGridSize) + (int)(mLevelGridSize * 0.5f);
+    return Vector2D(xPos, yPos);
+}
+
+Entity* Level::getEntity(int index)
+{
+    return mpEntityManager->getEntity(index);
+}
+
+std::istream& operator>>(std::istream& is, Level& level)
+{
+    // Read in grid size (which will also be the wall size) 
+    is.ignore(1000, ':');
+    is >> level.mLevelGridSize;
+
+    /* ---=============--- */
+    /* ---=== Walls ===--- */
+    /* ---=============--- */
+    is.ignore(1000, ':');
+    is.ignore(1000, '\n'); // Get rid of extra '\n'
+    string line = "";
+
+    int y = -1;
+    while (!is.eof())
+    {
+        getline(is, line);
+        if (line == "=====")
+            break;
+
+        // Read each wall 1/0 for each line 
+        istringstream ss(line);
+
+        int x = -1;
+        while (!ss.eof())
+        {
+            int tile = -1;
+            ss >> tile;
+
+            // Add a wall if needed 
+            switch ((Tile)tile)
+            {
+            case Tile::NONE:
+                break;
+
+            case Tile::WALL:
+                level.mWallPositions.emplace_back(level.getGridPos(x, y));
+                break;
+
+            case Tile::PLAYER:
+                level.mTankStartPositions.emplace_back(level.getGridPos(x, y));
+                break;
+
+            default:
+                assert(false);
+            }
+
+            x++;
+        }
+
+        // Set width 
+        if (level.mLevelWidth == 0)
+        {
+            level.mLevelWidth = x;
+        }
+        else
+        {
+            // Make sure the widths are consistent 
+            assert(level.mLevelWidth == x);
+        }
+
+        y++;
+    }
+
+    // Set Height 
+    level.mLevelHeight = y;
+
+    return is;
+}

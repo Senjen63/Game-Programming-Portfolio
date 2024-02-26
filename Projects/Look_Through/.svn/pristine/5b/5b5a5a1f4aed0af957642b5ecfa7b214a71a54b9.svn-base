@@ -1,0 +1,187 @@
+/*
+Author: David Silverman
+Class: GPR-250-01
+Assignment: Assignment 1
+Certification of Authenticity:
+I certify that this assignment is entirely my own work.
+ */
+
+
+
+#pragma once
+#include <iostream>
+#include "graphicssystem.h"
+
+using namespace std;
+
+/* Pre:  Nothing
+*  Post:  The Graphics system
+*  Purpose:  Create the Graphics system
+*********************************************************/
+GraphicsSystem::GraphicsSystem()
+{
+	
+}
+
+/* Pre:  The Graphics system
+*  Post:  Nothing
+*  Purpose:  Destroy the system
+*********************************************************/
+GraphicsSystem::~GraphicsSystem()
+{
+	mpDisp = nullptr;
+}
+
+/* Pre:  The Graphics system
+*  Post:  A display
+*  Purpose:  Create the display
+*********************************************************/
+void GraphicsSystem::Init()
+{
+	mpDisp = al_create_display(WINDOW_WIDTH, WINDOW_HEIGHT);
+	assert(mpDisp);
+}
+
+/* Pre:  The graphics system and the display
+*  Post:  The graphics system
+*  Purpose:  Clear the display
+*********************************************************/
+void GraphicsSystem::Cleanup()
+{
+	al_destroy_display(mpDisp);
+}
+
+/* Pre:  Nothing
+*  Post:  A height
+*  Purpose:  Get the height
+*********************************************************/
+int GraphicsSystem::getHeight()
+{
+	return al_get_display_height(mpDisp);
+}
+
+/* Pre:  Nothing
+*  Post:  A width
+*  Purpose:  Get the width
+*********************************************************/
+int GraphicsSystem::getWidth()
+{
+	return al_get_display_width(mpDisp);
+}
+
+/* Pre:  Nothing
+*  Post:  A backbuffer
+*  Purpose:  Get the backbuffer
+*********************************************************/
+ALLEGRO_BITMAP* GraphicsSystem::getBackBuffer()
+{
+	return al_get_backbuffer(mpDisp);
+}
+
+/* Pre:  A height
+*  Post:  Nothing
+*  Purpose:  Set the height
+*********************************************************/
+void GraphicsSystem::setHeight(int hi)
+{
+	al_resize_display(mpDisp, getWidth(), hi);
+}
+
+/* Pre:  A width
+*  Post:  Nothing
+*  Purpose:  Set the width
+*********************************************************/
+void GraphicsSystem::setWidth(int wi)
+{
+	al_resize_display(mpDisp, wi, getHeight());
+}
+
+/* Pre:  Nothing
+*  Post:  A display
+*  Purpose:  Get the backbuffer
+*********************************************************/
+void GraphicsSystem::Flip()
+{
+	al_flip_display();
+}
+
+/* Pre:  Nothing
+*  Post:  A drawn sprite
+*  Purpose:  Draw a sprite
+*********************************************************/
+void GraphicsSystem::Draw(Vector2D loc, Sprite spri)
+{
+	al_set_target_bitmap(al_get_backbuffer(mpDisp));
+	al_draw_bitmap(spri.getSprite()->getBuffer(), loc.getX(), loc.getY(), 0);
+}
+
+/* Pre:  Nothing
+*  Post:  A drawn sprite
+*  Purpose:  Draw a sprite
+*********************************************************/
+void GraphicsSystem::Draw(Vector2D loc, Sprite spri, float scale)
+{
+	al_set_target_bitmap(al_get_backbuffer(mpDisp));
+	al_draw_scaled_bitmap(spri.getSprite()->getBuffer(), spri.mLoc.getX(), spri.mLoc.getY(), spri.getWidth(), spri.getHeight(), loc.getX(), loc.getY(),
+		al_get_bitmap_width(spri.getSprite()->getBuffer()) * scale, al_get_bitmap_height(spri.getSprite()->getBuffer()) * scale, 0);
+}
+
+/* Pre:  Nothing
+*  Post:  A drawn sprite
+*  Purpose:  Draw a sprite
+*********************************************************/
+void GraphicsSystem::Draw(GraphicsBuffer* gBuff, Vector2D loc, Sprite spri)
+{
+	al_set_target_bitmap(gBuff->getBuffer());
+	al_draw_bitmap(spri.getSprite()->getBuffer(), loc.getX(), loc.getY(), 0);
+}
+
+/* Pre:  Nothing
+*  Post:  A drawn sprite
+*  Purpose:  Draw a sprite
+*********************************************************/
+void GraphicsSystem::Draw(GraphicsBuffer* gBuff, Vector2D loc, Sprite spri, float scale)
+{
+	al_set_target_bitmap(gBuff->getBuffer());
+	al_draw_scaled_bitmap(spri.getSprite()->getBuffer(), spri.mLoc.getX(), spri.mLoc.getY(), spri.getWidth(), spri.getHeight(), loc.getX(), loc.getY(),
+		al_get_bitmap_width(spri.getSprite()->getBuffer()) * scale, al_get_bitmap_height(spri.getSprite()->getBuffer()) * scale, 0);
+}
+
+/* Pre:  Nothing
+*  Post:  Drawn text
+*  Purpose:  Draw text
+*********************************************************/
+void GraphicsSystem::WriteText(Vector2D loc, Font font, Color color, string text)
+{
+	al_set_target_bitmap(al_get_backbuffer(mpDisp));
+	al_draw_text(font.getFont(), color.getColor(), loc.getX(), loc.getY(), 0, text.c_str());
+}
+
+/* Pre:  Nothing
+*  Post:  Drawn text
+*  Purpose:  Draw text
+*********************************************************/
+void GraphicsSystem::WriteText(GraphicsBuffer* gBuff, Vector2D loc, Font font, Color color, string text)
+{
+	al_set_target_bitmap(gBuff->getBuffer());
+	al_draw_text(font.getFont(), color.getColor(), loc.getX(), loc.getY(), ALLEGRO_ALIGN_LEFT, text.c_str());
+	//cout <<  << endl;
+}
+
+/* Pre:  Nothing
+*  Post:  A saved bitmap
+*  Purpose: Save bitmaps
+*********************************************************/
+void GraphicsSystem::SaveBuffer(string fileName)
+{
+	al_save_bitmap(fileName.c_str(), al_get_backbuffer(mpDisp));
+}
+
+/* Pre:  Nothing
+*  Post:  A saved bitmap
+*  Purpose: Save bitmaps
+*********************************************************/
+void GraphicsSystem::SaveBuffer(GraphicsBuffer* gBuff, string fileName)
+{
+	al_save_bitmap(fileName.c_str(), gBuff->getBuffer());
+}

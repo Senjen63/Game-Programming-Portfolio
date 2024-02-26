@@ -1,0 +1,20 @@
+#pragma once
+
+#include <string>
+#include "GameEvent.h"
+
+class InputEvent : public GameEvent
+{
+private:
+
+	string mInputState;
+	int mInput;
+
+public:
+
+	InputEvent(const string& inputState, const int& input):GameEvent(INPUT_EVENT), mInputState(inputState), mInput(input) {};
+	~InputEvent() {};
+
+	inline string getInputState() const { return mInputState; };
+	inline int getInput() const { return mInput; };
+};

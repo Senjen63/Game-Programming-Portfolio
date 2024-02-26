@@ -1,0 +1,310 @@
+#include "Game.h"
+Game* Game::mpsGameInstance = NULL;
+
+Game::Game()
+{
+	mpGraphSystem = new GraphicsSystem();
+	mInputSystem.Init();
+	mpFont = new Font((ASSET_PATH + FONT_FILENAME), FONT_SIZE);
+	mpFontSmall = new Font((ASSET_PATH + FONT_FILENAME), FONT_SIZE_SMALL);
+	mHUD = new HUD(mpGraphSystem);
+	mCurrentState = Game::GameState::MAIN_MENU;
+}
+
+
+Game* Game::GetInstance()
+{
+	if (mpsGameInstance == NULL) 
+	{
+		mpsGameInstance = new Game;
+	}
+	return mpsGameInstance;
+}
+
+
+Game::~Game() 
+{
+	CleanUp();
+}
+
+
+void Game::Init() 
+{
+	mBufferManager.CreateBuffer(FLOOR_FILENAME, ASSET_PATH + FLOOR_FILENAME);
+	mBufferManager.CreateBuffer(WALL_FILENAME, ASSET_PATH + WALL_FILENAME);
+	mBufferManager.CreateBuffer(SNAKE_FILENAME, ASSET_PATH + SNAKE_FILENAME);
+	mBufferManager.CreateBuffer(FOOD_FILENAME, ASSET_PATH + FOOD_FILENAME);
+	mBufferManager.CreateBuffer(SPEED_FILENAME, ASSET_PATH + SPEED_FILENAME);
+	mBufferManager.CreateBuffer(SLOW_FILENAME, ASSET_PATH + SLOW_FILENAME);
+	mBufferManager.CreateBuffer(DEATH_MENU, Color(20, 20, 20), DEATH_MENU_HEIGHT, DEATH_MENU_WIDTH);
+	mBufferManager.CreateBuffer(BACKGROUND, Color(20, 20, 20), DISP_HEIGHT, DISP_WIDTH);
+
+	mpEventSystem = EventSystem::getInstance();
+	mpEventSystem->init();
+	mpEventSystem->getInstance()->addListener((EventType)INPUT_EVENT, this);
+}
+
+void Game::ReloadGame()
+{
+	mGameTime = 0;
+	mScore = 0;
+	mGameTime = 0;
+	mSegments = 0;
+	mUnitManager.CleanUp();
+	LoadLevel(mLevelOn);
+	mUnitManager.SetSnakeSpeed(mSnakeSpeed);
+	mUnitManager.SetPowerupFrequency(mItemFrequency);
+	mUnitManager.SpawnSnake(Vector2D(DISP_HEIGHT / 2, DISP_WIDTH / 2), mBufferManager.GetBuffer(SNAKE_FILENAME), mSnakeSegments);
+	mCurrentState = Game::GameState::IN_GAME;
+}
+
+
+void Game::LoadLevel(int levelToLoad) 
+{
+	ifstream fin;
+	string nextTile;
+	int numTile = 0;
+	float xCoord = 0;
+	float yCoord = SPRITE_WIDTH;
+	int tmp;
+	string text;
+	bool isReadingWalls = false;
+
+	fin.open(mLevelNames[levelToLoad]);
+	if (!fin.is_open())
+	{
+		cout << "Level failed to load." << endl;
+	}
+	while (!fin.eof()) 
+	{	
+		if (!isReadingWalls) 
+		{
+			fin >> text;
+			if (text == "SnakeSpeed:")
+			{
+				fin >> tmp;
+				mSnakeSpeed = tmp;
+			}
+			if (text == "SnakeSegments:") 
+			{
+				fin >> tmp;
+				mSnakeSegments = tmp;
+			}
+			if (text == "SnakeReqLength:")
+			{
+				fin >> tmp;
+				mSnakeRequiredLength = tmp;
+			}
+			if (text == "FoodPoints:")
+			{
+				fin >> tmp;
+				mPointsPerFood = tmp;
+			}
+			if (text == "ItemFreq:")
+			{
+				fin >> tmp;
+				mItemFrequency = tmp;
+			}
+			if (text == "Map:") 
+			{
+				isReadingWalls = true;
+			}
+		}
+		else
+		{
+			if (numTile == 16)
+			{
+				yCoord += SPRITE_WIDTH;
+				xCoord = SPRITE_WIDTH;
+				numTile = 0;
+			}
+			else
+			{
+				xCoord = ((SPRITE_WIDTH * numTile)) + SPRITE_WIDTH;
+			}
+			fin >> nextTile;
+			//cout << nextTile << ": " << xCoord << ", " << yCoord << endl;
+			if (nextTile == "W")
+			{
+				mUnitManager.CreateUnit(true, mBufferManager.GetBuffer(WALL_FILENAME));
+				mUnitManager.GetLastUnit()->SetPosition(Vector2D(xCoord, yCoord));
+			}
+			else if (nextTile == "F")
+			{
+				mUnitManager.CreateUnit(false, mBufferManager.GetBuffer(FLOOR_FILENAME));
+				mUnitManager.GetLastUnit()->SetPosition(Vector2D(xCoord, yCoord));
+			}
+			numTile++;
+		}
+	}
+}
+
+
+
+void Game::handleEvent(const Event& event)
+{
+	if (event.getType() == INPUT_EVENT)
+	{
+		const InputEvent& inputEvent = static_cast<const InputEvent&>(event);
+
+		if (inputEvent.GetKeyCode() == ALLEGRO_KEY_W || inputEvent.GetKeyCode() == ALLEGRO_KEY_UP)
+		{
+			mUnitManager.ChangeSnakeDirection((int)Direction::UP);
+		}
+		if (inputEvent.GetKeyCode() == ALLEGRO_KEY_A || inputEvent.GetKeyCode() == ALLEGRO_KEY_LEFT)
+		{
+			mUnitManager.ChangeSnakeDirection((int)Direction::LEFT);
+		}
+		if (inputEvent.GetKeyCode() == ALLEGRO_KEY_S || inputEvent.GetKeyCode() == ALLEGRO_KEY_DOWN)
+		{
+			mUnitManager.ChangeSnakeDirection((int)Direction::DOWN);
+		}
+		if (inputEvent.GetKeyCode() == ALLEGRO_KEY_D || inputEvent.GetKeyCode() == ALLEGRO_KEY_RIGHT)
+		{
+			mUnitManager.ChangeSnakeDirection((int)Direction::RIGHT);
+		}
+		if (inputEvent.GetKeyCode() == ALLEGRO_KEY_ESCAPE)
+		{
+			leave = true;
+		}
+		if (inputEvent.GetKeyCode() == ALLEGRO_KEY_SPACE)
+		{
+			switch (mCurrentState)
+			{
+			case Game::GameState::MAIN_MENU:
+				mLevelOn++;
+				ReloadGame();
+				break;
+			case Game::GameState::DEATH_SCREEN:
+				ReloadGame();
+				mSnakeIsDead = false;
+				break;
+			case Game::GameState::IN_GAME:
+				//nothing for now
+				break;
+			case Game::GameState::GAME_COMPLETE:
+				//nothing for now
+				break;
+			}
+		}
+	}
+}
+
+
+void Game::DoLoop() 
+{
+	Timer time;
+	PerformanceTracker* pTracker = new PerformanceTracker();
+	float deltaTime = 0;
+	
+	//using this here to have a correct default value to draw the sprite, in the center of the screen
+	while (!leave)
+	{
+
+		pTracker->clearTracker("loop");
+		pTracker->startTracking("loop");
+		time.start();
+		deltaTime = time.getElapsedTime();
+		mInputSystem.InputEventLoop();
+		if (mCurrentState == Game::GameState::MAIN_MENU) 
+		{
+			mpGraphSystem->draw(mBufferManager.GetBuffer(BACKGROUND), Vector2D(0, 0));
+			if (mLevelOn == -1) 
+			{
+				mpGraphSystem->writeText(Vector2D(DISP_WIDTH / 2, DISP_HEIGHT / 2 - (SPRITE_WIDTH / 2)), mpFont, Color(0, 50, 150), "Welcome to Snake!");
+				mpGraphSystem->writeText(Vector2D(DISP_WIDTH / 2, DISP_HEIGHT / 2 + SPRITE_WIDTH), mpFontSmall, Color(0, 100, 130), "Press space to start");
+
+			}
+			else 
+			{
+				mpGraphSystem->writeText(Vector2D(DISP_WIDTH / 2, DISP_HEIGHT / 2 - (SPRITE_WIDTH / 2)), mpFont, Color(0, 50, 150), "Level Complete!");
+				mpGraphSystem->writeText(Vector2D(DISP_WIDTH / 2, DISP_HEIGHT / 2 + SPRITE_WIDTH), mpFontSmall, Color(0, 100, 130), "Press space to continue");
+			}
+		}
+		else if(mCurrentState == Game::GameState::GAME_COMPLETE)
+		{
+			mpGraphSystem->draw(mBufferManager.GetBuffer(BACKGROUND), Vector2D(0, 0));
+			mpGraphSystem->writeText(Vector2D(DISP_WIDTH / 2, DISP_HEIGHT / 2 - (SPRITE_WIDTH / 2)), mpFont, Color(0, 50, 150), "Game Complete!");
+			mpGraphSystem->writeText(Vector2D(DISP_WIDTH / 2, DISP_HEIGHT / 2 + SPRITE_WIDTH), mpFontSmall, Color(0, 100, 130), "Press escape to exit");
+		}
+		else
+		{
+			if (!mSnakeIsDead)
+			{
+				mUnitManager.Update(deltaTime);
+				mUnitManager.Draw(mpGraphSystem);
+			}
+			else
+			{
+				mpGraphSystem->draw(mBufferManager.GetBuffer(DEATH_MENU), Vector2D((DISP_WIDTH - DEATH_MENU_WIDTH) / 2, (DISP_HEIGHT - DEATH_MENU_HEIGHT) / 2));
+				mpGraphSystem->writeText(Vector2D(DISP_WIDTH / 2, DISP_HEIGHT / 2 - 16), mpFont, Color(200, 0, 0), "YOU DIED");
+				mpGraphSystem->writeText(Vector2D(DISP_WIDTH / 2, DISP_HEIGHT / 2 + 32), mpFontSmall, Color(200, 0, 0), "Press space to retry");
+			}
+		}
+		time.sleepUntilElapsed(SLEEP_MS);
+		mGameTime += time.getElapsedTime() / TIME_SCALE;
+		if (mCurrentState == Game::GameState::IN_GAME)
+		{
+			mHUD->UpdateHUD(mScore, TIME_SCALE / pTracker->getElapsedTime("loop"), mGameTime);
+		}
+		mpGraphSystem->flip();
+		//cout << pTracker->getElapsedTime("loop") << endl;
+		pTracker->stopTracking("loop");
+	}
+	delete pTracker;
+}
+
+
+
+void Game::PauseGame() 
+{
+	mUnitManager.DoAnimation();
+}
+
+
+GraphicsBuffer* Game::GetBuffer(string index)
+{
+	return mBufferManager.GetBuffer(index);
+}
+
+void Game::SnakeHasDied()
+{
+	mSnakeIsDead = true;
+	mCurrentState = Game::GameState::DEATH_SCREEN;
+}
+
+GraphicsSystem* Game::GetGraphicsSystem()
+{
+	return mpGraphSystem;
+}
+
+void Game::AddScore()
+{
+	mScore += mPointsPerFood;
+	mSegments++;
+	if (mSegments >= mSnakeRequiredLength) 
+	{
+		if (mLevelOn != 2) 
+		{
+			mCurrentState = Game::GameState::MAIN_MENU;
+		}
+		else
+		{
+			mCurrentState = Game::GameState::GAME_COMPLETE;
+		}
+	}
+}
+
+
+void Game::CleanUp()
+{
+	mpGraphSystem->CleanUp();
+	mBufferManager.CleanUp();
+	mUnitManager.CleanUp();
+	mInputSystem.CleanUp();
+	delete mHUD;
+	mHUD = nullptr;
+	delete mpFont;
+	delete mpFontSmall;
+	delete mpGraphSystem;
+}

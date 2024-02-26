@@ -1,0 +1,28 @@
+#pragma once
+
+#include <PerformanceTracker.h>
+#include <MemoryTracker.h>
+
+#include "GraphicsBuffer.h"
+
+class Sprite : public Trackable
+{
+public:
+	Sprite();
+	Sprite(GraphicsBuffer* graphicsBuffer, int x, int y, int width, int height);
+	~Sprite();
+
+	GraphicsBuffer* getBuffer();
+	int getX();
+	int getY();
+	int getWidth();
+	int getHeight();
+
+private:
+	GraphicsBuffer* mpBuffer;
+	int mX;
+	int mY;
+	int	mWidth;
+	int mHeight;
+
+};

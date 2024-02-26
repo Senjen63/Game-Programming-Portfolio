@@ -1,0 +1,51 @@
+#pragma once
+
+#include <PerformanceTracker.h>
+#include <MemoryTracker.h>
+#include <Timer.h>
+
+#include "GraphicsSystem.h"
+#include "Animation.h"
+#include "InputSystem.h"
+#include "Unit.h"
+
+const string ASSET_PATH = "..\\..\\common\\assets\\";
+const string BACKGROUND_FILENAME = "Woods.png";
+const string SMURF_FILENAME = "smurf_sprites.png";
+const string DEAN_FILENAME = "dean_sprites.png";
+
+const int SPRITE_WIDTH = 60;
+const int SPRITE_HEIGHT = 60;
+
+const int NUM_FRAMES = 16;
+const float STARTING_TIMING = 0.005;
+
+const double SLEEP_MS = 16.7;
+
+class Game : public Trackable
+{
+private:
+	GraphicsSystem* mpSystem = nullptr;
+	InputSystem mInputSystem;
+
+	GraphicsBuffer* mpWoods = nullptr;
+	GraphicsBuffer* mpSmurf = nullptr;
+	GraphicsBuffer* mpDean = nullptr;
+
+	Animation* mpSmurfAnim = nullptr;
+	Animation* mpDeanAnim = nullptr;
+
+	Unit* mpObject = nullptr;
+	//Unit* mpDeanObj = nullptr;
+
+public:
+	Game();
+	~Game();
+
+	void init();
+	void cleanup();
+
+	void doLoop();
+};
+
+extern Game* gpGameSystem;

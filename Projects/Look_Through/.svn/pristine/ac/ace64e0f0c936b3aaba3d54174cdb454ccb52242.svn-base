@@ -1,0 +1,22 @@
+#include "Sprite.h"
+
+
+Sprite::Sprite(GraphicsBuffer* buffer, Vector2D sourcePos, Vector2D size)
+{
+	mpBuffer = buffer;
+	mSourcePos = sourcePos;
+	mSize = size;
+}
+
+
+Sprite::Sprite(GraphicsBuffer* buffer)
+{
+	mpBuffer = buffer;
+	mSourcePos = Vector2D(0, 0);
+	mSize = Vector2D(buffer->getWidth(), buffer->getHeight());
+}
+
+
+Sprite::~Sprite()
+{
+}

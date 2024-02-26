@@ -1,0 +1,13 @@
+#pragma once
+
+enum class PlayerNumber
+{
+	INVALID = -1,
+	PLAYER_ONE = 1,
+	PLAYER_TWO = 2,
+	MAX_PLAYER_NUM = PLAYER_TWO
+};
+
+const unsigned int MAX_PLAYERS = (unsigned int)PlayerNumber::MAX_PLAYER_NUM;
+const unsigned int MAX_NUM_SPEEDS = 3;
+const unsigned int VICTORY_NUM = 3;

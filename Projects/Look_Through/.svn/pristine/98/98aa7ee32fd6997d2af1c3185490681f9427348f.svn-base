@@ -1,0 +1,115 @@
+#pragma once
+#include <Timer.h>
+#include <iostream>
+#include <cassert>
+#include <string>
+#include <PerformanceTracker.h>
+#include <MemoryTracker.h>
+#include "GraphicsSystem.h"
+#include "InputSystem.h"
+#include "Animation.h"
+#include "Unit.h"
+#include "UnitManager.h"
+#include "Snake.h"
+#include "GraphicsBufferManager.h"
+#include "Level.h"
+#include "LevelManager.h"
+#include "HUD.h"
+
+
+using namespace std;
+
+
+const string ASSETS = "..\\Assets\\";
+const string SNAKE_HEAD = "head4.png";
+const string SNAKE_BODY = "body2.png";
+const string WALL_PATH = "wall2.png";
+const string FOOD_PATH = "foodsheet2.png";
+const string SPEED_PATH = "fast.png";
+const string SLOW_PATH = "slow.png";
+const string BONUS_PATH = "Bonus.png";
+const string ASSET_PATH = "..\\..\\common\\assets\\";
+const string BACK_FILE = "Woods.png";
+const string DEAN_FILE = "dean_sprites.png";
+const string FONT_FILE = "cour.ttf";
+const Color WHITE = Color(255, 255, 255);
+const string SMURF_FILE = "smurf_sprites.png";
+const int SPRITE_NUM = 16;
+const int DISP_WIDTH = 1000;
+const int DISP_HEIGHT = 800;
+const int FPS = 16;
+const double TIME_TIL_SLEEP = 16.7;
+const Color BLACK = Color(0, 0, 0);
+const Color RED = Color(255, 0, 0);
+const Color GOLD = Color(250, 207, 50);
+
+
+
+class Game : public Trackable 
+{
+public:
+	Game();
+	~Game();
+	void init();
+	void doLoop();
+	void clean();
+
+
+private:
+
+	GraphicsSystem* mpDisplay;
+	InputSystem* mControls;
+	Animation* mpSmurfs;
+	Animation* mpDeans;
+	UnitManager* mpUnitList;
+	GraphicsBufferManager* mpBuffList;
+	Snake* mpSnake;
+	HUD* mpHUD;
+	Font* mpFont;
+	LevelManager* mpLevelMan;
+	UnitManager* mpFoodMan;
+	UnitManager* mpSpeedMan;
+	UnitManager* mpSlowMan;
+	UnitManager* mpBonusMan;
+
+
+};
+
+extern Game* gpGame;
+
+
+
+/*
+extern
+//this is for the global game variable
+
+clearTracker, startTracking, stopTracking
+// this is for the doLoop function, also use start() and sleepUnitlElapsed() functions from timer in dean lib
+
+al_isntall_mouse and keyboard
+//also for doLoop()
+
+void Unit::update(double dt)
+{
+	mAnimation.update(dt);
+}
+//unit update function
+
+data within animation.h
+	list of sprites make sure this is not dynamically allocated 
+	timing info
+		timePerFrame
+		timeLeft
+	current Sprite
+	Looping?
+
+	void Animation::update(double dt)
+	{
+		timeLeft -= dt;
+		if(timeLeft <= 0)
+		{
+			index++
+			timeLeft = timePerFrame
+		}
+	}
+*/

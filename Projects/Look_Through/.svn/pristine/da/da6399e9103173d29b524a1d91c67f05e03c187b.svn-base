@@ -1,0 +1,36 @@
+#pragma once
+#include "GraphicsBuffer.h"
+
+using namespace std;
+
+GraphicsBuffer::GraphicsBuffer(string asset, string fileName)
+{
+	bitmap = al_load_bitmap((asset + fileName).c_str());
+	assert(bitmap);
+}
+
+GraphicsBuffer::GraphicsBuffer(int width, int height, ALLEGRO_COLOR color)
+{
+	ALLEGRO_BITMAP* origBitmap = al_get_target_bitmap();
+	bitmap = al_create_bitmap(width, height);
+	al_set_target_bitmap(bitmap);
+	al_clear_to_color(color);
+	assert(bitmap);
+	al_set_target_bitmap(origBitmap);
+}
+
+GraphicsBuffer::~GraphicsBuffer()
+{
+	al_destroy_bitmap(bitmap);
+}
+
+int GraphicsBuffer::getWidth()
+{
+	return al_get_bitmap_width(bitmap);
+}
+
+int GraphicsBuffer::getHeight()
+{
+	int width = al_get_bitmap_height(bitmap);
+	return width;
+}

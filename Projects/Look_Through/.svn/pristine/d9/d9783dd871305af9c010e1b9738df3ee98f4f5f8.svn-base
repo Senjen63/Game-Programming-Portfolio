@@ -1,0 +1,51 @@
+//BP
+#pragma once
+#include <cmath>
+#include "Collision.h"
+#include "SnakeUnit.h"
+#include <Trackable.h>
+#include "GameScore.h"
+#include <EventSystem.h>
+#include "UnitManager.h"
+#include "SnakeCreation.h"
+#include "DirectionChange.h"
+
+class Snake : public EventListener
+{
+private:
+	float mSpeed = 0;
+	int mFoodPoints = 0;
+	bool mHasDied = false;
+	float mStartSpeed = 0;
+	unsigned int mPlayerScore = 0;
+	vector<SnakeUnit*> mBodyParts;
+	unsigned int mBodyPartsAtEnd = 0;
+	unsigned int mBodyPartsAtStart = 0;
+	EventSystem* mpEventSystem = nullptr;
+	Vector2D mOriginPoint = Vector2D(0, 0);
+	Vector2D mStartingPath = Vector2D(1, 0);
+	GraphicsBuffer* mpSnakeHeadBuff = nullptr;
+	GraphicsBuffer* mpSnakeBodyBuff = nullptr;
+public:
+	Snake();
+	Snake(Vector2D originPoint, Vector2D startingPath, GraphicsBuffer* headBuff, GraphicsBuffer* bodyBuff);
+	~Snake();
+	void init();
+	void cleaner();
+	void clearSnakeParts();
+	void resetSnakeParts();
+	SnakeUnit* getSnakeHead();
+	SnakeUnit* getSnakeBody();
+	void addScore(int score);
+	float getSpeed() { return mSpeed; }
+	void updatePlayerSnake(float timePassed);
+	bool hasDied() { return mHasDied; };
+	void setSnakeSpeed(float snakeSpeed);
+	virtual void handleEvent(const Event& thisEvent);
+	void addBodyParts(int segments, bool addScore);
+	unsigned int getBodyPartsAtStart() { return mBodyPartsAtStart; }
+	unsigned int getBodyPartsAtEnd() { return mBodyPartsAtEnd; }
+	void setEndSegmentNum(unsigned int endBodyParts) { mBodyPartsAtEnd = endBodyParts; }
+	void setStartSegmentNum(unsigned int startBodyParts) { mBodyPartsAtStart = startBodyParts; }
+	void beginLevel(float speed, unsigned int startBodyParts, unsigned int endBodyParts, int foodPoints);
+};

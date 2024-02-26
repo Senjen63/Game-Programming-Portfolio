@@ -1,0 +1,10 @@
+#include "DeadEvent.h"
+
+DeadEvent::DeadEvent()
+	:GameEvent(DEAD_EVENT)
+{
+}
+
+DeadEvent::~DeadEvent()
+{
+}

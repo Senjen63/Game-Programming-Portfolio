@@ -1,0 +1,98 @@
+#include "Snake.h"
+
+Snake::Snake()
+{
+	mDir = LEFT;
+	mFps = 0;
+	mTimeBetweenFrame = 0;
+	mTimeLeft = mTimeBetweenFrame;
+}
+
+Snake::Snake(float framerate)
+{
+	mDir = LEFT;
+	mFps = framerate;
+	mTimeBetweenFrame = 1000.0 / mFps;
+	mTimeLeft = mTimeBetweenFrame;
+}
+
+Snake::~Snake()
+{
+
+}
+
+void Snake::updateSnake(int changeX, int changeY, float dt)
+{
+	mTimeLeft -= dt;
+
+	int headX = getUnit(0).getLocationX();
+	int headY = getUnit(0).getLocationY();
+	if (mTimeLeft <= 0)
+	{
+		Vector2D oldLoc(headX, headY);
+		Vector2D newLoc = oldLoc;
+		if (mDir == LEFT)
+		{
+			headX -= changeX;
+		}
+		else if (mDir == RIGHT)
+		{
+			headX += changeX;
+		}
+		else if (mDir == UP)
+		{
+			headY -= changeY;
+		}
+		else if (mDir == DOWN)
+		{
+			headY += changeY;
+		}
+
+		getUnit(0).setLocationX(headX);
+		getUnit(0).setLocationY(headY);
+
+		if (getLength() > 1)
+		{
+			for (int i = 1; i < getLength(); i++)
+			{
+				oldLoc.setX(getUnit(i).getLocationX());
+				oldLoc.setY(getUnit(i).getLocationY());
+
+				int newX = newLoc.getX();
+				int newY = newLoc.getY();
+
+				
+
+				getUnit(i).setLocationX(newX);
+				getUnit(i).setLocationY(newY);
+
+				newLoc = oldLoc;
+			}
+		}
+		mTimeLeft = mTimeBetweenFrame;
+	}
+}
+
+void Snake::resetSnake()
+{
+	Unit first = getUnit(0);
+	removeAll();
+	addUnit(first);
+}
+
+direction Snake::getDir()
+{
+	return mDir;
+}
+
+void Snake::setDir(direction dir)
+{
+	mDir = dir;
+}
+
+void Snake::setFps(double& fps)
+{
+	mFps = fps;
+	mTimeBetweenFrame = 1000.0 / mFps;
+	mTimeLeft = mTimeBetweenFrame;
+}

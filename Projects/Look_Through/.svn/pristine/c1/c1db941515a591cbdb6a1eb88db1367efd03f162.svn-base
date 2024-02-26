@@ -1,0 +1,15 @@
+#pragma once
+
+#include <Vector2D.h>
+#include "GameEvent.h"
+
+class TurnEvent : public GameEvent
+{
+public:
+    TurnEvent(Vector2D direction);
+    ~TurnEvent();
+
+    Vector2D getDirection() const { return mDirection; }
+private:
+    Vector2D mDirection = Vector2D(0, 0);
+};

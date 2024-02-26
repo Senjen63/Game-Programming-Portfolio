@@ -1,0 +1,334 @@
+#include "LevelManager.h"
+
+const int LevelManager::CELL_SIZE = 32;
+//const Vector2D LevelManager::BOARD_DIMENSIONS = Vector2D(25, 20); // Num cells of CELL_SIZE the board consists of
+
+
+void LevelManager::init()
+{
+	EventSystem::getInstance()->addListener((EventType)GameEventType::SCORE_CHANGE_EVENT, this);
+	EventSystem::getInstance()->addListener((EventType)GameEventType::FRUIT_COLLECTED_EVENT, this);
+	EventSystem::getInstance()->addListener((EventType)GameEventType::KEYBOARD_JUST_PRESS_EVENT, this);
+
+	std::srand(std::time(NULL));
+
+	GraphicsBufferManager* gbManager = Game::getInstance()->getGraphicsBufferManager();
+
+
+	// Snake setup
+	std::vector<Sprite> snakeSprites;
+	Sprite snakeSprite = Sprite(&gbManager->getGraphicsBuffer("SnakeBuffer"));
+	snakeSprites.push_back(snakeSprite);
+	Animation snakeAnimation = Animation(snakeSprites, ANIM_SPEED, true);
+
+	std::unordered_map<std::string, Animation> snakeAnims;
+	snakeAnims["SnakeAnim"] = snakeAnimation;
+
+	mSnakeHeadParams = UnitParameters(Vector2D(0, 0), snakeAnims, "SnakeAnim", CollisionLayer::SNAKE_HEAD);
+
+
+	// Wall setup
+	std::vector<Sprite> wallSprites;
+	wallSprites.push_back(Sprite(&gbManager->getGraphicsBuffer("Wall")));
+	Animation wallAnimation = Animation(wallSprites, ANIM_SPEED, true);
+	std::unordered_map<std::string, Animation> wallAnims;
+	wallAnims["WallAnim"] = wallAnimation;
+
+	mWallParams = UnitParameters(Vector2D(0, 0), wallAnims, "WallAnim", CollisionLayer::WALL);
+
+
+	// Fruit setup
+	std::vector<Sprite> fruitSprites{ Sprite(&gbManager->getGraphicsBuffer("Fruit")), Sprite(&gbManager->getGraphicsBuffer("Fruit2"))};
+	Animation fruitAnimation = Animation(fruitSprites, ANIM_SPEED, true);
+	std::unordered_map<std::string, Animation> fruitAnims{ {"FruitAnim", fruitAnimation} };
+
+	mFruitParams = UnitParameters(Vector2D(0, 0), fruitAnims, "FruitAnim", CollisionLayer::FRUIT);
+
+
+	// Speed Up Power Up setup
+	std::vector<Sprite> speedUpPowerUpSprites{ Sprite(&gbManager->getGraphicsBuffer("SpeedUpPowerUp")), Sprite(&gbManager->getGraphicsBuffer("SpeedUpPowerUp2")) };
+	Animation speedUpPowerUpAnimation = Animation(speedUpPowerUpSprites, ANIM_SPEED, true);
+	std::unordered_map<std::string, Animation> speedUpPowerAnims{ {"SpeedUpPowerUpAnim", speedUpPowerUpAnimation} };
+
+	mSpeedUpPowerUpParams = UnitParameters(Vector2D(0, 0), speedUpPowerAnims, "SpeedUpPowerUpAnim", CollisionLayer::SPEED_POWER_UP);
+
+
+	// Speed Down Power Up setup
+	std::vector<Sprite> speedDownPowerUpSprites{ Sprite(&gbManager->getGraphicsBuffer("SpeedDownPowerUp")), Sprite(&gbManager->getGraphicsBuffer("SpeedDownPowerUp2")) };
+	Animation speedDownPowerUpAnimation = Animation(speedDownPowerUpSprites, ANIM_SPEED, true);
+	std::unordered_map<std::string, Animation> speedDownPowerAnims{ {"SpeedDownPowerUpAnim", speedDownPowerUpAnimation} };
+
+	mSpeedDownPowerUpParams = UnitParameters(Vector2D(0, 0), speedDownPowerAnims, "SpeedDownPowerUpAnim", CollisionLayer::SPEED_POWER_UP);
+
+
+	// Score Up Power Up setup
+	std::vector<Sprite> scoreUpPowerUpSprites{ Sprite(&gbManager->getGraphicsBuffer("ScoreUpPowerUp")), Sprite(&gbManager->getGraphicsBuffer("ScoreUpPowerUp2")) };
+	Animation scoreUpPowerUpAnimation = Animation(scoreUpPowerUpSprites, ANIM_SPEED, true);
+	std::unordered_map<std::string, Animation> scoreUpPowerUpAnims{ {"ScoreUpPowerUpAnim", scoreUpPowerUpAnimation} };
+
+	mScoreUpPowerUpParams = UnitParameters(Vector2D(0, 0), scoreUpPowerUpAnims, "ScoreUpPowerUpAnim", CollisionLayer::SCORE_POWER_UP);
+
+}
+
+
+void LevelManager::loadLevelFromFile(std::string levelDataFullPath)
+{
+	std::ifstream input = std::ifstream(levelDataFullPath);
+	
+	if (!input.good())
+	{
+		throw "loadLevelFromFile failed";
+	}
+
+
+	std::string key;
+
+	while (!input.eof())
+	{
+		input >> key;
+
+		if (key == "StartMillisecondMoveDelay")
+		{
+			input >> mStartMillisecondMoveDelay;
+		}
+		else if (key == "StartNumSegments")
+		{
+			input >> mStartNumSegments;
+		}
+		else if (key == "GoalLength")
+		{
+			input >> mGoalLength;
+		}
+		else if (key == "NumPointsForFood")
+		{
+			input >> mNumPointsForFood;
+		}
+		else if (key == "NumPointsForScoreUpPowerUp")
+		{
+			input >> mNumPointsForScoreUpPowerUp;
+		}
+		else if (key == "PowerUpSpawnFrequency")
+		{
+			input >> mPowerUpSpawnFrequency;
+		}
+		else if (key == "SpeedUpPowerUpChance")
+		{
+			input >> mSpeedUpPowerUpChance;
+		}
+		else if (key == "SpeedDownPowerUpChance")
+		{
+			input >> mSpeedDownPowerUpChance;
+		}
+		else if (key == "ScoreModPowerUpChance")
+		{
+			input >> mScoreModPowerUpChance;
+		}
+		else if (key == "SpeedUpPowerUpMagnitude")
+		{
+			input >> mSpeedUpPowerUpMagnitude;
+			if (mSpeedUpPowerUpMagnitude < 0) mSpeedUpPowerUpMagnitude *= -1;
+		}
+		else if (key == "SpeedDownPowerUpMagnitude")
+		{
+			input >> mSpeedDownPowerUpMagnitude;
+			if (mSpeedDownPowerUpMagnitude < 0) mSpeedDownPowerUpMagnitude *= -1;
+		}
+		else if (key == "LevelLayout") // Level layout has to be at end
+		{
+			placeWalls(input);
+		}
+	}
+}
+
+
+void LevelManager::startGame()
+{
+	spawnFruit();
+}
+
+
+void LevelManager::update(float dt)
+{
+	if (mGameStarted == false) return;
+
+
+	mTimeSinceLastPowerUpSpawn += Conversion::milToSec(dt);
+	mTimeInLevel += Conversion::milToSec(dt);
+
+	if (mTimeSinceLastPowerUpSpawn >= mPowerUpSpawnFrequency)
+	{
+		mTimeSinceLastPowerUpSpawn = 0.0f;
+
+		float total = mSpeedUpPowerUpChance + mSpeedDownPowerUpChance + mScoreModPowerUpChance;
+
+		float randomPercent = ((float) rand()) / (float) RAND_MAX;
+		float randomScaledPercent = randomPercent * total;
+
+		if (randomScaledPercent <= mSpeedUpPowerUpChance)
+		{
+			spawnSpeedUpPowerUp();
+		}
+		else if (randomScaledPercent <= mSpeedUpPowerUpChance + mSpeedDownPowerUpChance)
+		{
+			spawnSpeedDownPowerUp();
+		}
+		else
+		{
+			spawnScoreUpPowerUp();
+		}
+	}
+}
+
+
+void LevelManager::placeWalls(std::ifstream& wallLayout)
+{
+	std::string row;
+
+	int r = 0;
+
+	while (!wallLayout.eof())
+	{
+		wallLayout >> row;
+
+		for (unsigned int c = 0; c < row.size(); c++)
+		{
+			if (row[c] == '1')
+			{
+				mWallParams.startPos = Vector2D(c * CELL_SIZE, r * CELL_SIZE);
+				Game::getInstance()->getUnitManager()->createUnit(mWallParams, std::vector<Component*>());
+			}
+			else if (row[c] == 'S' || row[c] == 's')
+			{
+				mSnakeHeadParams.startPos = Vector2D(c * CELL_SIZE, r * CELL_SIZE);
+				spawnSnake();
+			}
+		}
+
+		std::cout << row << std::endl;
+
+		r++;
+	}
+}
+
+
+void LevelManager::spawnSnake()
+{
+	std::vector<CollisionLayer> snakeCollisionMask{ CollisionLayer::SNAKE_BODY, CollisionLayer::WALL, CollisionLayer::SPEED_POWER_UP,
+		CollisionLayer::SCORE_POWER_UP, CollisionLayer::FRUIT };
+
+	std::vector<Component*> snakeUnitComponents;
+	snakeUnitComponents.push_back(new SnakeComponent(Vector2D(0, 0), mStartMillisecondMoveDelay));
+	snakeUnitComponents.push_back(new CollisionDriver(snakeCollisionMask));
+
+	Game::getInstance()->getUnitManager()->createUnit(mSnakeHeadParams, snakeUnitComponents);
+
+	SnakeComponent* sc = static_cast<SnakeComponent*>(snakeUnitComponents[0]);
+	sc->init(); // Need to call separate init to make sure CollisionDriver is attached to unit
+
+	for (int i = 0; i < mStartNumSegments - 1; i++)
+	{
+		sc->spawnNewSegment();
+	}
+}
+
+
+void LevelManager::spawnFruit()
+{
+	std::vector<Component*> fruitComponents{ new ScoreModPowerUpComponent(mNumPointsForFood) };
+	Unit* fruit = &Game::getInstance()->getUnitManager()->createUnit(mFruitParams, fruitComponents);
+	moveUnitToAvailableSpace(fruit);
+
+	std::cout << "SPAWN FRUIT" << std::endl;
+}
+
+
+void LevelManager::spawnSpeedUpPowerUp()
+{
+	std::vector<Component*> speedUpPowerUpComponents{ new SpeedPowerUpComponent(-mSpeedUpPowerUpMagnitude) };
+	Unit* powerUp = &Game::getInstance()->getUnitManager()->createUnit(mSpeedUpPowerUpParams, speedUpPowerUpComponents);
+	moveUnitToAvailableSpace(powerUp);
+	
+	std::cout << "SPAWN SPEED UP" << std::endl;
+}
+
+
+void LevelManager::spawnSpeedDownPowerUp()
+{
+	std::vector<Component*> speedDownPowerUpComponents{ new SpeedPowerUpComponent(mSpeedDownPowerUpMagnitude) };
+	Unit* powerUp = &Game::getInstance()->getUnitManager()->createUnit(mSpeedDownPowerUpParams, speedDownPowerUpComponents);
+	moveUnitToAvailableSpace(powerUp);
+
+	std::cout << "SPAWN SPEED DOWN" << std::endl;
+}
+
+
+void LevelManager::spawnScoreUpPowerUp()
+{
+	std::vector<Component*> scoreUpPowerUp{ new ScoreModPowerUpComponent(mNumPointsForScoreUpPowerUp) };
+	Unit* powerUp = &Game::getInstance()->getUnitManager()->createUnit(mScoreUpPowerUpParams, scoreUpPowerUp);
+	moveUnitToAvailableSpace(powerUp);
+
+	std::cout << "SPAWN SCORE UP" << std::endl;
+}
+
+
+void LevelManager::moveUnitToAvailableSpace(Unit* unit)
+{
+	bool spaceFound = false;
+	Vector2D limits = Game::getInstance()->getWindowSize();
+
+	Vector2D newPos;
+
+	while (spaceFound == false)
+	{
+		newPos = Vector2D(std::rand() % (int)limits.getX(), std::rand() % (int)limits.getY());
+		auto unitsAtSpot = Game::getInstance()->getUnitManager()->getUnitsAtPos(newPos);
+
+		if (unitsAtSpot.size() == 0)
+		{
+			newPos = Vector2D((int)(newPos.getX() / CELL_SIZE) * CELL_SIZE, (int)(newPos.getY() / CELL_SIZE) * CELL_SIZE);
+			unit->setPos(newPos);
+			spaceFound = true;
+		}
+	}
+}
+
+
+void LevelManager::handleEvent(const Event& theEvent)
+{
+	if (theEvent.getType() == (EventType)GameEventType::SCORE_CHANGE_EVENT)
+	{
+		const ScoreChangeEvent& scEvent = static_cast<const ScoreChangeEvent&>(theEvent);
+
+		mScore += scEvent.getScoreModification();
+
+		std::cout << mScore << std::endl;
+	}
+	else if (theEvent.getType() == (EventType)GameEventType::FRUIT_COLLECTED_EVENT)
+	{
+		mScore += mNumPointsForFood;
+
+		mFruitCollected++;
+
+		if (mFruitCollected + 1 >= mGoalLength)
+		{
+			EventSystem::getInstance()->fireEvent((EventType)GameEventType::SNAKE_WON);
+		}
+
+		spawnFruit();
+
+		std::cout << "fruitCollected" << std::endl;
+	}
+	else if (mGameStarted == false && theEvent.getType() == (EventType)GameEventType::KEYBOARD_JUST_PRESS_EVENT)
+	{
+		Keycode k = static_cast<const KeyPressEvent&>(theEvent).getKey();
+
+		if (k == Keycode::W || k == Keycode::A || k == Keycode::S || k == Keycode::D || k == Keycode::UP_ARROW 
+			|| k == Keycode::LEFT_ARROW || k == Keycode::DOWN_ARROW || k == Keycode::RIGHT_ARROW)
+		{
+			mGameStarted = true;
+			startGame();
+
+		}
+	}
+}

@@ -1,0 +1,687 @@
+#include "Game.h"
+
+Game* Game::mpsGame = nullptr;
+
+Game::Game()
+{
+	mDisplayHeight = DISP_HEIGHT;
+	mDisplayWidth = DISP_WIDTH;
+	mpGraphicsSystem = nullptr;
+	mpFont = nullptr;
+	mpEventSystem = nullptr;
+}
+
+Game::~Game()
+{
+	cleanup();
+}
+
+Game* Game::getInstance()
+{
+	if (mpsGame == nullptr)
+	{
+		mpsGame = new Game;
+	}
+	return mpsGame;
+}
+
+void Game::cleanup()
+{
+	mpEventSystem->cleanup();
+	mInputSystem.cleanup();
+	delete mpGraphicsSystem;
+}
+
+void Game::init()
+{
+	EventSystem::initInstance();
+	mpGraphicsSystem = new GraphicsSystem(mDisplayHeight, mDisplayWidth);
+	mpGraphicsSystem->init();
+	mInputSystem.init();
+	mpEventSystem = EventSystem::getInstance();
+	mpEventSystem->init();
+	mpEventSystem->addListener((EventType)INPUT_EVENT, this);
+	
+	mLanguages = Language(LANGUAGE_FILE);
+
+	mSoundSystem = SoundSystem (SOUND_FILE);
+
+	ifstream gameData(GAME_SETTINGS);
+
+	string key;
+
+	if (gameData.good())
+	{
+		
+		string data;
+		int fontSize;
+
+		while(!gameData.eof())
+		{
+			gameData >> key;
+
+			if (key == "ship")
+			{
+				gameData >> data;
+				mBuffers.addBuffer(new GraphicsBuffer(data), "ship");
+				mPlayer.setAnimation(new Animation(mBuffers.getBuffer("ship"), (MILLISECOND_TO_SECOND / FRAMES_PER_SECOND), true));
+			}
+			if (key == "bullet")
+			{
+				gameData >> data;
+				mBuffers.addBuffer(new GraphicsBuffer(data), "bullet");
+				mBullet.setAnimation(new Animation(mBuffers.getBuffer("bullet"), SPRITES_PER_ROW, SPRITES_PER_COL, SPRITE_WIDTH, SPRITE_HEIGHT, (MILLISECOND_TO_SECOND / FRAMES_PER_SECOND), true));
+			}
+			if (key == "enemybullet")
+			{
+				gameData >> data;
+				mBuffers.addBuffer(new GraphicsBuffer(data), "enemybullet");
+				mEnemyBullet.setAnimation(new Animation(mBuffers.getBuffer("enemybullet"), SPRITES_PER_ROW, SPRITES_PER_COL, SPRITE_WIDTH, SPRITE_HEIGHT, (MILLISECOND_TO_SECOND / FRAMES_PER_SECOND)*1000, true));
+			}
+			if (key == "enemy")
+			{
+				gameData >> data;
+				mBuffers.addBuffer(new GraphicsBuffer(data), "enemy");
+				mEnemy.setAnimation(new Animation(mBuffers.getBuffer("enemy"), SPRITES_PER_ROW, SPRITES_PER_COL, SPRITE_WIDTH, SPRITE_HEIGHT, (MILLISECOND_TO_SECOND / FRAMES_PER_SECOND)*10000000000, true));
+			}
+			if (key == "font")
+			{
+				gameData >> data;
+				gameData >> fontSize;
+				mpFont = new Font(data, fontSize);
+			}
+			if (key == "color")
+			{
+				int r, g, b;
+				gameData >> r;
+				gameData >> g;
+				gameData >> b;
+				mTextColor = Color(r, g, b);
+			}
+		}
+	}
+
+	mHud = HUD(mpFont, mTextColor);
+	
+	ifstream playData(PLAY_SETTINGS);
+	if (playData.good())
+	{
+		while (!playData.eof())
+		{
+			playData >> key;
+
+			if (key == "enemylocation")
+			{
+				bool isEnemy = false;
+				for (int row = 0; row < LEVEL_HEIGHT; row++)
+				{
+					for (int column = 0; column < LEVEL_WIDTH; column++)
+					{
+						playData >> isEnemy;
+						if (isEnemy)
+						{
+							mEnemy.setSquare(mLevel.getSquare(column, row));
+							mEnemies.addUnit(new Unit(mEnemy));
+						}
+						cout << isEnemy;
+					}
+					cout << "\n";
+				}
+			}
+			else if (key == "playerlocation")
+			{
+				int x, y;
+
+				playData >> x;
+				playData >> y;
+
+				mPlayer.setSquare(mLevel.getSquare(x, y));
+			}
+		}
+	}
+}
+
+void Game::doLoop()
+{
+	PerformanceTracker* pPerformanceTracker = new PerformanceTracker;
+
+	float targetTime = MILLISECOND_TO_SECOND / FRAMES_PER_SECOND;
+	float bulletTime = 1;
+	float currentBulletTime = bulletTime;
+	float enemyTime = 6;
+	float currentEnemyTime = enemyTime;
+	float enemyFireTime = 10;
+	float currentFireTime = enemyFireTime;
+	float enemyBulletTime = 8;
+	float currentEnemyBulletTime = enemyBulletTime;
+	int numEnemyBullets = 4;
+	int currentEnemyBullets = 0;
+	mMovingRight = true;
+	bool moveDown = false;
+	
+	float frames;
+
+	Timer loopTimer;
+	frames = 0;
+	Color black = Color(0, 0, 0);
+	GraphicsBuffer* pBackground = new GraphicsBuffer(mDisplayHeight, mDisplayWidth, black);
+	Sprite* pSpriteBackground = new Sprite(pBackground, Vector2D(0, 0), pBackground->getHeight(), pBackground->getWidth());
+
+	srand(time(NULL));
+
+	mSoundSystem.playMusic();
+
+	while (mKeepGoing)
+	{
+		pPerformanceTracker->clearTracker("loop");
+		pPerformanceTracker->startTracking("loop");
+		loopTimer.start();
+
+		mpGraphicsSystem->draw(Vector2D(0, 0), pSpriteBackground, 1);
+
+		mInputSystem.getKeyEvent();
+
+		if (mRestart)
+		{
+			mMovingRight = true;
+			mEnemies.clearList();
+			ifstream playData(PLAY_SETTINGS);
+			if (playData.good())
+			{
+				string key;
+				while (!playData.eof())
+				{
+					playData >> key;
+
+					if (key == "enemylocation")
+					{
+						bool isEnemy = false;
+						for (int row = 0; row < LEVEL_HEIGHT; row++)
+						{
+							for (int column = 0; column < LEVEL_WIDTH; column++)
+							{
+								playData >> isEnemy;
+								if (isEnemy)
+								{
+									mEnemy.setSquare(mLevel.getSquare(column, row));
+									mEnemies.addUnit(new Unit(mEnemy));
+								}
+								cout << isEnemy;
+							}
+							cout << "\n";
+						}
+					}
+					else if (key == "playerlocation")
+					{
+						int x, y;
+
+						playData >> x;
+						playData >> y;
+
+						mPlayer.setSquare(mLevel.getSquare(x, y));
+					}
+				}
+			}
+			mEnemyBullets.clearList();
+			mPoints = 0;
+			mRestart = false;
+		}
+
+		//Updates everything that needs to be updated for the next level.
+		if (mNextLevel)
+		{
+			mTimePassed = 0;
+			mCurrentLevel++;
+			mNextLevel = false;
+			mPlaying = true;
+		}
+
+		if (mMainMenu)
+		{
+			mpGraphicsSystem->writeText(Vector2D(100,100), mpFont, mTextColor, mLanguages.getWord("Space Invaders on a Grid"));
+			mpGraphicsSystem->writeText(Vector2D(100, 250), mpFont, mTextColor, "1. " + mLanguages.getWord(MAIN_OPTION_ONE));
+			mpGraphicsSystem->writeText(Vector2D(100, 350), mpFont, mTextColor, "2. " + mLanguages.getWord(MAIN_OPTION_TWO));
+			mpGraphicsSystem->writeText(Vector2D(100, 450), mpFont, mTextColor, "3. " + mLanguages.getWord(MAIN_OPTION_THREE));
+			mpGraphicsSystem->writeText(Vector2D(100, 550), mpFont, mTextColor, "4. " + mLanguages.getWord(MAIN_OPTION_FOUR));
+			mPoints = 0;
+		}
+		
+		if (mPlaying)
+		{
+			mPlayer.draw(mpGraphicsSystem);
+			mEnemies.drawAll(mpGraphicsSystem);
+			if (mFiring)
+			{
+				currentBulletTime -= loopTimer.getElapsedTime() * mSpeed;
+				if(currentBulletTime <= 0)
+				{
+					if ((mBullet.getSquare()->getY()-1 < 0))
+					{
+						mFiring = false;
+					}
+					else
+					{
+						mBullet.setSquare(mLevel.getSquare(mBullet.getSquare()->getX(), mBullet.getSquare()->getY()-1));
+					}
+					currentBulletTime = bulletTime;
+				}
+				for (int i = 0; i < mEnemies.getAmount(); i++)
+				{
+					if (mEnemies.getUnit(i)->getSquare() == mBullet.getSquare())
+					{
+						mEnemies.killUnit(i);
+						mPoints++;
+						mFiring = false;
+						mSoundSystem.playExplosion();
+					}
+				}
+				if (mFiring)
+				{
+					mBullet.update(loopTimer.getElapsedTime());
+					mBullet.draw(mpGraphicsSystem);
+				}
+			}
+
+			currentEnemyTime -= loopTimer.getElapsedTime() * mSpeed;
+			if (currentEnemyTime <= 0)
+			{
+				for (int i = 0; i < mEnemies.getAmount(); i++)
+				{
+					if (mMovingRight)
+					{
+						if(mEnemies.getUnit(i)->getSquare()->getX() + 1 >= LEVEL_WIDTH)
+						{
+							mMovingRight = false;
+							moveDown = true;
+						}
+					}
+					else if (!mMovingRight)
+					{
+						if (mEnemies.getUnit(i)->getSquare()->getX() - 1 < 0)
+						{
+							mMovingRight = true;
+							moveDown = true;
+						}
+					}
+				}
+				if (moveDown)
+				{
+					for (int i = 0; i < mEnemies.getAmount(); i++)
+					{
+						mEnemies.getUnit(i)->setSquare(mLevel.getSquare(mEnemies.getUnit(i)->getSquare()->getX(), mEnemies.getUnit(i)->getSquare()->getY() + 1));
+						if (mEnemies.getUnit(i)->getSquare()->getY() >= LEVEL_HEIGHT - 1)
+						{
+							mPlaying = false;
+							mDead = true;
+						}
+					}
+					moveDown = false;
+				}
+				else if (mMovingRight)
+				{
+					for (int i = 0; i < mEnemies.getAmount(); i++)
+					{
+						mEnemies.getUnit(i)->setSquare(mLevel.getSquare((mEnemies.getUnit(i)->getSquare()->getX() + 1), mEnemies.getUnit(i)->getSquare()->getY()));
+					}
+				}
+				else
+				{
+					for (int i = 0; i < mEnemies.getAmount(); i++)
+					{
+						mEnemies.getUnit(i)->setSquare(mLevel.getSquare((mEnemies.getUnit(i)->getSquare()->getX() - 1), mEnemies.getUnit(i)->getSquare()->getY()));
+					}
+				}
+				currentEnemyTime = enemyTime;
+			}
+
+			mEnemies.updateAll(loopTimer.getElapsedTime());
+			mEnemies.drawAll(mpGraphicsSystem);
+
+			currentFireTime -= loopTimer.getElapsedTime() * mSpeed;
+			if (currentFireTime <= 0)
+			{
+				if (numEnemyBullets > mEnemyBullets.getAmount())
+				{
+					if (mEnemies.getAmount() > 0)
+					{
+						mEnemyBullets.addUnit(new Unit(mEnemyBullet));
+						int enemyNum = rand() % (mEnemies.getAmount() - 1) + 0;
+						mEnemyBullets.getUnit(mEnemyBullets.getAmount()-1)->setSquare(mEnemies.getUnit(enemyNum)->getSquare());
+					}
+				}
+				currentFireTime = enemyFireTime;
+			}
+
+			if (mEnemyBullets.getAmount() > 0)
+			{
+				mEnemyBullets.updateAll(loopTimer.getElapsedTime());
+				currentEnemyBulletTime -= loopTimer.getElapsedTime() * mSpeed;
+				if (currentEnemyBulletTime <= 0)
+				{
+					for (int i = 0; i < mEnemyBullets.getAmount(); i++)
+					{
+						if ((mEnemyBullets.getUnit(i)->getSquare()->getY() + 1 > 11))
+						{
+							mEnemyBullets.killUnit(i);
+						}
+						else
+						{
+							mEnemyBullets.getUnit(i)->setSquare(mLevel.getSquare(mEnemyBullets.getUnit(i)->getSquare()->getX(), mEnemyBullets.getUnit(i)->getSquare()->getY() + 1));
+						}
+					}
+					currentEnemyBulletTime = enemyBulletTime;
+				}
+				for (int i = 0; i < mEnemyBullets.getAmount(); i++)
+				{
+					if (mEnemyBullets.getUnit(i)->getSquare() == mPlayer.getSquare())
+					{
+						mPlaying = false;
+						mDead = true;
+						mSoundSystem.playExplosion();
+					}
+				}
+				mEnemyBullets.drawAll(mpGraphicsSystem);
+			}
+
+			frames++;
+			mFramesPerSecond = MILLISECOND_TO_SECOND/mTime;
+			mHud.display(mpGraphicsSystem, mPoints, mFramesPerSecond, mTimePassed, mLanguages.getWord("Points"), mLanguages.getWord("Frames"), mLanguages.getWord("Timer"));
+
+		}
+
+		if (mOptions)
+		{
+			mpGraphicsSystem->writeText(Vector2D(100, 200), mpFont, mTextColor, "1. " + mLanguages.getWord("Speed") + ": "+ to_string(mSpeed));
+			if (mSoundSystem.checkSound())
+			{
+				mpGraphicsSystem->writeText(Vector2D(100, 350), mpFont, mTextColor, "2. " + mLanguages.getWord("Sound") + ": " + mLanguages.getWord("On"));
+			}
+			else if (!mSoundSystem.checkSound())
+			{
+				mpGraphicsSystem->writeText(Vector2D(100, 350), mpFont, mTextColor, "2. " + mLanguages.getWord("Sound") + ": " + mLanguages.getWord("Off"));
+			}
+			mpGraphicsSystem->writeText(Vector2D(100, 500), mpFont, mTextColor, "3. " + mLanguages.getWord("Language") + " " + mLanguages.getCurrentLanguage());
+			mpGraphicsSystem->writeText(Vector2D(100, 650), mpFont, mTextColor, "4. " + mLanguages.getWord("Exit"));
+		}
+
+		if (mWin)
+		{
+			mpGraphicsSystem->writeText(Vector2D(100, 300), mpFont, mTextColor, WIN_MESSAGE);
+			mpGraphicsSystem->writeText(Vector2D(100, 500), mpFont, mTextColor, WIN_INSTRUCTION);
+		}
+
+		if (mDead)
+		{
+			mpGraphicsSystem->writeText(Vector2D(100, 300), mpFont, mTextColor, DEATH_MESSAGE);
+			mpGraphicsSystem->writeText(Vector2D(100, 500), mpFont, mTextColor, DEATH_INSTRUCTION);
+		}
+
+		mpGraphicsSystem->flip();
+		loopTimer.sleepUntilElapsed(targetTime);
+		pPerformanceTracker->stopTracking("loop");
+		if (mPlaying)
+		{
+			mTime = loopTimer.getElapsedTime();
+			mTimePassed += loopTimer.getElapsedTime() / MILLISECOND_TO_SECOND;
+		}
+		std::cout << "Frame Took:" << pPerformanceTracker->getElapsedTime("loop") << " ms" << endl;
+	}
+	
+	delete pBackground;
+	delete pSpriteBackground;
+	mBuffers.clearList();
+	delete mpFont;
+	delete pPerformanceTracker;
+}
+
+void Game::handleEvent(const Event& event)
+{
+	if (event.getType() == INPUT_EVENT)
+	{
+		const InputEvent& inputEvent = static_cast<const InputEvent&>(event);
+
+		if (inputEvent.getKeyCode() == (int)KeyCode::ESCAPE)
+		{
+			mKeepGoing = false;
+			if (mPlaying)
+			{
+				ofstream saveData(SAVE_FILE);
+				{
+					saveData << "yes";
+					saveData << endl;
+					saveData << "points";
+					saveData << endl;
+					saveData << mPoints;
+					saveData << endl;
+					saveData << "time";
+					saveData << endl;
+					saveData << mTimePassed;
+					saveData << endl;
+					saveData << "player";
+					saveData << endl;
+					saveData << mPlayer.getSquare()->getX();
+					saveData << endl;
+					saveData << mPlayer.getSquare()->getY();
+					saveData << endl;
+					if (mFiring)
+					{
+						saveData << "bullet";
+						saveData << endl;
+						saveData << mBullet.getSquare()->getX();
+						saveData << endl;
+						saveData << mBullet.getSquare()->getY();
+						saveData << endl;
+					}
+					saveData << "facing";
+					saveData << endl;
+					saveData << mMovingRight;
+					saveData << endl;
+					saveData << "enemybullets";
+					for (int i = 0; i < mEnemyBullets.getAmount(); i++)
+					{
+						saveData << endl << "enemybullet";
+						saveData << endl;
+						saveData << mEnemyBullets.getUnit(i)->getSquare()->getX();
+						saveData << endl;
+						saveData << mEnemyBullets.getUnit(i)->getSquare()->getY();
+					}
+					saveData << endl;
+					saveData << "EOB";
+					saveData << endl;
+					saveData << "enemies";
+					for (int i = 0; i < mEnemies.getAmount(); i++)
+					{
+						saveData << endl << "enemy";
+						saveData << endl;
+						saveData << mEnemies.getUnit(i)->getSquare()->getX();
+						saveData << endl;
+						saveData << mEnemies.getUnit(i)->getSquare()->getY();
+					}
+					saveData << endl << "EOE";
+				}
+			}
+		}
+
+		if (mMainMenu)
+		{
+			if (inputEvent.getKeyCode() == (int)KeyCode::ONE)
+			{
+				mCurrentLevel = -1;
+				mMainMenu = false;
+				mNextLevel = true;
+				mLevel.reset();
+				mFrames = 0;
+			}
+			else if (inputEvent.getKeyCode() == (int)KeyCode::TWO)
+			{
+
+				mMainMenu = false;
+
+				ifstream loadData(SAVE_FILE);
+				{
+					if (loadData.good())
+					{
+						string key;
+						while (!loadData.eof())
+						{
+							loadData >> key;
+							if (key == "no")
+							{
+								mRestart = true;
+							}
+							else if (key == "player")
+							{
+								int x, y;
+								loadData >> x;
+								loadData >> y;
+								mPlayer.setSquare(mLevel.getSquare(x, y));
+							}
+							else if (key == "points")
+							{
+								int num;
+								loadData >> num;
+								mPoints = num;
+							}
+							else if (key == "time")
+							{
+								double num;
+								loadData >> num;
+								mTimePassed = num;
+							}
+							else if (key == "bullet")
+							{
+								mFiring = true;
+								int x, y;
+								loadData >> x;
+								loadData >> y;
+								mBullet.setSquare(mLevel.getSquare(x, y));
+							}
+							else if (key == "facing")
+							{
+								bool facing;
+								loadData >> facing;
+								mMovingRight = facing;
+							}
+							else if (key == "enemybullets")
+							{
+								int x, y;
+								int bulletNum = 0;
+
+								loadData >> key;
+								while (!(key == "EOB"))
+								{
+									loadData >> x;
+									loadData >> y;
+									mEnemyBullets.addUnit(new Unit(mEnemyBullet));
+									mEnemyBullets.getUnit(bulletNum)->setSquare(mLevel.getSquare(x, y));
+									bulletNum++;
+									loadData >> key;
+								}
+							}
+							else if (key == "enemies")
+							{
+								int x, y;
+								int enemyNum = 0;
+
+								mEnemies.clearList();
+								loadData >> key;
+								while (!(key == "EOE"))
+								{
+									loadData >> x;
+									loadData >> y;
+									mEnemies.addUnit(new Unit(mEnemy));
+									mEnemies.getUnit(enemyNum)->setSquare(mLevel.getSquare(x,y));
+									enemyNum++;
+									loadData >> key;
+								}
+							}
+						}
+					}
+				}
+
+				mPlaying = true;
+			}
+			else if (inputEvent.getKeyCode() == (int)KeyCode::THREE)
+			{
+				mOptions = true;
+				mMainMenu = false;
+			}
+			else if (inputEvent.getKeyCode() == (int)KeyCode::FOUR)
+			{
+				mMainMenu = false;
+				mKeepGoing = false;
+			}
+		}
+
+		if (mOptions)
+		{
+			if (inputEvent.getKeyCode() == (int)KeyCode::ONE)
+			{
+				mSpeed++;
+				if (mSpeed > MAX_SPEED)
+				{
+					mSpeed = MIN_SPEED;
+				}
+			}
+			else if (inputEvent.getKeyCode() == (int)KeyCode::TWO)
+			{
+				mSoundSystem.toggleSound();
+			}
+			else if (inputEvent.getKeyCode() == (int)KeyCode::THREE)
+			{
+				mLanguages.switchLanguage();
+
+			}
+			else if (inputEvent.getKeyCode() == (int)KeyCode::FOUR)
+			{
+				mMainMenu = true;
+				mOptions = false;
+			}
+		}
+
+		if (inputEvent.getKeyCode() == (int)KeyCode::SPACE)
+		{
+			if (mDead)
+			{
+				mDead = false;
+				mRestart = true;
+				mMainMenu = true;
+			}
+			else if (mWin)
+			{
+				mWin = false;
+				mRestart = true;
+				mMainMenu = true;
+			}
+		}
+		
+		if (mPlaying)
+		{
+			if (inputEvent.getKeyCode() == (int)KeyCode::LEFT)
+			{
+				if (!(mPlayer.getSquare()->getX() <= 0))
+				{
+					mPlayer.setSquare(mLevel.getSquare(mPlayer.getSquare()->getX() - 1, mPlayer.getSquare()->getY()));
+				}
+			}
+			
+			if (inputEvent.getKeyCode() == (int)KeyCode::RIGHT)
+			{
+				if (!(mPlayer.getSquare()->getX() >= LEVEL_WIDTH-1))
+				{
+					mPlayer.setSquare(mLevel.getSquare(mPlayer.getSquare()->getX() + 1, mPlayer.getSquare()->getY()));
+				}
+			}
+			if (inputEvent.getKeyCode() == (int)KeyCode::SPACE)
+			{
+				if (!mFiring)
+				{
+					mFiring = true;
+					mBullet.setSquare(mLevel.getSquare(mPlayer.getSquare()->getX(), mPlayer.getSquare()->getY() - 1));
+					mSoundSystem.playFiring();
+				}
+			}
+		}
+	}
+	
+}

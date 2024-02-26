@@ -1,0 +1,102 @@
+#include "InputSystem.h"
+
+
+InputSystem::InputSystem()
+{
+	mpQueue = nullptr;
+}
+
+
+InputSystem::~InputSystem()
+{
+	cleanup();
+}
+
+
+int InputSystem::init()
+{
+	if (!al_install_keyboard())
+	{
+		std::cout << "error installing Keyboard\n";
+		system("pause");
+		return 1;
+	}
+
+	if (!al_install_mouse())
+	{
+		std::cout << "error installing Mouse\n";
+		system("pause");
+		return 1;
+	}
+
+	mpQueue = al_create_event_queue();
+	al_register_event_source(mpQueue, al_get_keyboard_event_source());
+	al_register_event_source(mpQueue, al_get_mouse_event_source());
+
+	return 0;
+}
+
+
+void InputSystem::cleanup()
+{
+	if (al_is_event_source_registered(mpQueue, al_get_keyboard_event_source()))
+	{
+		al_unregister_event_source(mpQueue, al_get_keyboard_event_source());
+	}
+	
+	if(al_is_event_source_registered(mpQueue, al_get_mouse_event_source()))
+	{
+		al_unregister_event_source(mpQueue, al_get_mouse_event_source());
+	}
+
+	if (mpQueue != nullptr) al_destroy_event_queue(mpQueue);
+}
+
+
+void InputSystem::handleInputQueue()
+{
+	ALLEGRO_EVENT theEvent;
+
+	while (!al_is_event_queue_empty(mpQueue))
+	{
+		al_get_next_event(mpQueue, &theEvent);
+
+		if (theEvent.type == ALLEGRO_EVENT_KEY_DOWN)
+		{
+			EventSystem::getInstance()->fireEvent(KeyPressEvent((Keycode)theEvent.keyboard.keycode));
+		}
+	}
+
+	/*Else if (theEvent.type == ALLEGRO_EVENT_KEY_UP)
+	{
+		Std::cout << theEvent.keyboard.keycode << “key up\n”;
+
+	}*/
+}
+
+
+bool InputSystem::getKeyState(Keycode keycode)
+{
+	ALLEGRO_KEYBOARD_STATE state;
+	al_get_keyboard_state(&state);
+
+	return al_key_down(&state, (int) keycode);
+}
+
+
+bool InputSystem::getMouseButtonState(Mousecode mouseCode)
+{
+	ALLEGRO_MOUSE_STATE state;
+	al_get_mouse_state(&state);
+
+	return al_mouse_button_down(&state, (int) mouseCode);
+}
+
+
+Vector2D InputSystem::getMousePos()
+{
+	ALLEGRO_MOUSE_STATE state;
+	al_get_mouse_state(&state);
+
+	return Vector2D(state.x, state.y);
+}

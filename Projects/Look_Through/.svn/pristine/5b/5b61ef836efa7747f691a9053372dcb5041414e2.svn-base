@@ -1,0 +1,20 @@
+#include "MouseEvent.h"
+
+MouseEvent::MouseEvent(int keyCode) : GameEvent((GameEventType)MOUSE_CLICK_EVENT)
+{
+    mKeyCode = keyCode;
+}
+
+
+MouseEvent::~MouseEvent()
+{
+
+}
+
+
+int MouseEvent::GetKeyCode() const
+{
+    return mKeyCode;
+}
+
+

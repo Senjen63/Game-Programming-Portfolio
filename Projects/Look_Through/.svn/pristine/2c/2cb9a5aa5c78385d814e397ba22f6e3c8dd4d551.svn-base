@@ -1,0 +1,25 @@
+#pragma once
+#include <allegro5/allegro.h>
+
+#include "Trackable.h"
+
+class InputSystem : public Trackable
+{
+public:
+	InputSystem();
+	~InputSystem();
+
+	void init();
+	void cleanup();
+	void update();
+
+	//both enum and int accessors are included for completeness
+	bool getKeyState(int keyCode);
+	bool getMouseState(int mouseCode);
+	int getMouseX();
+	int getMouseY();
+
+	const int ALLEGRO_KEYS_TO_CHECK = 86;
+private:
+
+};

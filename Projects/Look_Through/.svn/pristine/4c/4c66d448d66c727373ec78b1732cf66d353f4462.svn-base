@@ -1,0 +1,133 @@
+﻿//     -------------------------------------------------------------------------
+//     Final Project
+//         BaseComponents.hpp
+//     
+//             Created:
+//                 10-04-2022
+//             Author(s):
+//                 Aven Presseisen
+//     -------------------------------------------------------------------------
+
+#pragma once
+
+#include <memory>
+#include <string>
+#include <vector>
+
+#include "Component.hpp"
+#include "Font.hpp"
+
+struct Translation final : Component
+{
+    float x{};
+    float y{};
+
+    Translation() = default;
+
+    Translation( const float x, const float y ) : x( x ), y( y )
+    {
+    }
+};
+
+struct Scale final : Component
+{
+    float width{ 1 };
+    float height{ 1 };
+
+    Scale() = default;
+
+    Scale( const float width, const float height ) : width( width ), height( height )
+    {
+    }
+};
+
+struct SpriteHolder final : Component
+{
+    std::string name;
+
+    explicit SpriteHolder( std::string name ) : name( std::move( name ) )
+    {
+    }
+};
+
+struct Animation final : Component
+{
+    std::vector< std::string > spriteNames;
+    int fps{ 1 };
+    int currentFrame{};
+    float time{};
+
+    Animation( std::vector< std::string > spriteNames, const int fps, const int currentFrame = 0, const float time = 0 ) : spriteNames( std::move( spriteNames ) ), fps( fps ), currentFrame( currentFrame ), time( time )
+    {
+    }
+};
+
+struct UIElement final : Component
+{
+    bool centered = false;
+    UIElement() = default;
+
+    explicit UIElement( const bool centered ) : centered( centered )
+    {
+    }
+};
+
+struct TextElement final : Component
+{
+    std::string fontName;
+    std::string text;
+    Font::Align alignment;
+
+    TextElement( std::string fontName, std::string text, const Font::Align alignment ) : fontName( std::move( fontName ) ), text( std::move( text ) ), alignment( alignment )
+    {
+    }
+};
+
+struct PongComponent final : Component
+{
+    float angle;
+    float speed;
+
+    PongComponent( const float angle, const float speed ) : angle( angle ), speed( speed )
+    {
+    }
+};
+
+struct FPSShower final : Component
+{
+    float fps{};
+};
+
+
+struct Vector2
+{
+    float x;
+    float y;
+};
+
+
+struct Collider final : Component
+{
+    /*Vector2 topLeft{};
+    Vector2 topRight{};
+    Vector2 bottomRight{};
+    Vector2 bottomLeft{};
+
+    Collider( const Vector2 topLeft, const Vector2 topRight, const Vector2 bottomRight, const Vector2 bottomLeft ) : topLeft( topLeft ), topRight( topRight ), bottomRight( bottomRight ), bottomLeft( bottomLeft )
+    {
+    }*/
+
+    float size;
+
+    explicit Collider( const float size ) : size( size )
+    {
+    }
+};
+
+struct RigidBody final : Component
+{
+    Vector2 force{};
+    float drag{};
+    float collisionTolerance{ 0.05f };
+    std::vector< std::weak_ptr< Collider > > collisions{};
+};

@@ -1,0 +1,86 @@
+#include "Animation.h"
+#include <Timer.h>
+
+Animation::Animation()
+{
+	mpSprite = nullptr;
+	mTiming = 0;
+	mCurrentTime = 0;
+	mCurrentSprite = 0;
+	mNumSprite = 0;
+	mLoop = false;
+}
+
+Animation::Animation(GraphicsBuffer* pBuffer, int numSprites, float timing, bool loop)
+{
+	mpSprite = new Sprite[numSprites];
+	int count = 0;
+	Vector2D pos = Vector2D();
+	for (int i = 0; i < 2; i++)
+	{
+		for (int j = 0; j < 2; j++)
+		{
+			pos.setX(j * 60);
+			pos.setY(i * 60);
+			mpSprite[count] = Sprite(pBuffer, pos, 60, 60);
+			count++;
+		}
+	}
+	mCurrentSprite = 0;
+	mNumSprite = numSprites;
+	mTiming = timing;
+	mCurrentTime = 0;
+	mLoop = loop;
+}
+
+Animation::~Animation()
+{
+	delete[] mpSprite;
+	mpSprite = nullptr;
+	mTiming = 0;
+	mCurrentTime = 0;
+	mCurrentSprite = 0;
+	mLoop = false;
+}
+
+void Animation::update()
+{
+	if (mCurrentSprite < mNumSprite-1)
+	{
+		mCurrentSprite++;
+	}
+	else if (mCurrentSprite == mNumSprite-1)
+	{
+		if (mLoop)
+			mCurrentSprite = 0;
+	}	
+}
+
+Sprite* Animation::getCurrentSprite()
+{
+	return &mpSprite[mCurrentSprite];
+}
+
+void Animation::adjustTiming(float modifier)
+{
+	mTiming += modifier;
+	if (mTiming <= 0)
+	{
+		mTiming = .0001;
+	}
+}
+
+float Animation::getTiming()
+{
+	return mTiming;
+}
+
+Sprite Animation::getSprite(int pos)
+{
+	return mpSprite[pos];
+}
+
+int Animation::getSpriteNum()
+{
+	return mCurrentSprite;
+}

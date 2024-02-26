@@ -1,0 +1,39 @@
+#include "Sprite.h"
+
+using namespace std;
+
+std::vector<Sprite> Sprite::slice(const GraphicsBuffer* pBuffer, int spriteWidth, int spriteHeight, 
+    int sheetWidth, int sheetHeight, Vector2D sheetStart)
+{
+    if (sheetWidth == -1)
+        sheetWidth = pBuffer->getWidth();
+    if (sheetHeight == -1)
+        sheetHeight = pBuffer->getHeight();
+
+    // Find numSprites to preallocate memory 
+    int numSprites = (sheetHeight / spriteHeight) * (sheetWidth / spriteWidth);
+    vector<Sprite> sprites = vector<Sprite>();
+    sprites.reserve(numSprites);
+
+    for (int y = sheetStart.getY(); y < sheetStart.getY() + sheetHeight; y += spriteHeight)
+    {
+        for (int x = sheetStart.getX(); x < sheetStart.getX() + sheetWidth; x += spriteWidth)
+        {
+            sprites.push_back(Sprite(pBuffer, Vector2D(x, y), spriteWidth, spriteHeight));
+        }
+    }
+
+    return sprites;
+}
+
+Sprite::Sprite(const GraphicsBuffer* pBuffer, const Vector2D& loc, int width, int height) :
+    mpBuffer(pBuffer),
+    mLoc(loc),
+    mWidth(width),
+    mHeight(height)
+{}
+
+Sprite::Sprite(const GraphicsBuffer* pBuffer) : 
+    Sprite(pBuffer, Vector2D(), pBuffer->getWidth(), pBuffer->getHeight()) {}
+
+Sprite::~Sprite() {}

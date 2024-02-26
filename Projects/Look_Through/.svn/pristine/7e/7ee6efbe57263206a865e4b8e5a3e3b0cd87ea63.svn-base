@@ -1,0 +1,58 @@
+#pragma once
+
+#include <allegro5/allegro.h>
+#include <allegro5/allegro_font.h>
+#include <allegro5/allegro_ttf.h>
+#include <allegro5/allegro_audio.h>
+#include <allegro5/allegro_acodec.h>
+#include <allegro5/allegro_image.h>
+#include <allegro5/allegro_primitives.h>
+
+#include <Trackable.h>
+#include <Vector2D.h>
+
+#include <iostream>
+#include <cassert>
+#include <string>
+#include <vector>
+
+#include <PerformanceTracker.h>
+#include <Timer.h>
+
+#include "Font.h"
+#include "Color.h"
+#include "GraphicsBuffer.h"
+#include "GraphicsSystem.h"
+#include "Orbs.h"
+
+using namespace std;
+
+class EventSystem;
+
+enum displayLanguage
+{
+	English,
+	Spanish,
+	French
+};
+
+class HudManager : public Trackable
+{
+public:
+	HudManager();
+	~HudManager();
+
+	void drawScore(GraphicsSystem* system, int score, int lang);
+	void drawTimer(GraphicsSystem* system, double time, double saved, int lang);
+	void drawFPS(GraphicsSystem* system, float time);
+	void drawStart(GraphicsSystem* system, int lang);
+	void drawEnd(GraphicsSystem* system, int lang);
+	void drawOptions(GraphicsSystem* system, int diff, int lang, int opt, int sound);
+
+private:
+	string fontFileName;
+	int fontSize;
+	int optionsFontSize;
+	Font* pFont;
+	Font* pOptionsFont;
+};

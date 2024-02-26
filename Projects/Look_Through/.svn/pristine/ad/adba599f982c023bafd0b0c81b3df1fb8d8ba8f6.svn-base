@@ -1,0 +1,59 @@
+#include "AnimationManager.h"
+
+AnimationManager::~AnimationManager()
+{
+	cleanup();
+}
+
+void AnimationManager::cleanup()
+{
+	// go through all entries in the map and delete
+	for (auto iter : mMap)
+	{
+		AnimationPrototype* pAnimationPrototype = iter.second;
+		delete pAnimationPrototype;
+	}
+
+	mMap.clear();
+}
+
+void AnimationManager::createAndAddAnimation(const AnimKey& key, GraphicsBuffer* proto, int type)
+{
+	AnimationPrototype* pAnimationPrototype = NULL;
+
+	// figure out if it exists already
+	auto iter = mMap.find(key);
+
+	// already in map?
+	if (iter == mMap.end())
+	{
+		// not already there - just create and add it
+		pAnimationPrototype = new AnimationPrototype(proto, type);
+		mMap[key] = pAnimationPrototype;
+	}
+}
+
+void AnimationManager::destroyAnimation(const AnimKey& key)
+{
+	// figure out if it exists already
+	auto iter = mMap.find(key);
+
+	// already in map?
+	if (iter != mMap.end())
+	{
+		delete iter->second;
+		mMap.erase(iter);
+	}
+}
+
+AnimationPrototype* AnimationManager::getAnimation(const AnimKey& key) const
+{
+	// figure out if it exists already
+	auto iter = mMap.find(key);
+
+	// already in map?
+	if (iter != mMap.end())
+		return iter->second;
+	else
+		return NULL;
+}

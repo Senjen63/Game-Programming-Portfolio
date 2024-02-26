@@ -1,0 +1,117 @@
+#include "GraphicsSystem.h"
+
+/* Constuctors */
+GraphicsSystem::GraphicsSystem(int width, int height)
+{
+    this->mWidth = width;
+    this->mHeight = height;
+
+    mpDisplay = nullptr;
+    mpBackBuffer = nullptr;
+
+    mIsInitialized = false;
+}
+
+GraphicsSystem::~GraphicsSystem()
+{
+    cleanUp();
+
+    delete mpBackBuffer;
+}
+
+/* Memeber Functions */
+void GraphicsSystem::flip() const
+{
+    al_flip_display();
+}
+
+void GraphicsSystem::draw(const Vector2D& loc, const Sprite& sprite, float scale)
+{
+    // Might want to set to the back buffer for redundancy 
+    al_draw_scaled_bitmap(sprite.getBuffer()->getBitmap(), sprite.getLoc().getX(), sprite.getLoc().getY(), sprite.getWidth(), sprite.getHeight(),
+        loc.getX(), loc.getY(), sprite.getWidth() * scale, sprite.getHeight() * scale, 0);
+}
+
+void GraphicsSystem::draw(const GraphicsBuffer& buffer, const Vector2D& loc, const Sprite& sprite, float scale)
+{
+    // Store the old target so that we can set it back later 
+    ALLEGRO_BITMAP* oldBitmap = al_get_target_bitmap();
+    al_set_target_bitmap(buffer.getBitmap());
+
+    al_draw_scaled_bitmap(sprite.getBuffer()->getBitmap(), sprite.getLoc().getX(), sprite.getLoc().getY(), sprite.getWidth(), sprite.getHeight(),
+        loc.getX(), loc.getY(), sprite.getWidth() * scale, sprite.getHeight() * scale, 0);
+
+    al_set_target_bitmap(oldBitmap);
+}
+
+void GraphicsSystem::drawText(const Vector2D& loc, const Font& font, const Color& color, const TextAlignment alignment, const std::string& text)
+{
+    al_draw_text(font.mFont, color, loc.getX(), loc.getY(), (int)alignment, text.c_str());
+}
+
+void GraphicsSystem::drawText(const GraphicsBuffer& buffer, const Vector2D& loc, const Font& font, const Color& color, const TextAlignment alignment, const std::string& text)
+{
+    // Store the old target so that we can set it back later 
+    ALLEGRO_BITMAP* oldBitmap = al_get_target_bitmap();
+    al_set_target_bitmap(buffer.getBitmap());
+
+    al_draw_text(font.mFont, color, loc.getX(), loc.getY(), (int)alignment, text.c_str());
+
+    al_set_target_bitmap(oldBitmap);
+}
+
+void GraphicsSystem::saveBuffer(const GraphicsBuffer& bufferToSave, const std::string& path) const
+{
+    al_save_bitmap(path.c_str(), bufferToSave.getBitmap());
+}
+
+void GraphicsSystem::clearToColor(const Color& color)
+{
+    al_clear_to_color(color);
+}
+
+void GraphicsSystem::clearToColor(const GraphicsBuffer& buffer, const Color& color)
+{
+    // Store the old target so that we can set it back later 
+    ALLEGRO_BITMAP* oldBitmap = al_get_target_bitmap();
+    al_set_target_bitmap(buffer.getBitmap());
+
+    al_clear_to_color(color);
+
+    al_set_target_bitmap(oldBitmap);
+}
+
+void GraphicsSystem::init()
+{
+    if (!al_init())
+    {
+        throw new std::exception("error initting Allegro\n");
+    }
+    if (!al_init_image_addon())
+    {
+        throw new std::exception("error - Image Add-on not initted\n");
+    }
+    if (!al_init_font_addon())
+    {
+        throw new std::exception("error - Font Add-on not initted\n");
+    }
+    if (!al_init_ttf_addon())
+    {
+        throw new std::exception("error - TTF Add-on not initted\n");
+    }
+    if (!al_init_primitives_addon())
+    {
+        throw new std::exception("error - primitives Add-on not initted\n");
+    }
+
+    mpDisplay = al_create_display(mWidth, mHeight);
+    assert(mpDisplay);
+    mpBackBuffer = new GraphicsBuffer(al_get_backbuffer(mpDisplay));
+
+    mIsInitialized = true;
+}
+
+void GraphicsSystem::cleanUp()
+{
+    al_destroy_display(mpDisplay);
+}

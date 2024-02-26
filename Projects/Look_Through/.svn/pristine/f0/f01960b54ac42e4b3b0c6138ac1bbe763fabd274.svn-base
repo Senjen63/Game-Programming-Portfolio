@@ -1,0 +1,36 @@
+#pragma once
+#include <allegro5/allegro.h>
+#include <allegro5/allegro_font.h>
+#include <allegro5/allegro_ttf.h>
+#include <allegro5/allegro_audio.h>
+#include <allegro5/allegro_acodec.h>
+#include <allegro5/allegro_image.h>
+#include <allegro5/allegro_primitives.h>
+#include <Trackable.h>
+
+using namespace std;
+
+class GraphicsBuffer : public Trackable
+{
+	friend class GraphicsSystem;
+public:
+	//Empty Bit map
+	GraphicsBuffer(int width, int height);
+
+	//Asset file bit map
+	GraphicsBuffer(const string& assetPath);
+
+	//Destructor
+	~GraphicsBuffer();
+
+	int getWidth();
+	int getHeight();
+
+private:
+	ALLEGRO_BITMAP* getBitMap();
+	//System bit map
+	GraphicsBuffer(ALLEGRO_BITMAP* bitMap);
+
+	ALLEGRO_BITMAP* mBitMap;
+	bool mOwnsBitMap;
+};

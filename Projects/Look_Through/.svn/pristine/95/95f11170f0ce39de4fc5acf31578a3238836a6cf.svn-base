@@ -1,0 +1,20 @@
+#pragma once
+#include <Trackable.h>
+
+#include "GraphicsBuffer.h"
+
+class Panel : public Trackable
+{
+    private:
+        GraphicsBuffer* mpPanel = nullptr;
+
+        Color panelColor = Color(0, 0, 0);
+        Vector2D location;
+        Vector2D dimensions;
+
+    public:
+        Panel();
+        ~Panel();
+
+        void updatePanel();
+};

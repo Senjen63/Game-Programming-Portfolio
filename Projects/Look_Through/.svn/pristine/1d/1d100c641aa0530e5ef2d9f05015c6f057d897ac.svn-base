@@ -1,0 +1,24 @@
+/*
+Game
+The class which holds all systems and has the game loop 
+
+Data
+• The GraphicsSystem object
+• The InputSystem object
+• Other data necessary to fulfill the requirements of the assignment
+
+Public Functions
+• Constructor/Destructor
+• Init/Cleanup
+• DoLoop – contains the actual loop ( I suggest a while loop).  Things to do, not necessarily in this order:
+	o Get user input
+	o Adjust game state (based on user input and other automatic factors)
+	o Draw current game state
+	o Wait until the target amount of time has elapsed
+• Make sure you are timing the game loop
+*/
+#pragma once
+class Game
+{
+};
+

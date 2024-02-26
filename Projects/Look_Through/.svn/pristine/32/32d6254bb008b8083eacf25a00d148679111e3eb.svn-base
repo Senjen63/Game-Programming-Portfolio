@@ -1,0 +1,86 @@
+#include "Animation.h"
+#include <Timer.h>
+#include <iostream>
+using namespace std;
+
+Animation::Animation()
+{
+	mpSprites = nullptr;
+	mTime = 0;
+	mCurrentTime = 0;
+	mCurrentSprite = 0;
+	mNumSprites = 0;
+	mLoop = false;
+}
+
+Animation::Animation(GraphicsBuffer* pBuff, const int numSprites, const float time, bool loop)
+{
+	mpSprites = new Sprite[numSprites];
+	int count = 0;
+	int numSpriteLength = 2;
+	int numSpriteWidth = 2;
+	Vector2D pos = Vector2D();
+
+	int i;
+	int j;
+	for (i = 0; i < numSpriteWidth; i++)
+	{
+		for (j = 0; j < numSpriteLength; j++)
+		{
+			pos.setX(j * 60);
+			pos.setY(i * 60);
+			mpSprites[count] = Sprite(pBuff, pos, 60, 60);
+			count++;
+		}
+	}
+
+	mCurrentSprite = 0;
+	mNumSprites = numSprites;
+	mTime = time;
+	mCurrentTime = 0;
+	mLoop = loop;
+}
+
+Animation::~Animation()
+{
+	delete[] mpSprites;
+
+	mpSprites = nullptr;
+	mTime = 0;
+	mCurrentSprite = 0;
+	mCurrentTime = 0;
+	mLoop = false;
+}
+
+Sprite* Animation::getCurrentSprite()
+{
+	return &mpSprites[mCurrentSprite];
+}
+
+void Animation::update()
+{
+	if (mCurrentSprite < mNumSprites - 1)
+	{
+		mCurrentSprite++;
+	}
+	else if (mCurrentSprite == mNumSprites - 1)
+	{
+		if (mLoop)
+		{
+			mCurrentSprite = 0;
+		}
+	}
+}
+
+void Animation::adjustTiming(float modifier)
+{
+	mTime += modifier;
+	if (mTime <= 0)
+	{
+		mTime = .0001;
+	}
+}
+float Animation::getTime()
+{
+	return mTime;
+}

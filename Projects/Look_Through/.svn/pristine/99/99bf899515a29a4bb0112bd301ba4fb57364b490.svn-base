@@ -1,0 +1,54 @@
+#include "Camera.h"
+#include "Game.h"
+
+Camera::Camera()
+{
+	mWidth = 0;
+	mHeight = 0;
+	mViewport = sf::View(sf::Vector2f(0, 0), sf::Vector2f(float(mWidth), float(mHeight)));
+	//mViewport.setSize(sf::Vector2f(200.f, 200.f));
+}
+
+Camera::Camera(int width, int height)
+{
+	mWidth = width;
+	mHeight = height;
+	mViewport = sf::View(sf::Vector2f(0,0),sf::Vector2f(float(mWidth),float(mHeight)));
+	//mViewport.setSize(sf::Vector2f(200.f, 200.f));
+}
+
+void Camera::update()
+{
+	float x;
+	float y;
+	Game* pGame = Game::getInstance();
+
+	//lock at screen width/height if not in game
+	if (pGame->getState() != "playing")
+	{
+		x = mWidth / 2.0f;
+		y = mHeight / 2.0f;
+	}
+
+	else
+	{
+		//set pos to player x, player y (locked based on dimensions of screen)
+		x = pGame->getPlayer()->getX();
+		y = pGame->getPlayer()->getY();
+
+		//make sure it doesn't go offscreen
+		Vector2D levelSize = pGame->getLevels()->getCurrentLevel()->getLevelSize();
+		float minX = mWidth / 2.0f;
+		float minY = mHeight / 2.0f;
+		float maxX = (levelSize.getX() * Game::TILE_SIZE) - (mWidth / 2);
+		float maxY = (levelSize.getY() * Game::TILE_SIZE) - (mHeight / 2);
+
+		if (x < minX) { x = minX; }
+		if (y < minY) { y = minY; }
+
+		if (x > maxX) { x = maxX; }
+		if (y > maxY) { y = maxY; }
+	}
+
+	mViewport.setCenter(sf::Vector2f(x, y));
+}

@@ -1,0 +1,24 @@
+//Evan Norzow, Nicolas Delbue, and Brandon Perry
+#pragma once
+
+#include "Trackable.h"
+#include "AnimationManager.h"
+#include "UnitManager.h"
+#include "GraphicsBufferManager.h"
+
+class Snake : public Trackable
+{
+private:
+	bool mIsPlayer1;
+	AnimationManager* mpAnimationManager;
+	UnitManager* mpUnitManager;
+	GraphicsBufferManager* mpGraphicsBufferManager;
+	vector<Unit*> mSnakePieces;
+	int mNumPieces;
+public:
+	vector<Unit*> getSnakePieces() { return mSnakePieces; };
+	void addSnakePiece(Vector2D vec);
+
+	Snake(bool isPlayer1, float xPos, float yPos, UnitManager* um, AnimationManager* am, GraphicsBufferManager* gm, int numPieces);
+	~Snake() {};
+};

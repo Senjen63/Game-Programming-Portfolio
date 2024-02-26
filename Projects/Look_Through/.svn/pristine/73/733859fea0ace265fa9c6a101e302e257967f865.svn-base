@@ -1,0 +1,71 @@
+#include "InputSystem.h"
+#include "EventSystem.h"
+#include "KeyboardEvent.h"
+
+InputSystem::InputSystem()
+{
+}
+
+InputSystem::~InputSystem()
+{
+
+}
+
+void InputSystem::init()
+{
+	al_install_keyboard();
+	al_install_mouse();
+}
+
+void InputSystem::cleanup()
+{
+
+}
+
+void InputSystem::update()
+{
+	ALLEGRO_KEYBOARD_STATE state;
+
+	al_get_keyboard_state(&state);
+
+	for (int i = 1; i < ALLEGRO_KEYS_TO_CHECK; i++)
+	{
+		if (al_key_down(&state,i)) { EventSystem::getInstance()->fireEvent(KeyboardEvent(i)); }
+	}
+}
+
+bool InputSystem::getKeyState(int keyCode)
+{
+	ALLEGRO_KEYBOARD_STATE state;
+
+	al_get_keyboard_state(&state);
+
+	return al_key_down(&state, keyCode);
+}
+
+bool InputSystem::getMouseState(int mouseCode)
+{
+	ALLEGRO_MOUSE_STATE state;
+
+	al_get_mouse_state(&state);
+
+	return al_mouse_button_down(&state, (int)mouseCode);
+}
+
+int InputSystem::getMouseX()
+{
+	ALLEGRO_MOUSE_STATE state;
+
+	al_get_mouse_state(&state);
+
+	return state.x;
+}
+
+int InputSystem::getMouseY()
+{
+	ALLEGRO_MOUSE_STATE state;
+
+	al_get_mouse_state(&state);
+
+	return state.y;
+}

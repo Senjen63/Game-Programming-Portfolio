@@ -1,0 +1,30 @@
+#pragma once
+#include <Vector2D.h>
+#include "Animation.h"
+#include "GraphicsBuffer.h"
+
+class Unit
+{
+
+	friend class Game;
+
+private:
+	int mLocationX;
+	int mLocationY;
+	queue<Animation> mAnimations;
+	void draw(Vector2D sourceLoc, Vector2D sourceDim, Vector2D destinationLoc, Vector2D destinationDim, int flags);
+
+public:
+
+	Unit(int x, int y);
+
+	~Unit();
+
+	Animation& currentAnimation();
+
+	void addAnimation(Animation animation);
+
+	void update(double dt);
+
+	void setAnimation();
+};

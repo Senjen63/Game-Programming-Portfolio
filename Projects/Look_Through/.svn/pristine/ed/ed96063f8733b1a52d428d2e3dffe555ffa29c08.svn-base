@@ -1,0 +1,107 @@
+#include "Unit.h"
+
+Unit::Unit(Animation aniSprite)
+{
+	// push Animations into vector
+	mAnimations.push_back(aniSprite);//ani 0
+	
+	// set smurf animation first
+	mCurrentAnimation = 0;
+
+	mPause = false;
+
+	// set animation location to center of the screen
+	/*mLocation = Vector2D(300, 300)*/;
+}
+
+Unit::~Unit() {}
+
+void Unit::update(double dt)
+{
+	// update the current animation
+	if (mPause == false)
+	{
+		mAnimations[mCurrentAnimation].update(dt);
+	}
+}
+
+void Unit::draw(GraphicsSystem* graphSys)
+{
+	// draw the animation to the screen
+	graphSys->draw(mLocation.getX(), mLocation.getY(), mAnimations[mCurrentAnimation].getCurrentSprite(), 1);
+}
+
+void Unit::drawWall(GraphicsSystem* graphSys, Vector2D location)
+{
+	// draw the animation to the screen
+	graphSys->draw(location.getX(), location.getY(), mAnimations[mCurrentAnimation].getCurrentSprite(), 1);
+}
+
+void Unit::setAnimation()
+{
+	// switch between the two animations
+	if (mCurrentAnimation == 1)
+		mCurrentAnimation = 0;
+	else
+		mCurrentAnimation = 1;
+}
+
+void Unit::setLocation(Vector2D loc)
+{
+	// set the mouse location to the unit's location
+	mLocation = loc;
+}
+
+Vector2D Unit::getLocation()
+{
+	return mLocation;
+}
+
+
+void Unit::setAnimationSpeed(int opt)
+{
+	if (opt == 0)
+		mAnimations[mCurrentAnimation].speedUp();
+	else
+		mAnimations[mCurrentAnimation].slowDown();
+}
+
+void Unit::unitPause()
+{
+	if (mPause == false)
+		mPause = true;
+	else
+		mPause = false;
+}
+
+//Snake Movement
+//***********************************
+void Unit::Up()
+{
+	int xLoc = mLocation.getX();
+	int yLoc = mLocation.getY() - 3;
+	mLocation = Vector2D(xLoc, yLoc);
+}
+
+void Unit::Down()
+{
+	int xLoc = mLocation.getX();
+	int yLoc = mLocation.getY() + 3;
+	mLocation = Vector2D(xLoc, yLoc);
+	
+}
+
+void Unit::Right()
+{
+	int xLoc = mLocation.getX() + 3;
+	int yLoc = mLocation.getY();
+	mLocation = Vector2D(xLoc, yLoc);
+}
+
+void Unit::Left()
+{
+	int xLoc = mLocation.getX() - 3;
+	int yLoc = mLocation.getY();
+	mLocation = Vector2D(xLoc, yLoc);
+}
+//***********************************

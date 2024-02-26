@@ -1,0 +1,64 @@
+#include "Unit.h"
+
+Unit::Unit()
+{
+	mPos = Vector2D();
+	mCurrentAnimat = 1;
+	mpAnimation1 = nullptr;
+	mpAnimation2 = nullptr;
+}
+
+Unit::Unit(Animation* pAnimation1, Animation* pAnimation2, Vector2D position)
+{
+	mPos = position;
+	mCurrentAnimat = 1;
+	mpAnimation1 = pAnimation1;
+	mpAnimation2 = pAnimation2;
+}
+
+Unit::~Unit()
+{
+	mCurrentAnimat = 1;
+	mpAnimation1 = nullptr;
+	mpAnimation2 = nullptr;
+}
+
+void Unit::update()
+{
+	mpAnimation1->update();
+	mpAnimation2->update();
+}
+
+float Unit::getTime()
+{
+	return mpAnimation1->getTime();
+}
+
+Sprite* Unit::draw()
+{
+	if (mCurrentAnimat == 1)
+	{
+		return mpAnimation1->getCurrentSprite();
+	}
+	else
+	{
+		return mpAnimation2->getCurrentSprite();
+	}
+}
+
+void Unit::setAnimation()
+{
+	if (mCurrentAnimat == 1)
+	{
+		mCurrentAnimat = 0;
+	}
+	else {
+		mCurrentAnimat = 1;
+	}
+}
+
+void Unit::setTime(float time)
+{
+	mpAnimation1->adjustTiming(time);
+	mpAnimation2->adjustTiming(time);
+}

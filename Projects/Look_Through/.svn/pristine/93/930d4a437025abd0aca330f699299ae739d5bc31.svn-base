@@ -1,0 +1,282 @@
+#pragma once
+#include "PerformanceTracker.h"
+#include "InputEvents.h"
+#include "SnakeEvents.h"
+#include "GameEvents.h"
+#include "Game.h"
+#include "InputSystem.h"
+#include "Unit.h"
+#include "Animation.h"
+
+Game* Game::mpsGame = nullptr;
+
+const string INIT_TRACKER_NAME = "init";
+const string DRAW_TRACKER_NAME = "draw";
+const string WAIT_TRACKER_NAME = "wait";
+const string LOOP_TRACKER_NAME = "loop";
+
+enum class UnitTypes;
+
+void Game::createGame()
+{
+	if (!mpsGame)
+		mpsGame = new Game();
+}
+
+void Game::destroyGame()
+{
+	delete mpsGame;
+	mpsGame = nullptr;
+}
+
+Game* Game::getGame()
+{
+	return mpsGame;
+}
+
+void Game::setScore(int score)
+{
+	mScore = score;
+}
+
+Game::Game()
+{
+	mGameState = GameState::START_STATE;
+	mContinue = true;
+	mTargetTime = DEFAULT_TARGET_TIME;
+	mScore = 0;
+	mpEventSys = nullptr;
+	mpGraphicsSys = nullptr;
+	mpInputSys = nullptr;
+	mpUnitMan = nullptr;
+	mpGBMan = nullptr;
+	mpLevelMan = nullptr;
+	mpHUD = nullptr;
+}
+
+Game::~Game()
+{
+	cleanup();
+}
+
+void Game::init( float fps, int dispW, int dispH )
+{
+	mpEventSys = EventSystem::getInstance();
+	mpEventSys->init();
+
+	mpGraphicsSys = new GraphicsSystem();
+	mpGraphicsSys->init(dispW, dispH);
+
+	mpInputSys = new InputSystem();
+	mpInputSys->init();
+
+	mpGBMan = new GraphicsBufferManager();
+	mpGBMan->init("assets.txt");
+
+	mpUnitMan = new UnitManager();
+
+	mpLevelMan = new LevelManager();
+	mpLevelMan->init();
+
+	mpHUD = new HUD();
+	mpHUD->init();
+
+	mpEventSys->addListener( ( EventType )KEY_DOWN_EVENT, this );
+	mpEventSys->addListener( ( EventType )COLLISION_EVENT, this );
+	mpEventSys->addListener( ( EventType )CHANGE_SCORE_EVENT, this );
+	mpEventSys->addListener( ( EventType )WIN_LEVEL_EVENT, this );
+
+	mpEventSys->addListener((EventType)UPDATE_HUD_EVENT, mpHUD);
+
+	mTargetTime = 1000/fps;
+}
+
+void Game::cleanup()
+{
+	mpEventSys->removeListener( ( EventType )KEY_DOWN_EVENT, this );
+	delete mpHUD;
+	delete mpGBMan;
+	delete mpUnitMan;
+	delete mpInputSys;
+	delete mpLevelMan;
+	delete mpGraphicsSys;
+	mpEventSys = nullptr;
+}
+
+void Game::doLoop()
+{
+	PerformanceTracker* pPerformanceTracker = new PerformanceTracker;
+	Timer loopTimer;
+
+	mpGraphicsSys->writeText( "Welcome to Snake!", mpGraphicsSys->getWidth() / 4, mpGraphicsSys->getHeight() / 3 );
+	mpGraphicsSys->writeText("Press 'space' to start!", mpGraphicsSys->getWidth() / 4, mpGraphicsSys->getHeight() / 2);
+	mpGraphicsSys->flip();
+
+	while ( getIfContinue() )
+	{
+		switch ( Game::getGame()->getGameState() )
+		{
+		case GameState::START_STATE:			
+			mpInputSys->update();
+			break;
+		case GameState::PLAY_STATE:
+		{
+			pPerformanceTracker->clearTracker(LOOP_TRACKER_NAME);
+			pPerformanceTracker->startTracking(LOOP_TRACKER_NAME);
+
+			loopTimer.start();
+
+			mpInputSys->update();
+
+			mpGraphicsSys->draw( mpGBMan->getGraphicsBuff( "grass" ), 1 );
+
+			mpLevelMan->getCurLevel()->updateAll( mTargetTime );
+
+			mpUnitMan->updateAll( mTargetTime ); // mTargetTime should be same as deltaTime
+			mpUnitMan->drawAll();
+
+			mpGraphicsSys->flip();
+
+			loopTimer.sleepUntilElapsed( mTargetTime );
+
+			EventSystem::getInstance()->fireEvent(UpdateHUDEvent(UPDATE_HUD_EVENT, getScore(), pPerformanceTracker->getElapsedTime(LOOP_TRACKER_NAME), mpLevelMan->getCurLevel()->getTotalElapTime()));
+
+			pPerformanceTracker->stopTracking(LOOP_TRACKER_NAME);
+
+			std::cout << "Frame Took:" << pPerformanceTracker->getElapsedTime( LOOP_TRACKER_NAME ) << "ms" << std::endl;
+		}
+		break;
+		case GameState::END_STATE:
+			mpUnitMan->clearAll();
+			if (getLevelMan()->getCurLevelNum() >= 3)
+				mpUnitMan->createUnit(mpGraphicsSys->getWidth() / 2, mpGraphicsSys->getHeight() / 2, UnitTypes::DEFAULT_UNIT_TYPE, 0, mpGBMan->getGraphicsBuff("winscreen"));
+			else
+			{
+				mpUnitMan->createUnit(mpGraphicsSys->getWidth() / 2, mpGraphicsSys->getHeight() / 2, UnitTypes::DEFAULT_UNIT_TYPE, 0, mpGBMan->getGraphicsBuff("losescreen"));
+			}
+			mpUnitMan->drawAll();
+			mpGraphicsSys->flip();
+			mpInputSys->update();
+
+			break;
+		}
+	}
+
+	delete pPerformanceTracker;
+}
+
+void Game::handleEvent(const Event& theEvent)
+{
+	switch (theEvent.getType())
+	{
+	case KEY_DOWN_EVENT:
+	{ const KeyInputEvent& keyEvent = static_cast<const KeyInputEvent&>(theEvent);
+	switch (keyEvent.getKeyCode())
+	{
+	case KeyCode::ESCAPE:
+		setIfContinue(false);
+		break;
+	case KeyCode::RKEY:
+		getUnitMan()->clearAll();
+		mpHUD->init();
+		getLevelMan()->setCurLevelNum(1);
+		setGameState(GameState::PLAY_STATE);
+		break;
+	case KeyCode::UPKEY:
+	case KeyCode::WKEY:
+		EventSystem::getInstance()->fireEvent(ChangeDirectionEvent(CHANGE_DIR_EVENT, Direction::UP));
+		break;
+	case KeyCode::LEFTKEY:
+	case KeyCode::AKEY:
+		EventSystem::getInstance()->fireEvent(ChangeDirectionEvent(CHANGE_DIR_EVENT, Direction::LEFT));
+		break;
+	case KeyCode::DOWNKEY:
+	case KeyCode::SKEY:
+		EventSystem::getInstance()->fireEvent(ChangeDirectionEvent(CHANGE_DIR_EVENT, Direction::DOWN));
+		break;
+	case KeyCode::RIGHTKEY:
+	case KeyCode::DKEY:
+		EventSystem::getInstance()->fireEvent(ChangeDirectionEvent(CHANGE_DIR_EVENT, Direction::RIGHT));
+		break;
+	case KeyCode::SPACE:
+		switch (getGameState())
+		{
+		case GameState::START_STATE:
+			mpLevelMan->increaseLevel();
+			setGameState(GameState::PLAY_STATE);
+			break;
+		case GameState::END_STATE:
+			mpLevelMan->increaseLevel();
+			setGameState(GameState::START_STATE);
+			break;
+		}
+		break;
+	default:
+		break;
+	}
+	}
+	break;
+	case COLLISION_EVENT:
+	{
+		const CollisionEvent& colEvent = static_cast<const CollisionEvent&>(theEvent);
+		switch (colEvent.getCollider()->getType())
+		{
+		case UnitTypes::DEFAULT_UNIT_TYPE:
+			break;
+		case UnitTypes::SNAKE_UNIT_TYPE:
+			setGameState(GameState::END_STATE);
+			break;
+		case UnitTypes::WALL_UNIT_TYPE:
+			setGameState(GameState::END_STATE);
+			break;
+		case UnitTypes::SPEED_UP_TYPE:
+			EventSystem::getInstance()->fireEvent(ChangeSpeedEvent(CHANGE_SPEED_EVENT, 0));
+			mpLevelMan->getCurLevel()->mNumSpeedUp--;
+			mpLevelMan->getCurLevel()->addFreeSpace(colEvent.getCollider()->getX(), colEvent.getCollider()->getY());
+			mpUnitMan->deleteUnit(colEvent.getCollider());
+			break;
+		case UnitTypes::SLOW_DOWN_TYPE:
+			EventSystem::getInstance()->fireEvent(ChangeSpeedEvent(CHANGE_SPEED_EVENT, 1));
+			mpLevelMan->getCurLevel()->mNumSlowDown--;
+			mpLevelMan->getCurLevel()->addFreeSpace(colEvent.getCollider()->getX(), colEvent.getCollider()->getY());
+			mpUnitMan->deleteUnit(colEvent.getCollider());
+			break;;
+		case UnitTypes::BONUS_POINT_TYPE:
+			EventSystem::getInstance()->fireEvent(ChangeScoreEvent(CHANGE_SCORE_EVENT, 50));
+			mpLevelMan->getCurLevel()->mNumBonus--;
+			mpLevelMan->getCurLevel()->addFreeSpace(colEvent.getCollider()->getX(), colEvent.getCollider()->getY());
+			mpUnitMan->deleteUnit(colEvent.getCollider());
+			break;
+		case UnitTypes::FOOD_UNIT_TYPE:
+			EventSystem::getInstance()->fireEvent(ChangeScoreEvent(CHANGE_SCORE_EVENT, 25));
+			mpLevelMan->getCurLevel()->addFreeSpace(colEvent.getCollider()->getX(), colEvent.getCollider()->getY());
+			mpUnitMan->deleteUnit(colEvent.getCollider());
+			mpLevelMan->getCurLevel()->createFood();
+			mpUnitMan->createUnit(0, 0, 2, SPRITE_COL_NUM, UnitTypes::SNAKE_UNIT_TYPE, DEFAULT_TARGET_TIME, mpGBMan->getGraphicsBuff("catepillar"), true);
+			mpLevelMan->getCurLevel()->getSnake()->addUnit(mpUnitMan->getLastUnit());
+			break;
+		}
+	}
+	break;
+	case CHANGE_SCORE_EVENT:
+	{
+		const ChangeScoreEvent& csEvent = static_cast<const ChangeScoreEvent&>(theEvent);
+		setScore(getScore() + csEvent.getPoints());
+	}
+	break;
+	case WIN_LEVEL_EVENT:
+		{
+		const WinLevelEvent& wlEvent = static_cast<const WinLevelEvent&>(theEvent);
+		if (getLevelMan()->getCurLevelNum() >= 3)
+			setGameState(GameState::END_STATE);
+		else
+		{
+			getLevelMan()->increaseLevel();
+			setGameState(GameState::PLAY_STATE);
+		}
+		}
+		break;
+	}
+}
+
+Game* gpGame = nullptr;

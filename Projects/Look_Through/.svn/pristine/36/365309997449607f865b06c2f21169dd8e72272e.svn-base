@@ -1,0 +1,29 @@
+﻿//     -------------------------------------------------------------------------
+//     Final Project
+//         MainMenuSystem.hpp
+//     
+//             Created:
+//                 03-05-2022
+//             Author(s):
+//                 Aven Presseisen
+//     -------------------------------------------------------------------------
+
+#pragma once
+#include "System.hpp"
+
+class MainMenuSystem final : public System
+{
+    struct Option
+    {
+        Translation * pTranslation;
+        Scale * pScale;
+        Entity ent;
+    };
+
+    std::vector< Option > mOptions;
+    int mCurrentOption{};
+public:
+    void createQueries() override;
+    void onCreate() override;
+    void onUpdate() override;
+};

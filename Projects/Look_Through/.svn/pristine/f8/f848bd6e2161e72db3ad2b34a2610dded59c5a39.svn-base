@@ -1,0 +1,388 @@
+#include "AsteroidManager.h"
+#include "UnitManager.h"
+#include "Unit.h"
+#include "Animation.h"
+#include "Sprite.h"
+#include "Game.h"
+#include "SoundEffectManager.h"
+#include <EventSystem.h>
+#include <fstream>
+#include "PowerEvent.h"
+
+int AsteroidManager::determinePower()
+{
+	int rand1 = (rand() % mDenominator) + mMod;
+
+	if (rand1 <= mNumerator)
+	{
+		return (rand() % mTypes) + mMod;
+	}
+	else
+	{
+		return 0;
+	}
+}
+
+AsteroidManager::AsteroidManager()
+{
+	srand((unsigned int)time(NULL));
+	mSpeed = true;
+
+	ifstream inputDiff("../GalahadAssets/data/" + AST_TYPES);
+	if (inputDiff.good())
+	{
+		string key;
+		int types;
+
+		while (!inputDiff.eof())
+		{
+			inputDiff >> key;
+
+			if (key == "types")
+			{
+				inputDiff >> types;
+
+				mTypes = types;
+			}
+			else if (key == "xtro")
+			{
+				inputDiff >> types;
+
+				mMod = types;
+			}
+			else if (key == "loop")
+			{
+				inputDiff >> types;
+
+				mLoop = types;
+			}
+		}
+	}
+}
+
+AsteroidManager::AsteroidManager(int size) : UnitManager(size)
+{
+	srand((unsigned int)time(NULL));
+	mSpeed = true;
+
+	ifstream inputDiff("../GalahadAssets/data/" + AST_TYPES);
+	if (inputDiff.good())
+	{
+		string key;
+		int types;
+
+		while (!inputDiff.eof())
+		{
+			inputDiff >> key;
+
+			if (key == "types")
+			{
+				inputDiff >> types;
+
+				mTypes = types;
+			}
+			else if (key == "xtro")
+			{
+				inputDiff >> types;
+
+				mMod = types;
+			}
+			else if (key == "loop")
+			{
+				inputDiff >> types;
+
+				mLoop = types;
+			}
+		}
+	}
+}
+
+AsteroidManager::~AsteroidManager()
+{
+
+}
+
+void AsteroidManager::activateUnit(Vector2D pos, int type)
+{
+	for (unsigned int i = mLoop; i < mpUnits.size(); i++)
+	{
+		if (mpUnits[i]->mInUse == false)
+		{
+			mpUnits[i]->init(pos, mpUnits[mLoop]->mHitbox);
+
+			switch (type)
+			{
+			case 1:
+				mpUnits[i]->setType(ASTEROID);
+				mpUnits[i]->setMainAnimation(*mpAstaAnimation);
+				break;
+			case 2:
+				mpUnits[i]->setType(POINS);
+				mpUnits[i]->setMainAnimation(*mpPoinAnimation);
+				break;
+			case 3:
+				mpUnits[i]->setType(FAST);
+				mpUnits[i]->setMainAnimation(*mpFastAnimation);
+				break;
+			case 4:
+				mpUnits[i]->setType(SLOW);
+				mpUnits[i]->setMainAnimation(*mpSlowAnimation);
+				break;
+			}
+
+			return;
+		}
+	}
+}
+
+void AsteroidManager::activateUnit()
+{
+}
+
+void AsteroidManager::activateUnit(Vector2D pos)
+{
+
+	for (unsigned int i = mLoop; i < mpUnits.size(); i++)
+	{
+		if (mpUnits[i]->mInUse == false)
+		{
+			mpUnits[i]->init(pos, mpUnits[mLoop]->mHitbox);
+
+			switch (determinePower())
+			{
+			case 0:
+				mpUnits[i]->setType(ASTEROID);
+				mpUnits[i]->setMainAnimation(*mpAstaAnimation);
+				break;
+			case 1:
+				mpUnits[i]->setType(POINS);
+				mpUnits[i]->setMainAnimation(*mpPoinAnimation);
+				break;
+			case 2:
+				mpUnits[i]->setType(FAST);
+				mpUnits[i]->setMainAnimation(*mpFastAnimation);
+				break;
+			case 3:
+				mpUnits[i]->setType(SLOW);
+				mpUnits[i]->setMainAnimation(*mpSlowAnimation);
+				break;
+			}
+
+			return;
+		}
+	}
+}
+
+void AsteroidManager::createAndAddUnit(Vector2D location, Animation mainAnimation, Animation altAnimation)
+{
+	Unit* pUnit = new Unit(location);
+
+	pUnit->setType(ASTEROID);
+	pUnit->setMainAnimation(mainAnimation);
+	pUnit->setAltAnimation(altAnimation);
+	pUnit->mHitbox = mainAnimation.getDimen();
+
+	pUnit->setSpeed(mGravity);
+
+	mpUnits.push_back(pUnit);
+}
+
+void AsteroidManager::createAndAddUnit(Vector2D location, Animation mainAnimation)
+{
+	Unit* pUnit = new Unit(location);
+
+	pUnit->setType(ASTEROID);
+	pUnit->setMainAnimation(mainAnimation);
+	pUnit->mHitbox = mainAnimation.getDimen();
+
+	pUnit->setSpeed(mGravity);
+
+	mpUnits.push_back(pUnit);
+}
+
+void AsteroidManager::spawnIn(int amount)
+{
+	int xPos;
+
+	for (int i = mLoop; i < amount; i++)
+	{
+		xPos = rand() % mPositions;
+
+		activateUnit(mGridPos[xPos]);
+	}
+}
+
+void AsteroidManager::spawnIn(int amount, int other)
+{
+	int xPos;
+
+	int mount = (rand() % (other - amount)) + amount;
+
+	mPlaces.clear();
+
+	for (int i = mLoop; i < mount; i++)
+	{
+		xPos = rand() % mPositions;
+
+		mPlaces.push_back(xPos);
+
+		if(count(mPlaces.begin(), mPlaces.end(), xPos))
+			activateUnit(mGridPos[xPos]);
+	}
+}
+
+void AsteroidManager::updateAll(double dt)
+{
+	if (!mCanFall)
+	{
+		if (mCurrentTime <= mLoop)
+		{
+			mCurrentTime = mReload;
+			mCanFall = true;
+		}
+		else
+		{
+			mCurrentTime -= dt;
+		}
+	}
+	else
+	{
+		if (!mRandomSpawn)
+			spawnIn(mSpawn1);
+		else
+			spawnIn(mSpawn1, mSpawn2);
+
+		mCanFall = false;
+	}
+
+	if (mSpeed)
+	{
+		if (mMoveTime <= mLoop)
+		{
+			mMoveTime = mSet;
+			mSpeed = false;
+		}
+		else
+		{
+			mMoveTime -= dt;
+		}
+	}
+	else
+	{
+		for each (Unit * ast in mpUnits)
+		{
+			ast->setSpeed(mGravity);
+		}
+	}
+
+	for each (Unit * ast in mpUnits)
+	{
+		if (ast->mInUse) 
+		{
+			ast->draw();
+
+			ast->move(mLoop, mMod);
+
+			ast->update(dt);
+		}
+	}
+}
+
+void AsteroidManager::detectCollisions(vector<Unit*> pUnArr)
+{
+	Game* pGame = Game::getInstance();
+	// Detects Shots
+	for each (Unit* pUnit in mpUnits)
+	{
+		if (pUnit->mInUse)
+		{
+			for each (Unit* pUnit2 in pUnArr)
+			{
+				if (pUnit2->mInUse)
+				{
+					if (collideCheck(pUnit2, pUnit))
+					{
+						pGame->getSoundEffectManager()->playSound("explosion", mLoop);
+						pUnit->mInUse = false;
+						pUnit2->mInUse = false;
+						EventSystem::getInstance()->fireEvent(PowerEvent(pUnit->getType()));
+					}
+				}
+			}
+		}
+	}
+}
+
+void AsteroidManager::setAnimations(Animation* astaAnimation, Animation* fastAnimation, Animation* slowAnimation, Animation* poinAnimation)
+{
+	this->mpAstaAnimation = astaAnimation;
+	this->mpFastAnimation = fastAnimation;
+	this->mpSlowAnimation = slowAnimation;
+	this->mpPoinAnimation = poinAnimation;
+}
+
+void AsteroidManager::makeGrid(float height, int posits)
+{
+	mGridPos.clear();
+	mPositions = posits;
+
+	float xDimen = Game::getInstance()->getWidth() / static_cast<float>(posits);
+
+	for (int i = mLoop; i < posits; i++)
+	{
+		float xPo = xDimen * i;
+		mGridPos.push_back(Vector2D(xPo, -height));
+	}
+}
+
+void AsteroidManager::setGravity(float gra)
+{
+	mGravity = gra;
+	for each (Unit* ast in mpUnits)
+	{
+		ast->setSpeed(gra);
+	}
+}
+
+void AsteroidManager::deallocate()
+{
+	int height = Game::getInstance()->getHeight();
+
+	for each (Unit* ast in mpUnits)
+	{
+		if (ast->mLocation.getY() >= height)
+			ast->deinit();
+	}
+}
+
+void AsteroidManager::changeGravity(bool high)
+{
+	mSpeed = true;
+
+	if (high)
+	{
+		for each (Unit * ast in mpUnits)
+		{
+			ast->setSpeed(mHighG);
+		}
+	}
+	else
+	{
+		for each (Unit * ast in mpUnits)
+		{
+			ast->setSpeed(mLowG);
+		}
+	}
+
+}
+
+void AsteroidManager::resetGame()
+{
+	mMoveTime = mSet;
+	mSpeed = false;
+
+	for each (Unit * ast in mpUnits)
+	{
+		ast->setSpeed(mGravity);
+	}
+}

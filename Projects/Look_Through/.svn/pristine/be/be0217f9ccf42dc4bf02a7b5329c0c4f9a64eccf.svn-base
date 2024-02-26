@@ -1,0 +1,11 @@
+#include "Button.h"
+void Button::SetEventType(UIEvent::UIEventType eventType)
+{
+	mEventType = eventType;
+}
+
+UIEvent::UIEventType Button::GetEventType()
+{
+	return mEventType;
+}
+

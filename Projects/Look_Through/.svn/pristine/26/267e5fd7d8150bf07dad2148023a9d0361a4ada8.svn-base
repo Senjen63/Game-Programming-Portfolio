@@ -1,0 +1,196 @@
+#include "Game.h"
+
+
+Game* Game::mpGame;
+
+
+void Game::update(float dt)
+{
+	mpUnitManager->update(dt);
+}
+
+
+void Game::render()
+{
+	mpUnitManager->draw(mpGraphicsSystem);
+	mpGraphicsSystem->flip();
+}
+
+
+Game* Game::getInstance()
+{
+	return mpGame;
+}
+
+
+Game* Game::createInstance(int targetFramerate)
+{
+	assert(mpGame == nullptr);
+
+	mpGame = new Game(targetFramerate);
+
+	return mpGame;
+}
+
+
+void Game::initInstance(Vector2D windowSize)
+{
+	mWindowSize = windowSize;
+
+	mpGraphicsSystem->init();
+	mpGraphicsSystem = new GraphicsSystem(windowSize.getX(), windowSize.getY());
+
+	mpInputSystem->init();
+	mpInputSystem = new InputSystem();
+
+	mpUnitManager = new UnitManager();
+
+	mpGraphicsBufferManager = new GraphicsBufferManager(mpGraphicsSystem->getBackBuffer());
+}
+
+
+void Game::cleanupInstance()
+{
+	if (mpGraphicsBufferManager != nullptr)
+	{
+		delete mpGraphicsBufferManager;
+	}
+	
+	if (mpUnitManager != nullptr)
+	{
+		delete mpUnitManager;
+	}
+	
+	if (mpInputSystem != nullptr)
+	{
+		mpInputSystem->cleanup();
+		delete mpInputSystem;
+	}
+	
+	if (mpGraphicsSystem != nullptr)
+	{
+		mpGraphicsSystem->cleanup();
+		delete mpGraphicsSystem;
+	}
+}
+
+
+void Game::doLoop()
+{
+	const Vector2D SPRITE_SHEET_NUM = Vector2D(4, 4);
+	const Vector2D SHEET_SPRITE_SIZE = Vector2D(60, 60);
+
+	const std::string WOODS_BUFFER_NAME = "WoodsBuffer";
+	const std::string SMURF_BUFFER_NAME = "SmurfBuffer";
+	const std::string DEAN_BUFFER_NAME = "DeanBuffer";
+
+	const std::string SMURF_ANIM_NAME = "SmurfWalk";
+	const std::string DEAN_ANIM_NAME = "DeanWalk";
+
+	const std::string ASSET_PATH = "..\\..\\common\\assets\\";
+	const std::string WOODS_IMAGE_NAME = "Woods.png";
+	const std::string SMURF_SPRITES_NAME = "smurf_sprites.png";
+	const std::string DEAN_SPRITES_NAME = "dean_sprites.png";
+
+	const float ANIM_SPEED = 9.0f;
+
+	bool keepGoing = true;
+
+	Timer loopTimer;
+	PerformanceTracker* pPerformanceTracker = new PerformanceTracker();
+
+	mpGraphicsBufferManager->addGraphicsBuffer(WOODS_BUFFER_NAME, ASSET_PATH + WOODS_IMAGE_NAME);
+	mpGraphicsBufferManager->addGraphicsBuffer(SMURF_BUFFER_NAME, ASSET_PATH + SMURF_SPRITES_NAME);
+	mpGraphicsBufferManager->addGraphicsBuffer(DEAN_BUFFER_NAME, ASSET_PATH + DEAN_SPRITES_NAME);
+	
+	Sprite woodsSprite = Sprite(&mpGraphicsBufferManager->getGraphicsBuffer(WOODS_BUFFER_NAME));
+
+	std::vector<Sprite> smurfSprites;
+	std::vector<Sprite> deanSprites;
+
+	for (int y = 0; y < SPRITE_SHEET_NUM.getY(); y++)
+	{
+		for (int x = 0; x < SPRITE_SHEET_NUM.getX(); x++)
+		{
+			GraphicsBuffer* smurfBuffer = &mpGraphicsBufferManager->getGraphicsBuffer(SMURF_BUFFER_NAME);
+			GraphicsBuffer* deanBuffer = &mpGraphicsBufferManager->getGraphicsBuffer(DEAN_BUFFER_NAME);
+
+			Sprite smurfSprite = Sprite(smurfBuffer, Vector2D(x * SHEET_SPRITE_SIZE.getX(), y * SHEET_SPRITE_SIZE.getY()), SHEET_SPRITE_SIZE);
+			smurfSprites.push_back(smurfSprite);
+
+			Sprite deanSprite = Sprite(deanBuffer, Vector2D(x * SHEET_SPRITE_SIZE.getX(), y * SHEET_SPRITE_SIZE.getY()), SHEET_SPRITE_SIZE);
+			deanSprites.push_back(deanSprite);
+		}
+	}
+
+	Animation smurfAnim = Animation(smurfSprites, ANIM_SPEED, true);
+	Animation deanAnim = Animation(deanSprites, ANIM_SPEED, true);
+
+	std::unordered_map<std::string, Animation> unitAnims;
+	unitAnims[SMURF_ANIM_NAME] = smurfAnim;
+	unitAnims[DEAN_ANIM_NAME] = deanAnim;
+
+	UnitParameters unitParams = UnitParameters(Vector2D(0, 0), unitAnims, SMURF_ANIM_NAME);
+
+	while (keepGoing)
+	{
+		pPerformanceTracker->clearTracker(PERFORMANCE_TRACKER_STRING);
+		pPerformanceTracker->startTracking(PERFORMANCE_TRACKER_STRING);
+
+		loopTimer.start();
+
+		
+		if (mpInputSystem->getMouseButtonState(Mousecode::LEFT))
+		{
+			Vector2D mousePos = mpInputSystem->getMousePos();
+			unitParams.startPos = mousePos - (SHEET_SPRITE_SIZE / 2);
+			mpUnitManager->createUnit(unitParams);
+		}
+
+
+		if (mpInputSystem->getMouseButtonState(Mousecode::RIGHT))
+		{
+			Vector2D mousePos = mpInputSystem->getMousePos();
+			std::vector<Unit*> units = mpUnitManager->getUnitsAtPos(mousePos);
+			for (int i = 0; i < units.size(); i++)
+			{
+				mpUnitManager->deleteUnit(*units[i]);
+			}
+		}
+
+
+		if (mpInputSystem->getKeyState(Keycode::ENTER) && mpUnitManager->getNumUnits() > 0)
+		{
+			Unit* lastUnitPlaced = mpUnitManager->getUnit(mpUnitManager->getNumUnits() - 1);
+
+			if (lastUnitPlaced->getCurrentAnimationName() == SMURF_ANIM_NAME)
+			{
+				lastUnitPlaced->setCurrentAnimation(DEAN_ANIM_NAME);
+			}
+			else
+			{
+				lastUnitPlaced->setCurrentAnimation(SMURF_ANIM_NAME);
+			}
+		}
+
+
+		if (mpInputSystem->getKeyState(Keycode::ESCAPE))
+		{
+			keepGoing = false;
+		}
+
+		if (mpInputSystem->getKeyState(Keycode::SPACE) == false)
+		{
+			update(mTargetTimeInMilliseconds);
+		}
+		
+		mpGraphicsSystem->draw(Vector2D(0, 0), woodsSprite, Vector2D(.5f, .5f));
+		render();
+
+		loopTimer.sleepUntilElapsed(mTargetTimeInMilliseconds);
+
+		pPerformanceTracker->stopTracking(PERFORMANCE_TRACKER_STRING);
+	}
+
+	delete pPerformanceTracker;
+}

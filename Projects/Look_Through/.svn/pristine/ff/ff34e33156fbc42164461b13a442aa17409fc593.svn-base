@@ -1,0 +1,14 @@
+#pragma once
+
+#include "GameEvent.h"
+
+class ActionEvent : public GameEvent
+{
+    public:
+        ActionEvent(int);
+        ~ActionEvent();
+
+        int getAction() const { return mAction; }
+private:
+    int mAction = 0;
+};

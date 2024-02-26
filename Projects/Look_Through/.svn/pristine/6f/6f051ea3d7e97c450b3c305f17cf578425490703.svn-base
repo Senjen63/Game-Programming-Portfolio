@@ -1,0 +1,11 @@
+#include "HudEvent.h"
+
+HudEvent::HudEvent(HudEventTypes type) : Event((EventType)type)
+{
+
+}
+
+HudEvent::~HudEvent()
+{
+
+}

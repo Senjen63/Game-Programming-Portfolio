@@ -1,0 +1,29 @@
+#pragma once
+
+#include <vector>
+#include <Trackable.h>
+#include "Level.h"
+
+class LevelManager : public Trackable
+{
+public:
+    LevelManager() = default;
+    ~LevelManager();
+
+    void reserveLevels(unsigned int capacity);
+    void addLevel(const std::string& filePath);
+    void loadLevel(int index);
+    void loadNextLevel();
+    void unloadActiveLevel();
+
+    void update(double deltaTime);
+
+    const Level& getLevel(int index) const { return mLevels.at(index); }
+    Level* getActiveLevel() const { return mActiveLevel._Ptr; }
+    bool isLevelLoaded() const { return mLevelIsLoaded; }
+
+private:
+    bool mLevelIsLoaded = false;
+    std::vector<Level> mLevels;
+    std::vector<Level>::iterator mActiveLevel;
+};

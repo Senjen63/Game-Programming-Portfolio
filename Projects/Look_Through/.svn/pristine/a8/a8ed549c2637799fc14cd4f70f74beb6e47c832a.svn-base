@@ -1,0 +1,129 @@
+#include "Timer.h"
+#include "Game.h"
+
+Game::Game()
+{
+	mpGraphicsSystem = new GraphicsSystem;
+	mpInputSystem = new InputSystem;
+}
+
+Game::~Game()
+{
+	delete mpGraphicsSystem;
+	mpGraphicsSystem = nullptr;
+	delete mpInputSystem;
+	mpInputSystem = nullptr;
+}
+
+void Game::init()
+{
+	mpGraphicsSystem->init();
+	mpInputSystem->init();
+
+	const int WIDTH = 800, HEIGHT = 600;
+	mpGraphicsSystem->createDisplay( WIDTH, HEIGHT );
+}
+
+void Game::cleanup()
+{
+	mpInputSystem->cleanup();
+	mpGraphicsSystem->cleanup();
+}
+
+void Game::doLoop()
+{
+	const float FPS = 1 / 60.0f;
+
+	const std::string ASSET_PATH = "..\\..\\common\\assets\\";
+	const std::string DEAN_FILENAME = "dean_sprites.png";
+	const std::string WOODS_FILENAME = "woods.png";
+	const std::string SMURF_FILENAME = "smurf_sprites.png";
+
+	// Create graphics buffers
+	GraphicsBuffer woodsBuffer( ( ASSET_PATH + WOODS_FILENAME ).c_str() );
+	GraphicsBuffer deanBuffer( ( ASSET_PATH + DEAN_FILENAME ).c_str() );
+	GraphicsBuffer smurfBuffer( ( ASSET_PATH + SMURF_FILENAME ).c_str() );
+
+	// Create sprites
+	Sprite woodsSprite( woodsBuffer, 0, 0, woodsBuffer.getWidth(), woodsBuffer.getHeight() );
+
+	// Create animations
+	const int TOTAL_SPRITES = 16;
+	const int SPRITE_STRIDE = 60;
+	const int SPRITES_PER_ROW = 4;
+
+	Animation smurfAnimation( true );
+	Animation deanAnimation( true );
+
+	for( int i = 0, row = 0, col = 0; i < TOTAL_SPRITES; i++ )
+	{
+		smurfAnimation.addSprite( new Sprite { smurfBuffer, col * SPRITE_STRIDE, row * SPRITE_STRIDE, SPRITE_STRIDE, SPRITE_STRIDE } );
+		deanAnimation.addSprite( new Sprite { deanBuffer, col * SPRITE_STRIDE, row * SPRITE_STRIDE, SPRITE_STRIDE, SPRITE_STRIDE } );
+
+		if( ++col % SPRITES_PER_ROW == 0 )
+		{
+			col = 0;
+			row++;
+		}
+	}
+
+	Unit unit;
+	unit.addAnimation( &deanAnimation );
+	unit.addAnimation( &smurfAnimation );
+
+	unit.updatePosition( Vector2D { mpGraphicsSystem->getWidth() / 2, mpGraphicsSystem->getHeight() / 2 } );
+	
+	Timer timer;
+	timer.start();
+	while( 1 )
+	{
+		// get all inputs
+		mpInputSystem->pollInputs();
+
+		// change game
+		unit.updateUnit();
+
+		// Place Unit at Position
+		if( mpInputSystem->getMouseState().mClicking )
+		{
+			unit.updatePosition( mpInputSystem->getMouseState().mMousePosition );
+		}
+
+		// Speed Up Animation
+		if( (bool) mpInputSystem->getKeyState( Key::F ) )
+		{
+			unit.speedUpAnimation();
+		}
+
+		// Slow Down Animation
+		if( (bool) mpInputSystem->getKeyState( Key::S ) )
+		{
+			unit.slowDownAnimation();
+		}
+
+		// Switch Animation
+		if( (bool) mpInputSystem->getKeyState( Key::ENTER ) )
+		{
+			unit.setAnimation( (unit.getCurrentAnimationIndex() + 1) % 2 );
+		}
+
+		// Close Application
+		if( (bool) mpInputSystem->getKeyState( Key::ESCAPE ) )
+		{
+			break;
+		}
+
+		// draw game
+		mpGraphicsSystem->draw( 0, 0, woodsSprite, .5f );
+		unit.draw( mpGraphicsSystem );
+		// wait time till next frame
+
+		mpGraphicsSystem->flip();
+		timer.sleep( FPS );
+	}
+	smurfAnimation.cleanup();
+	deanAnimation.cleanup();
+	deanBuffer.cleanup();
+	smurfBuffer.cleanup();
+	woodsBuffer.cleanup();
+}

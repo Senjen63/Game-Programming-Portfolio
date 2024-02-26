@@ -1,0 +1,46 @@
+#include "Level.h"
+
+Level::Level(string filename)
+{
+	ifstream fin(mASSET_PATH + filename);
+
+	mMainFilename = filename;
+
+	if (fin.good())
+	{
+		fin >> mStartingLength;
+		fin >> mReqSnakeLength;
+		fin >> mBuffFrequency;
+		fin >> mDebuffFrequency;
+		fin >> mPointFrequency;
+		fin >> mFoodPoints;
+		fin >> mBonusPoints;
+		fin >> mDefaultUnitFps;
+		mUnitFps = mDefaultUnitFps;
+		fin >> mWallDisplayFilename;
+
+		fin.close();
+	}
+	else
+	{
+		mStartingLength = 3;
+		mReqSnakeLength = 7;
+		mBuffFrequency = 3;
+		mPointFrequency = 3;
+		mFoodPoints = 1;
+		mBonusPoints = 5;
+		mDefaultUnitFps = 9.5;
+		mUnitFps = mDefaultUnitFps;
+		mWallDisplayFilename = "wall.txt";
+	}
+}
+
+Level::~Level()
+{
+
+}
+
+//UnitManager Level::createWall(GraphicsBuffer* buffer)
+//{
+//
+//}

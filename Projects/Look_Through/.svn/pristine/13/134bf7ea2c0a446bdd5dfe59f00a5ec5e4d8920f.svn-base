@@ -1,0 +1,82 @@
+#pragma once
+
+#include <string>
+#include <unordered_map>
+#include <fstream>
+#include <random>
+
+#include "Vector2D.h"
+#include "Trackable.h"
+#include "UnitParameters.h"
+#include "Game.h"
+#include "ScoreChangeEvent.h"
+#include "EventListener.h"
+#include "Conversion.h"
+
+class Game;
+
+class LevelManager : public EventListener
+{
+	const float ANIM_SPEED = 1.0f;
+
+	// Imported level data
+	float mStartMillisecondMoveDelay;
+	int mStartNumSegments;
+
+	int mGoalLength;
+	int mNumPointsForFood;
+	int mNumPointsForScoreUpPowerUp;
+
+	float mPowerUpSpawnFrequency; // In seconds
+	float mSpeedUpPowerUpChance;
+	float mSpeedDownPowerUpChance;
+	float mScoreModPowerUpChance;
+
+	float mSpeedUpPowerUpMagnitude;
+	float mSpeedDownPowerUpMagnitude;
+
+	
+	// Object creation data
+	UnitParameters mSnakeHeadParams;
+	UnitParameters mWallParams;
+	UnitParameters mFruitParams;
+	UnitParameters mSpeedUpPowerUpParams;
+	UnitParameters mSpeedDownPowerUpParams;
+	UnitParameters mScoreUpPowerUpParams;
+
+
+	int mScore = 0;
+	float mTimeSinceLastPowerUpSpawn = 0;
+	float mTimeInLevel = 0;
+	int mFruitCollected = 0;
+
+	bool mGameStarted = false;
+
+public:
+	const static int CELL_SIZE;
+
+	LevelManager() {}
+	~LevelManager() { EventSystem::getInstance()->removeListenerFromAllEvents(this); }
+
+	void init();
+
+	void loadLevelFromFile(std::string levelDataFullPath);
+	void startGame();
+
+	void update(float dt);
+
+	void placeWalls(std::ifstream &wallLayout);
+	void spawnSnake();
+	void spawnFruit();
+	void spawnSpeedUpPowerUp();
+	void spawnSpeedDownPowerUp();
+	void spawnScoreUpPowerUp();
+
+	void moveUnitToAvailableSpace(Unit* unit);
+
+	void handleEvent(const Event& theEvent) override;
+
+	int getScore() { return mScore; }
+	float getTimeInLevel() { return mTimeInLevel; }
+};
+

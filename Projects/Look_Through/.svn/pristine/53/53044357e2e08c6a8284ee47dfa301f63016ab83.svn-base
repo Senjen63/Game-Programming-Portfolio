@@ -1,0 +1,22 @@
+#include "GameEvents.h"
+
+ChangeScoreEvent::ChangeScoreEvent( GameEventTypes type, int points ) : Event( ( EventType )type )
+{
+	mPoints = points;
+}
+
+UpdateHUDEvent::UpdateHUDEvent( GameEventTypes type, int score, float fps, int deltaTime ) : Event( ( EventType )type )
+{
+	mScore = score;
+	mFps = fps;
+	mTotalTime = deltaTime;
+}
+
+WinLevelEvent::WinLevelEvent(GameEventTypes type, int levnum) : Event ( ( EventType )type )
+{
+	mCurLevel = levnum;
+}
+
+WinGameEvent::WinGameEvent(GameEventTypes type) : Event( ( EventType )type )
+{
+}

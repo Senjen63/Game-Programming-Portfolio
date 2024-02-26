@@ -1,0 +1,22 @@
+SnakeSpeed: 5
+StartSegmentNum: 15
+EndSegmentNum: 20
+FoodPoints: 100
+PowerUpBaseFrequency: 10
+PowerUpRandomRange: 10
+BonusChance: 100
+FastChance: 0
+SlowChance: 0
+WallLocations:
+1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
+1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1
+1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1
+1 0 0 0 0 1 1 0 0 1 1 0 0 0 0 1
+1 0 0 1 1 1 0 0 0 0 1 1 1 0 0 1
+1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1
+1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1
+1 0 0 1 1 1 0 0 0 o 1 1 1 0 0 1
+1 0 0 0 0 1 1 0 0 1 1 0 0 0 0 1
+1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1
+1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1
+1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1

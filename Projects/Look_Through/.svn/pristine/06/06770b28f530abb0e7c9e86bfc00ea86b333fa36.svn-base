@@ -1,0 +1,29 @@
+#pragma once
+
+#include "SDLInclude.h"
+
+#include <PerformanceTracker.h>
+#include <MemoryTracker.h>
+
+#include <iostream>
+using namespace std;
+
+class Font : public Trackable
+{
+private:
+	TTF_Font* mpFont;
+	int mFontSize;
+
+	//accessors
+	TTF_Font* getFont();
+
+public:
+	Font();
+	Font(string filePath, int fontSize);
+	~Font();
+
+	//accessors
+	int getFontSize();
+
+	friend class GraphicsSystem;
+};

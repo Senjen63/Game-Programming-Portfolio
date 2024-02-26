@@ -1,0 +1,38 @@
+﻿#include "include/Sprite.hpp"
+
+Sprite::Sprite()
+{
+    mpBuffer = nullptr;
+    mpAtlasRect = nullptr;
+}
+
+Sprite::Sprite( GraphicsBuffer * pBuffer, Rect2D * pAtlas ) : mpBuffer( pBuffer )
+{
+    if ( !pAtlas )
+    {
+        pAtlas = new Rect2D{ 0, 0, pBuffer->getWidth(), pBuffer->getHeight() };
+    }
+
+    mpAtlasRect = pAtlas;
+}
+
+Sprite::~Sprite()
+{
+    // Buffers are murdered on their own.
+    mpBuffer = nullptr;
+
+    delete mpAtlasRect;
+    mpAtlasRect = nullptr;
+}
+
+int Sprite::getWidth() const
+{
+    if ( !mpAtlasRect ) return mpBuffer->getWidth();
+    return mpAtlasRect->w;
+}
+
+int Sprite::getHeight() const
+{
+    if ( !mpAtlasRect ) return mpBuffer->getHeight();
+    return mpAtlasRect->h;
+}

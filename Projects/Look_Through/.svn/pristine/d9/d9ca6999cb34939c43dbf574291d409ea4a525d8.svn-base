@@ -1,0 +1,53 @@
+#include "GraphicsBufferManager.h"
+
+GraphicsBufferManager::GraphicsBufferManager()
+{
+	mTotal = 0;
+
+}
+
+GraphicsBufferManager::~GraphicsBufferManager()
+{
+	clearAll();
+}
+
+void GraphicsBufferManager::addBuff(string filename, char id)
+{
+	
+	GraphicsBuffer* buff = new GraphicsBuffer(filename);
+	mpBufferList.insert({id, buff});
+	mIdList.push_back(id);
+	mTotal++;
+
+}
+
+void GraphicsBufferManager::addBuff(Color color, int height, int width, char id)
+{
+	
+	GraphicsBuffer* buff = new GraphicsBuffer(color, height, width);
+	mpBufferList.insert({id, buff});
+	mIdList.push_back(id);
+	mTotal++;
+
+}
+
+void GraphicsBufferManager::removeBuff(char id)
+{
+
+	mpBufferList.erase(id);
+	mTotal--;
+
+}
+
+GraphicsBuffer* GraphicsBufferManager::getBuff(char id)
+{
+	GraphicsBuffer* find = mpBufferList.at(id);
+	return find;
+}
+
+void GraphicsBufferManager::clearAll()
+{
+	mpBufferList.clear();
+	mTotal = 0;
+	mIdList.clear();
+}

@@ -1,0 +1,28 @@
+#pragma once
+#include <vector>
+
+#include "Sprite.h"
+
+class Animation : public Trackable
+{
+    std::vector< Sprite * > mSprites;
+
+    int mFramesPerSpriteChange = 60;
+    int mCurrentFramesTotal = 0;
+    bool mIsLooping = false;
+    int mCurrentIndex = 0;
+    int mOldFramesPerSpriteChange = 0;
+
+public:
+    Animation();
+    ~Animation();
+
+    void addSprite( Sprite * pSprite );
+    void cleanup() const;
+    void createAnimation( GraphicsBuffer * pBuffer, int pixelStride, int spritesPerRow, int totalSprites, bool looping = false );
+    [[nodiscard]] Sprite * getCurrentSprite() const;
+    void pauseAnimation();
+    void slowDown();
+    void speedUp();
+    void updateSprite();
+};

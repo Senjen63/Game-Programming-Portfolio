@@ -1,0 +1,72 @@
+#include "ButtonComponent.h"
+
+
+ButtonComponent::ButtonComponent(std::string buttonID, std::string text)
+{
+	mButtonID = buttonID;
+	mText = text;
+	EventSystem::getInstance()->addListener((EventType)GameEventType::MOUSE_PRESS_EVENT, this);
+}
+
+
+ButtonComponent::~ButtonComponent()
+{
+	EventSystem::getInstance()->removeListener((EventType)GameEventType::MOUSE_PRESS_EVENT, this);
+}
+
+
+void ButtonComponent::notifyListeners()
+{
+	for (IButtonListener* listener : mListeners)
+	{
+		listener->onButtonPressed(mButtonID);
+	}
+}
+
+
+void ButtonComponent::draw(GraphicsSystem* gSys)
+{
+	gSys->writeText(Vector2D(mpUnit->getX() + 25, mpUnit->getY() + mpUnit->getCurrentAnimation()->getCurrentFrame().getHeight() / 2), Game::getInstance()->getFont(), Color(0,0,0,255), mText);
+}
+
+
+void ButtonComponent::subscribeListener(IButtonListener* listener)
+{
+	auto it = std::find(mListeners.begin(), mListeners.end(), listener);
+
+	if (it == mListeners.end())
+	{
+		mListeners.push_back(listener);
+	}
+}
+
+
+void ButtonComponent::unsubscribeListener(IButtonListener* listener)
+{
+	auto it = std::find(mListeners.begin(), mListeners.end(), listener);
+
+	if (it != mListeners.end())
+	{
+		mListeners.erase(it);
+	}
+}
+
+
+void ButtonComponent::handleEvent(const Event& theEvent)
+{
+	std::cout << "Test" << std::endl;
+
+	InputSystem* is = Game::getInstance()->getInputSystem();
+
+	Vector2D mousePos = is->getMousePos() - Game::getInstance()->getGraphicsSystem()->getWindowPos();
+
+	std::vector<Unit*> units = Game::getInstance()->getUnitManager()->getUnitsAtPos(mousePos);
+
+	for (Unit* u : units)
+	{
+		if (u == mpUnit)
+		{
+			notifyListeners();
+		}
+	}
+}

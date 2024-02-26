@@ -1,0 +1,26 @@
+#pragma once
+#include "Animation.h"
+#include "GraphicsSystem.h"
+
+class Unit : public Trackable
+{
+public:
+	Unit();
+	Unit(int x, int , Animation* smurf, Animation* dean);
+	~Unit();
+
+	void Update(float removeTime);
+	void draw(GraphicsSystem* display, Vector2D pos);
+	void storeAnimations(Animation* smurf, Animation* dean);
+	void setAnimation();
+	void changeSpeed(float timeChange);
+
+
+private:
+	Animation* mpSmurfWalk;
+	Animation* mpDeanWalk;
+	Animation* mpCurrent;
+	int mX;
+	int mY;
+	int mAnimChoose;
+};

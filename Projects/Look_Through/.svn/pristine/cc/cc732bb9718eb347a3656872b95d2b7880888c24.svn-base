@@ -1,0 +1,152 @@
+#include "PowerUp.h"
+
+PowerUp::PowerUp()
+{
+
+}
+PowerUp::PowerUp(Animation slow, Animation speed, Animation point, Animation food)
+{
+	mSlow = slow;
+	mSpeed = speed;
+	mPoint = point;
+	mFood = food;
+}
+PowerUp::~PowerUp()
+{
+
+}
+
+void PowerUp::setSlow(Animation slow)
+{
+	mSlow = slow;
+}
+
+void PowerUp::setSpeed(Animation speed)
+{
+	mSpeed = speed;
+}
+
+void PowerUp::setScore(Animation score)
+{
+	mPoint = score;
+}
+
+void PowerUp::setFood(Animation food)
+{
+	mFood = food;
+}
+
+void PowerUp::setFrequency(float frequency)
+{
+	mFrequency = frequency;
+	mTimeRemaining = mFrequency * (MILLISECOND_TO_SECOND / FRAMES_PER_SECOND);
+}
+
+void PowerUp::setSlowChance(int chance)
+{
+	mSlowChance = chance;
+}
+void PowerUp::setPointChance(int chance)
+{
+	mPointChance = chance;
+}
+void PowerUp::setSpeedChance(int chance)
+{
+	mSpeedChance = chance;
+}
+
+void PowerUp::update(Level level, float timePassed)
+{
+	bool foodExist = false;
+
+	srand(time(NULL));
+
+	mFood.update(timePassed);
+	mSlow.update(timePassed);
+	mSpeed.update(timePassed);
+	mPoint.update(timePassed);
+
+
+	for (int i = 0; i < LEVEL_HEIGHT; i++)
+	{
+		for (int j = 0; j < LEVEL_WIDTH; j++)
+		{
+			if (level.getSquare(i, j)->checkFood())
+			{
+				foodExist = true;
+			}
+		}
+	}
+
+	if (!foodExist)
+	{
+		bool noFood = true;
+		int x, y;
+		while (noFood)
+		{
+			x = rand() % 11 + 1;
+			y = rand() % 11 + 1;
+			if (!level.getSquare(x,y)->isOccupied())
+			{
+				level.getSquare(x, y)->setFood();
+				noFood = false;
+			}
+		}
+	}
+
+	mTimeRemaining -= timePassed;
+	if (mTimeRemaining <= 0)
+	{
+		bool notSet = true;
+		int x, y, num;
+		while (notSet)
+		{
+			x = rand() % 11 + 1;
+			y = rand() % 11 + 1;
+			num = rand() % 100 + 1;
+			if (!level.getSquare(x, y)->isOccupied())
+			{
+ 				if (num <= mSpeedChance)
+				{
+					level.getSquare(x, y)->setSpeed();
+				}
+				else if (num <= (mSlowChance + mSpeedChance))
+				{
+					level.getSquare(x, y)->setSlow();
+				}
+				else if (num <= (mPointChance + mSlowChance + mSpeedChance))
+				{
+					level.getSquare(x, y)->setPoint();
+				}
+				notSet = false;
+				mTimeRemaining = mFrequency * (MILLISECOND_TO_SECOND/FRAMES_PER_SECOND);
+			}
+		}
+	}
+}
+
+void PowerUp::draw(GraphicsSystem* system, Level level)
+{
+	for (int i = 0; i < LEVEL_HEIGHT; i++)
+	{
+		for (int j = 0; j < LEVEL_WIDTH; j++)
+		{
+			if (level.getSquare(i, j)->checkFood())
+			{
+				system->draw(level.getSquare(i, j)->getPosition(), mFood.getCurrentSprite(),1);
+			}
+			else if(level.getSquare(i, j)->checkSlow())
+			{
+				system->draw(level.getSquare(i, j)->getPosition(), mSlow.getCurrentSprite(), 1);
+			}
+			else if(level.getSquare(i, j)->checkSpeed())
+			{
+				system->draw(level.getSquare(i, j)->getPosition(), mSpeed.getCurrentSprite(), 1);
+			}
+			else if(level.getSquare(i, j)->checkPoint())
+			{
+				system->draw(level.getSquare(i, j)->getPosition(), mPoint.getCurrentSprite(), 1);
+			}
+		}
+	}
+}

@@ -1,0 +1,37 @@
+#pragma once
+#include <iostream>
+#include <string>
+#include <allegro5/allegro.h>
+#include <allegro5/allegro_font.h>
+#include <allegro5/allegro_ttf.h>
+#include <allegro5/allegro_audio.h>
+#include <allegro5/allegro_acodec.h>
+#include <allegro5/allegro_image.h>
+#include <allegro5/allegro_primitives.h>
+
+#include "Sprite.h"
+#include "Font.h"
+
+class GraphicsSystem
+{
+public:
+	GraphicsSystem(int width, int height);
+	~GraphicsSystem();
+
+	bool init();
+
+	int getWidth() { return al_get_display_width(display); }
+	int getHeight() { return al_get_display_height(display); }
+	GraphicsBuffer* getBackBuffer() { return backBuffer; }
+
+	void draw(int x, int y, Sprite spr, float scale = 1.0); // draw to current backbuffer
+	void draw(GraphicsBuffer* target, int x, int y, Sprite spr, float scale = 1.0); // draw to given GraphicsBuffer
+	void writeText(int x, int y, Font* fnt, Color clr, string text); // write to current backbuffer
+	void writeText(GraphicsBuffer* target, int x, int y, Font* fnt, Color clr, string text); // write to given GraphicsBuffer
+	void saveBuffer(GraphicsBuffer* toSave, string filename); // save the contents of a GraphicsBuffer to a file
+
+	void flip() { al_flip_display(); }
+private:
+	ALLEGRO_DISPLAY* display;
+	GraphicsBuffer* backBuffer;
+};

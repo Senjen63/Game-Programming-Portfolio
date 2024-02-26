@@ -1,0 +1,12 @@
+#include "Sprite.h"
+
+Sprite::Sprite(GraphicsBuffer* buffer, int x, int y, int height, int width)
+{
+	mX = x;
+	mY = y;
+	mHeight = height;
+	mWidth = width;
+	mpBuffer = buffer;
+}
+
+Sprite::~Sprite() {}

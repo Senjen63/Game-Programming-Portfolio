@@ -1,0 +1,29 @@
+#pragma once
+
+#include "GraphicsSystem.h"
+#include "InputSystem.h"
+#include "Unit.h"
+
+#include <Timer.h>
+#include <PerformanceTracker.h>
+
+class Game
+{
+public:
+	Game(float displayWidth, float displayHeight);
+	~Game();
+
+	void init();
+	void clean();
+
+	void doLoop();
+
+	GraphicsSystem* getGraphicsSystem();
+	InputSystem* getInputSystem();
+
+private:
+	GraphicsSystem* mpGraphicsSystem;
+	InputSystem* mpInputSystem;
+};
+
+extern Game* gpGame;

@@ -1,0 +1,64 @@
+#include "LevelManager.h"
+#include "Level.h"
+
+LevelManager::LevelManager() 
+{
+	createAndAddLevel("./data_files/level1.txt");
+	createAndAddLevel("./data_files/level2.txt");
+	createAndAddLevel("./data_files/level3.txt");
+
+	this->mCurrentLevel = 1;
+}
+
+LevelManager::~LevelManager()
+{
+	clearLevels();
+}
+
+void LevelManager::createAndAddLevel(string fileName)
+{
+	Level* level = new Level(fileName);
+
+	mpLevels.push_back(level);
+}
+
+void LevelManager::deleteLevel(Level* pLevelToDelete)
+{
+	for (unsigned int i = 0; i < mpLevels.size(); i++)
+	{
+		Level* pLevel = mpLevels[i];
+		if (pLevel == pLevelToDelete)
+		{
+			delete pLevel;
+			mpLevels.erase(mpLevels.begin() + i);
+			break;
+		}
+	}
+}
+
+void LevelManager::clearLevels()
+{
+	for (auto level : mpLevels)
+	{
+		delete level;
+	}
+
+	mpLevels.clear();
+}
+
+void LevelManager::increaseCurrentLevel() 
+{ 
+	if (mCurrentLevel == 3) 
+	{
+		mCurrentLevel = 1;
+	}
+	else
+	{
+		mCurrentLevel++;
+	}
+}
+
+void LevelManager::resetCurrentLevel()
+{
+	mCurrentLevel = 1;
+}

@@ -1,0 +1,118 @@
+#include "Game.h"
+#include <windows.h>
+
+Game* Game::mpsGame = nullptr;
+
+Game* Game::getInstance()
+{
+	if (mpsGame == nullptr)
+	{
+		mpsGame = new Game;
+	}
+	return mpsGame;
+}
+
+void Game::destroyInstance()
+{
+	if (mpsGame != nullptr)
+	{
+		delete mpsGame;
+		mpsGame = nullptr;
+	}
+}
+
+Game::Game()
+{
+	mpGraphicsSystem = new GraphicsSystem(DISP_HEIGHT, DISP_WIDTH);
+	mpBufferManager = new GraphicsBufferManager();
+	mpInputSystem = new InputSystem();
+	mpUnitManager = new UnitManager();
+	mFrameTime = 16.7;
+	mpSmurfAnim = nullptr;
+	mpDeanAnim = nullptr;
+}
+
+Game::~Game()
+{
+	cleanup();
+}
+
+void Game::cleanup()
+{
+	mpGraphicsSystem->cleanUp();
+	mpBufferManager->cleanup();
+	mpUnitManager->cleanup();
+	delete mpGraphicsSystem;
+}
+
+void Game::init()
+{
+	mpGraphicsSystem->init();
+	mpInputSystem->init();
+	mpBufferManager->addBuffer(WOODS_FILENAME, ASSET_PATH + WOODS_FILENAME);
+	mpBufferManager->addBuffer(SMURF_FILENAME, ASSET_PATH + SMURF_FILENAME);
+	mpBufferManager->addBuffer(DEAN_FILENAME, ASSET_PATH + DEAN_FILENAME);
+
+	mpSmurfAnim = new Animation(mpBufferManager->getBuffer(SMURF_FILENAME), 16, 0.01, true);
+	mpDeanAnim = new Animation(mpBufferManager->getBuffer(DEAN_FILENAME), 16, 0.01, true);
+}
+
+void Game::doLoop()
+{
+	bool exit = false;
+	bool pauseAnim = false;
+	PerformanceTracker* pTracker = new PerformanceTracker();
+	Timer time;
+	float animTime = 0;
+	while (!exit)
+	{
+		pTracker->clearTracker("loop");
+		pTracker->startTracking("loop");
+		time.start();
+
+		animTime += time.getElapsedTime();
+		exit = mpInputSystem->getKeyState(Key::ESCAPE);
+		bool pressEnter = mpInputSystem->getKeyState(Key::ENTER);
+		bool pressSpace = mpInputSystem->getKeyState(Key::SPACE);
+		bool leftClick = mpInputSystem->getMouseDown(Mouse::LEFT);
+		bool rightClick = mpInputSystem->getMouseDown(Mouse::RIGHT);
+		Vector2D mousePos = mpInputSystem->getMousePosition();
+		if (pressEnter)
+			mpUnitManager->getLastUnit()->setAnimation();
+		if (pressSpace)
+			mpUnitManager->setPause();
+		if (leftClick)
+			mpUnitManager->addUnit(mousePos, mpSmurfAnim, mpDeanAnim);
+		if (rightClick)
+			mpUnitManager->deleteUnit(mousePos);
+		if (!pauseAnim)
+			mpUnitManager->updateAll(time.getElapsedTime());
+		mpGraphicsSystem->draw(mpBufferManager->getBuffer(WOODS_FILENAME), Vector2D(), .5f);
+		mpUnitManager->drawAll(mpGraphicsSystem);
+
+		mpGraphicsSystem->flipDisplay();
+
+		time.sleepUntilElapsed(mFrameTime);
+		pTracker->stopTracking("loop");
+	}
+}
+
+GraphicsSystem* Game::getGraphicsSystem()
+{
+	return mpGraphicsSystem;
+}
+
+UnitManager* Game::getUnitManager()
+{
+	return mpUnitManager;
+}
+
+GraphicsBufferManager* Game::getGraphicsBufferManager()
+{
+	return mpBufferManager;
+}
+
+float Game::getFrameTime()
+{
+	return mFrameTime;
+}

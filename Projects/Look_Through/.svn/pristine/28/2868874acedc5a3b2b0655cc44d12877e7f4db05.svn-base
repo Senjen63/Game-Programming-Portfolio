@@ -1,0 +1,145 @@
+#include "GraphicsSystem.h"
+
+GraphicsSystem::GraphicsSystem()
+{
+}
+
+GraphicsSystem::GraphicsSystem(int width, int height)
+{
+	mWidth = width;
+	mHeight = height;
+}
+
+GraphicsSystem::~GraphicsSystem()
+{
+	cleanup();
+}
+
+int GraphicsSystem::getWidth()
+{
+	return mWidth;
+}
+
+int GraphicsSystem::getHeight()
+{
+	return mHeight;
+}
+
+bool GraphicsSystem::init()
+{
+	if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
+	{
+		std::cout << "Issues loading SDL." << std::endl;
+		system("pause");
+		return false;
+	}
+
+	if (IMG_Init(IMG_INIT_PNG) == 0)
+	{
+		std::cout << "Issues loading IMGs." << std::endl;
+		system("pause");
+		return false;
+	}
+
+	string title = "Main Display";
+
+	mpWindow = SDL_CreateWindow
+	(
+		title.c_str(),
+		SDL_WINDOWPOS_CENTERED,
+		SDL_WINDOWPOS_CENTERED,
+		mWidth, mHeight,
+		0
+	);
+
+	if (mpWindow == nullptr)
+	{
+		std::cout << "Issues with Window." << std::endl;
+		system("pause");
+		return false;
+	}
+
+	mpRenderer = SDL_CreateRenderer(mpWindow, -1, 0);
+
+	if (mpRenderer == nullptr)
+	{
+		std::cout << "Issues with Renderer." << std::endl;
+		system("pause");
+		return false;
+	}
+
+	
+	//mpWindow = new Window("Main", mWidth, mHeight);
+
+	return true;
+}
+
+void GraphicsSystem::cleanup()
+{
+	SDL_Quit();
+	SDL_DestroyRenderer(mpRenderer);
+	SDL_DestroyWindow(mpWindow);
+	IMG_Quit();
+	
+}
+
+void GraphicsSystem::flip()
+{
+	SDL_RenderPresent(mpRenderer);
+}
+
+void GraphicsSystem::clear()
+{
+	SDL_RenderClear(mpRenderer);
+}
+
+void GraphicsSystem::draw(Sprite sprite, int hori, int vert, float horiScale, float vertScale)
+{
+	Vector2D position = sprite.getSourcePosition();
+	Vector2D heightAndWidth = sprite.getHeightAndWidth();
+
+	SDL_Rect Srcr;
+	SDL_Rect Destr;
+
+	Srcr.x = position.getX();
+	Srcr.y = position.getY();
+	Srcr.w = heightAndWidth.getX();
+	Srcr.h = heightAndWidth.getY();
+
+	Destr.x = hori;
+	Destr.y = vert;
+	Destr.w = heightAndWidth.getX() * horiScale;
+	Destr.h = heightAndWidth.getY() * vertScale;
+
+	SDL_RenderCopy(mpRenderer, sprite.getSpriteBuff().mpBitmap, &Srcr, &Destr);
+}
+
+void GraphicsSystem::draw(GraphicsBuffer* pBackBuff, int hori, int vert, float horiScale, float vertScale)
+{
+	SDL_Rect Destr;
+
+	Destr.x = hori;
+	Destr.y = vert;
+	Destr.w = pBackBuff->getWidth() * horiScale;
+	Destr.h = pBackBuff->getHeight() * vertScale;
+
+	SDL_RenderCopy(mpRenderer, pBackBuff->mpBitmap, NULL, &Destr);
+}
+
+void GraphicsSystem::displayMessage(int hori, int vert, string message, Font* font, Color color, GraphicsBuffer* pBackBuff)
+{
+	/*int flag = 0;
+	ALLEGRO_COLOR messageColor = al_map_rgba(color.getR(), color.getG(), color.getB(), color.getA());
+	ALLEGRO_BITMAP* oldBitmap = al_get_target_bitmap();
+	al_set_target_bitmap(pBackBuff->mpBitmap);
+	al_draw_text(font->mpFont, messageColor, hori, vert, flag, message.c_str());
+	al_set_target_bitmap(oldBitmap); */
+}
+
+void GraphicsSystem::displayMessage(int hori, int vert, string message, Color color, Font* font)
+{
+	/* int flag = 0;
+	cout << color.getR() << " ," << color.getG() << " ," << color.getB() << " ," << color.getA() << endl;
+	ALLEGRO_COLOR messageColor = al_map_rgba(color.getR(), color.getG(), color.getB(), color.getA());
+	al_draw_text(font->mpFont, messageColor, hori, vert, flag, message.c_str()); */
+}

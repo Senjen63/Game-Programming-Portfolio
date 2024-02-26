@@ -1,0 +1,160 @@
+#include "Level.h"
+#include "Game.h"
+#include <random>
+
+const int MAX_NUM_POWERUP = 3;
+const int OFFSET_Y = 80;
+const int OFFSET_X = 16;
+
+enum class UnitTypes;
+
+void Level::init()
+{
+	ifstream fin( mFileName );
+	if ( fin.good() )
+	{
+		fin >> mSpeed >> mStartNum >> mEndNum >> mFoodPoints >> mPowerupChance;
+		int wall;
+		fin >> mRows;
+		fin >> mCols;
+		while ( !fin.eof() )
+		{
+			for ( int i = 0; i < mCols; i++ )
+			{
+				for ( int j = 0; j < mRows; j++ )
+				{
+					fin >> wall;
+					if ( wall == 1 )
+					{
+						addWall( OFFSET_X + j * 32, OFFSET_Y + i * 32 );
+					}
+					if ( wall == 0 )
+					{
+						addFreeSpace( OFFSET_X + j * 32, OFFSET_Y + i * 32 );
+					}
+				}
+			}
+		}
+	}
+	fin.close();
+
+	mpSnake = new Snake();
+	Game::getGame()->getUnitMan()->createUnit( Game::getGame()->getGraphicsSys()->getWidth() / 2, Game::getGame()->getGraphicsSys()->getHeight() / 2,
+		1, 2, UnitTypes::SNAKE_UNIT_TYPE, 5, Game::getGame()->getGraphicsBuffMan()->getGraphicsBuff( "catepillar" ), true );
+	mpSnake->init( Game::getGame()->getUnitMan()->getLastUnit(), mSpeed );
+	for ( int i = 0; i < mStartNum - 1; i++ )
+	{
+		Game::getGame()->getUnitMan()->createUnit( 0, 0, 2, SPRITE_COL_NUM, UnitTypes::SNAKE_UNIT_TYPE, DEFAULT_TARGET_TIME, Game::getGame()->getGraphicsBuffMan()->getGraphicsBuff( "catepillar" ), true );
+		mpSnake->addUnit(Game::getGame()->getUnitMan()->getLastUnit());
+	}
+	createFood();
+}
+
+void Level::cleanup()
+{
+	clearAllWalls();
+	delete mpSnake;
+}
+
+void Level::updateAll( int deltaTime )
+{
+	if (getSnake()->getUnits().size() >= mEndNum)
+	{
+		Game::getGame()->getEventSys()->fireEvent(WinLevelEvent(WIN_LEVEL_EVENT, Game::getGame()->getLevelMan()->getCurLevelNum()));
+	}
+	mTotalElapTime += deltaTime;
+	mElapTime += deltaTime;
+	if ( mElapTime >= mPowerupChance )
+	{
+		if ( mNumSpeedUp < MAX_NUM_POWERUP )
+		{
+			int index = getRandFreeSpace();
+			Vector2D space = mFreeSpaces[index];
+			Game::getGame()->getUnitMan()->createUnit( space.getX(), space.getY(), 1, 2, UnitTypes::SPEED_UP_TYPE, 16,
+				Game::getGame()->getGraphicsBuffMan()->getGraphicsBuff( "speedup" ), false );
+			mFreeSpaces.erase( mFreeSpaces.begin() + index );
+			mNumSpeedUp++;
+		}
+		if ( mNumSlowDown < MAX_NUM_POWERUP )
+		{
+			int index = getRandFreeSpace();
+			Vector2D space = mFreeSpaces[ index ];
+			Game::getGame()->getUnitMan()->createUnit( space.getX(), space.getY(), 1, 2, UnitTypes::SLOW_DOWN_TYPE, 16,
+				Game::getGame()->getGraphicsBuffMan()->getGraphicsBuff( "speeddown" ), false );
+			mFreeSpaces.erase( mFreeSpaces.begin() + index );
+			mNumSlowDown++;
+		}
+		if ( mNumBonus < MAX_NUM_POWERUP )
+		{
+			int index = getRandFreeSpace();
+			Vector2D space = mFreeSpaces[ index ];
+			Game::getGame()->getUnitMan()->createUnit( space.getX(), space.getY(), 1, 2, UnitTypes::BONUS_POINT_TYPE, 16,
+				Game::getGame()->getGraphicsBuffMan()->getGraphicsBuff( "bonus" ), false );
+			mFreeSpaces.erase( mFreeSpaces.begin() + index );
+			mNumBonus++;
+		}
+		mElapTime -= mPowerupChance;
+	}
+	getSnake()->updateAll( deltaTime );
+}
+
+void Level::addWall( int x, int y )
+{
+	Game::getGame()->getUnitMan()->createUnit( x, y, UnitTypes::WALL_UNIT_TYPE, 6, Game::getGame()->getGraphicsBuffMan()->getGraphicsBuff( "wall" ) );
+	mpWalls.push_back( Game::getGame()->getUnitMan()->getLastUnit() );
+}
+
+void Level::addFreeSpace( int x, int y )
+{
+	Vector2D pos = Vector2D( x, y );
+	mFreeSpaces.push_back( pos );
+}
+
+void Level::createFood()
+{
+	int index = getRandFreeSpace();
+	Vector2D space = mFreeSpaces[ index ];
+	Game::getGame()->getUnitMan()->createUnit( space.getX(), space.getY(), 1, SPRITE_COL_NUM, UnitTypes::FOOD_UNIT_TYPE, DEFAULT_TARGET_TIME, Game::getGame()->getGraphicsBuffMan()->getGraphicsBuff( "food" ), false );
+	mFreeSpaces.erase(mFreeSpaces.begin() + index);
+}
+
+void Level::deleteFreeSpace(Vector2D space)
+{
+}
+
+void Level::clearAllWalls()
+{
+	for (int i = 0; i < mpWalls.size(); i++)
+	{
+		Game::getGame()->getUnitMan()->deleteUnit( mpWalls[ i ] );
+	}
+	mpWalls.clear();
+}
+
+int Level::getRandFreeSpace()
+{
+	//int ran = rand() % mFreeSpaces.size();
+	return rand() % mFreeSpaces.size();
+}
+
+Level::Level( string fileName )
+{
+	mFileName = fileName;
+	mSpeed = 0;
+	mPowerupChance = 0;
+	mStartNum = 0;
+	mEndNum = 0;
+	mFoodPoints = 0;
+	mNumSpeedUp = 0;
+	mNumSlowDown = 0;
+	mNumBonus = 0;
+	mElapTime = 0;
+	mTotalElapTime = 0;
+	mpSnake = nullptr;
+}
+
+Level::~Level()
+{
+
+}
+

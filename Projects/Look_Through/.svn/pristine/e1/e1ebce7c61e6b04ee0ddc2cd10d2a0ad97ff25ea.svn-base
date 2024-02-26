@@ -1,0 +1,27 @@
+#pragma once
+#include <allegro5/allegro.h>
+#include <allegro5/allegro_font.h>
+#include <allegro5/allegro_ttf.h>
+
+#include <string>
+
+using namespace std;
+
+class Font //font pointer + size
+{
+	friend class GraphicsSystem;
+public:
+	//construct fornt destruct and accessor for size
+	Font();
+	Font(string, float);
+	~Font();
+
+	float GetFontSize();
+	void SetFontSize(float);
+	ALLEGRO_FONT* GetFont();
+	void SetFont(ALLEGRO_FONT*);
+
+private:
+	float mFontSize;
+	ALLEGRO_FONT* mpLoadedFont;
+};

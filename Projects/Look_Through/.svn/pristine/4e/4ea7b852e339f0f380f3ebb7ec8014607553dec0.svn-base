@@ -1,0 +1,113 @@
+#pragma once
+
+#include <PerformanceTracker.h>
+#include <MemoryTracker.h>
+#include <Trackable.h>
+#include <Timer.h>
+
+#include <string>
+#include <fstream>
+#include <iostream>
+#include <time.h>
+
+#include "EventSystem.h"
+#include "EventListener.h"
+#include "GraphicsSystem.h"
+#include "InputSystem.h"
+#include "Animation.h"
+#include "Unit.h"
+#include "GraphicsBufferManager.h"
+#include "UnitManager.h"
+#include "Snake.h"
+#include "Square.h"
+#include "Level.h"
+#include "LevelManager.h"
+#include "PowerUp.h"
+#include "GameEvent.h"
+#include "InputEvent.h"
+#include "HUD.h"
+#include "SoundSystem.h"
+#include "Language.h"
+
+#include <stdlib.h>
+
+using namespace std;
+
+class Game : public EventListener
+{
+public:
+	Game();
+	~Game();
+
+	static Game* getInstance();
+
+	void init();
+	void cleanup();
+	void doLoop();
+	virtual void handleEvent(const Event& event);
+
+private:
+	static Game* mpsGame;
+
+	bool mRestart = false;
+	bool mKeepGoing = true;
+	bool mNextLevel = false;
+	bool mPlaying = false;
+	bool mMainMenu = true;
+	bool mDead = false;
+	bool mTransition = false;
+	bool mWin = false;
+	bool mFiring = false;
+	bool mOptions = false;
+	bool mMovingRight;
+	int mPoints = 0;
+	int mCurrentLevel = 0;
+	int mSpeed = 1;
+
+	GraphicsSystem * mpGraphicsSystem;
+	InputSystem mInputSystem;
+	Unit mPlayer, mBullet, mEnemy, mEnemyBullet;
+	UnitManager mEnemies, mEnemyBullets;
+	Level mLevel;
+	PowerUp mPowerSettings;
+	GraphicsBufferManager mBuffers;
+	Sprite mWall;
+	Font * mpFont;
+	Color mTextColor;
+	EventSystem* mpEventSystem;
+	HUD mHud;
+	Language mLanguages;
+	SoundSystem mSoundSystem;
+
+	int mDisplayHeight, mDisplayWidth;
+	double mTimePassed, mStartTime, mTime;
+	double mFrames, mFramesPerSecond;
+	const int MAX_SPEED = 3;
+	const int MIN_SPEED = 1;
+	const float MILLISECOND_TO_SECOND = 1000;
+	const float SPEED_ADJUSTMENT = 100000;
+	const string PLAY_SETTINGS = "Play.txt";
+	const string GAME_SETTINGS = "GameData.txt";
+	const string LANGUAGE_FILE = "Language.txt";
+	const string SAVE_FILE = "Save.txt";
+	const string SOUND_FILE = "Sound.txt";
+	const Vector2D DEFAULT_LOCATION = Vector2D(0, 0);
+	const int DISP_WIDTH = 720;
+	const int DISP_HEIGHT = 720;
+	const int SPRITES_PER_ROW = 3;
+	const int SPRITES_PER_COL = 1;
+	const int SPRITE_WIDTH = 60;
+	const int SPRITE_HEIGHT = 60;
+	const float FRAMES_PER_SECOND = 60;
+	const string TITLE = "SPACE INVADERS: ON A GRID";
+	const string TRANSITION_TITLE = "Are you ready for level";
+	const string TRANSITION_TEXT = "Press space to continue";
+	const string MAIN_OPTION_ONE = "Play";
+	const string MAIN_OPTION_TWO = "Load";
+	const string MAIN_OPTION_THREE = "Options";
+	const string MAIN_OPTION_FOUR = "Quit";
+	const string DEATH_MESSAGE = "You died";
+	const string DEATH_INSTRUCTION = "Press space to return to the title screen";
+	const string WIN_MESSAGE = "You win";
+	const string WIN_INSTRUCTION = "Press space to return to the title screen";
+};

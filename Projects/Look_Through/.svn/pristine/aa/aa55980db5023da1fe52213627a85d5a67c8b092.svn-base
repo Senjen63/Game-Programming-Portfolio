@@ -1,0 +1,67 @@
+#pragma once
+
+#include <EventListener.h>
+#include <Vector2D.h>
+
+enum class UnitType;
+
+class Animation;
+class UnitManager;
+class Unit;
+class SnakeManager;
+
+using namespace std;
+
+class Level : public EventListener
+{
+public:
+
+	Level(string filename, int cellSize = 32);
+	~Level();
+
+	void update(double dt);
+	//void draw();
+	void handleEvent(const Event& theEvent);
+
+	void spawnFood();
+	void spawnPowerUp();		
+	
+private:
+
+	void spawnPickUp(UnitType type);
+
+	const int ONE_SECOND_IN_MS = 1000;
+
+	UnitManager* mpUnitManager = nullptr;
+
+	SnakeManager* mpSnake = nullptr;
+
+	bool mFoodExists = false;	
+
+	double mMaxSpawnTimeInSeconds = 0;
+	double mPowerUpSpawnTimer = 0;
+	int mPointsPowerWeight = 0;	
+	int mSpeedPowerWeight = 0;
+	int mSlowPowerWeight = 0;
+
+	int mPointsPowerValue = 0;
+	int mSpeedPowerValue = 0;
+	int mSlowPowerValue = 0;
+
+	float mSnakeSpeed = 0;
+	int mStartingLength = 0;
+	int mTargetLength = 0;
+	int mLengthPerFood = 0;
+	int mPointsPerFood = 0;		
+
+	int mLevelHeight = 0;
+	int mLevelWidth = 0;	
+
+	//int mMaxHeight = 0;
+	//int mMaxWidth = 0;
+
+	int mCellSize = 0;
+	Vector2D mCenterOffset;
+	Vector2D mSnakeStartingPos;
+};
+

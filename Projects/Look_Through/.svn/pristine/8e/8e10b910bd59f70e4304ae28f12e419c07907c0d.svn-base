@@ -1,0 +1,138 @@
+#include "GraphicsSystem.h"
+#include <allegro5/allegro.h>
+#include <allegro5/allegro_font.h>
+#include <allegro5/allegro_ttf.h>
+#include <allegro5/allegro_audio.h>
+#include <allegro5/allegro_acodec.h>
+#include <allegro5/allegro_image.h>
+#include <allegro5/allegro_primitives.h>
+#include <iostream>
+
+using namespace std;
+
+GraphicsSystem::~GraphicsSystem()
+{
+	clean();
+}
+
+void GraphicsSystem::init( int dispW, int dispH )
+{
+	if ( !al_init() )
+	{
+		cout << "error initting Allegro\n";
+		system( "pause" );
+		return;
+	}
+	if ( !al_init_image_addon() )
+	{
+		cout << "error - Image Add-on not initted\n";
+		system( "pause" );
+		return;
+	}
+	if ( !al_init_font_addon() )
+	{
+		cout << "error - Font Add-on not initted\n";
+		system( "pause" );
+		return;
+	}
+	if ( !al_init_ttf_addon() )
+	{
+		cout << "error - TTF Add-on not initted\n";
+		system( "pause" );
+		return;
+	}
+	if ( !al_init_primitives_addon() )
+	{
+		cout << "error - primitives Add-on not initted\n";
+		system( "pause" );
+		return;
+	}
+	if ( !al_install_audio() )
+	{
+		cout << "error - Audio Add-on not initted\n";
+		system( "pause" );
+		//return 1;
+	}
+	if ( !al_init_acodec_addon() )
+	{
+		cout << "error - Audio Codec Add-on not initted\n";
+		system( "pause" );
+		//return 1;
+	}
+	if ( !al_reserve_samples( 1 ) )
+	{
+		cout << "error - samples not reserved\n";
+		system( "pause" );
+		//return 1;
+	}
+	mpDisplay = al_create_display( dispW, dispH );
+}
+
+void GraphicsSystem::clean()
+{
+	al_destroy_display( mpDisplay );
+}
+
+void GraphicsSystem::flip()
+{
+	al_flip_display();
+}
+
+void GraphicsSystem::draw( GraphicsBuffer* buff )
+{
+	al_set_target_bitmap( getBackBuffer() );
+	al_draw_bitmap( buff->getBitmap(), 0, 0, 0 );
+}
+
+void GraphicsSystem::draw( GraphicsBuffer* buff, float scale )
+{
+	al_set_target_bitmap( getBackBuffer() );
+	al_draw_scaled_bitmap( buff->getBitmap(), 0, 0, buff->getWidth(), buff->getHeight(), 0, 0, getWidth() * scale, getHeight() * scale, 0 );
+}
+
+//void GraphicsSystem::draw( Unit* unit, float scale )
+//{
+//	al_set_target_bitmap( getBackBuffer() );
+//	al_draw_scaled_bitmap( unit->getCurAnim().getCurrentSprite().getGraphicsBuffer()->getBitmap(), unit->getCurAnim().getCurrentSprite().getLocX(),
+//	 unit->getCurAnim().getCurrentSprite().getLocY(), unit->getCurAnim().getCurrentSprite().getWidth(), unit->getCurAnim().getCurrentSprite().getHeight(),
+//	 unit->getX(), unit->getY(), unit->getCurAnim().getCurrentSprite().getWidth() * scale, unit->getCurAnim().getCurrentSprite().getHeight() * scale, 0 );
+//}
+
+void GraphicsSystem::draw( Sprite* spr, int locX, int locY, float scale )
+{
+	al_draw_scaled_bitmap( spr->getGraphicsBuffer()->getBitmap(), spr->getLocX(), spr->getLocY(), spr->getWidth(), spr->getHeight(), locX, locY, spr->getWidth() * scale, spr->getHeight() * scale, 0 );
+}
+
+void GraphicsSystem::draw( GraphicsBuffer* backBuff, GraphicsBuffer* buff, int locX, int locY, float scale )
+{
+	ALLEGRO_BITMAP* pOldBitmap = al_get_target_bitmap();
+	al_set_target_bitmap(buff->getBitmap());
+	al_draw_scaled_bitmap( buff->getBitmap(), 0, 0, buff->getWidth(), buff->getHeight(), locX, locY, buff->getWidth() * scale, buff->getHeight() * scale, 0 );
+	al_set_target_bitmap(pOldBitmap);
+}
+
+void GraphicsSystem::draw( GraphicsBuffer* buff, Sprite* spr, int locX, int locY, float scale )
+{
+	ALLEGRO_BITMAP* pOldBitmap = al_get_target_bitmap();
+	al_set_target_bitmap( buff->getBitmap() );
+	al_draw_scaled_bitmap( spr->getGraphicsBuffer()->getBitmap(), spr->getLocX(), spr->getLocY(), spr->getWidth(), spr->getHeight(), locX, locY, spr->getWidth() * scale, spr->getHeight() * scale, 0 );
+	al_set_target_bitmap( pOldBitmap );
+}
+
+void GraphicsSystem::writeText( string txt, int locX, int locY )
+{
+	//al_draw_text( fnt->getFont(), col.getColor(), locX, locY, 0, txt.c_str() );
+}
+
+void GraphicsSystem::writeText( GraphicsBuffer* buff, string txt, int locX, int locY )
+{
+	ALLEGRO_BITMAP* pOldBitmap = al_get_target_bitmap();
+	al_set_target_bitmap( buff->getBitmap() );
+	//al_draw_text( fnt->getFont(), col.getColor(), locX, locY, 0, txt.c_str() );
+	al_set_target_bitmap( pOldBitmap );
+}
+
+void GraphicsSystem::saveBuffer( GraphicsBuffer* buff, string fileName )
+{
+	al_save_bitmap( fileName.c_str(), buff->getBitmap() );
+}

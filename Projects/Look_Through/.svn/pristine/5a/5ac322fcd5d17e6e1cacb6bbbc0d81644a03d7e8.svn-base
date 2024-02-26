@@ -1,0 +1,40 @@
+
+#include <fstream>
+#include <iostream>
+#include <cassert>
+#include <string>
+#include <vector>
+
+#include <PerformanceTracker.h>
+#include <MemoryTracker.h>
+#include <EventSystem.h>
+#include <Vector2D.h>
+#include <Timer.h>
+
+#include "Game.h"
+
+using namespace std;
+
+
+int main()
+{
+	EventSystem::initInstance();
+	EventSystem* pEventSystem = EventSystem::getInstance();
+	pEventSystem->init();
+
+	Game::createInstance();
+	Game* myGame = Game::getInstance();
+		
+	myGame->init(768, 576);
+	myGame->doLoop();		
+
+	Game::destroyInstance();	
+	myGame = nullptr;
+
+	EventSystem::cleanupInstance();
+	
+	MemoryTracker::getInstance()->reportAllocations(cout);
+
+	system("pause");
+	return 0;
+}

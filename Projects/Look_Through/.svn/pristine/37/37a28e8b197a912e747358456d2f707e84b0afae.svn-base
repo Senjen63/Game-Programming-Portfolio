@@ -1,0 +1,14 @@
+#pragma once
+
+class GraphicsBuffer
+{
+	
+	friend class GraphicsSystems;
+
+public:
+	GraphicsBuffer();
+	~GraphicsBuffer();
+
+private:
+
+};

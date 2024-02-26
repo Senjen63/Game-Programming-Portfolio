@@ -1,0 +1,26 @@
+#pragma once
+#include <PerformanceTracker.h>
+#include <MemoryTracker.h>
+#include "Sprite.h"
+#include "Trackable.h"
+
+class Animation : public Trackable
+{
+public:
+	Animation();
+	Animation(GraphicsBuffer *buffer, int size, int totalSprites, float timePFrame, bool loop, Sprite sprite);
+	~Animation();
+	void Update(float removeTime);
+	Sprite getCurrentSprite();
+	void adjustTime(float speed);
+
+private:
+	//probably the only way I could of doing this not dynamically and also not a linked list cuz I am lazy
+	vector<Sprite> mSpriteList;
+	int mNumSprites;
+	float mTimePerFrame;
+	float mTimeLeft;
+	int mCurrentSprite;
+	bool mLooping;
+};
+

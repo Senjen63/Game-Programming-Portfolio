@@ -1,0 +1,243 @@
+/*
+Author: David Silverman
+Class: GPR-250-01
+Assignment: Assignment 3
+Certification of Authenticity:
+I certify that this assignment is entirely my own work.
+ */
+
+
+#pragma once
+#include "unit.h"
+#include "game.h"
+
+using namespace std;
+
+/* Pre:  Nothing
+*  Post:  A unit
+*  Purpose:  Create the Unit
+*********************************************************/
+Unit::Unit()
+{
+	this->mpAnimation = nullptr;
+	mIsSmurfs = true;
+}
+
+Unit::Unit(Type type)
+{
+	this->mpAnimation = nullptr;
+	mIsSmurfs = true;
+	mType = type;
+}
+
+/* Pre:  A vector
+*  Post:  A unit
+*  Purpose:  Create the Unit
+*********************************************************/
+Unit::Unit(Vector2D loc)
+{
+	this->mLoc = loc;
+	mIsSmurfs = true;
+}
+
+/* Pre:  A vector and an animation
+*  Post:  A unit
+*  Purpose:  Create the Unit
+*********************************************************/
+Unit::Unit(Animation animationFirst, Animation animationSecond, Vector2D loc)
+{
+	mFirstAnimation = animationFirst;
+	mAltAnimation = animationSecond;
+	this->mpAnimation = &mFirstAnimation;
+	this->mLoc = loc;
+	mIsSmurfs = true;
+}
+
+Unit::Unit(Type type, Animation animationFirst, Animation animationSecond, Vector2D loc)
+{
+	mFirstAnimation = animationFirst;
+	mAltAnimation = animationSecond;
+	this->mpAnimation = &mFirstAnimation;
+	this->mLoc = loc;
+	mType = type;
+	mIsSmurfs = true;
+}
+
+/* Pre:  Nothing
+*  Post:  Nothing
+*  Purpose:  Destroy the unit
+*********************************************************/
+Unit::~Unit()
+{
+
+}
+
+/* Pre:  Nothing
+*  Post:  A drawn sprite
+*  Purpose:  Draw a sprite
+*********************************************************/
+void Unit::draw()
+{
+	if (mType == BRICK || mType == SNAKE)
+	{
+		Game::getInstance()->mpGraphics->Draw(mLoc, mpAnimation->getCurrentSprite(), BASE, BASE);
+	}
+	else
+	{
+		Game::getInstance()->mpGraphics->Draw(mLoc, mpAnimation->getCurrentSprite(), QUART, QUART);
+	}
+}
+
+void Unit::draw(Vector2D scale)
+{
+	if (mType == BRICK || mType == SNAKE)
+	{
+		Game::getInstance()->mpGraphics->Draw(mLoc, mpAnimation->getCurrentSprite(), BASE * scale.getX(), BASE * scale.getY());
+	}
+	else
+	{
+		Game::getInstance()->mpGraphics->Draw(mLoc, mpAnimation->getCurrentSprite(), QUART * scale.getX(), QUART * scale.getY());
+	}
+}
+
+void Unit::draw(Vector2D scale, bool needs)
+{
+	Vector2D loc = mLoc;
+	if (needs)
+	{
+		loc = Vector2D(loc.getX() * scale.getX(), loc.getY() * scale.getY());
+	}
+
+	if (mType == BRICK || mType == SNAKE)
+	{
+		Game::getInstance()->mpGraphics->Draw(loc, mpAnimation->getCurrentSprite(), BASE * scale.getX(), BASE * scale.getY());
+	}
+	else
+	{
+		Game::getInstance()->mpGraphics->Draw(loc, mpAnimation->getCurrentSprite(), QUART * scale.getX(), QUART * scale.getY());
+	}
+}
+
+/* Pre:  A graphics buffer
+*  Post:  A drawn sprite
+*  Purpose:  Draw a sprite
+*********************************************************/
+void Unit::draw(GraphicsBuffer* buffer)
+{
+	Game::getInstance()->mpGraphics->Draw(buffer, mLoc, mpAnimation->getCurrentSprite(), mpAnimation->getWidth(), mpAnimation->getHeight());
+}
+
+/* Pre:  An animation
+*  Post:  Nothing
+*  Purpose:  Set the animation
+*********************************************************/
+void Unit::setAnimation(Animation* animation)
+{
+	this->mpAnimation = animation;
+}
+
+/* Pre:  A boolean and a speed
+*  Post:  Nothing
+*  Purpose:  Set the animation speed
+*********************************************************/
+void Unit::setUnitCurrentSpeed(bool increase, float rate)
+{
+	if (increase)
+		mpAnimation->speedUp(rate);
+	else
+		mpAnimation->slowDown(rate);
+}
+
+/* Pre:  A vector
+*  Post:  Nothing
+*  Purpose:  Set the position
+*********************************************************/
+void Unit::setPosition(Vector2D pos)
+{
+	mLoc = pos;
+}
+
+/* Pre:  Nothing
+*  Post:  A speed
+*  Purpose:  Get the animation speed
+*********************************************************/
+float Unit::getUnitCurrentSpeed()
+{
+	return mpAnimation->getAnimationSpeed();
+}
+
+/* Pre:  A double
+*  Post:  Nothing
+*  Purpose:  Update the animation
+*********************************************************/
+void Unit::update(double dt)
+{
+	mpAnimation->update(dt);
+}
+
+/* Pre:  Nothing
+*  Post:  An animation width
+*  Purpose:  Make sure the animation width can be accessed
+*********************************************************/
+float Unit::getAnimationWidth()
+{
+	return mpAnimation->getWidth();
+}
+
+/* Pre:  Nothing
+*  Post:  An animation height
+*  Purpose:  Make sure the animation height can be accessed
+*********************************************************/
+float Unit::getAnimationHeight()
+{
+	return mpAnimation->getHeight();
+}
+
+/* Pre:  Nothing
+*  Post:  Nothing
+*  Purpose:  Switch the animations of the characters
+*********************************************************/
+void Unit::switchAnimation()
+{
+	if (mIsSmurfs)
+	{
+		mpAnimation = &mAltAnimation;
+		mIsSmurfs = false;
+	}
+	else
+	{
+		mpAnimation = &mFirstAnimation;
+		mIsSmurfs = true;
+	}
+}
+
+/* Pre:  Nothing
+*  Post:  A boolean
+*  Purpose:  Make sure the animation speed doesn't go under 0
+*********************************************************/
+bool Unit::clampRate()
+{
+	if (mpAnimation->getAnimationSpeed() > 0)
+		return true;
+	else
+		return false;
+}
+
+/* Pre:  A float
+*  Post:  Nothing
+*  Purpose:  Set the unit's speed
+*********************************************************/
+void Unit::setUnitCurrentSpeed(float speed)
+{
+	mpAnimation->directSet(speed);
+}
+
+Vector2D Unit::getPosition()
+{
+	return mLoc;
+}
+
+Type Unit::getType()
+{
+	return mType;
+}

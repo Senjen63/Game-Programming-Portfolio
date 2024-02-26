@@ -1,0 +1,48 @@
+#include "HUD.h"
+#include "Game.h"
+HUD::HUD()
+{
+
+}
+
+
+HUD::HUD(GraphicsSystem* graphSystem)
+{
+	mpGraphSystem = graphSystem;
+	mpHUDFont = new Font((ASSET_PATH + FONT_FILENAME), HUD_FONT_SIZE);
+}
+
+
+HUD::~HUD()
+{
+	CleanUp();
+}
+
+
+void HUD::CleanUp()
+{
+	mpGraphSystem = nullptr;
+	delete mpHUDFont;
+}
+
+
+void HUD::UpdateHUD(int score, float FPS, float time)
+{
+	string fpsString;
+	string timeString;
+	//pretty up the FPS display
+	float fpsToDisplay = (roundf(FPS * 100) / 100);
+	for (int i = 0; i < 5; i++)
+	{
+		fpsString += to_string(fpsToDisplay)[i];
+	}
+	//do the exact same thing for time
+	float timeToDisplay = (roundf(time * 100) / 100);
+	for (int i = 0; i < 5; i++)
+	{
+		timeString += to_string(timeToDisplay)[i];
+	}
+	mpGraphSystem->writeText(Vector2D(HUD_FONT_SIZE, 0), mpHUDFont, Color(200, 120, 0), to_string(score));
+	mpGraphSystem->writeText(Vector2D(DISP_WIDTH - FPS_DISPLAY_OFFSET, 0), mpHUDFont, Color(200, 120, 0), fpsString + " fps");
+	mpGraphSystem->writeText(Vector2D(HUD_FONT_SIZE, DISP_HEIGHT - HUD_FONT_SIZE), mpHUDFont, Color(200, 120, 0), timeString);
+}

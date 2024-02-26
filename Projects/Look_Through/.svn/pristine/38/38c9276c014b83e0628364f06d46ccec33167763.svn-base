@@ -1,0 +1,31 @@
+#pragma once
+#include "Game.h"
+#include "Animation.h"
+#include <vector>
+
+class Unit : public Trackable
+{
+	friend class UnitManager;
+public:
+	Unit();
+	Unit( int x, int y );
+	~Unit();
+
+	void update( float deltaTime );
+	void draw( float scale );
+	void setAnimation();
+	void setX( int x ) { mX = x; };
+	void setY( int y ) { mY = y; };
+
+	void addAnim( GraphicsBuffer* gbuff, float targetTime );
+	Animation& getCurAnim() { return mAnims[ mCurAnim ]; };
+	vector<Animation> getAnims() { return mAnims; };
+	Unit* getUnit() { return this; };
+
+	int getX() { return mX; };
+	int getY() { return mY; };
+
+private:
+	int mX, mY, mCurAnim;
+	vector< Animation > mAnims;
+};

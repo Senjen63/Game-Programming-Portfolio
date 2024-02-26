@@ -1,0 +1,34 @@
+#pragma once
+
+#include <Trackable.h>
+#include <SDL_mixer.h>
+#include <SDL_audio.h>
+
+class AudioSnippet : public Trackable
+{
+    friend class AudioSystem;
+
+    struct Mix_Deleter
+    {
+        void operator()(Mix_Chunk* pChunk)
+        {
+            Mix_FreeChunk(pChunk);
+        }
+    };
+
+public:
+    AudioSnippet() = delete;
+    AudioSnippet(const std::string& pathToSnippet, unsigned char volume = 64);
+    AudioSnippet(const AudioSnippet& other) = default;
+    ~AudioSnippet() {};
+
+    unsigned char getVolume() const { return mVolume; }
+    void setVolume(unsigned char volume) { mVolume = volume; }
+
+private:
+    Mix_Chunk* getChunk() const { return mpChunk.get(); }
+
+    std::shared_ptr<Mix_Chunk> mpChunk;
+
+    unsigned char mVolume = 0; // 0 to 128 
+};

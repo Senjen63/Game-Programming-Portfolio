@@ -1,0 +1,25 @@
+#pragma once
+
+#include <unordered_map>
+#include <Trackable.h>
+#include "SoundBuffer.h"
+
+class SoundBuffer;
+
+class SoundBufferManager : public Trackable
+{
+	std::unordered_map<std::string, SoundBuffer*> mBuffers;
+
+	bool doesBufferExist(std::string name);
+
+public:
+	SoundBufferManager() {}
+	~SoundBufferManager() { cleanup(); }
+
+	void cleanup();
+
+	SoundBuffer& addSoundBuffer(std::string name, std::string fullPath);
+	bool deleteSoundBuffer(std::string name);
+	SoundBuffer& getSoundBuffer(std::string name);
+};
+

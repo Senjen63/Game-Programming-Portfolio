@@ -1,0 +1,29 @@
+#pragma once
+
+#include <string>
+#include "GraphicsBuffer.h"
+
+class Sprite
+{
+public:
+
+	// Unmodified Buffer
+	Sprite(GraphicsBuffer* bufferPointer);
+	// Modified Buffer
+	Sprite(GraphicsBuffer* bufferPointer, float sourceLocationX, float sourceLocationY, float width, float height);
+	~Sprite() {};
+
+	GraphicsBuffer* getGraphicsBuffer() { return pmGraphicsBuffer; }
+	float getSourceLocationX() { return mSourceLocationX; }
+	float getSourceLocationY() { return mSourceLocationY; }
+	float getWidth() { return mWidth; }
+	float getHeight() { return mHeight; }
+
+private:
+
+	GraphicsBuffer* pmGraphicsBuffer;
+	float mSourceLocationX;
+	float mSourceLocationY;
+	float mWidth;
+	float mHeight;
+};

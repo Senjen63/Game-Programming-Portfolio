@@ -1,0 +1,23 @@
+SlowSpeed 275
+NormalSpeed 250
+FastSpeed 90
+PointChance 20
+PointIncrease 20
+SpeedUpChance 30
+SlowDownChance 20
+PowerUpTime 1000
+WinLength 10
+StartLength 3
+WallPlacement
+1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
+1 1 1 1 0 0 0 0 0 0 0 0 1 1 1 1
+1 1 1 1 0 0 0 0 0 0 0 0 1 1 1 1
+1 1 1 1 1 1 1 0 0 1 1 1 1 1 1 1
+1 0 0 1 1 1 1 0 0 1 1 1 1 0 0 1
+1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1
+1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1
+1 0 0 1 1 1 1 0 0 1 1 1 1 0 0 1
+1 1 1 1 1 1 1 0 0 1 1 1 1 1 1 1
+1 1 1 1 0 0 0 0 0 0 0 0 1 1 1 1
+1 1 1 1 0 0 0 0 0 0 0 0 1 1 1 1
+1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1

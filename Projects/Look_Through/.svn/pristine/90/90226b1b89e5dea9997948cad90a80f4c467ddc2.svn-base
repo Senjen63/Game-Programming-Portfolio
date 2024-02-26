@@ -1,0 +1,46 @@
+#include "Unit.h"
+
+Unit::Unit()
+{
+
+}
+
+Unit::Unit(Vector2D location, Animation * animationPrime, Animation * animationSecondry)
+{
+	mLocation = location;
+	mpPrimaryAnimation = animationPrime;
+	mpAlternateAnimation = animationSecondry;
+	mpCurrentAnimation = mpPrimaryAnimation;
+}
+
+Unit::~Unit()
+{
+	
+}
+
+void Unit::update()
+{
+	mpCurrentAnimation->update();
+}
+
+void Unit::setAnimation()
+{
+	if (mpCurrentAnimation == mpPrimaryAnimation)
+	{
+		mpCurrentAnimation = mpAlternateAnimation;
+	}
+	else if (mpCurrentAnimation == mpAlternateAnimation)
+	{
+		mpCurrentAnimation = mpPrimaryAnimation;
+	}
+}
+
+void Unit::draw(GraphicsSystem* system)
+{
+	system->draw(mLocation, mpCurrentAnimation->getCurrentSprite(), DEFAULT_SCALE);
+}
+
+void Unit::setLocation(Vector2D position)
+{
+	mLocation = position;
+}

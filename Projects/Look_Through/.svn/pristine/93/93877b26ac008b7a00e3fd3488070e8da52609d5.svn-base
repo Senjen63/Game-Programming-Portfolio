@@ -1,0 +1,181 @@
+
+#include <iostream>
+#include <cassert>
+#include <string>
+
+#include <PerformanceTracker.h>
+#include <MemoryTracker.h>
+#include <Vector2D.h>
+#include <Timer.h>
+
+#include "Unit.h"
+#include "Game.h"
+
+
+//----------------------------------------Unit----------------------------------------
+Unit::Unit()
+{
+	unitXPos = 0;
+	unitYPos = 0;
+	currentAnimation = nullptr;
+}
+
+Unit::Unit(int x, int y, Animation* animation)
+{
+	unitXPos = x;
+	unitYPos = y;
+	//currentAnimation = new Animation();
+	currentAnimation = animation;
+}
+
+Unit::~Unit()
+{
+
+}
+
+//change to new animation
+void Unit::setAnimation(Animation* newAnimation) 
+{
+	this->currentAnimation = newAnimation;
+}
+
+//adjust state of animation through Animation's update function + other
+void Unit::update()
+{
+	currentAnimation->update();
+}
+
+//draw current sprite in unit location
+void Unit::draw()
+{
+	Game::getInstance()->getGraphicsSystem()->draw(unitXPos, unitYPos, currentAnimation->getCurrentSprite());
+}
+
+void Unit::toggleWall(bool toggle)
+{
+	if (toggle)
+	{
+		isWall = true;
+	}
+	else
+	{
+		isWall = false;
+	}
+}
+
+void Unit::toggleFood(bool toggle)
+{
+	if (toggle)
+	{
+		isFood = true;
+	}
+	else
+	{
+		isFood = false;
+	}
+}
+
+void Unit::togglePwr(bool toggle)
+{
+	if (toggle)
+	{
+		isPwr = true;
+	}
+	else
+	{
+		isPwr = false;
+	}
+}
+
+void Unit::toggleSnk(bool toggle)
+{
+	if (toggle)
+	{
+		isSnake = true;
+	}
+	else
+	{
+		isSnake = false;
+	}
+}
+
+void Unit::toggleUp(bool toggle)
+{
+	if (toggle)
+	{
+		moveUp = true;
+	}
+	else
+	{
+		moveUp = false;
+	}
+}
+
+void Unit::toggleDown(bool toggle)
+{
+	if (toggle)
+	{
+		moveDown = true;
+	}
+	else
+	{
+		moveDown = false;
+	}
+}
+
+void Unit::toggleLeft(bool toggle)
+{
+	if (toggle)
+	{
+		moveLeft = true;
+	}
+	else
+	{
+		moveLeft = false;
+	}
+}
+
+void Unit::toggleRight(bool toggle)
+{
+	if (toggle)
+	{
+		moveRight = true;
+	}
+	else
+	{
+		moveRight = false;
+	}
+}
+
+void Unit::move(Vector2D newPos)
+{
+	Vector2D currentPos(unitXPos, unitYPos);
+	currentPos += newPos;
+	setPosition(currentPos);
+}
+
+int Unit::getMove()
+{
+	if (moveLeft)
+	{
+		return 1;
+	}
+	else if (moveRight)
+	{
+		return 2;
+	}
+	else if (moveUp)
+	{
+		return 3;
+	}
+	else if (moveDown)
+	{
+		return 4;
+	}
+}
+
+Vector2D Unit::getPosition()
+{
+	Vector2D pos(unitXPos, unitYPos);
+	return pos;
+}

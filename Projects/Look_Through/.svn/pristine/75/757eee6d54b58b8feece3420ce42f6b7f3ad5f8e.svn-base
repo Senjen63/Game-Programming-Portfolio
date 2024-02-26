@@ -1,0 +1,43 @@
+Level Grid Size (pixels): 64
+
+Snake Move Time (ms): 150
+Snake Start Length: 3
+Snake End Length: 7
+=====
+Powerup Time (ms): 5000
+Food Time (ms): 2000
+--- Food 1 ---
+Type: GROW
+Weight: 1
+Point Value: 10
+Grow Amount: 1
+--- Food 2 ---
+Type: SLOW_DOWN
+Weight: 1
+Point Value: 0
+Delta Time: 50
+--- Food 3 ---
+Type: SPEED_UP
+Weight: 1
+Point Value: 0
+Delta Time: 100
+--- Food 3 ---
+Type: POINTS
+Weight: 1
+Point Value: 150
+=====
+Wall Color (0-1): 1 .25 .25
+Walls:
+1 1 1 1 1 1 1 1 1 1 1 1
+1 0 0 0 0 1 1 0 0 0 0 1
+1 0 1 1 0 0 0 0 1 1 0 1
+1 0 1 0 0 0 0 0 0 1 0 1
+1 0 0 0 0 0 0 0 0 0 0 1
+1 1 0 0 0 1 1 0 0 0 1 1
+1 1 0 0 0 1 1 0 0 0 1 1
+1 0 0 0 0 0 0 0 0 0 0 1
+1 0 1 0 0 0 0 0 0 1 0 1
+1 0 1 1 0 0 0 0 1 1 0 1
+1 0 0 0 0 1 1 0 0 0 0 1
+1 1 1 1 1 1 1 1 1 1 1 1
+=====

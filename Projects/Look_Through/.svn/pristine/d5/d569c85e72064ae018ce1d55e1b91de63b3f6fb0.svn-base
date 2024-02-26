@@ -1,0 +1,6 @@
+#include "Color.h"
+
+Color::Color(int redValue, int greenValue, int blueValue, int alphaValue)
+{
+	mColor = al_map_rgba(redValue, greenValue, blueValue, alphaValue);
+}

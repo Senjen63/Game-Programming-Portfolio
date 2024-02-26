@@ -1,0 +1,55 @@
+#include "HUD.h"
+
+#include <EventSystem.h>
+#include "GraphicsSystem.h"
+
+#include "GameEvent.h"
+#include "ScoreChangeEvent.h"
+#include "SecondPassedEvent.h"
+
+HUD::HUD(Font* pFont, Color& baseCol) : mpFont(pFont), mBaseCol(baseCol)
+{
+	EventSystem* pEventSys = EventSystem::getInstance();
+	pEventSys->addListener((EventType)GameEventType::SCORE_CHANGE_EVENT, this);
+	pEventSys->addListener((EventType)GameEventType::SECOND_PASSED_EVENT, this);
+}
+
+HUD::~HUD()
+{
+	mpFont = nullptr;
+	EventSystem* pSys = EventSystem::getInstance();	
+}
+
+void HUD::draw()
+{
+	GraphicsSystem* pGraphicsSys = GraphicsSystem::getInstance();
+
+	pGraphicsSys->writeText(mScorePos, mpFont, mBaseCol, mScoreText + to_string(mScore));
+	pGraphicsSys->writeText(mTimePos, mpFont, mBaseCol, mTimeText + to_string((int)mTime));
+	pGraphicsSys->writeText(mFPSPos, mpFont, mBaseCol, mFPSText + to_string(mFPS));
+}
+
+void HUD::handleEvent(const Event& theEvent)
+{
+	if (theEvent.getType() == (EventType)GameEventType::SECOND_PASSED_EVENT)
+	{
+		const SecondPassedEvent& secondEvent = static_cast<const SecondPassedEvent&>(theEvent);
+		mFPS = secondEvent.getNumFrames();
+		mTime++;
+	}
+	else if (theEvent.getType() == (EventType)GameEventType::SCORE_CHANGE_EVENT)
+	{
+		const ScoreChangeEvent& scoreEvent = static_cast<const ScoreChangeEvent&>(theEvent);
+		mScore += scoreEvent.getScore();
+	}	
+}
+
+void HUD::resetTime()
+{
+	mTime = 0;
+}
+
+void HUD::resetScore()
+{
+	mScore = 0;
+}

@@ -1,0 +1,76 @@
+#include "Unit.h"
+
+Unit::Unit()
+{
+	mPosition = Vector2D();
+	mpMainAnim = nullptr;
+	mpAltAnim = nullptr;
+	mCurrentAnim = 0;
+}
+
+Unit::Unit(Vector2D position, Animation* pMainAnim, Animation* pAltAnim)
+{
+	mPosition = position;
+	mpMainAnim = pMainAnim;
+	mpAltAnim = pAltAnim;
+	mCurrentAnim = 0;
+}
+
+Unit::~Unit()
+{
+	mpMainAnim = nullptr;
+	mpAltAnim = nullptr;
+	mCurrentAnim = 0;
+}
+
+void Unit::update(double dt)
+{
+	mpMainAnim->update(dt);
+	mpAltAnim->update(dt);
+}
+
+float Unit::getTime()
+{
+	return mpMainAnim->getTime();
+}
+
+void Unit::setTime(float timeChange)
+{
+	mpMainAnim->changeTime(timeChange);
+	mpAltAnim->changeTime(timeChange);
+}
+
+void Unit::setPosition(float x, float y)
+{
+	mPosition.setX(x);
+	mPosition.setY(y);
+}
+
+void Unit::setAnimation()
+{
+	if (mCurrentAnim == 0)
+	{
+		mCurrentAnim = 1;
+	}
+	else
+	{
+		mCurrentAnim = 0;
+	}
+}
+
+Vector2D Unit::getPosition()
+{
+	return mPosition;
+}
+
+Sprite* Unit::draw()
+{
+	if (mCurrentAnim == 0)
+	{
+		return mpMainAnim->getCurrentSprite();
+	}
+	else
+	{
+		return mpAltAnim->getCurrentSprite();
+	}
+}

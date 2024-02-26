@@ -1,0 +1,91 @@
+#include "BufferManager.h"
+#include "GraphicsBuffer.h"
+BufferManager::BufferManager()
+{
+	//nothing goes here methinks
+}
+
+BufferManager::~BufferManager()
+{
+	CleanUp();
+}
+
+
+void BufferManager::CleanUp()
+{
+	for (auto buff : mMap)
+	{
+		GraphicsBuffer* pBuffer = buff.second;
+		delete pBuffer;
+	}
+	mMap.clear();
+}
+
+
+
+GraphicsBuffer* BufferManager::CreateBuffer(const BufferName& key, string fileName)
+{
+	GraphicsBuffer* pBuffer = NULL;
+	auto buff = mMap.find(key);
+	if (buff == mMap.end())
+	{
+		pBuffer = new GraphicsBuffer(fileName);
+		mMap[key] = pBuffer;
+	}
+	return pBuffer;
+}
+
+GraphicsBuffer* BufferManager::CreateBuffer(const BufferName& key, Color col, int width, int height)
+{
+	GraphicsBuffer* pBuffer = NULL;
+	auto buff = mMap.find(key);
+	if (buff == mMap.end())
+	{
+		pBuffer = new GraphicsBuffer(col, width, height);
+		mMap[key] = pBuffer;
+	}
+	return pBuffer;
+}
+
+
+GraphicsBuffer* BufferManager::GetBuffer(const BufferName& key)
+{
+	auto buff = mMap.find(key);
+	if (buff != mMap.end())
+	{
+		return buff->second;
+	}
+	else
+	{
+		return NULL;
+	}
+}
+
+
+void BufferManager::DeleteBuffer(const BufferName& key)
+{
+	//same system but now we destroy instead. 
+	auto buff = mMap.find(key);
+	if (buff != mMap.end())
+	{
+		delete buff->second;
+		mMap.erase(buff);
+	}
+
+}
+
+
+void BufferManager::DeleteBuffer(GraphicsBuffer* pBuffer)
+{
+	for (auto buff : mMap)
+	{
+		if (pBuffer == buff.second)
+		{
+			delete pBuffer;
+			mMap.erase(buff.first);
+			return;
+		}
+	}
+
+}
+

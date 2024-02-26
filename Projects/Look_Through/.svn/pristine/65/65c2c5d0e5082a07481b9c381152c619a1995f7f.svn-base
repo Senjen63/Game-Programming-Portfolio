@@ -1,0 +1,13 @@
+#include "MessageEvent.h"
+
+
+MessageEvent::MessageEvent(string text) : GameEvent((GameEventType)MESSAGE_EVENT)
+{
+    mText = text;
+}
+
+
+MessageEvent::~MessageEvent()
+{
+
+}

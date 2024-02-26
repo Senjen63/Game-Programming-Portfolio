@@ -1,0 +1,27 @@
+#pragma once
+
+#include "SnakeComponent.h"
+#include "Vector2D.h"
+
+class SnakeBodyComponent : public Component
+{
+	friend class SnakeComponent; // Should only really be created / modified by SnakeComponent
+
+	Vector2D dir;
+	Vector2D prevDirection = Vector2D(0, 0);
+
+	void UpdateData(Vector2D _pos, Vector2D _dir);
+
+public:
+	static const std::string SNAKE_BODY_COMPONENT_NAME;
+
+	SnakeBodyComponent(Vector2D _dir = Vector2D(0, 0)) { dir = _dir; }
+	SnakeBodyComponent(const SnakeBodyComponent& sbd) { dir = sbd.dir; }
+
+	void update(float dt) override {}
+	void draw(GraphicsSystem* gSys) override {}
+
+	std::string getIdentifier() override { return SNAKE_BODY_COMPONENT_NAME; }
+
+	void handleEvent(const Event& theEvent) override {};
+};

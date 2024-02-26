@@ -1,0 +1,107 @@
+#include "Game.h"
+
+
+
+Game::Game()
+{
+    mpDisplay = new GraphicsSystem(DISP_WIDTH, DISP_HEIGHT);
+
+    mInput = nullptr;
+    mpUnit = nullptr;
+    /*
+    mpBackground = nullptr;
+    mpDeanSmurfs = nullptr;
+    mpSmurfs = nullptr;
+    mpSmurfsAnim = nullptr;
+    mpDeanSmurfsAnim = nullptr;
+    */
+
+    mpBackground = new GraphicsBuffer((ASSET_PATH + BACKGROUND_FILENAME).c_str());
+    mpDeanSmurfs = new GraphicsBuffer((ASSET_PATH + DEAN_SMURFS_FILENAME).c_str());
+    mpSmurfs = new GraphicsBuffer((ASSET_PATH + SMURFS_FILENAME).c_str());
+
+    mpSmurfsAnim = new Animation(mpSmurfs, NUM_FRAMES, STARTING_TIMING * 2, true);
+    mpDeanSmurfsAnim = new Animation(mpDeanSmurfs, NUM_FRAMES, STARTING_TIMING * 2, true);
+
+    mpUnit = new Unit(mpSmurfsAnim, mpDeanSmurfsAnim, Vector2D());
+
+}
+
+void Game::init()
+{
+    mpDisplay->init();
+    mInput->init();
+    /*
+    mpBackground = new GraphicsBuffer((ASSET_PATH + BACKGROUND_FILENAME).c_str());
+    mpDeanSmurfs = new GraphicsBuffer((ASSET_PATH + DEAN_SMURFS_FILENAME).c_str());
+    mpSmurfs = new GraphicsBuffer((ASSET_PATH + SMURFS_FILENAME).c_str());
+
+    mpSmurfsAnim = new Animation(mpSmurfs, NUM_FRAMES, STARTING_TIMING, true);
+    mpDeanSmurfsAnim = new Animation(mpDeanSmurfs, NUM_FRAMES, STARTING_TIMING, true);
+
+    mpUnit = new Unit(mpSmurfsAnim, mpDeanSmurfsAnim, Vector2D());
+    */
+}
+
+Game::~Game()
+{
+    delete mpDisplay;
+    delete mpUnit;
+    delete mpBackground;
+    delete mpDeanSmurfs;
+    delete mpSmurfs;
+    delete mpSmurfsAnim;
+    delete mpDeanSmurfsAnim;
+}
+
+void Game::doLoop()
+{
+    bool keepGoing = true;
+    float frameRate = 16.7;
+    PerformanceTracker* pPerformanceTracker = new PerformanceTracker;
+    Timer loopTimer;
+    float incTime = STARTING_TIMING;
+
+    Vector2D animPos = Vector2D((DISP_WIDTH / 2) + (SMURF_WIDTH / 2), (DISP_HEIGHT / 2) + (SMURF_HEIGHT / 2));
+    while (keepGoing)
+    {
+        pPerformanceTracker->clearTracker("loop");
+        pPerformanceTracker->startTracking("loop");
+        
+        loopTimer.start();
+        if (mInput->isMousePressed(1))
+        {
+            animPos = mInput->getMousePosition();
+        }
+
+        if (mInput->isKeyPressed(ALLEGRO_KEY_F))
+        {
+            mpUnit->changeFrameRate(TIME_CHANGE);
+        }
+        else if (mInput->isKeyPressed(ALLEGRO_KEY_S))
+        {
+            mpUnit->changeFrameRate(TIME_CHANGE * -1);
+        }
+        else if (mInput->isKeyPressed(ALLEGRO_KEY_ENTER))
+        {
+            mpUnit->swapAnim();
+        }
+        else if (mInput->isKeyPressed(ALLEGRO_KEY_ESCAPE))
+        {
+            keepGoing = false;
+        }
+        mpUnit->Update(incTime);
+        Vector2D mousePos = Vector2D(animPos.getX() - (SMURF_WIDTH / 2), animPos.getY() - (SMURF_HEIGHT / 2));
+
+        mpDisplay->Draw(mpBackground, Vector2D(), 1);
+        mpDisplay->Draw(mousePos, mpUnit->Draw(), SMURF_WIDTH, SMURF_HEIGHT);
+
+        mpDisplay->flip();
+      
+        loopTimer.sleepUntilElapsed(frameRate);
+        pPerformanceTracker->stopTracking("loop");
+    }
+    delete pPerformanceTracker;
+}
+
+Game* pGame = nullptr;

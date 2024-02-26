@@ -1,0 +1,14 @@
+#pragma once
+#include "HUDEvent.h"
+
+class FpsEvent : public HUDEvent
+{
+private:
+    float mActualFps = 0;
+
+public:
+    FpsEvent(float fps);
+    ~FpsEvent();
+
+    float getFps() const { return mActualFps; }
+};

@@ -1,0 +1,50 @@
+﻿//     -------------------------------------------------------------------------
+//     Final Project
+//         EntityManager.hpp
+//     
+//             Created:
+//                 07-04-2022
+//             Author(s):
+//                 Aven Presseisen
+//     -------------------------------------------------------------------------
+
+#pragma once
+
+#include <vector>
+
+#include "Archetype.hpp"
+#include "ComponentManager.hpp"
+#include "EntityQuery.hpp"
+
+class EntityManager
+{
+    friend class World;
+
+    std::shared_ptr< ComponentManager > mpComponentManager;
+
+    Entity mLastEntity = 0;
+
+    // Component mask of archetype to archetype
+    std::unordered_map< ComponentMask, std::shared_ptr< Archetype > > mArchetypes;
+    // entity id to component mask
+    std::unordered_map< Entity, ComponentMask > mEntityMasks;
+public:
+    EntityManager();
+
+    Entity createEntity( const std::vector< Component * > & components );
+    void deleteEntity( Entity entity );
+
+    std::vector< std::shared_ptr< Component > > & getComponentsFromEntity( Entity entity );
+
+    template < typename T >
+    std::shared_ptr< T > getComponentFromEntity( Entity entity );
+
+    void createEntityQuery( const std::shared_ptr< EntityQuery > & query );
+    void addComponentToEntity( Entity entity, Component * component );
+};
+
+template < typename T >
+std::shared_ptr< T > EntityManager::getComponentFromEntity( const Entity entity )
+{
+    return mArchetypes[ mEntityMasks[ entity ] ]->getComponentFromEntity< T >( entity );
+}

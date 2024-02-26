@@ -1,0 +1,70 @@
+
+#include "GraphicsBuffer.h"
+#include "Color.h"
+
+GraphicsBuffer::GraphicsBuffer()
+{
+	mpBitmap = NULL;
+	mOwnsBitmap = false;
+}
+
+GraphicsBuffer::GraphicsBuffer(string& fileName)
+{
+	mpBitmap = al_load_bitmap(fileName.c_str());
+	mOwnsBitmap = true;
+}
+
+GraphicsBuffer::GraphicsBuffer(ALLEGRO_BITMAP* pBitmap)
+{
+	mpBitmap = pBitmap;
+	mOwnsBitmap = false;
+}
+
+GraphicsBuffer::GraphicsBuffer(Color color, int width, int height)
+{
+	ALLEGRO_BITMAP* oldBitmap = al_get_target_bitmap();
+
+	mpBitmap = al_create_bitmap(height, width);
+	al_set_target_bitmap(mpBitmap);
+	al_clear_to_color(color.getColor());
+	assert(mpBitmap);
+
+	al_set_target_bitmap(oldBitmap);
+
+	mOwnsBitmap = false;
+}
+
+GraphicsBuffer::~GraphicsBuffer()
+{
+	if (mOwnsBitmap)
+	{
+		al_destroy_bitmap(mpBitmap);
+	}
+}
+
+void GraphicsBuffer::clearToColor(Color color)
+{
+	ALLEGRO_BITMAP* oldBitmap = al_get_target_bitmap();
+
+	al_set_target_bitmap(getBitmap());
+
+	al_clear_to_color(al_map_rgb(color.getColor().r, color.getColor().g, color.getColor().b));
+
+	al_set_target_bitmap(oldBitmap);
+}
+
+//accessors
+ALLEGRO_BITMAP* GraphicsBuffer::getBitmap()
+{
+	return mpBitmap;
+}
+
+int GraphicsBuffer::getHeight()
+{
+	return al_get_bitmap_height(mpBitmap);
+}
+
+int GraphicsBuffer::getWidth()
+{
+	return al_get_bitmap_width(mpBitmap);
+}

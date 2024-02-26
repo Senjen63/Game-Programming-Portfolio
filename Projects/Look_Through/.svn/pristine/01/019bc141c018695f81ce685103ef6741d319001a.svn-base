@@ -1,0 +1,252 @@
+#include "Game.h"
+#include <time.h>
+
+// TESTING 
+const string DEAN_PATH = "..\\..\\common\\assets\\";
+const string ASSET_PATH = "assets\\";
+const string BULLET_NAME = "Sprites\\bullet.png";
+const string LEVELS_NAME = "LevelManagerData.txt";
+const string SOUNDS_NAME = "SoundNames.txt";
+const string SCRIPT_TEXT_NAME = "ScriptText.txt";
+const int BULLET_POOL_SIZE = 20;
+
+const string FONT_FILENAME = "cour.ttf";
+const int FONT_SIZE = 22;
+
+Game* Game::smpInst = nullptr;
+
+void Game::createInstance(int screenWidth, int screenHeight, float frameRate)
+{
+    // Delete previous inst 
+    if (smpInst)
+    {
+        delete smpInst;
+    }
+
+    smpInst = new Game(screenWidth, screenHeight, frameRate);
+
+    EventSystem::initInstance();
+}
+
+void Game::destoryInstance()
+{
+    if (smpInst)
+    {
+        delete smpInst;
+        smpInst = nullptr;
+    }
+
+    EventSystem::cleanupInstance();
+}
+
+void Game::init()
+{
+    if (mIsInitted)
+        return;
+
+    // Randomize Seed 
+    srand((unsigned int)time(NULL));
+
+    mpGraphicsSystem->init();
+    mpAudioSystem->init();
+    mpLevelManager->init();
+    mpAudioManager->init();
+    EventSystem::getInstance()->init();
+    mInputSystem.init();
+    mInputTranslator.init();
+
+    mpFont = new Font(DEAN_PATH + FONT_FILENAME, FONT_SIZE);
+    mpHUD->init(mpFont);
+    mpMenu->init(mpFont);
+    mpMenu->readFile(ASSET_PATH + SCRIPT_TEXT_NAME);
+    tanksCreation();
+
+    // init for Bullet Pool must happen after bullet creation 
+    // Bullet creation is in tanksCreation() 
+    mpBulletPool->init();
+
+    EventSystem::getInstance()->addListener((EventType)GAME_CLOSE, static_cast<EventListener*>(this));
+    EventSystem::getInstance()->addListener((EventType)PLAYER_HIT, static_cast<EventListener*>(this));
+
+    mIsInitted = true;
+}
+
+void Game::cleanUp()
+{
+    if (!mIsInitted)
+        return;
+
+    mIsInitted = false;
+
+    EventSystem::getInstance()->removeListener((EventType)GAME_CLOSE, static_cast<EventListener*>(this));
+    EventSystem::getInstance()->removeListener((EventType)PLAYER_HIT, static_cast<EventListener*>(this));
+
+    mpBulletPool->cleanUp();
+
+    tanksDestruction();
+    mInputTranslator.cleanUp();
+    mInputSystem.cleanUp();
+    EventSystem::getInstance()->cleanup();
+    mpAudioManager->cleanUp();
+    mpLevelManager->cleanUp();
+    mpAudioSystem->cleanUp();
+    mpGraphicsSystem->cleanUp();
+}
+
+void Game::doLoop()
+{
+    PerformanceTracker* pTracker = new PerformanceTracker();
+    Timer loopTimer; 
+
+    while (mShouldRun)
+    {
+
+        // Timer things 
+        pTracker->clearTracker(LOOP_TRACKER_NAME);
+        pTracker->startTracking(LOOP_TRACKER_NAME);
+        loopTimer.start();
+
+
+        // Clear background 
+        mpGraphicsSystem->clearToColor(COLOR_BLACK);
+        // Update 
+        update(mFrameTargetTime);
+
+        if (!mpMenu->getInMenu())
+        {
+            tanksUpdate(mFrameTargetTime);
+            // Draw 
+            draw(mpGraphicsSystem); // PUT ANYTHING YOU WANT DRAWN IN THIS FUNCTION 
+            tanksDraw();
+        }
+        else
+        {
+            mpMenu->drawMenu();
+        }
+        mpGraphicsSystem->flip();
+        loopTimer.sleepUntilElapsed(mFrameTargetTime);
+
+        pTracker->stopTracking(LOOP_TRACKER_NAME);
+        //std::cout << "Time took: " << pTracker->getElapsedTime(LOOP_TRACKER_NAME) << " ms" << std::endl;
+    }
+
+    delete pTracker;
+}
+
+void Game::handleEvent(const Event& theEvent)
+{
+    switch (theEvent.getType())
+    {
+        case GameEventType::GAME_CLOSE:
+        {
+            if (!mpMenu->getInMenu()) //should not save while in menu
+            {
+                mpLevelManager->saveGame();
+            }
+            mShouldRun = false;
+            break;
+        }
+        case PlayerEventType::PLAYER_HIT:
+        {
+            const PlayerHitEvent& hitEvent = static_cast<const PlayerHitEvent&>(theEvent);
+            if (hitEvent.getPlayerNumber() == PlayerNumber::PLAYER_ONE)
+            {
+                mPlayer2Score++;
+            }
+            else if (hitEvent.getPlayerNumber() == PlayerNumber::PLAYER_TWO)
+            {
+                mPlayer1Score++;
+            }
+            mpMenu->checkWin();
+            break;
+        }
+    }
+}
+
+Game::Game(int screenWidth, int screenHeight, float frameRate) :
+    mFrameTargetTime(1.0 / frameRate * 1000), mScreenWidth(screenWidth), mScreenHeight(screenHeight)
+{
+    mpGraphicsSystem = new GraphicsSystem(screenWidth, screenHeight);
+    mpGraphicsBufferManager = new GraphicsBufferManager();
+    mpAudioSystem = new AudioSystem();
+    mpLevelManager = new LevelManager(ASSET_PATH + LEVELS_NAME);
+    mpCollisionManager = new CollisionManager();
+    mpAudioManager = new AudioManager(ASSET_PATH + SOUNDS_NAME);
+    mpBulletPool = new BulletPool();
+    mpHUD = new HUD();
+    mpMenu = new Menu();
+}
+
+Game::~Game()
+{
+    cleanUp();
+
+    delete mpBulletPool;
+    delete mpAudioManager;
+    delete mpCollisionManager;
+    delete mpLevelManager;
+    delete mpAudioSystem;
+    delete mpGraphicsSystem;
+    delete mpHUD;
+    delete mpGraphicsBufferManager;
+    delete mpFont;
+    delete mpMenu;
+}
+
+void Game::update(double deltaTime)
+{
+    mpBulletPool->update(deltaTime);
+    mpLevelManager->update(deltaTime);
+
+    mInputSystem.update();
+}
+
+void Game::draw(GraphicsSystem* display)
+{
+    mpBulletPool->draw(display);
+    mpLevelManager->draw(display);
+    mpHUD->drawHUD(display);
+}
+
+void Game::tanksCreation()
+{
+    /* ---=====================--- */
+    /* ---=== Sound Testing ===--- */
+    /* ---=====================--- */
+    mpAudioManager->play(SoundType::MUSIC);
+
+    /* ---=======================--- */
+    /* ---=== Bullet Creation ===--- */
+    /* ---=======================--- */
+    auto pBulletBuffer = mpGraphicsBufferManager->addBuffer(BULLET_NAME, ASSET_PATH + BULLET_NAME);
+
+    mpBulletAnim = new Animation(Sprite(pBulletBuffer));
+    mpBulletPool->createBulletEntities(NUM_BULLETS, mpBulletAnim);
+}
+
+void Game::tanksDestruction()
+{
+    delete mpBulletAnim;
+    mpBulletAnim = nullptr;
+}
+
+void Game::tanksUpdate(double deltaTime)
+{
+}
+
+void Game::tanksDraw()
+{
+}
+
+void Game::setScores(int p1, int p2)
+{
+    mPlayer1Score = p1;
+    mPlayer2Score = p2;
+}
+
+
+void Game::setGameState(bool gameState)
+{
+    mMainMenu = gameState;
+    mpLevelManager->unloadActiveLevel();
+}

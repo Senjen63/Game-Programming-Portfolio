@@ -1,0 +1,43 @@
+#include "Wall.h"
+#include "Game.h"
+#include <random>
+
+Wall::Wall()
+{
+	mLocation = Vector2D(0, 0);
+	mWallType = WALL;
+	mpAnimation = nullptr;
+
+	mCurrentSize = SPRITE_SIZE;
+}
+
+Wall::Wall(int x, int y, Animation* anim, WallType type)
+{
+	mLocation = Vector2D(x, y);
+	mWallType = type;
+	mpAnimation = anim;
+
+	mCurrentSize = SPRITE_SIZE;
+}
+
+Wall::~Wall()
+{
+	delete mpAnimation;
+}
+
+void Wall::update(double elapsedTime)
+{
+	mpAnimation->update(elapsedTime);
+}
+
+void Wall::draw()
+{
+	mpAnimation->setPosition(mLocation);
+
+	//set wall color
+	if (mWallType == WALL) { mpAnimation->getCurrentSprite()->setColor(Color(128, 128, 128)); }
+	if (mWallType == PIT) { mpAnimation->getCurrentSprite()->setColor(Color(0, 0, 0)); }
+	if (mWallType == EXIT) { mpAnimation->getCurrentSprite()->setColor(Color(255, 255, 0)); }
+
+	Game::getInstance()->getGraphics()->draw(mpAnimation->getCurrentSprite());
+}

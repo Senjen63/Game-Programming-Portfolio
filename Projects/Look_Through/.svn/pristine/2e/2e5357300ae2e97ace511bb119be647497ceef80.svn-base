@@ -1,0 +1,43 @@
+﻿//     -------------------------------------------------------------------------
+//     Final Project
+//         BaseSystems.hpp
+//     
+//             Created:
+//                 10-04-2022
+//             Author(s):
+//                 Aven Presseisen
+//     -------------------------------------------------------------------------
+
+#pragma once
+
+#include "System.hpp"
+
+class SpriteSystem final : public System
+{
+    friend class Game;
+
+    GraphicsSystem * mpGraphicsSystem = nullptr;
+
+    explicit SpriteSystem( GraphicsSystem * pGraphicsSystem );
+public:
+    void createQueries() override;
+    void onUpdate() override;
+};
+
+class FPSViewerSystem final : public System
+{
+    float mTimer{};
+public:
+    void createQueries() override;
+    void onUpdate() override;
+};
+
+class PhysicsSystem final : public System
+{
+    float mT{};
+    float mDT{0.00001f};
+    float mAccumulator{};
+public:
+    void createQueries() override;
+    void onUpdate() override;
+};

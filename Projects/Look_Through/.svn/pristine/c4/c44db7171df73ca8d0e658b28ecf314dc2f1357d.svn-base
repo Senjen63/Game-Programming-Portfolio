@@ -1,0 +1,13 @@
+//BP
+#pragma once
+#include "Unit.h"
+#include <Vector2D.h>
+#include "SpawnEvents.h"
+
+class FoodCreation : public SpawnEvents
+{
+public:
+    FoodCreation();
+    ~FoodCreation();
+private:
+};

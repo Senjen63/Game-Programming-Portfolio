@@ -1,0 +1,61 @@
+#include "UnitManager.h"
+
+UnitManager::UnitManager()
+{
+	mSize = 0;
+}
+
+UnitManager::~UnitManager()
+{
+	clearAll();
+}
+
+void UnitManager::addUnit(int x, int y, Animation* smurf, Animation* dean)
+{
+	Unit* unit = new Unit(x, y, smurf, dean);
+	mUnitList.push_back(unit);
+	mSize++;
+}
+
+void UnitManager::removeUnit()
+{
+	mSize--;
+	mUnitList.erase(mUnitList.begin());
+}
+
+Unit* UnitManager::getUnit(int unitSpot)
+{
+	if (unitSpot < mSize)
+	{
+		return mUnitList[unitSpot];
+	}
+	return nullptr;
+}
+
+void UnitManager::clearAll()
+{
+	for (int i = 0; i < mSize; i++)
+	{
+		delete mUnitList[i];
+	}
+	mSize = 0;
+	mUnitList.clear();
+}
+
+void UnitManager::updateAll(float time)
+{
+	for (int i = 0; i < mSize; i++)
+	{
+		mUnitList[i]->update(time);
+	}
+}
+
+void UnitManager::drawAll(GraphicsSystem* display)
+{
+	Vector2D pos;
+	for (int i = 0; i < mSize; i++)
+	{
+		
+		mUnitList[i]->draw(display, mUnitList[i]->getPos());
+	}
+}

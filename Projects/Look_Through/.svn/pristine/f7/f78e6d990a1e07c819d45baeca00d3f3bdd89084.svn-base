@@ -1,0 +1,190 @@
+#include "Game.h"
+
+Game* gpGame;
+
+Game::Game(float displayWidth, float displayHeight)
+{
+	mpGraphicsSystem = new GraphicsSystem(displayWidth, displayHeight);
+	mpGraphicsSystem->init();
+	mpInputSystem = new InputSystem();
+	mpInputSystem->init();
+}
+
+Game::~Game()
+{
+	clean();
+}
+
+void Game::init()
+{
+	mpGraphicsSystem->init();
+}
+
+void Game::clean()
+{
+	delete(mpGraphicsSystem);
+	delete(mpInputSystem);
+}
+
+GraphicsSystem* Game::getGraphicsSystem()
+{
+	return mpGraphicsSystem;
+}
+
+InputSystem* Game::getInputSystem()
+{
+	return mpInputSystem;
+}
+
+void Game::doLoop()
+{
+	GraphicsSystem* pGraphicsSystem = getGraphicsSystem();
+	InputSystem* pInputSystem = getInputSystem();
+	PerformanceTracker* pPerformanceTracker = new PerformanceTracker;
+
+	float displayWidth = pGraphicsSystem->getDisplayWidth();
+	float displayHeight = pGraphicsSystem->getDisplayHeight();
+
+	std::pair<float, float> defaultUnitPosition = std::pair<float, float>(displayWidth / 2, displayHeight / 2);
+
+	bool continueLoop = true;
+	double targetFPS = 60;
+	double targetTimeMS = 1000 / targetFPS;
+
+	float framesPerAnimationSprite = 10;
+	float timePerAnimationSprite = (float)targetTimeMS * framesPerAnimationSprite;
+
+	const std::string ASSET_PATH = "..\\..\\common\\assets\\";
+	const std::string WOODS_FILENAME = "Woods.png";
+	const std::string SMURFS_FILENAME = "smurf_sprites.png";
+	const std::string DEAN_FILENAME = "dean_sprites.png";
+
+	// Graphics Buffers
+	GraphicsBuffer* woodsBuffer = new GraphicsBuffer(ASSET_PATH + WOODS_FILENAME);
+	assert(woodsBuffer);
+	GraphicsBuffer* smurfsBuffer = new GraphicsBuffer(ASSET_PATH + SMURFS_FILENAME);
+	assert(smurfsBuffer);
+	GraphicsBuffer* deanBuffer = new GraphicsBuffer(ASSET_PATH + DEAN_FILENAME);
+	assert(deanBuffer);
+
+	// Animation
+	Animation* smurfsAnimation = new Animation(timePerAnimationSprite, true);
+	const float SMURF_SPRITES_PER_ROW = 4;
+	const float SMURF_SPRITES_PER_COLUMN = 4;
+	const float SMURF_UNIT_SCALE = 60;
+
+	// Loading smurf animation with sprites
+	for (int i = 0; i < SMURF_SPRITES_PER_COLUMN; i++)
+	{
+		for (int j = 0; j < SMURF_SPRITES_PER_ROW; j++)
+		{
+			Sprite newSmurfSprite = Sprite(smurfsBuffer, SMURF_UNIT_SCALE * j, SMURF_UNIT_SCALE * i, SMURF_UNIT_SCALE, SMURF_UNIT_SCALE);
+			smurfsAnimation->addSprite(newSmurfSprite);
+		}
+	}
+
+	Animation* deanAnimation = new Animation(timePerAnimationSprite, true);
+	const float DEAN_SPRITES_PER_ROW = 4;
+	const float DEAN_SPRITES_PER_COLUMN = 4;
+	const float DEAN_UNIT_SCALE = 60;
+
+	// Loading Dean animation with sprites
+	for (int i = 0; i < DEAN_SPRITES_PER_COLUMN; i++)
+	{
+		for (int j = 0; j < DEAN_SPRITES_PER_ROW; j++)
+		{
+			Sprite newDeanSprite = Sprite(deanBuffer, DEAN_UNIT_SCALE * j, DEAN_UNIT_SCALE * i, DEAN_UNIT_SCALE, DEAN_UNIT_SCALE);
+			deanAnimation->addSprite(newDeanSprite);
+		}
+	}
+	
+	Unit* animatedUnit = new Unit(defaultUnitPosition, smurfsAnimation);
+
+	bool enterHeldPreviousFrame = false;
+
+	while (continueLoop)
+	{
+		pPerformanceTracker->clearTracker("loop");
+		pPerformanceTracker->startTracking("loop");
+
+		Timer timerVar;
+		timerVar.start();
+
+		InputSystem::Keys* currentKeys = pInputSystem->getKeyState();
+		InputSystem::Mouse* currentMouse = pInputSystem->getMouseState();
+
+		// Input
+
+		// If F is pressed, slow animation
+		if (currentKeys->mKey_F)
+		{
+			animatedUnit->mpCurrentAnimation->changeSpeed(timePerAnimationSprite / 4);
+		}
+
+		// If S is pressed, speed up animation
+		else if (currentKeys->mKey_S)
+		{
+			animatedUnit->mpCurrentAnimation->changeSpeed(timePerAnimationSprite * 4);
+		}
+
+		// Return speed to normal
+		else
+		{
+			animatedUnit->mpCurrentAnimation->changeSpeed(timePerAnimationSprite);
+		}
+
+		// If enter is pressed, swap between smurf and Dean animations
+		if (currentKeys->mKey_Enter)
+		{
+			if (animatedUnit->mpCurrentAnimation == smurfsAnimation && !enterHeldPreviousFrame)
+			{
+				animatedUnit->setAnimation(deanAnimation);
+			}
+
+			else if (animatedUnit->mpCurrentAnimation == deanAnimation && !enterHeldPreviousFrame)
+			{
+				animatedUnit->setAnimation(smurfsAnimation);
+			}
+			
+			enterHeldPreviousFrame = true;
+		}
+
+		else
+		{
+			enterHeldPreviousFrame = false;
+		}
+
+		// If Escape is pressed, end the game loop
+		if (currentKeys->mKey_Escape)
+		{
+			continueLoop = false;
+		}
+
+		// If left mouse is pressed, move the unit to the mouse position
+		if (currentMouse->mLeftMouse_Pressed)
+		{
+			animatedUnit->mLocation = currentMouse->mMousePosition;
+		}
+
+		animatedUnit->update(targetTimeMS);
+
+		pGraphicsSystem->draw(displayWidth/2, displayHeight/2, woodsBuffer, 1, 1);
+		animatedUnit->draw(pGraphicsSystem);
+
+		pGraphicsSystem->flipBackBuffer();
+
+		timerVar.sleepUntilElapsed(targetTimeMS);
+
+		pPerformanceTracker->stopTracking("loop");
+		std::cout << "Frame took " << pPerformanceTracker->getElapsedTime("loop") << " milliseconds." << std::endl;
+	}
+
+	delete woodsBuffer;
+	delete smurfsBuffer;
+	delete deanBuffer;
+	delete smurfsAnimation;
+	delete deanAnimation;
+	delete animatedUnit;
+
+	delete pPerformanceTracker;
+}

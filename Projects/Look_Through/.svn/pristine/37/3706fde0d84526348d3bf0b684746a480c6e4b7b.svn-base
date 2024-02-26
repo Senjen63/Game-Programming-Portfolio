@@ -1,0 +1,116 @@
+
+#include "GraphicsSystem.h"
+
+#include <iostream>
+#include <cassert>
+#include <string>
+
+#include <PerformanceTracker.h>
+#include <MemoryTracker.h>
+#include <Vector2D.h>
+#include <stdlib.h>
+#include <time.h>
+#include <Timer.h>
+
+using namespace std;
+
+int main()
+{
+	srand( time( NULL ) );
+
+	const string ASSET_PATH = "..\\..\\common\\assets\\";
+	const string STEPS_FILENAME = "steps.png";
+	const string QUIMBY_FILENAME = "mayor_quimby.png";
+	const string SMURF_FILENAME = "smurf_sprites.png";
+	const string FONT_FILENAME = "cour.ttf";
+	const string OUTPUT_FILENAME = "backbuffer.jpg";
+	const string RED_OUTPUT_FILENAME = "redbuffer.jpg";
+	const string DISPLAY_TEXT = "Curse you Papa Smurf!!!";
+	const int FONT_SIZE = 40;
+
+	const float RED_BUFFER_SCALE = 2.0 / 3.0;
+	const int SMURF_TILE_LENGTH = 4;
+
+	const int DISP_WIDTH = 800;
+	const int DISP_HEIGHT = 600;
+
+	const int RED_WIDTH = 800;
+	const int RED_HEIGHT = 600;
+
+	const Color RED = Color( 255, 0, 0 );
+	const Color BLACK = Color( 0, 0, 0 );
+
+	const int ALIGN = 0; //0 = left align, 1 = right align, 2 = center align
+
+	GraphicsSystem* graphic = nullptr;
+
+	if (graphic->init())
+	{
+		graphic = new GraphicsSystem( DISP_WIDTH, DISP_HEIGHT );
+		assert(graphic);
+
+		Font* courFont = new Font( ( ASSET_PATH + FONT_FILENAME ), FONT_SIZE, ALIGN );
+		assert( courFont );
+
+		GraphicsBuffer* steps = new GraphicsBuffer( ( ASSET_PATH + STEPS_FILENAME ).c_str() );
+		assert( steps );
+		GraphicsBuffer* quimby = new GraphicsBuffer( ( ASSET_PATH + QUIMBY_FILENAME ).c_str() );
+		assert( quimby );
+		GraphicsBuffer* smurf = new GraphicsBuffer( ( ASSET_PATH + SMURF_FILENAME ).c_str() );
+		assert( smurf );
+		GraphicsBuffer* redBuffer = new GraphicsBuffer( RED, RED_WIDTH, RED_HEIGHT );
+		assert( redBuffer );
+
+		Sprite quimbySprite = Sprite( quimby, Vector2D( 0, 0 ), Vector2D( quimby->getWidth(), quimby->getHeight() ) );
+
+		//draw to red buffer
+		graphic->draw( redBuffer, 0, 0, quimbySprite, 1, 1 );
+		graphic->writeText( redBuffer, 0, 0, courFont, BLACK, DISPLAY_TEXT );
+
+		//draw to backBuffer
+		graphic->draw( steps, 0, 0, 1, 1 );
+		graphic->draw( redBuffer, DISP_WIDTH / ( RED_BUFFER_SCALE * 8 ), DISP_HEIGHT / ( RED_BUFFER_SCALE * 8 ),
+			RED_BUFFER_SCALE, RED_BUFFER_SCALE );
+
+		int randX;
+		int randY;
+
+		for ( int i = 0; i < SMURF_TILE_LENGTH; i++ )
+		{
+			for ( int j = 0; j < SMURF_TILE_LENGTH; j++ )
+			{
+				randX = rand() % graphic->getWidth();
+				randY = rand() % graphic->getHeight();
+
+				Sprite smurfSprite = Sprite( smurf, Vector2D( ( smurf->getWidth() / SMURF_TILE_LENGTH ) * i, 
+					( smurf->getHeight() / SMURF_TILE_LENGTH ) * j ),
+					Vector2D( smurf->getWidth() / SMURF_TILE_LENGTH, smurf->getHeight() / SMURF_TILE_LENGTH ) );
+				
+				graphic->draw( randX, randY, smurfSprite, 1, 1 );
+			}
+		}
+
+		graphic->saveBuffer( graphic->getBackBuffer(), OUTPUT_FILENAME );
+		graphic->saveBuffer( redBuffer, RED_OUTPUT_FILENAME );
+
+		graphic->flip();
+
+		Timer timer;
+		timer.sleep( 5000.0 );
+
+		delete redBuffer;
+		delete smurf;
+		delete quimby;
+		delete steps;
+		delete courFont;
+		delete graphic;
+	}
+
+	graphic = nullptr;
+	
+
+	MemoryTracker::getInstance()->reportAllocations( cout );
+
+	system( "pause" );
+	return 0;
+}

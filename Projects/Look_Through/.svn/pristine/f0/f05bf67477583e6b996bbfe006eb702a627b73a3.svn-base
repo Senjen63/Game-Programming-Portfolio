@@ -1,0 +1,132 @@
+#include "HUD.h"
+#include "GraphicsSystem.h"
+#include "Game.h"
+#include <sstream>
+#include <fstream>
+#include "LanguageManager.h"
+
+HUD::HUD()
+{
+	ifstream inputDiff("../GalahadAssets/data/" + FILE_PATH);
+	if (inputDiff.good())
+	{
+		string key;
+		float inFloat1;
+		float inFloat2;
+
+		while (!inputDiff.eof())
+		{
+			inputDiff >> key;
+
+			if (key == "lifepos1")
+			{
+				inputDiff >> inFloat1 >> inFloat2;
+
+				mLife1 = Vector2D(inFloat1, inFloat2);
+			}
+			else if (key == "lifepos2")
+			{
+				inputDiff >> inFloat1 >> inFloat2;
+
+				mLife2 = Vector2D(inFloat1, inFloat2);
+			}
+			else if (key == "lifepos3")
+			{
+				inputDiff >> inFloat1 >> inFloat2;
+
+				mLife3 = Vector2D(inFloat1, inFloat2);
+			}
+			else if (key == "lives")
+			{
+				inputDiff >> inFloat1 >> inFloat2;
+
+				mLives = Vector2D(inFloat1, inFloat2);
+			}
+			else if (key == "score")
+			{
+				inputDiff >> inFloat1 >> inFloat2;
+
+				mScore = Vector2D(inFloat1, inFloat2);
+			}
+			else if (key == "whole")
+			{
+				inputDiff >> mWhole;
+			}
+			else if (key == "half")
+			{
+				inputDiff >> mHalf;
+			}
+			else if (key == "most")
+			{
+				inputDiff >> mMost;
+			}
+			else if (key == "middle")
+			{
+				inputDiff >> mMiddle;
+			}
+			else if (key == "least")
+			{
+				inputDiff >> mLeast;
+			}
+			else if (key == "height")
+			{
+				inputDiff >> mHeight;
+			}
+		}
+	}
+}
+
+void HUD::setLifePos(Vector2D vec1, Vector2D vec2, Vector2D vec3)
+{
+	mLife1 = vec1;
+	mLife2 = vec2;
+	mLife3 = vec3;
+}
+
+void HUD::setLivesPos(Vector2D vec)
+{
+	mLives = vec;
+}
+
+void HUD::setScorePos(Vector2D vec)
+{
+	mScore = vec;
+}
+
+void HUD::setColor(Color* color)
+{
+	mpColor = color;
+}
+
+void HUD::setFont(Font* font)
+{
+	mpFont = font;
+}
+
+void HUD::setSprite(Sprite* sprite)
+{
+	mpLife = sprite;
+}
+
+void HUD::drawHUD(int lives, int score)
+{
+	Game* pGame = Game::getInstance();
+
+	stringstream ss;
+	ss << pGame->getLanguageManager()->getText("score_text") << score;
+
+	pGame->getGraphicsSystem()->writeText(&mLives, mpFont, mpColor, pGame->getLanguageManager()->getText("lives_text"));
+
+	pGame->getGraphicsSystem()->writeText(&mScore, mpFont, mpColor, ss.str());
+
+	Vector2D livesTextSize = pGame->getGraphicsSystem()->getTextSize(mpFont, pGame->getLanguageManager()->getText("lives_text"));
+
+	setLifePos(Vector2D(livesTextSize.getX(), mHeight), Vector2D(livesTextSize.getX() + mHalf, mHeight), Vector2D(livesTextSize.getX() + mWhole, mHeight));
+
+	if (lives >= mMost)
+		pGame->getGraphicsSystem()->draw(&mLife3, mpLife);
+	if (lives >= mMiddle)
+		pGame->getGraphicsSystem()->draw(&mLife2, mpLife);
+	if (lives >= mLeast)
+		pGame->getGraphicsSystem()->draw(&mLife1, mpLife);
+}

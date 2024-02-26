@@ -1,0 +1,48 @@
+#pragma once
+
+#include <string>
+#include <fstream>
+#include <iostream>
+#include <PerformanceTracker.h>
+#include <MemoryTracker.h>
+
+#include "Square.h"
+
+using namespace std;
+
+const int LEVEL_WIDTH = 12;
+const int LEVEL_HEIGHT = 12;
+
+class Level : public Trackable
+{
+	friend class Square;
+public:
+	Level();
+	Level(string level);
+	~Level();
+	
+	float getFrequency();
+	int getSnakeSpeed();
+	int getStartLength();
+	int getFoodPoints();
+	int getSpeedChance();
+	int getPointChance();
+	int getSlowChance();
+	int getWinLength();
+	Square* getSquare(int x, int y);
+	int getStartX();
+	int getStartY();
+	void reset();
+	void cleanUp();
+
+private:
+	
+	int mSnakeSpeed;
+	int mStartLength;
+	int mFoodPoints;
+	int mSpeedChance, mPointChance, mSlowChance;
+	float mPowerFrequency;
+	int mWinLength;
+	int mStartX, mStartY;
+	Square* mpGrid[LEVEL_WIDTH][LEVEL_HEIGHT];
+};

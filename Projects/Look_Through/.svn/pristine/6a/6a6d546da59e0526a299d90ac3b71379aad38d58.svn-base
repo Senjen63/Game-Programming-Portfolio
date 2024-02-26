@@ -1,0 +1,45 @@
+#include "ScreenChangeManager.h"
+
+ScreenChangeManager::ScreenChangeManager()
+{
+}
+
+
+void ScreenChangeManager::init()
+{
+	EventSystem::getInstance()->addListener((EventType)GameEventType::SNAKE_DIED, this);
+	EventSystem::getInstance()->addListener((EventType)GameEventType::SNAKE_WON, this);
+}
+
+
+void ScreenChangeManager::handleEvent(const Event& theEvent)
+{
+	if (mCanHandleEvents == true)
+	{
+		Game* g = Game::getInstance();
+
+		if (theEvent.getType() == (EventType)GameEventType::SNAKE_WON)
+		{
+			if (g->mCurrentLevelIndex == g->NUM_LEVELS - 1)
+			{
+				g->changeCurrentScreen(ScreenType::GAME_WIN_SCREEN);
+				//g->mCurrentScreen = ScreenType::GAME_WIN_SCREEN;
+			}
+			else
+			{
+				g->changeCurrentScreen(ScreenType::LEVEL_WIN_SCREEN);
+				//g->mCurrentScreen = ScreenType::LEVEL_WIN_SCREEN;
+			}
+
+			g->mCurrentLevelIndex = (g->mCurrentLevelIndex + 1) % g->NUM_LEVELS;
+
+			mCanHandleEvents = false;
+		}
+		else if (theEvent.getType() == (EventType)GameEventType::SNAKE_DIED)
+		{
+			g->changeCurrentScreen(ScreenType::START_MENU);
+
+			mCanHandleEvents = false;
+		}
+	}
+}

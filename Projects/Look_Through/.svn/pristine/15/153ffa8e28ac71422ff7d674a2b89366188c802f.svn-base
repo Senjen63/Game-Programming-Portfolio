@@ -1,0 +1,12 @@
+#include "InputEvents.h"
+
+InputEvents::InputEvents(int keyCode)
+	:GameEvent(INPUT_EVENT)
+{
+	mKeyCode = keyCode;
+}
+
+InputEvents::~InputEvents()
+{
+
+}

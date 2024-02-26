@@ -1,0 +1,141 @@
+#include "Game.h"
+#include <assert.h>
+
+Game* Game::mpGameInstance = nullptr;
+
+void Game::cleanUp()
+{
+	if (isInit)
+	{
+		mpDisplay->cleanUp();
+		mpBufferManager->clear();
+		mpUnitManager->cleanUp();
+		delete mpBufferManager;
+		delete mpUnitManager;
+		mpSmurfsAnimation->cleanUp();
+		delete mpSmurfsAnimation;
+		mpDeansAnimation->cleanUp();
+		delete mpDeansAnimation;
+		delete mpDisplay;
+	}
+}
+
+void Game::createInstance()
+{
+	if (mpGameInstance == nullptr)
+	{
+		mpGameInstance = new Game;
+	}
+}
+
+void Game::destroyInstance()
+{
+	delete mpGameInstance;
+	mpGameInstance = nullptr;
+}
+
+void Game::doLoop()
+{
+	bool keepGoing = false;
+	double targetTime = 16.7;
+	float timeMod = 1.0;
+
+	PerformanceTracker* pPerformanceTracker = new PerformanceTracker;
+
+	Vector2D mousePos = Vector2D(400, 300);
+
+	while (!keepGoing)
+	{
+		//Set up timers and trackers
+		pPerformanceTracker->clearTracker("loop");
+		pPerformanceTracker->startTracking("loop");
+		Timer loopTimer;
+		loopTimer.start();
+
+		//Render
+		mpDisplay->drawCurrent(Vector2D(), Sprite(mpBufferManager->getBuffer("woods")), 1.0);
+		mpUnitManager->drawAll(mpDisplay);
+
+		mpDisplay->flipDisplay();
+
+		//Takes in player input
+		if (mInput.getMouseStateLeft())
+		{
+			mousePos = mInput.getMousePos();
+			mpUnitManager->addUnit(mpSmurfsAnimation, mpDeansAnimation, mousePos);
+		}
+
+		if (mInput.getMouseStateRight())
+		{
+			mousePos = mInput.getMousePos();
+			mpUnitManager->deleteArea(mousePos);
+		}
+
+		keepGoing = mInput.getKeyState(ESCAPE_KEY);
+
+		if (mInput.getKeyState(ENTER_KEY))
+		{
+			mpUnitManager->getUnit()->setAnimation();
+		}
+
+		if (mInput.getKeyState(SPACE_KEY))
+		{
+			mpUnitManager->setShouldUpdate();
+		}
+
+		//Updates the units
+		mpUnitManager->updateAll(targetTime);
+
+		//Use and siplay timers and trackers
+		loopTimer.sleepUntilElapsed(targetTime);
+		pPerformanceTracker->stopTracking("loop");
+
+		cout << "Frame Took:" << pPerformanceTracker->getElapsedTime("loop") << " ms" << endl;
+	}
+
+	delete pPerformanceTracker;
+}
+
+void Game::Init()
+{
+	mpDisplay->init();
+
+	mpBufferManager = new GraphicsBufferManager;
+	mpUnitManager = new UnitManager;
+
+	mpBufferManager->addBuffer("woods", ASSET_PATH + BACKGROUND_FILENAME);
+	mpBufferManager->addBuffer("smurfs", ASSET_PATH + SMURF_FILENAME);
+	mpBufferManager->addBuffer("deans", ASSET_PATH + DEAN_FILENAME);
+
+	mpSmurfsAnimation = new Animation(mpBufferManager->getBuffer("smurfs"), TIME_PER_FRAME, true, NUM_FRAMES);
+	mpDeansAnimation = new Animation(mpBufferManager->getBuffer("deans"), TIME_PER_FRAME, true, NUM_FRAMES);
+
+	isInit = true;
+}
+
+Game::Game()
+{
+	mpDisplay = new GraphicsSystem(DISP_HEIGHT, DISP_WIDTH);
+
+	mpUnitManager = nullptr;
+
+	mpBufferManager = nullptr;
+
+	mpSmurfsAnimation = nullptr;
+	mpDeansAnimation = nullptr;
+
+	mInput.Init();
+
+	isInit = false;
+}
+
+Game::~Game()
+{
+	cleanUp();
+}
+
+Game* Game::getInstance()
+{
+	assert(mpGameInstance != nullptr);
+	return mpGameInstance;
+}

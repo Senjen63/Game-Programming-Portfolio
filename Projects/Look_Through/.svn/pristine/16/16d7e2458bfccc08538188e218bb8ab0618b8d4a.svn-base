@@ -1,0 +1,26 @@
+#include "Font.h"
+
+//Constructor for the font class.
+Font::Font(string file, int size)
+{
+	mFontSize = size;
+	mpFont = al_load_ttf_font(file.c_str(), size, 0);
+	
+}
+
+//Destructor for the font class.
+Font::~Font()
+{
+	al_destroy_font(mpFont);
+}
+
+//Accessor to get the font size.
+int Font::getSize()
+{
+	return mFontSize;
+}
+
+ALLEGRO_FONT* Font::getFont()
+{
+	return mpFont;
+}

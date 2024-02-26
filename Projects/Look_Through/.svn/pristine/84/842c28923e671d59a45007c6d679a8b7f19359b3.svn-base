@@ -1,0 +1,59 @@
+#pragma once
+
+#include "Component.h"
+
+const std::string COLLIDER_TYPE = "Collider";
+
+// To know which type of collider it is 
+// I don't think you would need more than these 2 but feel free to add more 
+enum class ColliderType
+{
+    INVALID = -1,
+    BOX,
+    CIRCLE,
+    MAX_COLLIDER_TYPES
+};
+
+// So that you know what is colliding with what (Like Unity layers) 
+// Add/remove whatever you need here 
+enum class CollisionTag
+{
+    INVALID = -1,
+    TANK,
+    WALL,
+    BULLET,
+    // ADD STUFF HERE IF DESIRED 
+    MAX_COLLISION_LAYERS
+};
+
+class Collider : public Component
+{
+public:
+    Collider() = delete; // I don't think we will ever need this 
+    Collider(ColliderType colliderType, CollisionTag collisionTag);
+    Collider(const Collider& other);
+    Collider& operator=(const Collider& other) = delete; // I don't want to implement this :( 
+    virtual ~Collider();
+
+    virtual	void init() = 0;
+    virtual void cleanUp() = 0;
+    virtual void Update(double deltaTime);
+    virtual void handleEvent(const Event& theEvent) = 0;
+
+    virtual bool collides(const Collider& other) const = 0;
+
+    Vector2D getPosition() const { return mPosition; }
+    void resetPosition() { mPosition = mpParentEntity->getPosition(); }
+    void setPosition(const Vector2D& newPos) { mPosition = newPos; }
+    void addPosition(const Vector2D& addPos) { mPosition += addPos; }
+
+    ColliderType getColliderType() const { return mColliderType; }
+    CollisionTag getCollisionTag() const { return mCollisionTag; }
+
+private:
+    ColliderType mColliderType = ColliderType::INVALID;
+    CollisionTag mCollisionTag = CollisionTag::INVALID;
+
+protected:
+    Vector2D mPosition;
+};

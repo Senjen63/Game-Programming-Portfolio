@@ -1,0 +1,31 @@
+#pragma once
+
+#include <allegro5/allegro.h>
+#include <allegro5/allegro_font.h>
+#include <allegro5/allegro_ttf.h>
+#include <allegro5/allegro_audio.h>
+#include <allegro5/allegro_acodec.h>
+#include <allegro5/allegro_image.h>
+#include <allegro5/allegro_primitives.h>
+
+#include <PerformanceTracker.h>
+#include <MemoryTracker.h>
+
+using namespace std;
+
+class Color : public Trackable
+{
+	friend class GraphicsSystem;
+	friend class GraphicsBuffer;
+public:
+	//Constructor
+	Color();
+	Color(int red, int green, int blue);
+	//Destructor
+	~Color();
+	//Accessor
+private:
+	ALLEGRO_COLOR getColor();
+	//Variables
+	ALLEGRO_COLOR mColor;
+};

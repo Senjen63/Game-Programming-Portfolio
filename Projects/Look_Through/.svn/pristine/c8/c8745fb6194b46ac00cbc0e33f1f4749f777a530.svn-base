@@ -1,0 +1,194 @@
+#include "Unit.h"
+#include "Game.h"
+
+Unit::Unit()
+{
+	mPosition = Vector2D();
+	mCurrentAnim = 0;
+	mHasAnimation = false;
+	mpAnim1 = nullptr;
+}
+
+
+Unit::Unit(Animation* pAnim1,  Vector2D position)
+{
+	mPosition = position;
+	mCurrentAnim = 1;
+	mpAnim1 = pAnim1;
+	mHasAnimation = true;
+	mTime = 0;
+	mIsPaused = false;
+}
+
+
+Unit::Unit(GraphicsBuffer* pBuffer)
+{
+	mPosition = Vector2D(0, 0);
+	mCurrentAnim = 1;
+	mTime = 0;
+	mpAnim1 = nullptr;
+	mSprite = new Sprite(pBuffer, Vector2D(), SPRITE_WIDTH, SPRITE_HEIGHT);
+	mIsPaused = false;
+	mHasAnimation = false;
+}
+
+
+Unit::~Unit()
+{
+	if (mHasAnimation) 
+	{
+		if (mpAnim1 != nullptr) 
+		{
+			delete mpAnim1;
+			mpAnim1 = nullptr;
+		}
+	}
+}
+
+
+float Unit::GetTime()
+{
+	if (mHasAnimation)
+	{
+		return mpAnim1->GetTime();
+	}
+	else
+	{
+		return 0;
+	}
+}
+
+Vector2D Unit::GetPosition()
+{
+	return mPosition;
+}
+
+
+void Unit::SetPosition(Vector2D position)
+{
+	mPosition = position;
+}
+
+
+Sprite* Unit::CurrentSprite()
+{
+	if (mHasAnimation)
+	{
+		return mpAnim1->GetCurrentSprite();
+	}
+	else
+	{
+		return mSprite;
+	}
+}
+
+
+void Unit::Update(float t)
+{
+	mTime += t;
+	if (mTime > GetTime() && !mIsPaused && mHasAnimation) 
+	{
+		if (mpAnim1 != NULL) 
+		{
+			mpAnim1->Update();
+		}
+	}
+}
+
+
+void Unit::Draw(GraphicsSystem* pGraphicsSystem)
+{
+	if (mHasAnimation) 
+	{
+		pGraphicsSystem->draw(CurrentSprite()->getLocation(), CurrentSprite(), GetPosition().getX(), GetPosition().getY());
+	}
+	else
+	{
+		pGraphicsSystem->draw(Vector2D(GetPosition().getX() - mSprite->getWidth(), GetPosition().getY() - mSprite->getHeight()), mSprite);
+	}
+
+}
+
+
+void Unit::SwitchAnimation()
+{
+	if (mCurrentAnim == 1)
+	{
+		mCurrentAnim = 0;
+	}
+	else
+	{
+		mCurrentAnim = 1;
+	}
+}
+
+
+void Unit::TogglePause()
+{
+	if (mIsPaused)
+		mIsPaused = false;
+	else
+		mIsPaused = true;
+}
+
+
+void Unit::SetTime(float timing)
+{
+	mpAnim1->AdjustTime(timing);
+}
+
+
+void Unit::SetNextSegment(Unit* nextSegment)
+{
+	mNextSegment = nextSegment;
+}
+
+Unit* Unit::GetLastSegment()
+{
+	return mNextSegment;
+}
+
+void Unit::SetWall()
+{
+	mIsWall = true;
+}
+
+
+void Unit::SetFood()
+{
+	mIsFood = true;
+}
+
+
+void Unit::SetFloor()
+{
+	mIsFloor = true;
+}
+
+bool Unit::CheckIfWall() 
+{ 
+	return mIsWall; 
+}
+
+
+bool Unit::CheckIfFood() 
+{ 
+	return mIsFood; 
+}
+
+
+bool Unit::CheckIfFloor() 
+{ 
+	return mIsFloor; 
+}
+
+
+void Unit::SetPowerUpType(int type)
+{
+	mPowerUpType = type;
+}
+
+int Unit::GetPowerUpType()
+{
+	return mPowerUpType;
+}

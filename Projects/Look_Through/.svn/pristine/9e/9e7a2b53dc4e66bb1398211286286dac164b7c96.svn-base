@@ -1,0 +1,12 @@
+#include "TurnEvent.h"
+
+TurnEvent::TurnEvent(Vector2D direction) : GameEvent((GameEventType)TURN_EVENT)
+{
+    mDirection = direction;
+}
+
+
+TurnEvent::~TurnEvent()
+{
+
+}

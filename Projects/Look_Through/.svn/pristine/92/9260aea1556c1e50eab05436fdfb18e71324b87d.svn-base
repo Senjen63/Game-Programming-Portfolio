@@ -1,0 +1,30 @@
+#pragma once
+#include "Trackable.h"
+#include "GraphicsBuffer.h"
+#include "GraphicsSystem.h"
+#include <map>
+
+class GraphicsBufferManager : public Trackable
+{
+	//could possibly make this a friend of graphicsbuffer, might be heavy handed. 
+private:
+	map<string, GraphicsBuffer*> mpGraphicsBuffers;
+public:
+	GraphicsBufferManager() {};
+	~GraphicsBufferManager() { removeAllBuffers(); };
+
+	void createBuffer(string buffName ,string path, GraphicsSystem* gs);
+	void createBuffer(string buffName, Color color, int height, int width, GraphicsSystem* gs);
+	void createBuffer(string buffName, SDL_Texture* pBitmap);
+
+	GraphicsBuffer* getBuffer(string buffName) { return mpGraphicsBuffers[buffName]; };
+	void addBuffer(string buffName, GraphicsBuffer* buff) { mpGraphicsBuffers[buffName] = buff; };
+	void delBuffer(string buffName);
+
+	void removeAllBuffers();
+
+
+	/* GraphicsBuffer(string path);
+	GraphicsBuffer(Color color, int height, int width);
+	GraphicsBuffer(ALLEGRO_BITMAP* pBitmap); */
+};

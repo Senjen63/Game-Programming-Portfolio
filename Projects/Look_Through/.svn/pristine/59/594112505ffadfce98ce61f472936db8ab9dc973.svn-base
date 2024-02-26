@@ -1,0 +1,16 @@
+#include "SoundBuffer.h"
+#include <assert.h>
+
+using namespace std;
+
+SoundBuffer::SoundBuffer(string filename)
+{
+	mBuffer = new sf::SoundBuffer();
+
+	assert(mBuffer->loadFromFile(filename));
+}
+
+SoundBuffer::~SoundBuffer()
+{
+	delete mBuffer;
+}

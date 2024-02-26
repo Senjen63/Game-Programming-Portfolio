@@ -1,0 +1,17 @@
+#pragma once
+#include "Animation.h"
+#include "Vector2D.h"
+#include <PerformanceTracker.h>
+#include <MemoryTracker.h>
+#include "Unit.h"
+class Player : public Unit
+{
+private:
+	bool mIsFlying = false;
+	float mSpeed;
+public: 
+	using Unit::Unit;
+	void SetFlying(bool isFlying);
+	void Update(float t) override;
+	void SetSpeed(float newSpeed);
+};

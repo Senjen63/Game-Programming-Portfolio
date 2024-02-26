@@ -1,0 +1,133 @@
+#include "unitManager.h"
+#include "game.h"
+
+UnitManager::UnitManager()
+{
+
+}
+UnitManager::~UnitManager()
+{
+    cleanup();
+}
+void UnitManager::cleanup()
+{
+    clearAll();
+}
+Unit* UnitManager::getLast()
+{
+    if (mpUnits.size() > 0)
+    {
+        return mpUnits.back();
+    }
+    return nullptr;
+}
+int UnitManager::getUnitNum()
+{
+    return mpUnits.size();
+}
+Unit* UnitManager::addUnit(Vector2D pos, int fps)
+{
+    Unit* newUnit = new Unit(pos, fps);
+
+    mpUnits.push_back(newUnit);
+    cout << "Add Unit" << endl;
+    return getLast();
+}
+void UnitManager::deleteUnit(Unit* unit)
+{
+    delete unit;
+
+    vector<Unit*>::iterator target = find(mpUnits.begin(), mpUnits.end(), unit);
+    mpUnits.erase(target);
+}
+void UnitManager::deleteUnits(vector<Unit*>* units)
+{
+    for (int i = 0; i < units->size(); i++)
+    {
+        deleteUnit((*units)[i]);
+    }
+}
+void UnitManager::deleteUnitsAtPosition(Vector2D mousePosition)
+{
+    for (int i = mpUnits.size() - 1; i >= 0; i--) //delete last unit first
+    {
+        if (mpUnits[i]->isClicked(mousePosition))
+        {
+            delete mpUnits[i];
+
+            mpUnits.erase(mpUnits.begin() + i);
+        }
+    }
+}
+void UnitManager::clearAll()
+{
+    for (unsigned int i = 0; i < mpUnits.size(); i++)
+    {
+        delete mpUnits[i];
+    }
+    mpUnits.clear();
+}
+void UnitManager::nextAnimForUnit()
+{
+    int nextIndex = getLast()->getCurrentIndex() + 1;
+
+    if (nextIndex >= getLast()->getAnimCount())
+    {
+        nextIndex = 0;
+    }
+    getLast()->setAnimation(nextIndex);
+}
+void UnitManager::setAllPlay(bool play)
+{
+    for (int i = 0; i < mpUnits.size(); i++)
+    {
+        Unit* current = mpUnits[i];
+        current->togglePlay(play);
+    }
+}
+void UnitManager::switchAllPlay()
+{
+    for (int i = 0; i < mpUnits.size(); i++)
+    {
+        Unit* current = mpUnits[i];
+        current->togglePlay(!current->getIsPlaying());
+    }
+}
+void UnitManager::updateAll(float elapsedTime)
+{
+    for (int i = 0; i < mpUnits.size(); i++)
+    {
+        mpUnits[i]->update(elapsedTime);
+    }
+}
+void UnitManager::drawAll()
+{
+    for (int i = 0; i < mpUnits.size(); i++)
+    {
+        mpUnits[i]->draw();
+    }
+}
+Unit* UnitManager::clickedOn(Vector2D mousePos)
+{
+    for (int i = mpUnits.size() - 1; i >= 0; i--) //delete last unit first
+    {
+        if (mpUnits[i]->isClicked(mousePos))
+        {
+            return mpUnits[i];
+        }
+    }
+    return nullptr;
+}
+vector<Unit*>* UnitManager::clickedUnits(Vector2D mousePos)
+{
+    vector<Unit*>* units = new vector<Unit*>;
+
+    for (unsigned int i = 0; i < mpUnits.size(); i++)
+    {
+        if (mpUnits[i]->isClicked(mousePos))
+        {
+            units->push_back(mpUnits[i]);
+        }
+    }
+    return units;
+}

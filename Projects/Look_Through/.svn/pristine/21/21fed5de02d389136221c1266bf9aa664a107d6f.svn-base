@@ -1,0 +1,19 @@
+#pragma once
+
+#include "GameEvent.h"
+
+class ScoreChangeEvent : public GameEvent
+{
+public:
+
+	ScoreChangeEvent(const int& score)
+		: GameEvent(GameEventType::SCORE_CHANGE_EVENT), mScoreChange(score) {};
+	~ScoreChangeEvent() {};
+
+	inline int getScore() const { return mScoreChange; };
+
+private:
+
+	int mScoreChange;
+};
+

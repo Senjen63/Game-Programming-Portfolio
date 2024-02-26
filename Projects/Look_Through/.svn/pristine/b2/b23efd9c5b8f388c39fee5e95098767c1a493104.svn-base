@@ -1,0 +1,46 @@
+#pragma once
+
+#include "Trackable.h"
+#include "Vector2D.h"
+#include <vector>
+
+class Sprite;
+class Vector2D;
+class Color;
+
+using namespace std;
+
+class Snake : public Trackable
+{
+	private:
+		vector<Vector2D> mSnakePartLocations;
+
+		Color* mpSnakeColor;
+
+		Sprite* mpSnakeSprite;
+
+		int mSnakeSpeed;
+		int mSnakeSpeedRemaining;
+		string mSnakeDirection;
+	public:
+		Snake();
+		~Snake();
+
+		void drawSnake(double);
+		void snakeMovement(double);
+		void setSnakeDirection(string);
+		void resetSnakeDirection();
+		void growSnake();
+		void addSnakePart(Vector2D);
+		bool isCollision(Vector2D newSnakeLocation);
+		void powerUpCollision(Vector2D& newSnakeLocation);
+		void clearSnake();
+
+		void speedUpSnake();
+		void slowDownSnake();
+		void resetSnakeSpeed();
+		void initSnake();
+
+		int getSnakeSize() { return mSnakePartLocations.size(); }
+		vector<Vector2D> getSnakePartLocations() { return mSnakePartLocations; }
+};

@@ -1,0 +1,83 @@
+#include "Asteroid.h"
+#include "Game.h"
+#include "GraphicsBuffer.h"
+#include "GraphicsBufferManager.h"
+#include "Sprite.h"
+#include "Vector2D.h"
+#include <fstream>
+
+Asteroid::Asteroid()
+{
+	ifstream inputDiff("../GalahadAssets/data/" + FILE_PATH);
+	if (inputDiff.good())
+	{
+		string key;
+
+		while (!inputDiff.eof())
+		{
+			inputDiff >> key;
+
+			if (key == "mLoc")
+			{
+				inputDiff >> mLoc;
+			}
+		}
+	}
+
+	Game* pGame = Game::getInstance();
+
+	pGame->getGraphicsBufferManager()->createAndAddGraphicsBuffer(ASTEROID_KEY, ASTEROID_PATH);
+	pGame->getGraphicsBufferManager()->createAndAddGraphicsBuffer(FAST_KEY, FAST_PATH);
+	pGame->getGraphicsBufferManager()->createAndAddGraphicsBuffer(SMALL_FAST_KEY, SMALL_FAST_PATH);
+	pGame->getGraphicsBufferManager()->createAndAddGraphicsBuffer(SLOW_KEY, SLOW_PATH);
+	pGame->getGraphicsBufferManager()->createAndAddGraphicsBuffer(SMALL_SLOW_KEY, SMALL_SLOW_PATH);
+	pGame->getGraphicsBufferManager()->createAndAddGraphicsBuffer(POINTS_KEY, POINTS_PATH);
+	pGame->getGraphicsBufferManager()->createAndAddGraphicsBuffer(SMALL_POINTS_KEY, SMALL_POINTS_PATH);
+	
+
+	this->mpAsteroidSprite = new Sprite(pGame->getGraphicsBufferManager()->getGraphicsBuffer(ASTEROID_KEY)->getWidth(),
+		pGame->getGraphicsBufferManager()->getGraphicsBuffer(ASTEROID_KEY)->getHeight(),
+		&Vector2D(mLoc,mLoc),
+		pGame->getGraphicsBufferManager()->getGraphicsBuffer(ASTEROID_KEY));
+
+	this->mpFastSprite1 = new Sprite(pGame->getGraphicsBufferManager()->getGraphicsBuffer(FAST_KEY)->getWidth(),
+		pGame->getGraphicsBufferManager()->getGraphicsBuffer(FAST_KEY)->getHeight(),
+		&Vector2D(mLoc, mLoc),
+		pGame->getGraphicsBufferManager()->getGraphicsBuffer(FAST_KEY));
+
+	this->mpFastSprite2 = new Sprite(pGame->getGraphicsBufferManager()->getGraphicsBuffer(SMALL_FAST_KEY)->getWidth(),
+		pGame->getGraphicsBufferManager()->getGraphicsBuffer(SMALL_FAST_KEY)->getHeight(),
+		&Vector2D(mLoc, mLoc),
+		pGame->getGraphicsBufferManager()->getGraphicsBuffer(SMALL_FAST_KEY));
+
+	this->mpSlowSprite1 = new Sprite(pGame->getGraphicsBufferManager()->getGraphicsBuffer(SLOW_KEY)->getWidth(),
+		pGame->getGraphicsBufferManager()->getGraphicsBuffer(SLOW_KEY)->getHeight(),
+		&Vector2D(mLoc, mLoc),
+		pGame->getGraphicsBufferManager()->getGraphicsBuffer(SLOW_KEY));
+
+	this->mpSlowSprite2 = new Sprite(pGame->getGraphicsBufferManager()->getGraphicsBuffer(SMALL_SLOW_KEY)->getWidth(),
+		pGame->getGraphicsBufferManager()->getGraphicsBuffer(SMALL_SLOW_KEY)->getHeight(),
+		&Vector2D(mLoc, mLoc),
+		pGame->getGraphicsBufferManager()->getGraphicsBuffer(SMALL_SLOW_KEY));
+
+	this->mpPointsSprite1 = new Sprite(pGame->getGraphicsBufferManager()->getGraphicsBuffer(POINTS_KEY)->getWidth(),
+		pGame->getGraphicsBufferManager()->getGraphicsBuffer(POINTS_KEY)->getHeight(),
+		&Vector2D(mLoc, mLoc),
+		pGame->getGraphicsBufferManager()->getGraphicsBuffer(POINTS_KEY));
+
+	this->mpPointsSprite2 = new Sprite(pGame->getGraphicsBufferManager()->getGraphicsBuffer(SMALL_POINTS_KEY)->getWidth(),
+		pGame->getGraphicsBufferManager()->getGraphicsBuffer(SMALL_POINTS_KEY)->getHeight(),
+		&Vector2D(mLoc, mLoc),
+		pGame->getGraphicsBufferManager()->getGraphicsBuffer(SMALL_POINTS_KEY));
+}
+
+Asteroid::~Asteroid()
+{
+	delete mpAsteroidSprite;
+	delete mpFastSprite1;
+	delete mpFastSprite2;
+	delete mpSlowSprite1;
+	delete mpSlowSprite2;
+	delete mpPointsSprite1;
+	delete mpPointsSprite2;
+}

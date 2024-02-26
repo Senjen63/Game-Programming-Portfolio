@@ -1,0 +1,11 @@
+#include "PowerEvent.h"
+
+PowerEvent::PowerEvent(const UnitType& type) : GameEvent(POWER_EVENT), mType(type)
+{
+
+}
+
+PowerEvent::~PowerEvent()
+{
+
+}

@@ -1,0 +1,107 @@
+#include "Entity.h"
+#include "Component.h"
+
+#include "MathHelp.h"
+
+Entity::Entity()
+{
+	mpAnim = nullptr;
+	mPosition = Vector2D();
+	mComponent = {};
+	mScale = 1.0;
+}
+
+Entity::Entity(Animation* anim, Vector2D pos, float scale, bool isEnabled) :
+	mIsEnabled(isEnabled)
+{
+	mScale = scale;
+	mpAnim = anim;
+	mPosition = pos;
+}
+
+Entity::~Entity()
+{
+	cleanUp();
+
+	for (auto c : mComponent)
+	{
+		delete c;
+	}
+	mComponent.clear();
+}
+
+void Entity::init()
+{
+	if (isInitted)
+		return;
+
+	for (auto i : mComponent)
+	{
+		i->init();
+	}
+	isInitted = true;
+}
+
+void Entity::Draw(GraphicsSystem* pDisplay)
+{
+	if (mIsEnabled)
+		pDisplay->draw(mPosition, mpAnim->getCurrentSprite(), mRotation, mScale); 
+}
+
+void Entity::Update(double deltaTime)
+{
+	// Don't update if not enabled 
+	if (!mIsEnabled)
+		return;
+
+	for (auto i : mComponent)
+	{
+		if (i->getEnabled())
+		{
+			i->Update(deltaTime);
+		}
+	}
+
+	mpAnim->update(deltaTime);
+
+}
+
+void Entity::cleanUp()
+{
+	if (!isInitted)
+		return;
+
+	for (auto c : mComponent)
+	{
+		c->cleanUp();
+	}
+
+	isInitted = false;
+}
+
+void Entity::addComponent(Component* component)
+{
+	mComponent.push_back(component);
+	component->mpParentEntity = this;
+
+	component->init();
+}
+
+Component* Entity::getComponent(const std::string& type)
+{
+	for (auto c : mComponent)
+	{
+		if (c->getType() == type)
+		{
+			return c;
+		}
+	}
+
+	return nullptr;
+}
+
+void Entity::addtoAngle(float add)
+{
+	mRotation += add;
+	mRotation = wrapAngle(mRotation);
+}

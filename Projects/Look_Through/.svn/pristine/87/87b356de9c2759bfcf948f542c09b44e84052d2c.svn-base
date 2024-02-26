@@ -1,0 +1,27 @@
+#pragma once
+#include <PerformanceTracker.h>
+#include <MemoryTracker.h>
+
+#include "Sprite.h"
+
+class Animation : public Trackable
+{
+public:
+	Animation();
+	Animation(GraphicsBuffer* pBuff, int numSprites, float time, bool loop);
+	~Animation();
+
+	Sprite* getCurrentSprite();
+
+	void update();
+	void adjustTiming(float modifier);
+	float getTime();
+
+private:
+	Sprite* mpSprites;
+	float mTime = 0.0;
+	float mCurrentTime = 0.0;
+	int mCurrentSprite = 0;
+	int mNumSprites = 0;
+	bool mLoop = false;
+};

@@ -1,0 +1,222 @@
+#include "UnitManager.h"
+
+void UnitManager::addUnit(Animation* anim1, Animation* anim2, Vector2D location, string code, Vector2D velocity)
+{
+	Unit* pUnit = new Unit(anim1, anim2, location, code, velocity);
+
+	mpUnits.push_back(pUnit);
+}
+
+void UnitManager::cleanUp()
+{
+	for (vector<Unit*>::iterator iter = mpUnits.begin(); iter != mpUnits.end(); ++iter)
+	{
+		Unit* pUnit = *iter;
+		delete pUnit;
+	}
+
+	mpUnits.clear();
+}
+
+void UnitManager::deleteArea(Vector2D mousePos)
+{
+	for (vector<Unit*>::iterator iter = mpUnits.begin(); iter != mpUnits.end(); ++iter)
+	{
+		Unit* pUnit = *iter;
+		if (pUnit->getLocationX() > (mousePos.getX() - 30) && pUnit->getLocationX() < (mousePos.getX() + 30) && pUnit->getLocationY() > (mousePos.getY() - 30) && pUnit->getLocationY() < (mousePos.getY() + 30))
+		{
+			deleteUnit(pUnit);
+			break;
+		}
+	}
+}
+
+void UnitManager::deleteUnit(Unit* pUnitDestroy)
+{
+	for (int i = 0; i < mpUnits.size(); i++)
+	{
+		Unit* pUnit = mpUnits[i];
+
+		if (pUnit == pUnitDestroy)
+		{
+			delete pUnit;
+			mpUnits.erase(mpUnits.begin() + i);
+			break;
+		}
+	}
+}
+
+bool UnitManager::doesClick(Vector2D pos)
+{
+	for (vector<Unit*>::iterator iter = mpUnits.begin(); iter != mpUnits.end(); ++iter)
+	{
+		Unit* pUnit = *iter;
+
+		if (pos.getX() > pUnit->getLocationX() - 32 && pos.getX() < pUnit->getLocationX() + 10 && pos.getY() < pUnit->getLocationY() + 10 && pos.getY() > pUnit->getLocationY() - 32)
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
+void UnitManager::doesCollide(Vector2D pos)
+{
+	for (vector<Unit*>::iterator iter = mpUnits.begin(); iter != mpUnits.end(); ++iter)
+	{
+		Unit* pUnit = *iter;
+
+		if (pos.getX() > pUnit->getLocationX() - 32 && pos.getX() < pUnit->getLocationX() + 10 && pos.getY() < pUnit->getLocationY() + 10 && pos.getY() > pUnit->getLocationY() - 32)
+		{
+			if (pUnit->getCurrentAnimation() == 1)
+			{
+				pUnit->setAnimation();
+			}
+		}
+	}
+}
+
+Unit* UnitManager::doesLeaveScreen()
+{
+	for (vector<Unit*>::iterator iter = mpUnits.begin(); iter != mpUnits.end(); ++iter)
+	{
+		Unit* pUnit = *iter;
+		
+		if (pUnit->getLocationX() < 0 || pUnit->getLocationX() > 800 || pUnit->getLocationY() < 0 || pUnit->getLocationY() > 600)
+		{
+			return pUnit;
+		}
+	}
+
+	return nullptr;
+}
+
+void UnitManager::drawAll(GraphicsSystem* display)
+{
+	for (vector<Unit*>::iterator iter = mpUnits.begin(); iter != mpUnits.end(); ++iter)
+	{
+		Unit* pUnit = *iter;
+		display->drawPart(pUnit->draw()->getLocation(), pUnit->draw(), pUnit->getLocationX() - 30, pUnit->getLocationY() - 30);
+	}
+}
+
+Vector2D UnitManager::getFirstLoc()
+{
+	vector<Unit*>::iterator iter = mpUnits.begin();
+	Unit* pUnit = *iter;
+	return pUnit->getLocation();
+}
+
+Vector2D UnitManager::getLastLoc()
+{
+	return mpUnits.back()->getLocation();
+}
+
+Vector2D UnitManager::getSecondLastLoc()
+{
+	return mpUnits[mpUnits.size() - 2]->getLocation();
+}
+
+Unit* UnitManager::getUnit()
+{
+	if (mpUnits.size() > 0)
+	{
+		Unit* pUnit = mpUnits[0];
+		for (int i = 0; i < mpUnits.size(); i++)
+		{
+			pUnit = mpUnits[i];
+		}
+
+		return pUnit;
+	}
+	else
+	{
+		return nullptr;
+	}
+}
+
+void UnitManager::loadUnitData(Animation* anim1, Animation* anim2)
+{
+	ifstream fin;
+	fin.open("orbPosData.txt");
+
+	if (!fin.is_open())
+	{
+		cout << "Failed to Load Orb Data File" << endl;
+	}
+
+	while (!fin.eof())
+	{
+		float posX;
+		float posY;
+		float velX;
+		float velY;
+		int currentAnim;
+
+		fin >> posX;
+		fin >> posY;
+		fin >> velX;
+		fin >> velY;
+		fin >> currentAnim;
+
+		addUnit(anim1, anim2, Vector2D(posX, posY), "Orb", Vector2D(velX, velY));
+
+		if (currentAnim != 1)
+		{
+			getUnit()->setAnimation();
+		}
+	}
+}
+
+void UnitManager::moveUnits()
+{
+	for (vector<Unit*>::iterator iter = mpUnits.begin(); iter != mpUnits.end(); ++iter)
+	{
+		Unit* pUnit = *iter;
+		
+		pUnit->setLocation(Vector2D(pUnit->getLocationX() + pUnit->getVelocity().getX(), pUnit->getLocationY() + pUnit->getVelocity().getY()));
+	}
+}
+
+void UnitManager::saveUnitData()
+{
+	ofstream fout;
+	fout.open("orbPosData.txt");
+
+	for (vector<Unit*>::iterator iter = mpUnits.begin(); iter != mpUnits.end(); ++iter)
+	{
+		Unit* pUnit = *iter;
+
+		fout << pUnit->getLocationX() << " " << pUnit->getLocationY() << " " << pUnit->getVelocity().getX() << " " << pUnit->getVelocity().getY() << " " << pUnit->getCurrentAnimation() << endl;
+	}
+
+	fout.close();
+}
+
+void UnitManager::setShouldUpdate()
+{
+	for (vector<Unit*>::iterator iter = mpUnits.begin(); iter != mpUnits.end(); ++iter)
+	{
+		Unit* pUnit = *iter;
+		pUnit->setShouldUpdate();
+	}
+}
+
+UnitManager::UnitManager()
+{
+
+}
+
+UnitManager::~UnitManager()
+{
+}
+
+void UnitManager::updateAll(double dt)
+{
+	for (vector<Unit*>::iterator iter = mpUnits.begin(); iter != mpUnits.end(); ++iter)
+	{
+		Unit* pUnit = *iter;
+		pUnit->Update(dt);
+	}
+}

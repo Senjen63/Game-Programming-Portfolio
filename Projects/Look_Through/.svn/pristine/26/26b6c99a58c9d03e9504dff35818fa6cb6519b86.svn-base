@@ -1,0 +1,48 @@
+#include "GraphicsBuffer.h"
+
+using namespace std;
+
+ALLEGRO_BITMAP* GraphicsBuffer::getBitMap()
+{
+	return mBitMap;
+}
+
+int GraphicsBuffer::getHeight()
+{
+	return al_get_bitmap_height(mBitMap);
+}
+
+int GraphicsBuffer::getWidth()
+{
+	return al_get_bitmap_width(mBitMap);
+}
+
+GraphicsBuffer::GraphicsBuffer(int width, int height)
+{
+	mBitMap = al_create_bitmap(width, height);
+	assert(mBitMap);
+
+	mOwnsBitMap = true;
+}
+
+GraphicsBuffer::GraphicsBuffer(const string& assetPath)
+{
+	mBitMap = al_load_bitmap(assetPath.c_str());
+	assert(mBitMap);
+
+	mOwnsBitMap = true;
+}
+
+GraphicsBuffer::GraphicsBuffer(ALLEGRO_BITMAP* bitMap)
+{
+	mBitMap = bitMap;
+	mOwnsBitMap = false;
+}
+
+GraphicsBuffer::~GraphicsBuffer()
+{
+	if (mOwnsBitMap)
+	{
+		al_destroy_bitmap(mBitMap);
+	}
+}

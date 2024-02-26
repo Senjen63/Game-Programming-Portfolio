@@ -1,0 +1,194 @@
+/*
+Author: David Silverman
+Class: GPR-250-01
+Assignment: Assignment 2
+Certification of Authenticity:
+I certify that this assignment is entirely my own work.
+ */
+
+
+#pragma once
+#include "animation.h"
+
+using namespace std;
+
+ /* Pre:  Nothing
+ *  Post:  An animation
+ *  Purpose:  Create an animation
+ *********************************************************/
+Animation::Animation()
+{
+	this->mTiming = SIXTY_FRAMES;
+	this->mTimeLeft = mTiming;
+}
+
+/* Pre:  A float
+*  Post:  An animation
+*  Purpose:  Create an animation
+*********************************************************/
+Animation::Animation(float time)
+{
+	this->mTiming = time;
+	this->mTimeLeft = mTiming;
+}
+
+/* Pre:  Parameters for an animation
+*  Post:  An animation
+*  Purpose:  Create an animation
+*********************************************************/
+Animation::Animation(GraphicsBuffer* buffer, int rows, int columns, float bufferWidth, float bufferHeight, float time)
+{
+	float mSprWidth = bufferWidth / columns;
+	float mSprHeight = bufferHeight / rows;
+
+	for (int i = 0; i < rows; i++)
+	{
+		for (int j = 0; j < columns; j++)
+		{
+			Vector2D mPos = Vector2D(j * mSprWidth, i * mSprHeight);
+			mFrames.push_back(Sprite(mPos, mSprHeight, mSprWidth, buffer));
+			mTotalSprites++;
+			mLastSprite = mTotalSprites - 1;
+		}
+	}
+
+	mTiming = time;
+	mTimeLeft = mTiming;
+}
+
+/* Pre:  An animation
+*  Post:  Nothing
+*  Purpose:  Destroy the animation
+*********************************************************/
+Animation::~Animation()
+{
+	mFrames.clear();
+}
+
+/* Pre:  A sprite
+*  Post:  Nothing
+*  Purpose:  Add sprites to an animation
+*********************************************************/
+void Animation::addSprite(Sprite* spri)
+{
+	mFrames.push_back(*spri);
+}
+
+/* Pre:  Parameters for a sprite
+*  Post:  Nothing
+*  Purpose:  Add sprites to an animation
+*********************************************************/
+void Animation::addSprite(GraphicsBuffer* buffer, int rows, int columns, float bufferWidth, float bufferHeight)
+{
+	mSprWidth = bufferWidth / columns;
+	mSprHeight = bufferHeight / rows;
+
+	for (int i = 0; i < rows; i++)
+	{
+		for (int j = 0; j < columns; j++)
+		{
+			Vector2D mPos = Vector2D(j * mSprWidth, i * mSprHeight);
+			mFrames.push_back(Sprite(mPos, mSprHeight, mSprWidth, buffer));
+			mTotalSprites++;
+			mLastSprite = mTotalSprites - 1;
+		}
+	}
+}
+
+/* Pre:  A double
+*  Post:  Nothing
+*  Purpose:  Updates an animation according to the animation rate
+*********************************************************/
+void Animation::update(double dt)
+{
+	mTimeLeft -= dt;
+
+	if (mTimeLeft <= 0)
+	{
+		if (mIsEndSprite)
+		{
+			mCurrentSprite = 0;
+			mIsEndSprite = false;
+		}
+		else
+		{
+			mCurrentSprite++;
+			if (mCurrentSprite == mLastSprite)
+				mIsEndSprite = true;
+		}
+
+		mTimeLeft = mTiming;
+	}
+}
+
+/* Pre:  Nothing
+*  Post:  A sprite
+*  Purpose:  Get the current sprite of the animation
+*********************************************************/
+Sprite Animation::getCurrentSprite()
+{
+	return mFrames[mCurrentSprite];
+}
+
+/* Pre:  A float
+*  Post:  Nothing
+*  Purpose:  Speed up the animation
+*********************************************************/
+void Animation::speedUp(float rate)
+{
+	mTiming -= rate;
+}
+
+/* Pre:  A float
+*  Post:  Nothinf
+*  Purpose:  Slow down the animation
+*********************************************************/
+void Animation::slowDown(float rate)
+{
+	mTiming += rate;
+}
+
+/* Pre:  A sprite
+*  Post:  A sprite
+*  Purpose:  Sets the sprite to another sprite
+*********************************************************/
+Animation Animation::operator = (Animation const& ani)
+{
+	mFrames = ani.mFrames;
+	mTiming = ani.mTiming;
+	mCurrentSprite = ani.mCurrentSprite;
+	mLastSprite = ani.mLastSprite;
+	mTotalSprites = ani.mTotalSprites;
+	mIsEndSprite = ani.mIsEndSprite;
+	mSprWidth = ani.mSprWidth;
+	mSprHeight = ani.mSprHeight;
+
+	return *this;
+}
+
+/* Pre:  Nothing
+*  Post:  A float
+*  Purpose:  Get the animation speed
+*********************************************************/
+float Animation::getAnimationSpeed()
+{
+	return mTiming;
+}
+
+/* Pre:  Nothing
+*  Post:  A float
+*  Purpose:  Get the animation width
+*********************************************************/
+float Animation::getWidth()
+{
+	return mSprWidth;
+}
+
+/* Pre:  Nothing
+*  Post:  A float
+*  Purpose:  Get the animation height
+*********************************************************/
+float Animation::getHeight()
+{
+	return mSprHeight;
+}

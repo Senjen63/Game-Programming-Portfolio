@@ -1,0 +1,52 @@
+#include "InputSystem.h"
+
+void InputSystem::cleanUp()
+{
+	al_uninstall_keyboard();
+	al_uninstall_mouse();
+}
+
+bool InputSystem::getKeyState(int mKeyCode)
+{
+	al_get_keyboard_state(&mKeyState);
+	return al_key_down(&mKeyState, mKeyCode);
+}
+
+Vector2D InputSystem::getMousePos()
+{
+	Vector2D pos;
+
+	pos.setX(mMouseState.x);
+	pos.setY(mMouseState.y);
+
+	return pos;
+}
+
+bool InputSystem::getMouseStateLeft()
+{
+	al_get_mouse_state(&mMouseState);
+	return al_mouse_button_down(&mMouseState, 1);
+}
+
+bool InputSystem::getMouseStateRight()
+{
+	al_get_mouse_state(&mMouseState);
+	return al_mouse_button_down(&mMouseState, 2);
+}
+
+void InputSystem::Init()
+{
+	al_init();
+	al_install_keyboard();
+	al_install_mouse();
+}
+
+InputSystem::InputSystem()
+{
+	Init();
+}
+
+InputSystem::~InputSystem()
+{
+	cleanUp();
+}

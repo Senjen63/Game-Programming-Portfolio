@@ -1,0 +1,21 @@
+#pragma once
+
+#include <vector>
+
+#include "Level.h"
+
+class LevelManager : public Trackable
+{
+public:
+	LevelManager();
+	~LevelManager();
+	
+	void addLevel(Level theLevel);
+	Level getLevel(int levelNumber);
+	int getTotalLevels();
+	void resetLevel(int levelNumber);
+	void cleanUp();
+
+private:
+	vector<Level> mLevelList;
+};

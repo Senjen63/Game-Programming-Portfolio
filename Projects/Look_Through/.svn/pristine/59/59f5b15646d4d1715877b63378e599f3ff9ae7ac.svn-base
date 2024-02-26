@@ -1,0 +1,104 @@
+
+#include "GraphicsBufferManager.h"
+#include "GraphicsBuffer.h"
+#include "GraphicsSystem.h"
+
+GraphicsBufferManager::GraphicsBufferManager()
+{
+	
+}
+
+GraphicsBufferManager::~GraphicsBufferManager()
+{
+	cleanup();
+}
+
+void GraphicsBufferManager::cleanup()
+{
+	//go through all entries in map and delete
+	for (auto iter : mMap)
+	{
+		GraphicsBuffer* pBuffer = iter.second;
+		delete pBuffer;
+	}
+
+	mMap.clear();
+}
+
+GraphicsBuffer* GraphicsBufferManager::createAndManageBuffer(const BufferName& key, string fileName)
+{
+	GraphicsBuffer* pBuffer = NULL;
+
+	//figure out if it exists already
+	auto iter = mMap.find(key);
+
+	//already in map?
+	if (iter == mMap.end())
+	{
+		//not already there - just create and add it
+		pBuffer = new GraphicsBuffer(fileName);
+		mMap[key] = pBuffer;
+	}
+
+	return pBuffer;
+}
+
+GraphicsBuffer* GraphicsBufferManager::createAndManageBuffer(const BufferName& key, Color color, int width, int height)
+{
+	GraphicsBuffer* pBuffer = NULL;
+
+	//figure out if it exists already
+	auto iter = mMap.find(key);
+	
+	//already in map?
+	if (iter == mMap.end())
+	{
+		//not already there - just create and add it
+		pBuffer = new GraphicsBuffer(color, height, width);
+		mMap[key] = pBuffer;
+	}
+
+	return pBuffer;
+}
+
+void GraphicsBufferManager::deleteBuffer(const BufferName& key)
+{
+	//figure out if it exists already
+	auto iter = mMap.find(key);
+
+	if (iter != mMap.end())//found
+	{
+		delete iter->second;
+		mMap.erase(iter);
+	}
+
+}
+
+void GraphicsBufferManager::deleteBuffer(GraphicsBuffer* pBuffer)
+{
+	//go through all entries in map searching for pWidget
+	for (auto iter : mMap)
+	{
+		if (pBuffer == iter.second)
+		{
+			delete pBuffer;
+			mMap.erase(iter.first);
+			return;
+		}
+	}
+
+}
+
+GraphicsBuffer* GraphicsBufferManager::getBuffer(const BufferName& key)
+{
+	auto iter = mMap.find(key);
+
+	if (iter != mMap.end())
+	{
+		return iter->second;
+	}
+	else
+	{
+		return NULL;
+	}
+}

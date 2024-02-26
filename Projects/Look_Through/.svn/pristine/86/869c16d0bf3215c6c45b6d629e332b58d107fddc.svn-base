@@ -1,0 +1,28 @@
+#pragma once
+
+#include "Trackable.h"
+#include "Color.h"
+#include <string>
+#include <allegro5/allegro.h>
+
+class GraphicsBuffer : public Trackable
+{
+friend class GraphicsSystem;
+
+	const std::string ASSET_PATH = "..\\..\\common\\assets\\";
+
+private:
+
+	ALLEGRO_BITMAP* mpBitmap;
+	bool mDoesOwnBitmap;
+
+public:
+
+	GraphicsBuffer(int newWidth, int newHeight);
+	GraphicsBuffer(const std::string filename);
+	GraphicsBuffer(ALLEGRO_BITMAP* pBitmap);
+	~GraphicsBuffer();
+
+	int getBitmapWidth() { return al_get_bitmap_width(mpBitmap); }
+	int getBitmapHeight() { return al_get_bitmap_height(mpBitmap); }
+};

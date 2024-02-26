@@ -1,0 +1,8 @@
+#include "FoodEvent.h"
+
+FoodEvent::FoodEvent(const int& food) : GameEvent(FOOD_EVENT)
+{
+	mFood = food;
+}
+
+FoodEvent::~FoodEvent() {}

@@ -1,0 +1,48 @@
+﻿#include "include/PongTestSystem.hpp"
+
+constexpr float PI = 3.141592675f;
+
+void PongTestSystem::createQueries()
+{
+    auto query = ( new EntityQuery )->withAll< PongComponent, Translation >()->withNone< UIElement >();
+    mQueries.emplace_back( query );
+}
+
+void PongTestSystem::onCreate()
+{
+}
+
+void PongTestSystem::onStart()
+{
+}
+
+void PongTestSystem::onUpdate()
+{
+    const auto pEntityManager = mpEntityManager.lock();
+    const auto pCamera = mpCamera.lock();
+    const auto pTime = mpTime.lock();
+    const auto pInput = mpInputTranslator.lock();
+
+    for ( const auto & ent : mQueries[ 0 ]->entities )
+    {
+        const std::shared_ptr< Translation > translation = pEntityManager->getComponentFromEntity< Translation >( ent );
+        const std::shared_ptr< PongComponent > pongComp = pEntityManager->getComponentFromEntity< PongComponent >( ent );
+        translation->x += cos( pongComp->angle ) * pongComp->speed * pTime->getDeltaTime();
+        translation->y += sin( pongComp->angle ) * pongComp->speed * pTime->getDeltaTime();
+
+        // Right wall, Left wall, Top wall, Bottom wall
+        if ( translation->x > pCamera->getSize().width / 2.0f + pCamera->getPosition().x
+            || translation->x < pCamera->getPosition().x - pCamera->getSize().width / 2.0f )
+        {
+            pongComp->angle = PI - pongComp->angle;
+        } else if ( translation->y > pCamera->getSize().height / 2.0f + pCamera->getPosition().y
+            || translation->y < pCamera->getPosition().y - pCamera->getSize().height / 2.0f )
+        {
+            pongComp->angle = -pongComp->angle;
+        }
+    }
+}
+
+void PongTestSystem::onStop()
+{
+}

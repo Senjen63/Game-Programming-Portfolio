@@ -1,0 +1,61 @@
+#pragma once
+#include "Event.h"
+#include "InputEvents.h"
+
+class Unit;
+
+enum class Direction;
+
+enum SnakeEventTypes
+{
+	CHANGE_DIR_EVENT = NUM_INPUT_EVENTS, COLLISION_EVENT, CHANGE_SPEED_EVENT, NUM_SNAKE_EVENTS
+};
+
+class ChangeDirectionEvent : public Event
+{
+public:
+	ChangeDirectionEvent( SnakeEventTypes type, Direction dir );
+	~ChangeDirectionEvent() {};
+	
+	//unsure why needs to be const
+	Direction getDir() const { return mDir; };
+
+private:
+	Direction mDir;
+};
+
+class CollisionEvent : public Event
+{
+public:
+	CollisionEvent( SnakeEventTypes type, Unit* collider );
+	~CollisionEvent() {};
+
+	Unit* getCollider() const { return mpCollider; };
+
+private:
+	Unit* mpCollider = nullptr;
+};
+
+class ChangeSpeedEvent : public Event
+{
+public:
+	ChangeSpeedEvent( SnakeEventTypes type, int speed );
+	~ChangeSpeedEvent() {};
+
+	int getChange() const { return mChange; };
+
+private:
+	int mChange;
+};
+
+class AddPointsEvent : public Event
+{
+public:
+	AddPointsEvent( SnakeEventTypes type, int points );
+	~AddPointsEvent() {};
+
+	int getPoints() const { return mPoints; };
+
+private:
+	int mPoints;
+};

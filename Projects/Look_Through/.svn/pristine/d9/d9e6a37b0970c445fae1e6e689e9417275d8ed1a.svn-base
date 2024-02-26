@@ -1,0 +1,61 @@
+#include "SFX.h"
+
+SFX::SFX()
+{
+	//init sound
+	//SDL_Init(SDL_INIT_AUDIO);
+
+	int audioRate = 22050;
+	Uint16 audioFormat = AUDIO_S16SYS;
+	int audioChannel = 2;
+	int audioBuffer = 4096;
+
+	if (Mix_OpenAudio(audioRate, audioFormat, audioChannel, audioBuffer) != 0)
+	{
+		cout << "didnt work to init audio" << endl;
+		exit(-1);
+	}
+}
+
+SFX::~SFX()
+{
+	//SDL_Quit();
+}
+
+void SFX::addSoundEffect(const char* path)
+{
+	Mix_Chunk* tempChunk = Mix_LoadWAV(path);
+
+	if (tempChunk != nullptr)
+	{
+		mSoundEffectBank.push_back(tempChunk);
+		cout << (mSoundEffectBank.size() - 1) << ". Sound loaded, path: " << path << endl;
+	}
+	else
+	{
+		cout << "Couldnt Load Sound it was not initialized" << endl;
+	}
+}
+
+void SFX::initializeSFX(const char* eat, const char* babb, const char* friendSound, const char* tobb, const char* treeThunk)
+{
+	addSoundEffect(eat);
+	addSoundEffect(babb);
+	addSoundEffect(friendSound);
+	addSoundEffect(tobb);
+	addSoundEffect(treeThunk);
+}
+
+void SFX::playSoundEffect(const int choice) const
+{
+	if (choice > (mSoundEffectBank.size() - 1))
+	{
+		// cout << "Sound out of range" << endl << endl;
+	}
+	else
+	{
+		Mix_PlayChannel(-1, mSoundEffectBank[choice], 0);
+
+		// cout << "Played Sound: " << choice << endl;
+	}
+}

@@ -1,0 +1,23 @@
+#pragma once
+
+#include <Trackable.h>
+#include <vector>
+#include "Sprite.h"
+
+class UI : public Trackable
+{
+public:
+	UI(Texture* hearts);
+	~UI();
+
+	void draw();
+
+	//variables for ui
+	const float UI_OFFSET = 24;
+	const float UI_SPACING = 48;
+	const int MAX_NUM_HEARTS = 8;
+private:
+	Texture* mpHeartTexture;
+
+	std::vector<Sprite*> mpHearts;
+};

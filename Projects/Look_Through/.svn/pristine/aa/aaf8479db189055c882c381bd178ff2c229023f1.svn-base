@@ -1,0 +1,18 @@
+#include "UIEvent.h"
+
+UIEvent::UIEvent(int eventType) : GameEvent((GameEventType)UI_EVENT)
+{
+    mEventType = eventType;
+}
+
+
+UIEvent::~UIEvent()
+{
+
+}
+
+int UIEvent::GetEventType() const
+{
+    return static_cast<int>(mEventType);
+}
+

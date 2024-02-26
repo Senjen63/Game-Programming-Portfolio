@@ -1,0 +1,79 @@
+#include "UnitManager.h"
+
+UnitManager::UnitManager()
+{
+
+}
+
+UnitManager::~UnitManager()
+{
+
+}
+
+void UnitManager::setAnimation()
+{
+	mUnits[mUnits.size() - 1].setAnimation();
+}
+
+void UnitManager::addUnit(Unit unit)
+{
+	mUnits.push_back(unit);
+}
+
+void UnitManager::removeUnit(Vector2D location)
+{
+	for (unsigned int i = 0; i < mUnits.size(); i++)
+	{
+		float xDiff = abs(mUnits[i].getLocationX() - location.getX());
+		float yDiff = abs(mUnits[i].getLocationY() - location.getY());
+
+		float xArea = mUnits[i].currentAnimation().getCurrentSprite().getHeight() / 2;
+		float yArea = mUnits[i].currentAnimation().getCurrentSprite().getWidth() / 2;
+
+		if (xDiff <= xArea && yDiff <= yArea)
+		{
+			mUnits.erase(mUnits.begin() + i);
+		}
+	}
+}
+
+Unit &UnitManager::getRecentUnit()
+{
+	return mUnits[mUnits.size() - 1];
+}
+
+Unit &UnitManager::getUnit(int location)
+{
+	return mUnits.at(location);
+}
+
+int UnitManager::getLength()
+{
+	return mUnits.size();
+}
+
+void UnitManager::removeAll()
+{
+	mUnits.clear();
+}
+
+void UnitManager::updateAll(double dt)
+{
+	for(unsigned int i = 0; i < mUnits.size(); i++)
+	{
+		mUnits[i].update(dt);
+	}
+}
+
+void UnitManager::drawAll(int scale)
+{
+	for (unsigned int i = 0; i < mUnits.size(); i++)
+	{
+		mUnits[i].draw(scale);
+	}
+}
+
+bool UnitManager::isEmpty()
+{
+	return mUnits.empty();
+}

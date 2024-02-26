@@ -1,0 +1,110 @@
+#include "GraphcisBufferManager.h"
+
+GraphicsBufferManager::GraphicsBufferManager()
+{
+    mpMissingTexture = nullptr;
+}
+
+
+GraphicsBufferManager::~GraphicsBufferManager()
+{
+    cleanup();
+    delete mpMissingTexture;
+}
+
+
+void GraphicsBufferManager::init()
+{
+    mpMissingTexture = new GraphicsBuffer(Color(255, 0, 255), DEFAULT_SPRITE_WIDTH, DEFAULT_SPRITE_HEIGHT);
+}
+
+
+void GraphicsBufferManager::cleanup()
+{
+    clearAll();
+}
+
+
+void GraphicsBufferManager::addBuffer(GBKey key, GraphicsBuffer* newGB)
+{
+    auto iter = mGraphicsBuffers.find(key);
+
+    if (iter == mGraphicsBuffers.end() && !newGB->isBitmapNull()) //create new buffer if it doesn't exist
+    {
+        mGraphicsBuffers[key] = newGB;
+    }
+    else if (newGB->isBitmapNull()) //use missing texture if passed bitmap is null
+    {
+        delete newGB;
+        mGraphicsBuffers[key] = mpMissingTexture;
+    }
+    else //replace existing buffer
+    {
+        *mGraphicsBuffers[key] = newGB; //copied so memory address of stored GraphicsBuffer stays the same
+
+        delete newGB;
+        //iter->second = newGB;
+    }
+}
+
+
+void GraphicsBufferManager::deleteBuffer(GraphicsBuffer* newGB)
+{
+    for (auto item : mGraphicsBuffers)
+    {
+        if (item.second == newGB)
+        {
+            if (item.second != nullptr)
+            {
+                delete item.second;
+                item.second = nullptr;
+            }
+            mGraphicsBuffers.erase(item.first);
+            break;
+        }
+    }
+}
+
+
+void GraphicsBufferManager::deleteBuffer(GBKey key)
+{
+    auto target =  mGraphicsBuffers.find(key);
+
+    if (target != mGraphicsBuffers.end())
+    {
+        if (target->second != nullptr)
+        {
+            delete target->second;
+            target->second = nullptr;
+        }
+        mGraphicsBuffers.erase(target);
+    }
+}
+
+
+GraphicsBuffer* GraphicsBufferManager::getBuffer(GBKey key)
+{
+    if (mGraphicsBuffers.find(key) != mGraphicsBuffers.end())
+    {
+        return mGraphicsBuffers[key];
+    }
+    else
+    {
+        return NULL;
+    }
+    
+}
+
+
+void GraphicsBufferManager::clearAll()
+{
+    for (auto item : mGraphicsBuffers)
+    {
+        if (item.second != mpMissingTexture && item.second != nullptr)
+        {
+            delete item.second;
+        }
+    }
+
+    mGraphicsBuffers.clear();
+}

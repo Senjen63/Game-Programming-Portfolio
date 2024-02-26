@@ -1,0 +1,42 @@
+#pragma once
+
+#include <SFML/Graphics.hpp>
+
+#include "Color.h"
+
+#include <Trackable.h>
+#include <string>
+#include <Vector2D.h>
+
+using namespace std;
+
+class GraphicsBuffer : public Trackable
+{
+    friend class GraphicsSystem;
+
+    private:
+        bool mOwnsBuffer = false; //will mpBuffer get deleted in destructor
+
+        sf::Texture* mpBuffer;
+
+        Vector2D mSections = Vector2D(1, 1); //number of sections (1, 1) if normal image, more if sprite sheet
+
+        GraphicsBuffer( sf::Texture* pTarget );
+        
+    public:
+        GraphicsBuffer(unsigned int width, unsigned int height);
+        GraphicsBuffer( string filePath, Vector2D sections);
+        GraphicsBuffer( GraphicsBuffer* pTarget );
+        GraphicsBuffer( Color color, unsigned int width, unsigned int height );
+        ~GraphicsBuffer();
+
+        int getWidth();
+        int getHeight();
+        Vector2D getSections();
+
+        void setSections(Vector2D sections);
+
+        bool isBitmapNull();
+
+        void clearToColor(Color color);
+};

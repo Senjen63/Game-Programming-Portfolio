@@ -1,0 +1,57 @@
+#pragma once
+
+#include <string>
+#include <allegro5/allegro.h>
+
+class InputSystem
+{
+public:
+	// Struct to hold keys pressed per frame
+	struct InputSystem::Keys
+	{
+		bool mKey_F = false;
+		bool mKey_S = false;
+		bool mKey_Space = false;
+		bool mKey_Enter = false;
+		bool mKey_Escape = false;
+
+		void reset()
+		{
+			mKey_F = false;
+			mKey_S = false;
+			mKey_Space = false;
+			mKey_Enter = false;
+			mKey_Escape = false;
+		}
+	};
+
+	// Struct to hold mouse info per frame
+	struct InputSystem::Mouse
+	{
+		bool mLeftMouse_Pressed = false;
+		bool mRightMouse_Pressed = false;
+		std::pair<float, float> mMousePosition = std::pair<float, float>(0, 0);
+
+		void reset()
+		{
+			mLeftMouse_Pressed = false;
+			mRightMouse_Pressed = false;
+		}
+	};
+
+	InputSystem() {};
+	~InputSystem() { clean(); }
+
+	void init();
+	void clean();
+
+	Keys* getKeyState();
+	Mouse* getMouseState();
+
+private:
+	struct Keys;
+	struct Mouse;
+
+	Keys* mpSysKeys = nullptr;
+	Mouse* mpSysMouse = nullptr;
+};

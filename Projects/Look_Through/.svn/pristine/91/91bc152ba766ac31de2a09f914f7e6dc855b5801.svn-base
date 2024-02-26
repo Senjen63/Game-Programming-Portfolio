@@ -1,0 +1,27 @@
+#include "Unit.h"
+
+Unit::Unit(std::pair<float, float>location, Animation* currentAnimation)
+{
+	mLocation = location;
+	mpCurrentAnimation = currentAnimation;
+}
+
+Unit::~Unit()
+{
+
+}
+
+void Unit::update(float deltaTime)
+{
+	mpCurrentAnimation->update(deltaTime);
+}
+
+void Unit::draw(GraphicsSystem* currentGraphicsSystem)
+{
+	currentGraphicsSystem->draw(mLocation.first, mLocation.second, mpCurrentAnimation->getCurrentSprite(), 1, 1);
+}
+
+void Unit::setAnimation(Animation* newAnimation)
+{
+	mpCurrentAnimation = newAnimation;
+}

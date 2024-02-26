@@ -1,0 +1,43 @@
+/*
+* Author: Quincy Gomes-Cedeno
+* Class: GPR-250-02
+* Assignment: Assignment 3
+* Certification of Authenticity:
+* I certify that this assignment is entirely my own work 
+* EXCEPT:
+* for work copied from Ananda Shumock-Bailey from Assignments 2
+*/
+
+#include <iostream>
+#include <cassert>
+#include <string>
+
+#include <PerformanceTracker.h>
+#include <MemoryTracker.h>
+#include <Vector2D.h>
+#include <Timer.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+
+#include "GraphicsSystem.h"
+#include "Game.h"
+
+using namespace std;
+
+int main()
+{
+	//gpGame = new Game;
+	Game::createInstance();
+	Game::getInstance()->init();
+	Game::getInstance()->doLoop();
+	
+	Game::getInstance()->destroyInstance(); //issue comes when in unit destructor
+	
+	//delete gpGame;
+
+	MemoryTracker::getInstance()->reportAllocations(cout);
+
+	system("pause");
+	return 0;
+}

@@ -1,0 +1,90 @@
+#include "Entity.h"
+#include "InputSystem.h"
+
+void Entity::addCollider(CollisionType collisionType)
+{
+    Bounds bounds(mPosition, getAnimation().getMaxSize() * mScale);
+    addCollider(bounds, collisionType);
+}
+
+void Entity::addCollider(Bounds bounds, CollisionType collisionType)
+{
+    removeCollider();
+
+    mpCollider = new Collider(bounds, collisionType);
+}
+
+void Entity::removeCollider()
+{
+    if (mpCollider)
+    {
+        delete mpCollider;
+    }
+}
+
+bool Entity::hasCollider() const
+{
+    return mpCollider;
+}
+
+Entity::Entity(const Entity& other) : 
+    mPosition(other.mPosition), mScale(other.mScale), mAnimations(other.mAnimations), mCurrentIndex(other.mCurrentIndex)
+{
+    mpCollider = new Collider(*other.mpCollider, this);
+}
+
+Entity::~Entity()
+{
+    removeCollider();
+}
+
+Entity::Entity(const Vector2D& position, const Animation& mainAnimation, float scale) :
+    mPosition(position),
+    mScale(scale),
+    mpCollider(nullptr)
+{
+    mAnimations.push_back(mainAnimation);
+}
+
+Entity::Entity(const Vector2D& position, const std::vector<Animation>& animations, int startingIndex, float scale) :
+    mPosition(position),
+    mAnimations(animations),
+    mCurrentIndex(startingIndex),
+    mScale(scale),
+    mpCollider(nullptr)
+{ }
+
+void Entity::update(double deltaTime)
+{
+    mAnimations[mCurrentIndex].update(deltaTime);
+
+    if (hasCollider())
+        mpCollider->updatePos(mPosition);
+}
+
+void Entity::draw(const GraphicsSystem& sys, float scale) const
+{
+    const Sprite& currentSprite = mAnimations[mCurrentIndex].getCurrentSprite();
+    Vector2D offsetToCenter = currentSprite.getOffsetToCenter() * (scale * mScale);
+
+    sys.draw(mPosition - offsetToCenter, currentSprite, scale * mScale);
+}
+
+bool Entity::overlapsPosition(const Vector2D& position) const
+{
+    const Sprite& sprite = mAnimations[mCurrentIndex].getCurrentSprite();
+    int halfWidth = sprite.getWidth() * 0.5f;
+    int halfHeight = sprite.getHeight() * 0.5f;
+
+    return
+        position.getX() > mPosition.getX() - halfWidth &&   // left boundry 
+        position.getX() < mPosition.getX() + halfWidth &&   // right boundry 
+        position.getY() > mPosition.getY() - halfHeight &&  // top boundry 
+        position.getY() < mPosition.getY() + halfHeight;    // bottom boundry 
+}
+
+void Entity::setAnimationIndex(int index)
+{
+    mAnimations[index].setTimingInfo(mAnimations[mCurrentIndex]);
+    mCurrentIndex = index;
+}

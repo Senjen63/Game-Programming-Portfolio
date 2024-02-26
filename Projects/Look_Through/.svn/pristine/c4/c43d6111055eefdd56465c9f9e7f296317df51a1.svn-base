@@ -1,0 +1,23 @@
+#pragma once
+
+#include "Component.h"
+
+class SpeedPowerUpComponent : public Component
+{
+	float mDelayAdjustment; // In milliseconds
+
+public:
+	static const std::string SPEED_POWER_UP_COMPONENT_NAME;
+
+	SpeedPowerUpComponent(float delayAdjustmentInMilliseconds) { mDelayAdjustment = delayAdjustmentInMilliseconds; };
+
+	float getDelayAdjustment() { return mDelayAdjustment; }
+	void setDelayAdjustment(float delayAdjustmentInMilliseconds) { mDelayAdjustment = delayAdjustmentInMilliseconds; }
+
+	void update(float dt) override {}
+	void draw(GraphicsSystem* gSys) {}
+
+	std::string getIdentifier() override { return SPEED_POWER_UP_COMPONENT_NAME; }
+
+	void handleEvent(const Event& theEvent) override {};
+};

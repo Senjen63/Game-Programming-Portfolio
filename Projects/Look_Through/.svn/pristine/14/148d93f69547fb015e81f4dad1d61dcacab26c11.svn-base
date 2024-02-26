@@ -1,0 +1,32 @@
+#pragma once
+
+
+using namespace std;
+
+class Color
+{
+public:
+
+	Color();
+	Color(int red, int green, int blue, int alpha);
+	~Color() {};
+
+	int getRed() { return mRed; };
+	int getGreen() { return mGreen; };
+	int getBlue() { return mBlue; };
+	int getAlpha() { return mAlpha; };
+
+	void setAlpha(int alpha) { mAlpha = alpha; };
+
+private:
+
+	int mRed;
+	int mGreen;
+	int mBlue;
+	int mAlpha;
+	
+	const int MIN_VALUE = 0;
+	const int MAX_VALUE = 255;
+
+};
+

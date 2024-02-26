@@ -1,0 +1,66 @@
+//Evan Norzow, Nicolas Delbue, and Brandon Perry
+#include "SaveData.h"
+
+SaveData::SaveData()
+{
+
+}
+SaveData::~SaveData()
+{
+
+}
+
+void SaveData::SaveTheData(int Player1Score, int Player2Score, int diff)
+{
+	mPlayerOneScore = Player1Score;
+	mPlayerTwoScore = Player2Score;
+	mDiff = diff;
+
+	ofstream fout;
+	fout.open(fileName);
+
+	fout << mPlayerOneScore << endl;
+	fout << mPlayerTwoScore << endl;
+	fout << mDiff << endl;
+
+	fout.close();
+}
+void SaveData::LoadData()
+{
+	string line;
+	ifstream fin;
+
+	fin.open(fileName);
+
+	if (fin.is_open())
+	{
+		getline(fin, line);
+		mPlayerOneScore = stoi(line);
+		getline(fin, line);
+		mPlayerTwoScore = stoi(line);
+		getline(fin, line);
+		mDiff = stoi(line);
+		fin.close();
+	}
+}
+int SaveData::GetPlayerOneScore()
+{
+	return mPlayerOneScore;
+}
+int SaveData::GetPlayerTwoScore()
+{
+	return mPlayerTwoScore;
+}
+void SaveData::ResetData()
+{
+	mPlayerOneScore = 0;
+	mPlayerTwoScore = 0;
+	mDiff = 0;
+
+	ofstream fout;
+	fout.open(fileName);
+	fout << mPlayerOneScore << endl;
+	fout << mPlayerTwoScore << endl;
+	fout << mDiff << endl;
+	fout.close();
+}

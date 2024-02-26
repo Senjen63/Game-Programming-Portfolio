@@ -1,0 +1,235 @@
+//BP
+#include "Game.h"
+#include "Unit.h"
+#include "LevelManager.h"
+
+LevelManager::LevelManager()
+{
+    mCurrentLevel = 0;
+}
+
+LevelManager::~LevelManager()
+{
+    cleaner();
+}
+
+void LevelManager::init()
+{
+    mpEventSystem = EventSystem::getInstance();
+}
+
+void LevelManager::cleaner()
+{
+    deleteLevels();
+    mpEventSystem = nullptr;
+}
+
+void LevelManager::deleteLevels()
+{
+    for (unsigned int i = 0; i < mLevelList.size(); i++)
+    {
+
+        delete mLevelList[i];
+
+    }
+    mLevelList.clear();
+}
+
+GameLevel* LevelManager::getThisLevel()
+{
+    if (mLevelList.size() > 0)
+    {
+
+        return mLevelList[mCurrentLevel];
+
+    }
+    return nullptr;
+}
+
+int LevelManager::getThisLevelIndex()
+{
+    if (mLevelList.size() > 0)
+    {
+
+        return mCurrentLevel;
+
+    }
+    return -1;
+}
+
+int LevelManager::getPreviousLevelIndex()
+{
+    if (mLevelList.size() > 0)
+    {
+
+        return mLevelList.size() - 1;
+
+    }
+    return -1;
+}
+
+void LevelManager::printInfo(unsigned int index)
+{
+    cout << endl << "Level " << index <<
+        " Info" << endl << endl;
+    mLevelList[index]->printCurrentLevelStats();
+    cout << endl;
+}
+
+void LevelManager::setLevelIndex(unsigned int levelIndex)
+{
+    mCurrentLevel = levelIndex;
+    if (mCurrentLevel > mLevelList.size())
+    {
+
+        mCurrentLevel = 0;
+
+    }
+}
+
+GameLevel* LevelManager::getLevelByIndex(unsigned int index)
+{
+    if (mLevelList.size() > 0 && mLevelList.size() < index)
+    {
+
+        return mLevelList[index];
+
+    }
+    return nullptr;
+}
+
+GameLevel* LevelManager::loadNewLevel(string path, GraphicsBuffer* wallBuffer, Vector2D wallSections)
+{
+    ifstream fileIn;
+    if (!fileIn.fail() && !fileIn.eof())
+    {
+
+        GameLevel* newGameLevel = new GameLevel();
+        fileIn.open(path);
+        if (!fileIn.fail() && !fileIn.eof())
+        {
+
+            string tagsIn, tempsIn;
+            while (!fileIn.eof())
+            {
+
+                fileIn >> tagsIn;
+                if (tagsIn == START_BODY_PARTS)
+                {
+
+                    fileIn >> tempsIn;
+                    newGameLevel->setBeginBodyParts(stoi(tempsIn));
+
+                }
+
+                if (tagsIn == SPEED)
+                {
+
+                    fileIn >> tempsIn;
+                    newGameLevel->setPlayerSnakeSpeed(stof(tempsIn));
+
+                }
+
+                if (tagsIn == FOOD_SCORE)
+                {
+
+                    fileIn >> tempsIn;
+                    newGameLevel->setFoodScoreValue(stoi(tempsIn));
+
+                }
+
+                if (tagsIn == END_BODY_PARTS)
+                {
+
+                    fileIn >> tempsIn;
+                    newGameLevel->setEndBodyParts(stoi(tempsIn));
+
+                }
+
+                if (tagsIn == POWER_UP_PROBABILITY)
+                {
+
+                    fileIn >> tempsIn;
+                    newGameLevel->setRandomItemProbability(stof(tempsIn));
+
+                }
+
+                if (tagsIn == POWER_UP)
+                {
+
+                    fileIn >> tempsIn;
+                    newGameLevel->setBeginItemProbability(stof(tempsIn));
+
+                }
+
+                if (tagsIn == SPEED_UP)
+                {
+
+                    fileIn >> tempsIn;
+                    newGameLevel->setFastItemProbability(stof(tempsIn));
+
+                }
+
+                if (tagsIn == BONUS)
+                {
+
+                    fileIn >> tempsIn;
+                    newGameLevel->setBonusItemProbability(stof(tempsIn));
+
+                }
+
+                if (tagsIn == SLOW_DOWN)
+                {
+
+                    fileIn >> tempsIn;
+                    newGameLevel->setSlowItemProbability(stof(tempsIn));
+
+                }
+                
+                if (tagsIn == WALL_PIECES)
+                {
+                    int vertsIndex = 0;
+                    getline(fileIn, tempsIn);
+                    getline(fileIn, tempsIn);
+                    while (tempsIn != "")
+                    {
+
+                        for (unsigned int index = 0; index < tempsIn.length(); index += 2)
+                        {
+
+                            if (tempsIn[index] == '1')
+                            {
+
+                                int horiIndex = index / 2;
+                                Vector2D newLocation =
+                                    Vector2D((float)(horiIndex + .5) *
+                                        wallBuffer->getWidth(),
+                                        (float)(vertsIndex + .5) *
+                                        wallBuffer->getHeight());
+                                newGameLevel->addWallLocation(newLocation);
+
+                            }
+
+                        }
+                        getline(fileIn, tempsIn);
+                        vertsIndex++;
+
+                    }
+
+                }
+
+            }
+
+        }
+
+        fileIn.close();
+        mLevelList.push_back(newGameLevel);
+        return newGameLevel;
+    }
+    else
+    {
+
+        return nullptr;
+
+    }
+}

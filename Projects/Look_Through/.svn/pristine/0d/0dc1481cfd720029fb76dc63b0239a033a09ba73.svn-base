@@ -1,0 +1,37 @@
+#pragma once
+
+#include <PerformanceTracker.h>
+#include <MemoryTracker.h>
+#include "Animation.h"
+#include "Vector2D.h"
+
+class Game;
+class GraphicsSystem;
+
+class Unit : public Trackable
+{
+public:
+	Unit();
+	Unit(Vector2D pos);
+	Unit(GraphicsBuffer* pBuffer, Vector2D pos);
+	Unit(GraphicsBuffer* pBuffer, Vector2D pos, float width, float height);
+	~Unit();
+
+	void update(float time);
+	void updateEnemy(float time, int distance);
+	void updateEnemyBullet(float time, int distance);
+	void drawEnemyBullet(GraphicsSystem* pGraphicsSystem);
+	void draw(GraphicsSystem* pGraphicsSystem, int option, int x, int y);
+	Vector2D getPosition();
+	void setPosition(Vector2D pos);
+	Sprite* getSprite();
+	void advanceEnemy();
+	bool getDirection();
+	void resetPosition();
+
+private:
+	Vector2D mStartPos;
+	Vector2D mPos;
+	Sprite* mpSprite;
+	bool mRight = false;
+};

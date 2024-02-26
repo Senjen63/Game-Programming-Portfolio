@@ -1,0 +1,74 @@
+#include "Animation.h"
+
+Animation::Animation(int fps, bool loop)
+{
+	mFps = fps;
+	mLoop = loop;
+}
+
+Animation::Animation(GraphicsBuffer* frames, int xSections, int ySections, int fps, bool loop)
+{
+	/*
+	load in frames from grid (which is specified by x and y sections) in a graphics buffer
+	*/
+	for (int i = 0; i < xSections; i++)
+	{
+		for (int j = 0; j < ySections; j++)
+		{
+			Sprite frameSprite = Sprite(frames, Vector2D((frames->getWidth() / xSections) * i,
+				(frames->getHeight() / ySections) * j),
+				Vector2D(frames->getWidth() / xSections, frames->getHeight() / ySections));
+			addSprite(frameSprite);
+		}
+	}
+
+    mCurrent = 0;
+    mFps = fps;
+    mTimePerSprite = 1000.0 / mFps;
+    mTimeLeft = mTimePerSprite;
+    mLoop = loop;
+}
+
+
+Animation::~Animation()
+{
+
+}
+
+
+void Animation::addSprite(Sprite newSprite)
+{
+	mFrames.push_back(newSprite);
+}
+
+
+Sprite Animation::update(float timeElapsed)
+{
+	mTimeLeft -= timeElapsed;
+
+	if (mTimeLeft <= 0)
+	{
+		mCurrent++;
+		mTimeLeft = mTimePerSprite;
+
+		if (mCurrent >= mFrames.size() && mLoop)
+		{
+			mCurrent = 0;
+		}
+	}
+
+	return mFrames[mCurrent];
+}
+
+
+Sprite Animation::getCurrentSprite()
+{
+	return mFrames[mCurrent];
+}
+
+
+void Animation::changeSpeed(int newFps)
+{
+	mFps = newFps;
+	mTimePerSprite = 1000.0 / newFps;
+}

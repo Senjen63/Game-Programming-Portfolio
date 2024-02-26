@@ -1,0 +1,41 @@
+#pragma once
+
+enum UnitTypes
+{
+    DEFAULT_UNIT_TYPE = 200,
+    SNAKE_HEAD_UNIT_TYPE,   //Delete
+    SNAKE_BODY_UNIT_TYPE,   //Delete
+    PLAYER_UNIT_TYPE,
+    DOOR_UNIT_TYPE,
+    FOOD_UNIT_TYPE,         //Delete
+    BONUS_POINTS_UNIT_TYPE, //Delete
+    SPEED_UP_UNIT_TYPE,     //Delete
+    SLOW_DOWN_UNIT_TYPE,    //Delete
+    WALL_UNIT_TYPE,
+    BUTTON_UNIT_TYPE, //used for all buttons
+    SPIKE_UNIT_TYPE,
+    ARROW_TRAP_UNIT_TYPE,
+    ARROWS_UNIT_TYPE,
+    COLLECTIBLE_UNIT_TYPE,
+    NUM_UNIT_TYPES
+};
+
+enum ButtonTypes
+{
+    BUTTON_DEFAULT = NUM_UNIT_TYPES,    //default
+    BUTTON_START,                       //start game
+    BUTTON_LOAD,                        //load save
+    BUTTON_OPTIONS,                     //options menu
+    BUTTON_QUIT,                        //quit game
+    BUTTON_NEXT,                        //next level
+    BUTTON_BACK,                        //back to main menu
+    BUTTON_FIRST_LANG,                  //button to select first language
+    BUTTON_SECOND_LANG,                 //button to select second language
+    BUTTON_THIRD_LANG,                  //button to select third language
+    BUTTON_EASY,                        //change to easy
+    BUTTON_MEDIUM,                      //change to medium
+    BUTTON_HARD,                        //change to hard
+    BUTTON_SOUND_ON,
+    BUTTON_SOUND_OFF,
+    NUM_BUTTON_TYPES
+};

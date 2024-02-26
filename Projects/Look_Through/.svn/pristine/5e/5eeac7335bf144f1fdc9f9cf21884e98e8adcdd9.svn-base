@@ -1,0 +1,13 @@
+[LEVELDATA]
+#snakespd
+#snakeseg
+#neededlength
+#foodpts
+#powuptime
+#speedupchance
+#speeddownchance
+#morepointschance
+[WALLS]
+tileX tileY
+tileX tileY
+[EOF]

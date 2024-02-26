@@ -1,0 +1,227 @@
+#include "Game.h"
+
+Game* Game::spGame = nullptr;
+
+Game::Game()
+{
+    mWidthHeight = Vector2D(DEFAULT_WIDTH, DEFAULT_HEIGHT);
+}
+
+
+Game::Game(Vector2D widthHeight)
+{
+    mWidthHeight = widthHeight;
+}
+
+
+Game::~Game()
+{
+    cleanup();
+}
+
+
+void Game::createGame()
+{
+    if (!spGame)
+    {
+        spGame = new Game();
+    }
+}
+
+
+void Game::createGame(Vector2D widthHeight)
+{
+    if (!spGame)
+    {
+        spGame = new Game(widthHeight);
+    }
+}
+
+
+void Game::destroyGame()
+{
+    delete spGame;
+}
+
+
+Game* Game::getGame()
+{
+    return spGame;
+}
+
+
+void Game::init()
+{
+    if (!mInitialized && spGame != nullptr)
+    {
+        mpGraphics = new GraphicsSystem(mWidthHeight.getX(), mWidthHeight.getY());
+        mpUnitManager = new UnitManager();
+        mpGBManager = new GraphicsBufferManager();
+        mInput = InputSystem();
+
+        mpGraphics->init();
+        mInput.init();
+
+        mInitialized = true;
+    }
+}
+
+
+void Game::cleanup()
+{
+    if (mInitialized && !mCleaned)
+    {
+        delete mpGBManager;
+        delete mpUnitManager;
+        delete mpGraphics;
+
+        mCleaned = true;
+    }
+}
+
+
+GraphicsSystem* Game::getGraphicsSystem()
+{
+    return mpGraphics;
+}
+
+
+void Game::input()
+{
+    Vector2D mousePos = mInput.getMousePosition();
+
+    if (mInput.getMouseState(LEFT_MOUSE))
+    {
+        Unit* newUnit = mpUnitManager->addUnit(mousePos, mFps);
+
+        if (mpGBManager->getBuffer("Smurf") != NULL)
+        {
+            newUnit->addAnimation(mpGBManager->getBuffer("Smurf"), X_SECTIONS, Y_SECTIONS);
+        }
+
+        if (mpGBManager->getBuffer("Dean") != NULL)
+        {
+            newUnit->addAnimation(mpGBManager->getBuffer("Dean"), X_SECTIONS, Y_SECTIONS);
+        }
+    }
+
+    
+
+    if (mInput.getMouseState(RIGHT_MOUSE))
+    {
+        //////////delete one at a time////////////////////
+
+        /*Unit* selectedUnit = mpUnitManager->clickedUnit(mousePos);
+
+        if (selectedUnit != nullptr)
+        {
+            mpUnitManager->deleteUnit(selectedUnit);
+        }*/
+
+
+        //////////delete all units hovered over at once////////////////////
+
+        /*vector<Unit*>* selectedUnits = mpUnitManager->clickedUnits(mousePos);
+
+        if (selectedUnits->size() > 0)
+        {
+            mpUnitManager->deleteUnits(selectedUnits);
+        }*/
+
+
+        //////////simplified deletion////////////////////
+
+        mpUnitManager->deleteUnitsAtPosition(mousePos);
+    }
+
+    if (mInput.getMouseState(RIGHT_MOUSE))
+    {
+        
+    }
+
+    if (mInput.getKeyState(ESCAPE))
+    {
+        mEndGame = true;
+    }
+
+    if (mInput.getKeyState(ENTER))
+    {
+        if (!mInput.PressedKeys.mEnterPressed && mpUnitManager->getLastUnit() != nullptr)
+        {
+            mInput.PressedKeys.mEnterPressed = true;
+
+            mpUnitManager->nextAnimationForLastUnit();
+        }
+    }
+    else
+    {
+        mInput.PressedKeys.mEnterPressed = false;
+    }
+
+    if (mInput.getKeyState(SPACE))
+    {
+        if (!mInput.PressedKeys.mSpacePressed)
+        {
+            mInput.PressedKeys.mSpacePressed = true;
+
+            mpUnitManager->switchAllPlay();
+        }
+    }
+    else
+    {
+        mInput.PressedKeys.mSpacePressed = false;
+    }
+}
+
+
+void Game::update(float elapsedTime)
+{
+    mpUnitManager->updateAll(elapsedTime * TIME_SCALE);
+}
+
+
+void Game::render()
+{
+    GraphicsBuffer* pWoods = mpGBManager->getBuffer("Woods");
+
+    if (pWoods != NULL)
+    {
+        mpGraphics->draw(pWoods, 0, 0,
+            mWidthHeight.getX() / pWoods->getWidth(), mWidthHeight.getY() / pWoods->getHeight());
+    }
+
+    mpUnitManager->drawAll();
+    mpGraphics->flip();
+}
+
+
+void Game::gameLoop()
+{
+    mEndGame = false;
+
+    PerformanceTracker* pPerformance = new PerformanceTracker;
+
+    mpGBManager->addBuffer("Woods", new GraphicsBuffer(ASSET_PATH + WOODS_FILENAME));
+    mpGBManager->addBuffer("Smurf", new GraphicsBuffer(ASSET_PATH + SMURF_FILENAME));
+    mpGBManager->addBuffer("Dean", new GraphicsBuffer(ASSET_PATH + DEAN_FILENAME));
+
+    while (!mEndGame)
+    {
+        pPerformance->clearTracker(LOOP_TRACKER_NAME);
+        pPerformance->startTracking(LOOP_TRACKER_NAME);
+
+        Timer timer;
+        timer.start();
+
+        input();
+        update(timer.getElapsedTime());
+        render();
+
+        timer.sleepUntilElapsed(mTimePerFrame);
+
+        pPerformance->stopTracking(LOOP_TRACKER_NAME);
+        cout << pPerformance->getElapsedTime(LOOP_TRACKER_NAME) << endl;
+    }
+    
+    delete pPerformance;
+}

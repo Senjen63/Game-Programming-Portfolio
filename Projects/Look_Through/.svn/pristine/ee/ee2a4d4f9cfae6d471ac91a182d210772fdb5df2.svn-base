@@ -1,0 +1,162 @@
+﻿#include "include/MovementSystem.hpp"
+
+#include <iostream>
+
+#include "SimplexNoise.h"
+#include "include/Player.hpp"
+
+void MovementSystem::createQueries()
+{
+    mQueries.clear();
+    EntityQuery * pPlayerQuery = ( new EntityQuery )->withAll< Player, RigidBody >();
+    mQueries.emplace_back( pPlayerQuery );
+}
+
+void MovementSystem::onCreate()
+{
+    const auto pInput = mpInputTranslator.lock();
+    pInput->createBinding( "Horizontal", AxisType{ true, KeyCode::D } );
+    pInput->createBinding( "Horizontal", AxisType{ false, KeyCode::A } );
+
+    pInput->createBinding( "Vertical", AxisType{ true, KeyCode::W } );
+    pInput->createBinding( "Vertical", AxisType{ false, KeyCode::S } );
+
+    const auto pEntityManager = mpEntityManager.lock();
+
+    constexpr float scale = 0.021f;
+    constexpr int totalY = 20;
+    for ( int j = -8; j <= 8; ++j )
+    {
+        const int top = static_cast< int >(SimplexNoise::noise( static_cast< float >(j) * scale ) * 10.0f) - 10;
+        for ( int i = top - totalY; i < top; ++i )
+        {
+            if ( i == top - 1 )
+            {
+                pEntityManager->createEntity( {
+                    new Translation( static_cast< float >(j), static_cast< float >(i) ),
+                    new Scale( 1, 1 ),
+                    new SpriteHolder( "grass0" ),
+                    new Collider( 0.5f ),
+                } );
+            } else if ( i < top - 10 )
+            {
+                pEntityManager->createEntity( {
+                    new Translation( static_cast< float >(j), static_cast< float >(i) ),
+                    new Scale( 1, 1 ),
+                    new SpriteHolder( "hidden0" ),
+                    new Collider( 0.5f ),
+                } );
+            } else
+            {
+                pEntityManager->createEntity( {
+                    new Translation( static_cast< float >(j), static_cast< float >(i) ),
+                    new Scale( 1, 1 ),
+                    new SpriteHolder( "stone0" ),
+                    new Collider( 0.5f ),
+                } );
+            }
+        }
+    }
+}
+
+void MovementSystem::onUpdate()
+{
+    const auto pEntityManager = mpEntityManager.lock();
+    const auto pBuffer = mpEntityCommandBuffer.lock();
+    const auto pTime = mpTime.lock();
+    const auto pInput = mpInputTranslator.lock();
+    const auto pCamera = mpCamera.lock();
+
+    for ( const auto & ent : mQueries[ 0 ]->entities )
+    {
+        const std::shared_ptr< RigidBody > rigidBody = pEntityManager->getComponentFromEntity< RigidBody >( ent );
+        const std::shared_ptr< Player > player = pEntityManager->getComponentFromEntity< Player >( ent );
+        const std::shared_ptr< Translation > translation = pEntityManager->getComponentFromEntity< Translation >( ent );
+
+        //doesnt support multiplayer yet
+        pCamera->setPosition( *translation );
+
+        constexpr int totalY = 20;
+        constexpr int chunkSize = 8;
+        constexpr float scale = 0.021f;
+
+        if ( static_cast< int >(translation->x) < mLast )
+        {
+            constexpr int direction = -chunkSize;
+            mLast = static_cast< int >(translation->x);
+            const int top = static_cast< int >(SimplexNoise::noise( static_cast< float >(mLast + direction) * scale ) * 10.0f) - 10;
+            for ( int i = top - totalY; i < top; ++i )
+            {
+                if ( i == top - 1 )
+                {
+                    pBuffer->createEntity( {
+                        new Translation( static_cast< float >(mLast + direction), static_cast< float >(i) ),
+                        new Scale( 1, 1 ),
+                        new SpriteHolder( "grass0" ),
+                        new Collider( 0.5f ),
+                    } );
+                } else if ( i < top - 10 )
+                {
+                    pBuffer->createEntity( {
+                        new Translation( static_cast< float >(mLast + direction), static_cast< float >(i) ),
+                        new Scale( 1, 1 ),
+                        new SpriteHolder( "hidden0" ),
+                        new Collider( 0.5f ),
+                    } );
+                } else
+                {
+                    pBuffer->createEntity( {
+                        new Translation( static_cast< float >(mLast + direction), static_cast< float >(i) ),
+                        new Scale( 1, 1 ),
+                        new SpriteHolder( "stone0" ),
+                        new Collider( 0.5f ),
+                    } );
+                }
+            }
+        }
+
+        if ( static_cast< int >(translation->x) > mLast )
+        {
+            //std::cout << mLast << " " << static_cast<int>(translation->x) << " " << translation->x << std::endl;
+            constexpr int direction = chunkSize;
+            mLast = static_cast< int >(translation->x);
+            const int top = static_cast< int >(SimplexNoise::noise( static_cast< float >(mLast + direction) * scale ) * 10.0f) - 10;
+            for ( int i = top - totalY; i < top; ++i )
+            {
+                if ( i == top - 1 )
+                {
+                    pBuffer->createEntity( {
+                        new Translation( static_cast< float >(mLast + direction), static_cast< float >(i) ),
+                        new Scale( 1, 1 ),
+                        new SpriteHolder( "grass0" ),
+                        new Collider( 0.5f ),
+                    } );
+                } else if ( i < top - 10 )
+                {
+                    pBuffer->createEntity( {
+                        new Translation( static_cast< float >(mLast + direction), static_cast< float >(i) ),
+                        new Scale( 1, 1 ),
+                        new SpriteHolder( "hidden0" ),
+                        new Collider( 0.5f ),
+                    } );
+                } else
+                {
+                    pBuffer->createEntity( {
+                        new Translation( static_cast< float >(mLast + direction), static_cast< float >(i) ),
+                        new Scale( 1, 1 ),
+                        new SpriteHolder( "stone0" ),
+                        new Collider( 0.5f ),
+                    } );
+                }
+            }
+        }
+
+        const float horizontal = pInput->getAxis( "Horizontal" );
+        player->direction = atan2( pInput->getAxis( "Vertical" ), horizontal );
+        rigidBody->force.x = horizontal * player->speed;
+        if ( pInput->getButtonDown( KeyCode::Space ) )
+        {
+            rigidBody->force.y += player->jumpHeight;
+        }
+    }
+}

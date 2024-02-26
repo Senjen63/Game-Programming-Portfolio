@@ -1,0 +1,14 @@
+filenames
+	GPR_250_SnakeSpriteSheet.png
+	GPR_250_StartScreen.png
+	GPR_250_WinScreen.png
+	GPR_250_LoseScreen.png
+	Level1.txt
+	Level2.txt
+	Level3.txt
+spriteinfo
+	32
+	32
+	4
+	
+	0 1 2 3 4 5 6

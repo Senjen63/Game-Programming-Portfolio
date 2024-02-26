@@ -1,0 +1,11 @@
+#include "LevelEvent.h"
+
+LevelEvent::LevelEvent(LevelEventType type)
+	:Event((EventType)type)
+{
+}
+
+LevelEvent::~LevelEvent()
+{
+}
+

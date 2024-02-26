@@ -1,0 +1,102 @@
+#include "OptionsManager.h"
+#include <fstream>
+#include <string>
+
+OptionsManager::OptionsManager()
+{
+	ifstream input(OPTION_FILEPATH);
+	if (input.good())
+	{
+		string key;
+
+		while (!input.eof())
+		{
+			input >> key;
+			if (key == SOUND_KEY)
+			{
+				int temp;
+				input >> temp;
+				setSound(temp);
+			}
+			else if (key == LANGUAGE_KEY)
+			{
+				int temp;
+				input >> temp;
+				setLanguage(temp);
+			}
+			else if (key == DIFFICULTY_KEY)
+			{
+				int temp;
+				input >> temp;
+				setDifficulty(temp);
+			}
+			else if (key == "return")
+			{
+				input >> mNull;
+			}
+		}
+	}
+	input.close();
+}
+
+OptionsManager::~OptionsManager()
+{
+
+}
+
+void OptionsManager::setSound(int setting)
+{
+	mOptionsMap[SOUND_KEY] = setting;
+}
+
+void OptionsManager::setLanguage(int setting)
+{
+	mOptionsMap[LANGUAGE_KEY] = setting;
+}
+
+void OptionsManager::setDifficulty(int setting)
+{
+	mOptionsMap[DIFFICULTY_KEY] = setting;
+}
+
+int OptionsManager::getSound()
+{
+	return getSetting(SOUND_KEY);
+}
+
+int OptionsManager::getLanguage()
+{
+	return getSetting(LANGUAGE_KEY);
+}
+
+int OptionsManager::getDifficulty()
+{
+	return getSetting(DIFFICULTY_KEY);
+}
+
+void OptionsManager::saveOptions()
+{
+	ofstream settingsFile;
+	settingsFile.open(OPTION_FILEPATH);
+	
+	for (auto setting : mOptionsMap)
+	{
+		settingsFile << setting.first + " " + to_string(setting.second) + "\n";
+	}
+
+	settingsFile.close();
+}
+
+int OptionsManager::getSetting(OptionsKey key)
+{
+	auto option = mOptionsMap.find(key);
+
+	if (option != mOptionsMap.end())
+	{
+		return option->second;
+	}
+	else
+	{
+		return mNull;
+	}
+}

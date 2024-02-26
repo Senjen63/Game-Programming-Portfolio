@@ -1,0 +1,21 @@
+#include "Sound.h"
+
+Sound::Sound(std::string audioFilePath)
+{
+	mSound = Mix_LoadWAV(audioFilePath.c_str());
+
+	if (mSound == nullptr)
+	{
+		std::cout << Mix_GetError() << endl;
+	}
+}
+
+Sound::~Sound()
+{
+	Mix_FreeChunk(mSound);
+}
+
+void Sound::play()
+{
+	Mix_PlayChannel(-1, mSound, 0);
+}

@@ -1,0 +1,13 @@
+#pragma once
+#include "GameEvent.h"
+
+class MouseEvent : public GameEvent
+{
+private:
+    int mKeyCode = 0;
+
+public:
+    MouseEvent(int keyCode);
+    ~MouseEvent();
+    int GetKeyCode() const;
+};

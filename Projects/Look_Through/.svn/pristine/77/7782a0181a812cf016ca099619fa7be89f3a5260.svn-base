@@ -1,0 +1,25 @@
+#include "Color.h"
+
+//Constructor if no color is chosen.
+Color::Color()
+{
+	mColor = al_map_rgb(0, 0, 0);
+}
+
+//Constructor if a color is chosen.
+Color::Color(int red, int green, int blue)
+{
+	mColor = al_map_rgb(red, green, blue);
+}
+
+//Destructer that sets the color to be invisible.
+Color::~Color()
+{
+
+}
+
+//Accessor to get the color.
+ALLEGRO_COLOR Color::getColor()
+{
+	return mColor;
+}

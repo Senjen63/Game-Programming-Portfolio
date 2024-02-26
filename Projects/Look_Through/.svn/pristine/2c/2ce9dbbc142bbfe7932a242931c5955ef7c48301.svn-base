@@ -1,0 +1,70 @@
+#pragma once
+#include <iostream>
+#include <cassert>
+#include <string>
+
+#include <PerformanceTracker.h>
+#include <MemoryTracker.h>
+#include <Vector2D.h>
+#include <Timer.h>
+
+#include "GraphicsSystem.h"
+#include "GraphicsBuffer.h"
+#include "Unit.h"
+#include "Animation.h"
+#include "InputSystem.h"
+#include "UnitManager.h"
+#include "GraphicsBufferManager.h"
+
+using namespace std;
+
+const string ASSET_PATH = "..\\..\\common\\assets\\";
+const string BACKGROUND_PATH = "woods.png";
+const string SMURF_PATH = "smurf_sprites.png";
+const string DEAN_PATH = "dean_sprites.png";
+
+
+const int SPRITE_HEIGHT = 60;
+const int SPRITE_WIDTH = 60;
+const float ANIM_SPEED = 40.0;
+
+const float TARGET_FRAMETIME = 1000.0 / 60.0; // 60 FPS
+
+const float DEFAULT_TARGET_TIME = 1000.0 / 60.0; // 60 FPS
+
+const string INIT_TRACKER_NAME = "Init";
+const string ASSET_LOAD_TRACKER_NAME = "Asset Loading";
+
+const string LOOP_TRACKER_NAME = "Loop";
+
+
+class Game : public Trackable
+{
+private:
+	static Game* mpsGame;
+	Game();
+	~Game();
+
+	GraphicsSystem* mpDisplay;
+	InputSystem* mpInput;
+
+	GraphicsBufferManager mBuffers;
+	UnitManager mUnits;
+
+	double mTargetTime;
+
+	bool mIsActive;
+
+public:
+	static Game* getInstance();
+
+	static void createInstance();
+	static void destroyInstance();
+
+	bool init(int height, int width);
+	void deinit();
+
+	GraphicsSystem* getDisplay();
+
+	void doLoop();
+};

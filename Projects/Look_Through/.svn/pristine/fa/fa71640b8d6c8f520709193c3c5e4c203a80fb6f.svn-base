@@ -1,0 +1,69 @@
+#pragma once
+
+#include <Trackable.h>
+
+class Font;
+class Color;
+class Game;
+
+using namespace std;
+
+class StartScreen : public Trackable 
+{
+private:
+	Font* mpFontTitle;
+	Font* mpFontOther;
+	Color* mpTextColor;
+	Color* mpBackgroundColor;
+
+	const string DATA_FILENAME = "menu_data.txt";
+	const string TEXT_FILENAME = "menu_text_data.txt";
+
+	int mSelectedMenuOption;
+
+	int mX;
+	int mY;
+
+	int mCor;
+	int mCor1;
+	int mCor2;
+	int mCor3;
+	int mCor4;
+	int mCor5;
+	int mCor6;
+
+	bool mInOptions;
+public:
+	StartScreen();
+	~StartScreen();
+
+	void draw();
+
+	void drawMainMenu(Game* pGame, bool, bool, bool, bool);
+	void drawOptionsInnerMenu(Game* pGame, bool, bool, bool, bool);
+
+	void nextMenuOption(string);
+
+	int getSelectedMenuOption() { return mSelectedMenuOption; }
+	bool getInOptions() { return mInOptions; }
+
+	void setSelectedMenuOption(int newSelectedOption) { mSelectedMenuOption = newSelectedOption; }
+
+	void setInOptions(bool);
+
+	string getSound();
+	string getLanguage();
+	string getDifficulty();
+
+	enum MenuOptions
+	{
+		PLAY,
+		LOAD_SAVED_GAME,
+		OPTIONS,
+		QUIT,
+		SOUND_OPTION,
+		LANGUAGE_OPTION,
+		DIFFICULTY_OPTION,
+		BACK
+	};
+};

@@ -1,0 +1,33 @@
+#include "Sprite.h"
+Sprite::Sprite()
+{
+	mBuffer = nullptr;
+	mSX = 0;
+	mSY = 0;
+	mSWidth = 0;
+	mSHeight = 0;
+}
+Sprite::Sprite(GraphicsBuffer* buffer, int x, int y, int width, int height)
+{
+	mBuffer = buffer;
+	mSX = x;
+	mSY = y;
+	mSWidth = width;
+	mSHeight = height;
+
+}
+
+Sprite::Sprite(GraphicsBuffer* buffer, int x, int y)
+{
+	mBuffer = buffer;
+	mSX = x;
+	mSY = y;
+	mSWidth = mBuffer->getWidth();
+	mSHeight = mBuffer->getHeight();
+
+}
+
+Sprite :: ~Sprite()
+{
+
+}

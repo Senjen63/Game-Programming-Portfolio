@@ -1,0 +1,33 @@
+#include "Unit.h"
+#include "Game.h"
+#include "Sprite.h"
+#include "Animation.h"
+#include "GraphicsSystem.h"
+
+Unit::Unit(Vector2D location)
+{
+	this->mLocation = location;
+	this->mpAnim = nullptr;
+}
+
+Unit::~Unit() {};
+
+void Unit::update(double animTime)
+{
+	mpAnim->update(animTime);
+}
+
+void Unit::draw()
+{
+	gpGame->getGraphicsSystem()->draw(mLocation, mpAnim->getCurrentSprite());
+}
+
+void Unit::setAnim(Animation* newAnim)
+{
+	this->mpAnim = newAnim;
+}
+
+void Unit::setLocation(Vector2D newLocation)
+{
+	this->mLocation = newLocation;
+}

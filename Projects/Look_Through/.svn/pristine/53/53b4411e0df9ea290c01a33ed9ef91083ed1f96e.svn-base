@@ -1,0 +1,56 @@
+#pragma once
+#include "Unit.h"
+#include "CollisionEvent.h"
+
+#include <vector>
+
+#include <Trackable.h>
+#include <Vector2D.h>
+#include <EventSystem.h>
+#include <EventListener.h>
+
+using namespace std;
+
+class UnitManager : public EventListener
+{
+	private:
+		vector<Unit*> mUnits;
+
+		EventSystem* mpEventSystem = nullptr;
+
+	public:
+		UnitManager();
+		~UnitManager();
+
+		void init();
+		void cleanup();
+
+		Unit* getLastUnit();
+		int getUnitCount();
+
+		virtual void handleEvent(const Event& currentEvent);
+
+		void addUnit(Unit* unit);
+		Unit* addUnit(Vector2D pos, int fps);
+		Unit* addUnit(Vector2D pos, GraphicsBuffer* newBuffer, int fps, bool loopAnimation, int type);
+		void deleteUnit(Unit* unit);
+		void deleteUnits(vector<Unit*>* units);
+		void deleteUnitsOfType(int type);
+		void deleteUnitsAtPosition(Vector2D mousePosition);
+		void clearAll();
+
+		void nextAnimationForLastUnit();
+
+		void setAllPlay(bool play); //sets playing to passed bool
+		void switchAllPlay(); //changes all playing bools to opposite
+
+		vector<Unit*> checkAnyCollisions(Unit* checkUnit);
+		vector<Unit*> checkCollisionOfType(Unit* checkUnit, int type);
+		vector<Unit*> checkCollisionInArea(Vector2D pos, float xDiameter, float yDiameter);
+
+		void updateAll(float elapsedTime);
+		void drawAll();
+
+		Unit* clickedUnit(Vector2D mousePos);
+		vector<Unit*>* clickedUnits(Vector2D mousePos);
+};

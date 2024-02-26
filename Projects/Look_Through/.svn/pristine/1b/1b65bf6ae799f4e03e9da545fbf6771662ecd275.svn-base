@@ -1,0 +1,89 @@
+/*
+Author: David Silverman
+Class: GPR-250-01
+Assignment: Assignment 3
+Certification of Authenticity:
+I certify that this assignment is entirely my own work.
+ */
+
+#include "snakemanager.h"
+#include "game.h"
+
+using namespace std;
+
+SnakeManager::SnakeManager()
+{
+
+}
+
+SnakeManager::SnakeManager(Animation* aniHead, Animation* aniBody, Animation* aniTail)
+{
+	mpSmurfAnimation = aniHead;
+	mpDeanAnimation = aniBody;
+	mpTailAnimation = aniTail;
+}
+
+SnakeManager::~SnakeManager()
+{
+	Cleanup();
+}
+
+void SnakeManager::updateAll(Level* lulvi, double dt, HeadDirection dire)
+{
+	mMoving = dire;
+
+	for (int i = 0; i < mpUnits.size(); i++)
+	{
+		if(mAnimated)
+			mpUnits[i]->update(dt);
+	}
+
+	mpUnits[0]->setAnimation(mpSmurfAnimation);
+
+	for (int i = 1; i < mpUnits.size() - 1; i++)
+	{
+		mpUnits[i]->setAnimation(mpDeanAnimation);
+	}
+
+	mpUnits[mpUnits.size() - 1]->setAnimation(mpTailAnimation);
+}
+
+/*
+void SnakeManager::drawAll()
+{
+	for (int i = 0; i < mpUnits.size(); i++)
+	{
+		mpUnits[i]->draw(Vector2D(1, 1));
+	}
+}
+*/
+
+void SnakeManager::setStarting(Vector2D start)
+{
+	for each (Unit* un in mpUnits)
+	{
+		un->setPosition(start);
+	}
+}
+
+Vector2D SnakeManager::getFirstPos()
+{
+	return Vector2D(0, 0);
+}
+
+int SnakeManager::getLength()
+{
+	return mpUnits.size();
+}
+
+HeadDirection SnakeManager::getDirection()
+{
+	return mMoving;
+}
+
+void SnakeManager::setAnimations(Animation* aniHead, Animation* aniBody, Animation* aniTail)
+{
+	mpSmurfAnimation = aniHead;
+	mpDeanAnimation = aniBody;
+	mpTailAnimation = aniTail;
+}

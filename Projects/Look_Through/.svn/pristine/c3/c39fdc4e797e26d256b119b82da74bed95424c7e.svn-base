@@ -1,0 +1,77 @@
+#pragma once
+
+#include <list>
+#include "GraphicsSystem.h"
+#include "Component.h"
+#include "Vector2D.h"
+#include "Unit.h"
+#include "SnakeBodyComponent.h"
+#include "EventListener.h"
+#include "Event.h"
+#include "KeyPressEvent.h"
+#include "GameEvent.h"
+#include "ICollisionHandler.h"
+#include "SpeedPowerUpComponent.h"
+#include "ScoreChangeEvent.h"
+#include "FruitCollectedEvent.h"
+#include "SnakeDiedEvent.h"
+#include "SnakeWonEvent.h"
+#include "Sound.h"
+
+class SnakeBodyComponent;
+
+class SnakeComponent : public Component, public EventListener, public ICollisionHandler
+{
+	const int MOVE_AMOUNT = 32;
+
+	std::list<SnakeBodyComponent*> mBodyComponents;
+
+	Sound mJumpSound;
+
+	float mTimePassedSinceLastMove = 0.0f;
+	float mMoveDelay; // How long between moves in milliseconds
+
+	Vector2D mCurrentDirection;
+	Vector2D mPrevDirection = Vector2D(0, 0);
+	Vector2D mPrevPosition = Vector2D(0, 0);
+
+	bool mLoaded = true;
+	bool mOnLog = false;
+
+	void moveSnake(Keycode pressedKey);
+	//void moveSnake();
+
+public:
+	SnakeComponent(Vector2D startDirection = Vector2D(0, 0), float moveDelay = 160.0f);
+	~SnakeComponent() { /*EventSystem::getInstance()->removeListenerFromAllEvents(this);*/ }
+
+	void init();
+
+	void update(float dt) override;
+	void draw(GraphicsSystem* gSys) override;
+
+	void handleEvent(const Event& theEvent) override;
+
+	void spawnNewSegment();
+
+	bool checkIfOnLog();
+	bool getIfOnLog() { return mOnLog; };
+	void setOnLog(bool onlog) { mOnLog = onlog; };
+
+	float getMoveDelay() { return mMoveDelay; }
+	void setMoveDelay(float moveDelay) { mMoveDelay = moveDelay; }
+	void moveSnakeOnLog(float speed, Vector2D dir);
+
+	void setCurDir(Vector2D newdir) { mCurrentDirection = newdir; };
+
+	std::string getIdentifier() override;
+
+	void checkInLevel();
+	void onCollision(Unit* unit, CollisionLayer layer) override;
+	bool checkCollision(CollisionLayer layer) override;
+
+	void speedPowerUpCollected(Unit* unit);
+	void scorePowerUpCollected(Unit* unit);
+	void fruitCollected(Unit* unit);
+};
+

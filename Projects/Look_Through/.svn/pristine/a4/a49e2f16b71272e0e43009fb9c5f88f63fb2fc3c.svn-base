@@ -1,0 +1,63 @@
+#pragma once
+
+#include "Trackable.h"
+#include "Animation.h"
+#include "Vector2D.h"
+#include "Direction.h"
+
+class EnemyBase : public Trackable
+{
+	const float SPRITE_SIZE = 32.0f;
+
+public:
+
+	// initialization
+	EnemyBase(Direction dir, Vector2D location, Animation* anim);
+	~EnemyBase();
+
+	// enemy actions
+	void update(double mFPS);
+	void draw();
+	void getHit();
+	void destroy();
+	bool isColliding(Vector2D locationColliding);
+	virtual void move() = 0;
+
+	//accessors
+	float getX() { return mLocation.getX(); }
+	float getY() { return mLocation.getY(); }
+	float getSize() { return mCurrentSize; }
+	int getHP() { return mCurrentHealth; }
+	Direction getDirection() { return mDirection; }
+	virtual std::string getType() = 0;
+
+	//mutators
+	void setHP(int i) { mCurrentHealth = i; }
+
+	const double HEALTH_MULT_NORMAL = 1.5;
+	const double HEALTH_MULT_HARD = 2;
+
+	const Color BASE_COLOR = Color(255, 255, 255);
+	const Color FLASH_COLOR = Color(255, 0, 0);
+	const int ENEMY_FLASH_TIME = 8;
+protected:
+
+	// graphics
+	float mCurrentSize;
+	Animation* mpCurrentAnimation;
+	Sprite* mpSprites[4];
+
+	// movement vars
+	int mSpeed;
+	Direction mDirection;
+	int mMaxHealth;
+	int mCurrentHealth;
+	bool mCanHit;
+	double mInvFrames;
+	double mCurrentInv;
+	int mID;
+	int mCurrentFlashFrames;
+
+	Vector2D mLocation;
+	Color mColor;
+};

@@ -1,0 +1,29 @@
+#pragma once
+
+#include <string>
+#include <trackable.h>
+#include <Event.h>
+
+using namespace std;
+
+enum LevelEventType
+{
+	NULL_EVENT = NUM_BASE_EVENT_TYPES,
+	KEYBOARD_EVENT,
+	INPUT_EVENT,
+	RELEASE_EVENT,
+	DIE_EVENT,
+	NEXT_LEVEL_EVENT,
+	VICTORY_EVENT,
+	NUM_GAME_EVENT_TYPES
+};
+
+class LevelEvent :public Event
+{
+public:
+	LevelEvent(LevelEventType type);
+	virtual ~LevelEvent();
+
+private:
+
+};

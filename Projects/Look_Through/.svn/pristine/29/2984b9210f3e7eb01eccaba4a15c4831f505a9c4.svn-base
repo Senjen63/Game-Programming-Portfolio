@@ -1,0 +1,17 @@
+#include "Color.h"
+
+Color::Color(int r, int g, int b)
+{
+    mR = r;
+    mG = g;
+    mB = b;
+}
+
+Color::~Color()
+{
+}
+
+ALLEGRO_COLOR Color::getColor()
+{
+	return al_map_rgb(mR, mG, mB);
+}

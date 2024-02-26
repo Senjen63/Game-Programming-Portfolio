@@ -1,0 +1,34 @@
+
+#include "Font.h"
+
+#include <iostream>
+using namespace std;
+
+Font::Font()
+{
+	mpFont = NULL;
+	mFontSize = 0;
+}
+
+Font::Font(string filePath, int fontSize)
+{
+	TTF_Init();
+	mpFont = TTF_OpenFont(filePath.c_str(), fontSize);
+	mFontSize = fontSize;
+}
+
+Font::~Font()
+{
+	TTF_CloseFont(mpFont);
+	mFontSize = 0;
+}
+
+TTF_Font* Font::getFont()
+{
+	return mpFont;
+}
+
+int Font::getFontSize()
+{
+	return mFontSize;
+}

@@ -1,0 +1,1237 @@
+//Evan Norzow, Nicolas Delbue, and Brandon Perry
+#include "Game.h"
+#include <cstdlib> 
+#include <ctime> 
+#include <fstream>
+
+Game* Game::mpsInstance = nullptr;
+
+Game* Game::getGameInstance()
+{
+	//assert(mpsInstance);
+	return mpsInstance;
+}
+
+void Game::destroyGameInstance()
+{
+	delete mpsInstance;
+	mpsInstance = nullptr;
+};
+
+Game* Game::createGameInstance()
+{
+	if (mpsInstance == nullptr)
+	{
+		mpsInstance = new Game;
+	}
+	return mpsInstance;
+}
+
+Game::Game()
+{
+	//we decided to step down from 1920x1080 because Nick's laptop couldn't handle it.
+	const int DISP_WIDTH = 1536;
+	const int DISP_HEIGHT = 768;
+
+	EventSystem* pEventSystem = EventSystem::getInstance();
+	pEventSystem->addListener((EventType)INPUT_EVENT, this);
+	pEventSystem->addListener((EventType)COLLISION_EVENT, this);
+	//pEventSystem->addListener((EventType)LEVEL_CHANGE_EVENT, this);
+
+	mpAudioSystem = new AudioSystem();
+	mpAnimationManager = new AnimationManager();
+	mpLevelManager = new LevelManager();
+	mpGraphicsBuffManager = new GraphicsBufferManager();
+	mpUnitManager = new UnitManager();
+	mpGraphicsSystem = new GraphicsSystem(DISP_WIDTH, DISP_HEIGHT);
+	mpInputSystem = new InputSystem();
+	mpSaveData = new SaveData();
+}
+
+Game::~Game()
+{
+	//destructor stuff
+	delete mpAudioSystem;
+	delete mpSaveData;
+	delete mpAnimationManager;
+	delete mpLevelManager;
+	delete mpGraphicsBuffManager;
+	delete mpUnitManager;
+	delete mpGraphicsSystem;
+	delete mpInputSystem;
+	mpAudioSystem = nullptr;
+	mpSaveData = nullptr;
+	mpAnimationManager = nullptr;
+	mpLevelManager = nullptr;
+	mpGraphicsBuffManager = nullptr;
+	mpUnitManager = nullptr;
+	mpGraphicsSystem = nullptr;
+	mpInputSystem = nullptr;
+
+	delete mpMusic;
+	delete mpCrash;
+	delete mpClick;
+	mpMusic = nullptr;
+	mpCrash = nullptr;
+	mpClick = nullptr;
+}
+
+bool Game::init()
+{
+	if (!mpGraphicsSystem->init())
+	{
+		std::cout << "Issues with Graphics system." << std::endl;
+		system("pause");
+		return false;
+	}
+	if (!mpInputSystem->init())
+	{
+		std::cout << "Issues with Input system." << std::endl;
+		system("pause");
+		return false;
+	}
+	if (!mpLevelManager->init())
+	{
+		std::cout << "Issues with Level system." << std::endl;
+		system("pause");
+		return false;
+	}
+	if (!mpAudioSystem->init())
+	{
+		std::cout << "Issues with Audio system." << std::endl;
+		system("pause");
+		return false;
+	}
+	return true;
+}
+
+void Game::cleanUp()
+{
+	mpGraphicsSystem->cleanup();
+	mpLevelManager->cleanup();
+	mpAudioSystem->cleanUp();
+}
+
+void Game::doLoop()
+{
+	//Thank god the fonts actually work. This was probably the hardest part of the whole project.
+	//Box helped Nick and Brandon add the library to the project, but Evan got the majority of it set up afterwords
+	Font* pFont = new Font("cour.ttf", 50);
+
+	//Brandon sourced music.mp3 from the official Tron Legacy film soundtrack
+	//The other effects are generic sounds
+	mpMusic = new Audio(true, "music.mp3");
+	mpClick = new Audio(false, "click.wav");
+	mpCrash = new Audio(false, "crash.wav");
+	
+
+	int snakeSegments = 0;
+	int endLength = 0;
+	int foodPoints = 0;
+	int powerupPower = 0;
+	int powerUpFrequency = 0;
+
+	int snakeSpeed = 0;
+
+	int snakeSpeed1 = 0;
+	int snakeSpeed2 = 0;
+	int snakeSpeed3 = 0;
+
+	//reading our data driven snake/level properties
+	ifstream input;
+	input.open("input.txt");
+	if (input.good())
+	{
+		string key;
+
+		while (!input.eof())
+		{
+			input >> key;
+
+			if (key == "speed")
+			{
+				input >> snakeSpeed1;
+
+			}
+			else if (key == "speed2")
+			{
+				input >> snakeSpeed2;
+			}
+			else if (key == "speed3")
+			{
+				input >> snakeSpeed3;
+			}
+			else if (key == "segments")
+			{
+				input >> snakeSegments;
+			}
+			else if (key == "length")
+			{
+				input >> endLength;
+			}
+			else if (key == "food")
+			{
+				input >> foodPoints;
+			}
+			else if (key == "frequency")
+			{
+				input >> powerUpFrequency;
+			}
+			else if (key == "powerup")
+			{
+				input >> powerupPower;
+			}
+		}
+
+	}
+	else
+	{
+		return;
+	}
+
+	//Time in milliseconds.
+	double targetTime = 16.7;
+	//filenames for our images and .txt files
+	//All art assets were made by Brandon
+	const string LEVEL0_FILENAME = "Level0.txt";
+	const string LEVEL1_FILENAME = "Level1.txt";
+	const string LEVEL2_FILENAME = "Level2.txt";
+	const string CYCLE_FILENAME = "bluelightcycle.png";
+	const string TRAIL_FILENAME = "bluelightcycletrail.png";
+	const string ORANGE_CYCLE_FILENAME = "orangelightcycle.png";
+	const string ORANGE_TRAIL_FILENAME = "orangelightcycletrail.png";
+	const string BACKGROUND_FILENAME = "LevelBackground.png";
+	const string TITLESCREEN_FILENAME = "TitleScreen.png";
+	const string WALL_FILENAME = "arenawall.png";
+	const string POWERUP_FILENAME = "Bonus.png";
+	const string FOOD_FILENAME = "Onion.png";
+	//placeholder title text
+	//string menu = "TRON  |  Press The Spacebar To Begin!  | Settings - P |  Exit - ESC";
+	int spriteNum = 4;
+	double fps = 30;
+
+	const int BACKGROUND_SIZE_X = 1536;
+	const int BACKGROUND_SIZE_Y = 768;
+	//64x64 was the perfect asset size for what we wanted to do
+	const int WALL_SIZE = 64;
+	const int SNAKE_SIZE = 64;
+	Color red = Color(255, 0, 0);
+	Color green = Color(0, 255, 0);
+	Color blue = Color(0, 0, 255);
+	Color black = Color(0, 0, 0);
+
+	//Creating buffers and animations
+	mpGraphicsBuffManager->createBuffer("backgroundImg", BACKGROUND_FILENAME, mpGraphicsSystem);
+	mpGraphicsBuffManager->createBuffer("title", TITLESCREEN_FILENAME, mpGraphicsSystem);
+	mpGraphicsBuffManager->createBuffer("wallImg", WALL_FILENAME, mpGraphicsSystem);
+	mpGraphicsBuffManager->createBuffer("player1HeadImg", CYCLE_FILENAME, mpGraphicsSystem);
+	mpGraphicsBuffManager->createBuffer("player1BodyImg", TRAIL_FILENAME, mpGraphicsSystem);
+	mpGraphicsBuffManager->createBuffer("player2HeadImg", ORANGE_CYCLE_FILENAME, mpGraphicsSystem);
+	mpGraphicsBuffManager->createBuffer("player2BodyImg", ORANGE_TRAIL_FILENAME, mpGraphicsSystem);
+	mpGraphicsBuffManager->createBuffer("foodImg", FOOD_FILENAME, mpGraphicsSystem);
+	mpGraphicsBuffManager->createBuffer("powerupImg", POWERUP_FILENAME, mpGraphicsSystem);
+
+	mpAnimationManager->createAnim("snakeHead", mpGraphicsBuffManager->getBuffer("player1HeadImg"), 1, 1, fps, false);
+	mpAnimationManager->createAnim("snakeBody", mpGraphicsBuffManager->getBuffer("player1BodyImg"), 1, 1, fps, false);
+	mpAnimationManager->createAnim("snakeHead2", mpGraphicsBuffManager->getBuffer("player2HeadImg"), 1, 1, fps, false);
+	mpAnimationManager->createAnim("snakeBody2", mpGraphicsBuffManager->getBuffer("player2BodyImg"), 1, 1, fps, false);
+	mpAnimationManager->createAnim("wall", mpGraphicsBuffManager->getBuffer("wallImg"), 1, 1, fps, false);
+	mpAnimationManager->createAnim("food", mpGraphicsBuffManager->getBuffer("foodImg"), 2, 2, fps - 10, true);
+	mpAnimationManager->createAnim("powerup", mpGraphicsBuffManager->getBuffer("powerupImg"), 2, 2, fps - 10, true);
+
+	mpLevelManager->loadLevel(LEVEL0_FILENAME, mpGraphicsBuffManager->getBuffer("wallImg"));
+	mpLevelManager->loadLevel(LEVEL1_FILENAME, mpGraphicsBuffManager->getBuffer("wallImg"));
+	mpLevelManager->loadLevel(LEVEL2_FILENAME, mpGraphicsBuffManager->getBuffer("wallImg"));
+
+	mpLevelManager->instantiateLevel(0, mpUnitManager, mpAnimationManager, mpGraphicsBuffManager->getBuffer("wallImg"));
+
+	//Create snake
+	mpSnake = new Snake(true, 256, 256, mpUnitManager, mpAnimationManager, mpGraphicsBuffManager, snakeSegments);
+	mpSnake2 = new Snake(false, BACKGROUND_SIZE_X - 256, BACKGROUND_SIZE_Y - 256, mpUnitManager, mpAnimationManager, mpGraphicsBuffManager, snakeSegments);
+
+
+	//Level data
+	Level* currentLevel = mpLevelManager->getCurrentLevel();
+
+	//Plays music
+	mpAudioSystem->playLoopingMusic(mpMusic);
+
+	//how Evan decided to make the difficulty work
+	//Using an int makes it harder to understand what it is doing without context
+	while (mShouldContinue)
+	{
+		switch (mDifficulty)
+		{
+		case 0:
+			snakeSpeed = snakeSpeed1;
+			break;
+		case 1:
+			snakeSpeed = snakeSpeed2;
+			break;
+		case 2:
+			snakeSpeed = snakeSpeed3;
+			break;
+		}
+
+		//Main menu while loop
+		//And we didn't feel the need to data drive the text in addition to everything else that is data driven because we had already proven we could do it
+		//don't take off points for that >:(
+		while (mShouldContinue && !mStartLevel && !mEnterSettings && mEnterMenu)
+		{
+			mpInputSystem->update();
+			if (mLangSetEN)
+			{
+				mpGraphicsSystem->draw(mpGraphicsBuffManager->getBuffer("title"), 0, 0, 1, 1);
+				mpGraphicsSystem->displayMessage((mpGraphicsSystem->
+					getWidth() / 30) * 9, mpGraphicsSystem->getHeight() / 2,
+					"Press Space To Play!",
+					Color(255, 255, 255),
+					pFont);
+				mpGraphicsSystem->displayMessage((mpGraphicsSystem->
+					getWidth() / 30) * 5, (mpGraphicsSystem->getHeight() / 32) * 19,
+					"Settings - P | Load Saved Game - L",
+					Color(255, 255, 255),
+					pFont);
+				mpGraphicsSystem->displayMessage((mpGraphicsSystem->
+					getWidth() / 30) * 12, (mpGraphicsSystem->getHeight() / 64) * 43,
+					"Quit - Esc",
+					Color(255, 255, 255),
+					pFont);
+			}
+			else if (mLangSetES)
+			{
+				mpGraphicsSystem->draw(mpGraphicsBuffManager->getBuffer("title"), 0, 0, 1, 1);
+				mpGraphicsSystem->displayMessage((mpGraphicsSystem->
+					getWidth() / 60) * 20, mpGraphicsSystem->getHeight() / 2,
+					"Pressione Espacio!",
+					Color(255, 255, 255),
+					pFont);
+				mpGraphicsSystem->displayMessage((mpGraphicsSystem->
+					getWidth() / 30) * 5, (mpGraphicsSystem->getHeight() / 32) * 19,
+					"Ajustes - P  |  Cargar Guardar - L",
+					Color(255, 255, 255),
+					pFont);
+				mpGraphicsSystem->displayMessage((mpGraphicsSystem->
+					getWidth() / 60) * 24, (mpGraphicsSystem->getHeight() / 64) * 43,
+					"Dejar - Esc",
+					Color(255, 255, 255),
+					pFont);
+			}
+			else if (mLangSetFR)
+			{
+				mpGraphicsSystem->draw(mpGraphicsBuffManager->getBuffer("title"), 0, 0, 1, 1);
+				mpGraphicsSystem->displayMessage((mpGraphicsSystem->
+					getWidth() / 60) * 19, mpGraphicsSystem->getHeight() / 2,
+					"Appuyer Sur Espace!",
+					Color(255, 255, 255),
+					pFont);
+				mpGraphicsSystem->displayMessage((mpGraphicsSystem->
+					getWidth() / 30) * 6, (mpGraphicsSystem->getHeight() / 32) * 19,
+					"Reglages - P  |  Continuez - L",
+					Color(255, 255, 255),
+					pFont);
+				mpGraphicsSystem->displayMessage((mpGraphicsSystem->
+					getWidth() / 60) * 23, (mpGraphicsSystem->getHeight() / 64) * 43,
+					"Arreter - Esc",
+					Color(255, 255, 255),
+					pFont);
+			}
+			mpGraphicsSystem->flip();
+		}
+
+		//Player 1 victory screen while loop
+		while (mShouldContinue && !mStartLevel && !mEnterSettings && !mEnterMenu && mPlayer1Win)
+		{
+			mpInputSystem->update();
+			if (mLangSetEN)
+			{
+				mpGraphicsSystem->draw(mpGraphicsBuffManager->getBuffer("backgroundImg"), 0, 0, 1, 1);
+				mpGraphicsSystem->displayMessage((mpGraphicsSystem->
+					getWidth() / 60) * 22, (mpGraphicsSystem->getHeight() / 60) * 22,
+					"Player 1 Wins!",
+					Color(255, 255, 255),
+					pFont);
+				mpGraphicsSystem->displayMessage((mpGraphicsSystem->
+					getWidth() / 60) * 18, (mpGraphicsSystem->getHeight() / 60) * 33,
+					"Title Screen - Space",
+					Color(255, 255, 255),
+					pFont);
+			}
+			if (mLangSetES)
+			{
+				mpGraphicsSystem->draw(mpGraphicsBuffManager->getBuffer("backgroundImg"), 0, 0, 1, 1);
+				mpGraphicsSystem->displayMessage((mpGraphicsSystem->
+					getWidth() / 60) * 20, (mpGraphicsSystem->getHeight() / 60) * 22,
+					"El jugador 1 gana!",
+					Color(255, 255, 255),
+					pFont);
+				mpGraphicsSystem->displayMessage((mpGraphicsSystem->
+					getWidth() / 60) * 15, (mpGraphicsSystem->getHeight() / 60) * 33,
+					"Volver Al Titulo - Espacio",
+					Color(255, 255, 255),
+					pFont);
+			}
+			if (mLangSetFR)
+			{
+				mpGraphicsSystem->draw(mpGraphicsBuffManager->getBuffer("backgroundImg"), 0, 0, 1, 1);
+				mpGraphicsSystem->displayMessage((mpGraphicsSystem->
+					getWidth() / 60) * 20, (mpGraphicsSystem->getHeight() / 60) * 22,
+					"Le joueur 1 gagne!",
+					Color(255, 255, 255),
+					pFont);
+				mpGraphicsSystem->displayMessage((mpGraphicsSystem->
+					getWidth() / 60) * 13, (mpGraphicsSystem->getHeight() / 60) * 33,
+					"Retour A L'ecran titre - Espace",
+					Color(255, 255, 255),
+					pFont);
+			}
+			mpGraphicsSystem->flip();
+		}
+
+		//Player 2 victory screen while loop
+		while (mShouldContinue && !mStartLevel && !mEnterSettings && !mEnterMenu && mPlayer2Win)
+		{
+			mpInputSystem->update();
+			if (mLangSetEN)
+			{
+				mpGraphicsSystem->draw(mpGraphicsBuffManager->getBuffer("backgroundImg"), 0, 0, 1, 1);
+				mpGraphicsSystem->displayMessage((mpGraphicsSystem->
+					getWidth() / 60) * 22, (mpGraphicsSystem->getHeight() / 60) * 22,
+					"Player 2 Wins!",
+					Color(255, 255, 255),
+					pFont);
+				mpGraphicsSystem->displayMessage((mpGraphicsSystem->
+					getWidth() / 60) * 18, (mpGraphicsSystem->getHeight() / 60) * 33,
+					"Title Screen - Space",
+					Color(255, 255, 255),
+					pFont);
+			}
+			if (mLangSetES)
+			{
+				mpGraphicsSystem->draw(mpGraphicsBuffManager->getBuffer("backgroundImg"), 0, 0, 1, 1);
+				mpGraphicsSystem->displayMessage((mpGraphicsSystem->
+					getWidth() / 60) * 20, (mpGraphicsSystem->getHeight() / 60) * 22,
+					"El jugador 2 gana!",
+					Color(255, 255, 255),
+					pFont);
+				mpGraphicsSystem->displayMessage((mpGraphicsSystem->
+					getWidth() / 60) * 15, (mpGraphicsSystem->getHeight() / 60) * 33,
+					"Volver Al Titulo - Espacio",
+					Color(255, 255, 255),
+					pFont);
+			}
+			if (mLangSetFR)
+			{
+				mpGraphicsSystem->draw(mpGraphicsBuffManager->getBuffer("backgroundImg"), 0, 0, 1, 1);
+				mpGraphicsSystem->displayMessage((mpGraphicsSystem->
+					getWidth() / 60) * 20, (mpGraphicsSystem->getHeight() / 60) * 22,
+					"Le joueur 2 gagne!",
+					Color(255, 255, 255),
+					pFont);
+				mpGraphicsSystem->displayMessage((mpGraphicsSystem->
+					getWidth() / 60) * 13, (mpGraphicsSystem->getHeight() / 60) * 33,
+					"Retour A L'ecran titre - Espace",
+					Color(255, 255, 255),
+					pFont);
+			}
+			mpGraphicsSystem->flip();
+		}
+
+		//Settings while loop
+		while (mShouldContinue && !mStartLevel && mEnterSettings)
+		{
+			mpInputSystem->update();
+			//std::cout << "TEST" << std::endl;
+			if (mLangSetEN && !mLangSetES && !mLangSetFR)
+			{
+				if (mDifficulty == 0)
+				{
+					mpGraphicsSystem->draw(mpGraphicsBuffManager->getBuffer("backgroundImg"), 0, 0, 1, 1);
+					mpGraphicsSystem->displayMessage((mpGraphicsSystem->
+						getWidth() / 60) * 26, mpGraphicsSystem->getHeight() / 10,
+						"Settings",
+						Color(255, 255, 255),
+						pFont);
+					mpGraphicsSystem->displayMessage((mpGraphicsSystem->
+						getWidth() / 30) * 5, (mpGraphicsSystem->getHeight() / 32) * 8,
+						"Change Language (Press M) - English",
+						Color(255, 255, 255),
+						pFont);
+					mpGraphicsSystem->displayMessage((mpGraphicsSystem->
+						getWidth() / 60) * 10, (mpGraphicsSystem->getHeight() / 64) * 32,
+						"Change Difficulty (Press N) - Easy",
+						Color(255, 255, 255),
+						pFont);
+					mpGraphicsSystem->displayMessage((mpGraphicsSystem->
+						getWidth() / 60) * 18, (mpGraphicsSystem->getHeight() / 64) * 43,
+						"Sound On/Off (Press K)",
+						Color(255, 255, 255),
+						pFont);
+					mpGraphicsSystem->displayMessage((mpGraphicsSystem->
+						getWidth() / 60) * 12, (mpGraphicsSystem->getHeight() / 64) * 53,
+						"Return To Title Screen (Press P)",
+						Color(255, 255, 255),
+						pFont);
+				}
+				if (mDifficulty == 1)
+				{
+					mpGraphicsSystem->draw(mpGraphicsBuffManager->getBuffer("backgroundImg"), 0, 0, 1, 1);
+					mpGraphicsSystem->displayMessage((mpGraphicsSystem->
+						getWidth() / 60) * 26, mpGraphicsSystem->getHeight() / 10,
+						"Settings",
+						Color(255, 255, 255),
+						pFont);
+					mpGraphicsSystem->displayMessage((mpGraphicsSystem->
+						getWidth() / 30) * 5, (mpGraphicsSystem->getHeight() / 32) * 8,
+						"Change Language (Press M) - English",
+						Color(255, 255, 255),
+						pFont);
+					mpGraphicsSystem->displayMessage((mpGraphicsSystem->
+						getWidth() / 60) * 10, (mpGraphicsSystem->getHeight() / 64) * 32,
+						"Change Difficulty (Press N) - Normal",
+						Color(255, 255, 255),
+						pFont);
+					mpGraphicsSystem->displayMessage((mpGraphicsSystem->
+						getWidth() / 60) * 18, (mpGraphicsSystem->getHeight() / 64) * 43,
+						"Sound On/Off (Press K)",
+						Color(255, 255, 255),
+						pFont);
+					mpGraphicsSystem->displayMessage((mpGraphicsSystem->
+						getWidth() / 60) * 12, (mpGraphicsSystem->getHeight() / 64) * 53,
+						"Return To Title Screen (Press P)",
+						Color(255, 255, 255),
+						pFont);
+				}
+				if (mDifficulty == 2)
+				{
+					mpGraphicsSystem->draw(mpGraphicsBuffManager->getBuffer("backgroundImg"), 0, 0, 1, 1);
+					mpGraphicsSystem->displayMessage((mpGraphicsSystem->
+						getWidth() / 60) * 26, mpGraphicsSystem->getHeight() / 10,
+						"Settings",
+						Color(255, 255, 255),
+						pFont);
+					mpGraphicsSystem->displayMessage((mpGraphicsSystem->
+						getWidth() / 30) * 5, (mpGraphicsSystem->getHeight() / 32) * 8,
+						"Change Language (Press M) - English",
+						Color(255, 255, 255),
+						pFont);
+					mpGraphicsSystem->displayMessage((mpGraphicsSystem->
+						getWidth() / 60) * 10, (mpGraphicsSystem->getHeight() / 64) * 32,
+						"Change Difficulty (Press N) - Hard",
+						Color(255, 255, 255),
+						pFont);
+					mpGraphicsSystem->displayMessage((mpGraphicsSystem->
+						getWidth() / 60) * 18, (mpGraphicsSystem->getHeight() / 64) * 43,
+						"Sound On/Off (Press K)",
+						Color(255, 255, 255),
+						pFont);
+					mpGraphicsSystem->displayMessage((mpGraphicsSystem->
+						getWidth() / 60) * 12, (mpGraphicsSystem->getHeight() / 64) * 53,
+						"Return To Title Screen (Press P)",
+						Color(255, 255, 255),
+						pFont);
+				}
+			}
+			else if (!mLangSetEN && mLangSetES && !mLangSetFR)
+			{
+				if (mDifficulty == 0)
+				{
+					mpGraphicsSystem->draw(mpGraphicsBuffManager->getBuffer("backgroundImg"), 0, 0, 1, 1);
+					mpGraphicsSystem->displayMessage((mpGraphicsSystem->
+						getWidth() / 60) * 26, mpGraphicsSystem->getHeight() / 10,
+						"Ajustes",
+						Color(255, 255, 255),
+						pFont);
+					mpGraphicsSystem->displayMessage((mpGraphicsSystem->
+						getWidth() / 60) * 9, (mpGraphicsSystem->getHeight() / 32) * 8,
+						"Cambiar Idioma (Presione M) - Espanol",
+						Color(255, 255, 255),
+						pFont);
+					mpGraphicsSystem->displayMessage((mpGraphicsSystem->
+						getWidth() / 60) * 6, (mpGraphicsSystem->getHeight() / 64) * 32,
+						"Cambiar La Dificultad (Presione N) - Facil",
+						Color(255, 255, 255),
+						pFont);
+					mpGraphicsSystem->displayMessage((mpGraphicsSystem->
+						getWidth() / 60) * 7, (mpGraphicsSystem->getHeight() / 64) * 43,
+						"Activar/Desactivar El Sonido (Presione K)",
+						Color(255, 255, 255),
+						pFont);
+					mpGraphicsSystem->displayMessage((mpGraphicsSystem->
+						getWidth() / 60) * 13, (mpGraphicsSystem->getHeight() / 64) * 53,
+						"Volver Al Titulo (Presione P)",
+						Color(255, 255, 255),
+						pFont);
+				}
+				if (mDifficulty == 1)
+				{
+					mpGraphicsSystem->draw(mpGraphicsBuffManager->getBuffer("backgroundImg"), 0, 0, 1, 1);
+					mpGraphicsSystem->displayMessage((mpGraphicsSystem->
+						getWidth() / 60) * 26, mpGraphicsSystem->getHeight() / 10,
+						"Ajustes",
+						Color(255, 255, 255),
+						pFont);
+					mpGraphicsSystem->displayMessage((mpGraphicsSystem->
+						getWidth() / 60) * 9, (mpGraphicsSystem->getHeight() / 32) * 8,
+						"Cambiar Idioma (Presione M) - Espanol",
+						Color(255, 255, 255),
+						pFont);
+					mpGraphicsSystem->displayMessage((mpGraphicsSystem->
+						getWidth() / 60) * 6, (mpGraphicsSystem->getHeight() / 64) * 32,
+						"Cambiar La Dificultad (Presione N) - Normal",
+						Color(255, 255, 255),
+						pFont);
+					mpGraphicsSystem->displayMessage((mpGraphicsSystem->
+						getWidth() / 60) * 7, (mpGraphicsSystem->getHeight() / 64) * 43,
+						"Activar/Desactivar El Sonido (Presione K)",
+						Color(255, 255, 255),
+						pFont);
+					mpGraphicsSystem->displayMessage((mpGraphicsSystem->
+						getWidth() / 60) * 13, (mpGraphicsSystem->getHeight() / 64) * 53,
+						"Volver Al Titulo (Presione P)",
+						Color(255, 255, 255),
+						pFont);
+				}
+				if (mDifficulty == 2)
+				{
+					mpGraphicsSystem->draw(mpGraphicsBuffManager->getBuffer("backgroundImg"), 0, 0, 1, 1);
+					mpGraphicsSystem->displayMessage((mpGraphicsSystem->
+						getWidth() / 60) * 26, mpGraphicsSystem->getHeight() / 10,
+						"Ajustes",
+						Color(255, 255, 255),
+						pFont);
+					mpGraphicsSystem->displayMessage((mpGraphicsSystem->
+						getWidth() / 60) * 9, (mpGraphicsSystem->getHeight() / 32) * 8,
+						"Cambiar Idioma (Presione M) - Espanol",
+						Color(255, 255, 255),
+						pFont);
+					mpGraphicsSystem->displayMessage((mpGraphicsSystem->
+						getWidth() / 60) * 6, (mpGraphicsSystem->getHeight() / 64) * 32,
+						"Cambiar La Dificultad (Presione N) - Duro",
+						Color(255, 255, 255),
+						pFont);
+					mpGraphicsSystem->displayMessage((mpGraphicsSystem->
+						getWidth() / 60) * 7, (mpGraphicsSystem->getHeight() / 64) * 43,
+						"Activar/Desactivar El Sonido (Presione K)",
+						Color(255, 255, 255),
+						pFont);
+					mpGraphicsSystem->displayMessage((mpGraphicsSystem->
+						getWidth() / 60) * 13, (mpGraphicsSystem->getHeight() / 64) * 53,
+						"Volver Al Titulo (Presione P)",
+						Color(255, 255, 255),
+						pFont);
+				}
+			}
+			else if (!mLangSetEN && !mLangSetES && mLangSetFR)
+			{
+				if (mDifficulty == 0)
+				{
+					mpGraphicsSystem->draw(mpGraphicsBuffManager->getBuffer("backgroundImg"), 0, 0, 1, 1);
+					mpGraphicsSystem->displayMessage((mpGraphicsSystem->
+						getWidth() / 60) * 26, mpGraphicsSystem->getHeight() / 10,
+						"Reglages",
+						Color(255, 255, 255),
+						pFont);
+					mpGraphicsSystem->displayMessage((mpGraphicsSystem->
+						getWidth() / 60) * 7, (mpGraphicsSystem->getHeight() / 32) * 8,
+						"Changer De Langue (Presse M) - Francais",
+						Color(255, 255, 255),
+						pFont);
+					mpGraphicsSystem->displayMessage((mpGraphicsSystem->
+						getWidth() / 60) * 8, (mpGraphicsSystem->getHeight() / 64) * 32,
+						"Change La Difficulte (Presse N) - Facil",
+						Color(255, 255, 255),
+						pFont);
+					mpGraphicsSystem->displayMessage((mpGraphicsSystem->
+						getWidth() / 60) * 12, (mpGraphicsSystem->getHeight() / 64) * 43,
+						"Son Active/Desactive (Presse K)",
+						Color(255, 255, 255),
+						pFont);
+					mpGraphicsSystem->displayMessage((mpGraphicsSystem->
+						getWidth() / 60) * 11, (mpGraphicsSystem->getHeight() / 64) * 53,
+						"Retour A L'ecran titre (Presse P)",
+						Color(255, 255, 255),
+						pFont);
+				}
+				if (mDifficulty == 1)
+				{
+					mpGraphicsSystem->draw(mpGraphicsBuffManager->getBuffer("backgroundImg"), 0, 0, 1, 1);
+					mpGraphicsSystem->displayMessage((mpGraphicsSystem->
+						getWidth() / 60) * 26, mpGraphicsSystem->getHeight() / 10,
+						"Reglages",
+						Color(255, 255, 255),
+						pFont);
+					mpGraphicsSystem->displayMessage((mpGraphicsSystem->
+						getWidth() / 60) * 7, (mpGraphicsSystem->getHeight() / 32) * 8,
+						"Changer De Langue (Presse M) - Francais",
+						Color(255, 255, 255),
+						pFont);
+					mpGraphicsSystem->displayMessage((mpGraphicsSystem->
+						getWidth() / 60) * 8, (mpGraphicsSystem->getHeight() / 64) * 32,
+						"Change La Difficulte (Presse N) - Ordinaire",
+						Color(255, 255, 255),
+						pFont);
+					mpGraphicsSystem->displayMessage((mpGraphicsSystem->
+						getWidth() / 60) * 12, (mpGraphicsSystem->getHeight() / 64) * 43,
+						"Son Active/Desactive (Presse K)",
+						Color(255, 255, 255),
+						pFont);
+					mpGraphicsSystem->displayMessage((mpGraphicsSystem->
+						getWidth() / 60) * 11, (mpGraphicsSystem->getHeight() / 64) * 53,
+						"Retour A L'ecran titre (Presse P)",
+						Color(255, 255, 255),
+						pFont);
+				}
+				if (mDifficulty == 2)
+				{
+					mpGraphicsSystem->draw(mpGraphicsBuffManager->getBuffer("backgroundImg"), 0, 0, 1, 1);
+					mpGraphicsSystem->displayMessage((mpGraphicsSystem->
+						getWidth() / 60) * 26, mpGraphicsSystem->getHeight() / 10,
+						"Reglages",
+						Color(255, 255, 255),
+						pFont);
+					mpGraphicsSystem->displayMessage((mpGraphicsSystem->
+						getWidth() / 60) * 7, (mpGraphicsSystem->getHeight() / 32) * 8,
+						"Changer De Langue (Presse M) - Francais",
+						Color(255, 255, 255),
+						pFont);
+					mpGraphicsSystem->displayMessage((mpGraphicsSystem->
+						getWidth() / 60) * 8, (mpGraphicsSystem->getHeight() / 64) * 32,
+						"Change La Difficulte (Presse N) - Dur",
+						Color(255, 255, 255),
+						pFont);
+					mpGraphicsSystem->displayMessage((mpGraphicsSystem->
+						getWidth() / 60) * 12, (mpGraphicsSystem->getHeight() / 64) * 43,
+						"Son Active/Desactive (Presse K)",
+						Color(255, 255, 255),
+						pFont);
+					mpGraphicsSystem->displayMessage((mpGraphicsSystem->
+						getWidth() / 60) * 11, (mpGraphicsSystem->getHeight() / 64) * 53,
+						"Retour A L'ecran titre (Presse P)",
+						Color(255, 255, 255),
+						pFont);
+				}
+			}
+			mpGraphicsSystem->flip();
+		}
+
+
+		//Level while loop
+		int numLoops = 0;
+		while (mShouldContinue && mStartLevel)
+		{
+
+			Timer theTimer;
+			theTimer.start();
+
+			//Moves the snake.
+			if (numLoops % snakeSpeed == 0 && mDirection != 0)
+			{
+				vector<Unit*> snakePieces = mpSnake->getSnakePieces();
+				Unit* head = snakePieces[0];
+				vector<Vector2D> snakeLocations;
+
+				for (int i = 0; i < snakePieces.size(); i++)
+				{
+					snakeLocations.push_back(snakePieces[i]->getLocation());
+				}
+
+				Vector2D headLocation = head->getLocation();
+
+				switch (mDirection)
+				{
+				case 1:
+					head->setLocation(Vector2D(headLocation.getX(), headLocation.getY() - SNAKE_SIZE));
+					break;
+				case 2:
+					head->setLocation(Vector2D(headLocation.getX(), headLocation.getY() + SNAKE_SIZE));
+					break;
+				case 3:
+					head->setLocation(Vector2D(headLocation.getX() - SNAKE_SIZE, headLocation.getY()));
+					break;
+				case 4:
+					head->setLocation(Vector2D(headLocation.getX() + SNAKE_SIZE, headLocation.getY()));
+					break;
+				default:
+					//Do nothing
+					break;
+				}
+
+				for (int i = 1; i < snakePieces.size(); i++)
+				{
+					snakePieces[i]->setLocation(snakeLocations[i - 1]);
+				}
+				mpSnake->addSnakePiece(snakeLocations[snakeLocations.size() - 1]);
+
+				snakeLocations.clear();
+			}
+
+			//Move snake 2
+			if (numLoops % snakeSpeed == 0 && mDirection2 != 0)
+			{
+				vector<Unit*> snakePieces2 = mpSnake2->getSnakePieces();
+				Unit* head2 = snakePieces2[0];
+				vector<Vector2D> snakeLocations2;
+
+				for (int i = 0; i < snakePieces2.size(); i++)
+				{
+					snakeLocations2.push_back(snakePieces2[i]->getLocation());
+				}
+
+				Vector2D headLocation2 = head2->getLocation();
+
+				switch (mDirection2)
+				{
+				case 5:
+					head2->setLocation(Vector2D(headLocation2.getX(), headLocation2.getY() - SNAKE_SIZE));
+					break;
+				case 6:
+					head2->setLocation(Vector2D(headLocation2.getX(), headLocation2.getY() + SNAKE_SIZE));
+					break;
+				case 7:
+					head2->setLocation(Vector2D(headLocation2.getX() - SNAKE_SIZE, headLocation2.getY()));
+					break;
+				case 8:
+					head2->setLocation(Vector2D(headLocation2.getX() + SNAKE_SIZE, headLocation2.getY()));
+					break;
+				default:
+					//Do nothing
+					break;
+				}
+
+				for (int i = 1; i < snakePieces2.size(); i++)
+				{
+					snakePieces2[i]->setLocation(snakeLocations2[i - 1]);
+				}
+
+				mpSnake2->addSnakePiece(snakeLocations2[snakeLocations2.size() - 1]);
+
+				snakeLocations2.clear();
+			}
+
+			mpInputSystem->update();
+
+			mpGraphicsSystem->draw(mpGraphicsBuffManager->getBuffer("backgroundImg"), 0, 0, 1, 1);
+
+			mpGraphicsSystem->displayMessage(64, 64,
+				std::to_string(mSnake1Score),
+				Color(255, 255, 255),
+				pFont);
+
+			mpGraphicsSystem->displayMessage((mpGraphicsSystem->
+				getWidth() - 128), 64,
+				std::to_string(mSnake2Score),
+				Color(255, 255, 255),
+				pFont);
+
+			mpUnitManager->updateAll(targetTime);
+			mpUnitManager->collisionCheck();
+			mpUnitManager->drawAll();
+
+			mpGraphicsSystem->flip();
+
+			//update score
+			if (mScored) //Could be used for score???
+			{
+				//mpHUD->addScore(foodPoints);
+				mpAudioSystem->playSound(mpCrash);
+
+				if (mSnakeOne)
+				{
+					mSnake1Score++;
+					//add score to hud
+					//Reset pos and units
+					mScored = false;
+				}
+				else if (!mSnakeOne)
+				{
+					mSnake2Score++;
+					//add score to hud
+					//Reset pos and units
+					mScored = false;
+				}
+
+				mScored = false;
+				//mStartLevel = true;
+
+				if (mSnake1Score >= 5)
+				{
+					mStartLevel = false;
+					mDidWin = true;
+					mpSaveData->ResetData();
+					mEnterMenu = false;
+					mPlayer1Win = true;
+					
+				}
+				else if (mSnake2Score >= 5)
+				{
+					mStartLevel = false;
+					mDidWin = true;
+					mpSaveData->ResetData();
+					mEnterMenu = false;
+					mPlayer2Win = true;
+				}
+				else
+				{
+					restartLevel();
+				}
+			}
+
+			theTimer.sleepUntilElapsed(targetTime);
+			numLoops++;
+		}
+	}
+
+
+
+	if (mScored) //Could be used for score???
+	{
+		//mpHUD->addScore(foodPoints);
+
+		if (mSnakeOne)
+		{
+			mSnake1Score++;
+			//add score to hud
+			//Reset pos and units
+			mScored = false;
+		}
+		else if (!mSnakeOne)
+		{
+			mSnake2Score++;
+			//add score to hud
+			//Reset pos and units
+			mScored = false;
+		}
+
+		mScored = false;
+		//mStartLevel = true;
+	}
+	mpSaveData->SaveTheData(mSnake1Score, mSnake2Score, mDifficulty);
+
+	mpGraphicsBuffManager->removeAllBuffers();
+	mpAnimationManager->removeAllAnims();
+	delete mpSnake;
+	delete mpSnake2;
+	mpSnake2 = nullptr;
+	mpSnake = nullptr;
+	delete pFont;
+	pFont = nullptr;
+}
+
+void Game::handleEvent(const Event& theEvent)
+{
+
+	if (theEvent.getType() == COLLISION_EVENT)
+	{
+		mpAudioSystem->playSound(mpCrash);
+		const CollisionEvent& collisionEvent = static_cast<const CollisionEvent&>(theEvent);
+		Unit* firstUnit = collisionEvent.getThisUnit();
+		Unit* secondUnit = collisionEvent.getCollidingUnit();
+		string firstTag = firstUnit->getTag();
+		string secondTag = secondUnit->getTag();
+
+		if (firstTag == "Wall" && secondTag == "Snake" || firstTag == "Snake" && secondTag == "Wall")
+		{
+			mScored = true;
+			mSnakeOne = false;
+			if (mSnake1Score >= 5 || mSnake2Score >= 5)
+			{
+				mStartLevel = false;
+				mDidWin = true;
+			}
+			else
+			{
+				restartLevel();
+			}
+		}
+		if (firstTag == "Wall" && secondTag == "Snake2" || firstTag == "Snake2" && secondTag == "Wall")
+		{
+			mScored = true;
+			mSnakeOne = true;
+			if (mSnake1Score >= 5 || mSnake2Score >= 5)
+			{
+				mStartLevel = false;
+				mDidWin = true;
+			}
+			else
+			{
+				restartLevel();
+			}
+		}
+
+		//Need one way to reset score when pressing menu?
+		if (firstTag == "Snake2" && secondTag == "Snake")
+		{
+			//increase snake 2 score?
+			mScored = true;
+			mSnakeOne = false;
+			//mShouldContinue = false;
+		}
+		if (firstTag == "Snake" && secondTag == "Snake2")
+		{
+			//increase snake 1 score?
+			//mShouldContinue = false; //Change should continue to a restart bool
+			mScored = true;
+			mSnakeOne = true;
+			if (mSnake1Score >= 5 || mSnake2Score >= 5)
+			{
+				mStartLevel = false;
+				mDidWin = true;
+			}
+			else
+			{
+				restartLevel();
+			}
+		}
+		if (firstTag == "Snake2" && secondTag == "Snake2Body")
+		{
+			mScored = true;
+			mSnakeOne = true;
+			if (mSnake1Score >= 5 || mSnake2Score >= 5)
+			{
+				mStartLevel = false;
+				mDidWin = true;
+			}
+			else
+			{
+				restartLevel();
+			}
+		}
+		if (firstTag == "Snake" && secondTag == "SnakeBody")
+		{
+			mScored = true;
+			mSnakeOne = false;
+			if (mSnake1Score >= 5 || mSnake2Score >= 5)
+			{
+				mStartLevel = false;
+				mDidWin = true;
+			}
+			else
+			{
+				restartLevel();
+			}
+		}
+		if (firstTag == "Snake" && secondTag == "Snake2Body")
+		{
+			mScored = true;
+			mSnakeOne = false;
+			if (mSnake1Score >= 5 || mSnake2Score >= 5)
+			{
+				mStartLevel = false;
+				mDidWin = true;
+			}
+			else
+			{
+				restartLevel();
+			}
+		}
+		if (firstTag == "Snake2" && secondTag == "SnakeBody")
+		{
+			mScored = true;
+			mSnakeOne = true;
+			if (mSnake1Score >= 5 || mSnake2Score >= 5)
+			{
+				mStartLevel = false;
+				mDidWin = true;
+			}
+			else
+			{
+				restartLevel();
+			}
+		}
+	}
+	else if (theEvent.getType() == INPUT_EVENT)
+	{
+		const InputEvent& inputEvent = static_cast<const InputEvent&>(theEvent);
+		int key = inputEvent.getInput();
+
+		switch (key)
+		{
+		case 1:
+			//W
+			if (mDirection != 2 && mStartLevel)
+				mDirection = key;
+			break;
+		case 2:
+			//S
+			if (mDirection != 1 && mStartLevel)
+				mDirection = key;
+			break;
+		case 3:
+			//A
+			if (mDirection != 4 && mStartLevel)
+				mDirection = key;
+			break;
+		case 4:
+			//D
+			if (mDirection != 3 && mStartLevel)
+				mDirection = key;
+			break;
+		case 5:
+			//W
+			if (mDirection2 != 2 && mStartLevel)
+				mDirection2 = key;
+			break;
+		case 6:
+			//S
+			if (mDirection2 != 1 && mStartLevel)
+				mDirection2 = key;
+			break;
+		case 7:
+			//A
+			if (mDirection2 != 4 && mStartLevel)
+				mDirection2 = key;
+			break;
+		case 8:
+			//D
+			if (mDirection2 != 3 && mStartLevel)
+				mDirection2 = key;
+			break;
+		case 9:
+			mShouldContinue = false;
+			break;
+		case 10:
+			//Brandon added inputs 10-15
+			if (mShouldContinue && !mStartLevel)
+			{
+				mpAudioSystem->playSound(mpClick);
+				bool isPPressed = false;
+				if (!mEnterSettings && !isPPressed)
+				{
+					//std::cout << "P" << std::endl;
+					mEnterSettings = true;
+					isPPressed = true;
+				}
+				if (mEnterSettings && !isPPressed)
+				{
+					//std::cout << "P - 2" << std::endl;
+					mEnterSettings = false;
+					isPPressed = true;
+				}
+			}
+			break;
+		case 11:
+			if (mShouldContinue && mEnterMenu && !mStartLevel && !mEnterSettings)
+			{
+				mpAudioSystem->playSound(mpClick);
+				mSnake1Score = 0;
+				mSnake2Score = 0;
+				mStartLevel = true;
+			}
+			else if (mShouldContinue && !mStartLevel && !mEnterSettings && mPlayer1Win && !mEnterMenu)
+			{
+				bool isSpacePressed = false;
+				if (!isSpacePressed)
+				{
+					mPlayer1Win = false;
+					isSpacePressed = true;
+					mEnterMenu = true;
+				}
+			}
+			else if (mShouldContinue && !mStartLevel && !mEnterSettings && mPlayer2Win && !mEnterMenu)
+			{
+				bool isSpacePressed = false;
+				if (!isSpacePressed)
+				{
+					mPlayer2Win = false;
+					isSpacePressed = true;
+					mEnterMenu = true;
+				}
+			}
+			break;
+		case 12:
+			if (mShouldContinue && !mStartLevel && mEnterSettings)
+			{
+				mpAudioSystem->playSound(mpClick);
+				bool isMPressed = false;
+				if (mLangSetEN && !mLangSetES && !mLangSetFR && !isMPressed)
+				{
+					mLangSetEN = false;
+					mLangSetES = true;
+					mLangSetFR = false;
+					isMPressed = true;
+				}
+				if (!mLangSetEN && mLangSetES && !mLangSetFR && !isMPressed)
+				{
+					mLangSetEN = false;
+					mLangSetES = false;
+					mLangSetFR = true;
+					isMPressed = true;
+				}
+				if (!mLangSetEN && !mLangSetES && mLangSetFR && !isMPressed)
+				{
+					mLangSetEN = true;
+					mLangSetES = false;
+					mLangSetFR = false;
+					isMPressed = true;
+				}
+			}
+			break;
+		case 13:
+			if (mShouldContinue && !mStartLevel && mEnterSettings)
+			{
+				mpAudioSystem->playSound(mpClick);
+				mDifficulty++;
+				if (mDifficulty > 2)
+				{
+					mDifficulty = 0;
+				}
+			}
+			break;
+		case 14:
+			if (mShouldContinue && !mStartLevel && !mEnterSettings)
+			{
+				mpSaveData->LoadData();
+				mSnake1Score = mpSaveData->GetPlayerOneScore();
+				mSnake2Score = mpSaveData->GetPlayerTwoScore();
+				mDifficulty = mpSaveData->GetDiff();
+				mStartLevel = true;
+			}
+			break;
+		case 15:
+			if (mShouldContinue && !mStartLevel && mEnterSettings)
+			{
+				bool isKPressed = false;
+				if (!mIsMuted && !isKPressed)
+				{
+					mIsMuted = true;
+					mpAudioSystem->mute(mIsMuted, mpMusic);
+					mpAudioSystem->mute(mIsMuted, mpClick);
+					mpAudioSystem->mute(mIsMuted, mpCrash);
+					isKPressed = true;
+				}
+				if (mIsMuted && !isKPressed)
+				{
+					mIsMuted = false;
+					mpAudioSystem->mute(mIsMuted, mpMusic);
+					mpAudioSystem->mute(mIsMuted, mpClick);
+					mpAudioSystem->mute(mIsMuted, mpCrash);
+					isKPressed = true;
+				}
+			}
+			break;
+		default:
+			break;
+		}
+	}
+}
+
+void Game::restartLevel()
+{
+	mpSaveData->SaveTheData(mSnake1Score, mSnake2Score, mDifficulty);
+
+	delete mpSnake;
+	delete mpSnake2;
+
+	int snakeSegments = 0;
+	const int BACKGROUND_SIZE_X = 1536;
+	const int BACKGROUND_SIZE_Y = 768;
+
+	mpLevelManager->instantiateLevel(0, mpUnitManager, mpAnimationManager, mpGraphicsBuffManager->getBuffer("wallImg"));
+	mDirection = 0;
+	mDirection2 = 0;
+
+	mpSnake = new Snake(true, 256, 256, mpUnitManager, mpAnimationManager, mpGraphicsBuffManager, snakeSegments);
+	mpSnake2 = new Snake(false, BACKGROUND_SIZE_X - 256, BACKGROUND_SIZE_Y - 256, mpUnitManager, mpAnimationManager, mpGraphicsBuffManager, snakeSegments);
+
+}

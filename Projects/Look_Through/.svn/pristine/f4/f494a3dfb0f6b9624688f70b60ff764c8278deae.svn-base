@@ -1,0 +1,23 @@
+#pragma once
+#include "SDL_FILES.h"
+#include <iostream>
+#include <Trackable.h>
+#include <vector>
+
+using namespace std;
+
+class Audio
+{
+public:
+	Audio();
+	~Audio();
+
+	void addSound(const char* path);
+
+	void playSound(const int sound) const;
+
+private:
+
+	std::vector<Mix_Chunk*> mpSounds;
+
+};

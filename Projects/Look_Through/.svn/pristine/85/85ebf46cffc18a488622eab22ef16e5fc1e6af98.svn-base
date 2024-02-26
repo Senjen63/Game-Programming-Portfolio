@@ -1,0 +1,45 @@
+#include "InputSystem.h"
+
+InputSystem::InputSystem()
+{
+    mpSystem = nullptr;
+}
+
+InputSystem::~InputSystem()
+{
+	cleanup();
+}
+
+void InputSystem::init()
+{
+    EventSystem::initInstance();
+    mpSystem = EventSystem::getInstance();
+    mpSystem->init();
+}
+
+void InputSystem::cleanup()
+{
+    mpSystem->cleanup();
+    mpSystem = nullptr;
+}
+
+void InputSystem::getKeyEvent()
+{
+    SDL_Event theEvent;
+
+    while (SDL_PollEvent(&theEvent))
+    {
+        if (theEvent.type == SDL_KEYDOWN)
+        {
+            if(theEvent.key.repeat == 0)
+                mpSystem->fireEvent(MoveEvent((int)theEvent.key.keysym.sym));
+        }
+    }
+}
+
+bool InputSystem::getKeyState(Key keyCode)
+{
+    const Uint8* mKeyboardState = SDL_GetKeyboardState(NULL);
+    return mKeyboardState[(int)keyCode];
+
+}

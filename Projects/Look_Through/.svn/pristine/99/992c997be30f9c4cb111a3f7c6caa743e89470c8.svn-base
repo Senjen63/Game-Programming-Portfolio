@@ -1,0 +1,236 @@
+#include "SnakeManager.h"
+
+SnakeManager::SnakeManager(float cellSize, float timePerMove, int startingSegments, std::pair<float, float>startPosition):Unit(startPosition)
+{
+	mCellSize = cellSize;
+	mTimePerMove = timePerMove;
+	mTimeRemaining = mTimePerMove;
+	mNewDirection = std::make_pair(0, -1);
+	pmEventSystem = EventSystem::getInstance();
+	mStartingSegments = startingSegments;
+	mStartingLocation = startPosition;
+
+	if (startingSegments <= 0)
+	{
+		startingSegments = 1;
+	}
+
+	const std::string snakeBufferFilePath = "Assets/snake.png";
+	pmSnakeBuffer = new GraphicsBuffer(snakeBufferFilePath);
+	pmSnakeAnimation = new Animation(0, false);
+	Sprite snakeSprite = Sprite(pmSnakeBuffer);
+	pmSnakeAnimation->addSprite(snakeSprite);
+
+	init();
+
+	EventSystem* pEventSystem = EventSystem::getInstance();
+	pEventSystem->addListener((EventType)MOVE_EVENT, this);
+	pEventSystem->addListener((EventType)SNAKE_COLLISION_EVENT, this);
+}
+
+SnakeManager::~SnakeManager()
+{
+	pmHeadSegment = nullptr;
+
+	std::list<SnakeSegment*>::iterator i;
+	for (i = pmSegments.begin(); i != pmSegments.end(); i++)
+	{
+		delete(*i);
+	}
+
+	pmSegments.clear();
+
+	delete(pmSnakeAnimation);
+	delete(pmSnakeBuffer);
+}
+
+void SnakeManager::init()
+{
+	mIsActive = true;
+
+	if (!pmSegments.empty())
+	{
+		clear();
+	}
+
+	addSegment(mStartingLocation);
+	pmHeadSegment = *pmSegments.begin();
+
+	for (int i = 0; i < mStartingSegments - 1; i++)
+	{
+		addSegment();
+	}
+}
+
+void SnakeManager::init(float timePerMove, int startingSegments, std::pair<float, float>startPosition)
+{
+	mTimePerMove = timePerMove;
+	mTimeRemaining = mTimePerMove;
+	mNewDirection = std::make_pair(0, -1);
+	mStartingSegments = startingSegments;
+	mStartingLocation = startPosition;
+
+	init();
+}
+
+void SnakeManager::clear()
+{
+	pmHeadSegment = nullptr;
+
+	while (!pmSegments.empty())
+	{
+		delete pmSegments.back();
+		pmSegments.pop_back();
+	}
+
+	pmSegments.clear();
+}
+
+// Adds the head segment based on the start position passed in.
+// Direction of (0, 0) should keep the snake idle.
+void SnakeManager::addSegment(std::pair<float, float>startPosition)
+{
+	Animation* currentAnim = getSnakeAnimation();
+	SnakeSegment* newSegment = new SnakeSegment(startPosition, currentAnim, std::make_pair(0, 0), true);
+
+	pmSegments.push_back(newSegment);
+}
+
+// Adds a new segment after the last segment in the segment list.
+void SnakeManager::addSegment()
+{
+	// failsafe if the list is empty
+	if (pmSegments.empty() && mIsActive)
+	{
+		addSegment(std::make_pair(0, 0));
+		return;
+	}
+
+	else if (!mIsActive)
+	{
+		return;
+	}
+
+	Animation* currentAnim = getSnakeAnimation();
+	SnakeSegment* endSegment = pmSegments.back();
+
+	std::pair<float, float> endLocation = endSegment->getLocation();
+
+	// Depending on how collision with another segment, this will either work perfectly and allow for all segments to overlap on start or kill the player immediately.
+	std::pair<int, int> endDirection = endSegment->getForwardDirection();
+
+	std::pair<float, float> createPosition = std::make_pair(endLocation.first + (endDirection.first * mCellSize), endLocation.second + (endDirection.second * mCellSize));
+
+	SnakeSegment* newSegment = new SnakeSegment(createPosition, pmSnakeAnimation, endDirection, false);
+
+	pmSegments.push_back(newSegment);
+}
+
+void SnakeManager::update(float deltaTime)
+{
+	mTimeRemaining -= deltaTime;
+
+	if (mTimeRemaining <= 0)
+	{
+		mTimeRemaining = mTimePerMove;
+
+		std::list<SnakeSegment*>::iterator i;
+		std::pair<float, float> previousPosition;
+		for (i = pmSegments.begin(); i != pmSegments.end(); i++)
+		{
+			// If idle or head segment get the direction head is moving in and move it towards that direction
+			if (i == pmSegments.begin())
+			{
+				previousPosition = (*i)->getLocation();
+				std::pair<float, float>currentDirection = mNewDirection;
+
+				(*i)->moveSegment(currentDirection, mCellSize);
+				continue;
+			}
+
+			std::pair<float, float> currentPosition = (*i)->getLocation();
+			(*i)->updateLocation(previousPosition);
+			previousPosition = currentPosition;
+		}
+
+		if (pmHeadSegment != nullptr)
+		{
+			pmEventSystem->fireEvent(MoveEvent(pmHeadSegment->getLocation(), this, "SnakeManager"));
+		}
+	}
+
+	else
+	{
+		std::list<SnakeSegment*>::iterator i;
+		for (i = pmSegments.begin(); i != pmSegments.end(); i++)
+		{
+			(*i)->update(deltaTime);
+		}
+	}
+}
+
+void SnakeManager::changeHeadDirection(std::pair<int, int> newDirection)
+{
+	if (newDirection.first != -1 * this->mNewDirection.first || newDirection.second != -1 * this->mNewDirection.second)
+	{
+		this->mNewDirection = newDirection;
+	}
+}
+
+void SnakeManager::draw(GraphicsSystem* currentGraphicsSystem)
+{
+	std::list<SnakeSegment*>::iterator i;
+	for (i = pmSegments.begin(); i != pmSegments.end(); i++)
+	{
+		(*i)->draw(currentGraphicsSystem);
+	}
+}
+
+void SnakeManager::handleEvent(const Event& theEvent)
+{
+	if (theEvent.getType() == SNAKE_COLLISION_EVENT)
+	{
+		mIsActive = false;
+		pmHeadSegment = nullptr;
+
+		std::list<SnakeSegment*>::iterator i;
+		for (i = pmSegments.begin(); i != pmSegments.end(); i++)
+		{
+			delete(*i);
+		}
+
+		pmSegments.clear();
+	}
+
+	if (theEvent.getType() == MOVE_EVENT)
+	{
+		const MoveEvent& moveEvent = static_cast<const MoveEvent&>(theEvent);
+
+		if (moveEvent.getObjectTag() == "SnakeManager")
+		{
+			std::list<SnakeSegment*>::iterator i;
+			for (i = pmSegments.begin(); i != pmSegments.end(); i++)
+			{
+				if (moveEvent.getPosition() == (*i)->getLocation() && (*i) != pmHeadSegment)
+				{
+					EventSystem* pEventSystem = EventSystem::getInstance();
+					pEventSystem->fireEvent(SnakeCollisionEvent());
+					break;
+				}
+			}
+		}
+	}
+}
+
+void SnakeManager::changeMoveSpeed(float changeInSpeed)
+{
+	if (mTimePerMove + changeInSpeed <= 10)
+	{
+		mTimePerMove = 10;
+	}
+
+	else
+	{
+		mTimePerMove += changeInSpeed;
+	}
+}

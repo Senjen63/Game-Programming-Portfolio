@@ -1,0 +1,494 @@
+#include "Game.h"
+#include <assert.h>
+
+Game* Game::mpGameInstance = nullptr;
+
+void Game::addScore(int value)
+{
+	mScore += value;
+}
+
+void Game::cleanUp()
+{
+	if (isInit)
+	{
+		delete pCollideListener;
+
+		mpDisplay->cleanUp();
+		mpBufferManager->clear();
+		mpSnakeUnitManager->cleanUp();
+		mpCollectibleUnitManager->cleanUp();
+		mpWallManager->cleanUp();
+		delete mpBufferManager;
+		delete mpSnakeUnitManager;
+		delete mpCollectibleUnitManager;
+		delete mpWallManager;
+		mpBallsAnimation->cleanUp();
+		mpSpeedAnimation->cleanUp();
+		mpSlowAnimation->cleanUp();
+		mpPointsAnimation->cleanUp();
+		mpFoodAnimation->cleanUp();
+		mpWallAnimation->cleanUp();
+		delete mpBallsAnimation;
+		delete mpSpeedAnimation;
+		delete mpSlowAnimation;
+		delete mpPointsAnimation;
+		delete mpFoodAnimation;
+		delete mpWallAnimation;
+		delete mpSnake;
+		delete mpCollect;
+		delete mpHud;
+		delete mpDisplay;
+
+		EventSystem::cleanupInstance();
+	}
+}
+
+void Game::clearLevel()
+{
+	mpSnakeUnitManager->cleanUp();
+	mpCollectibleUnitManager->cleanUp();
+	mpWallManager->cleanUp();
+}
+
+void Game::createInstance()
+{
+	if (mpGameInstance == nullptr)
+	{
+		mpGameInstance = new Game;
+	}
+}
+
+void Game::destroyInstance()
+{
+	delete mpGameInstance;
+	mpGameInstance = nullptr;
+}
+
+void Game::displayStart()
+{
+	mpDisplay->drawCurrent(Vector2D(), Sprite(mpBufferManager->getBuffer("snow")), 1.0);
+	mpHud->drawStart(mpDisplay);
+
+	mpDisplay->flipDisplay();
+
+	while (!shouldStart)
+	{
+		mInput.runQueue();
+	}
+}
+
+void Game::doLoop()
+{
+	displayStart();
+
+	double targetTime = 16.7;
+	float timeMod = 1.0;
+
+	PerformanceTracker* pPerformanceTracker = new PerformanceTracker;
+
+	Vector2D mousePos = Vector2D(450, 270);
+	mpSnakeUnitManager->addUnit(mpBallsAnimation, mpBallsAnimation, mousePos, "Snake");
+	mpSnake->addAtStart(mBodyStart);
+	mpCollectibleUnitManager->addUnit(mpFoodAnimation, mpFoodAnimation, Vector2D(150, 150), "Food");
+
+	levelTimer.start();
+
+	while (!shouldLoop)
+	{
+		//Set up timers and trackers
+		pPerformanceTracker->clearTracker("loop");
+		pPerformanceTracker->startTracking("loop");
+		Timer loopTimer;
+		loopTimer.start();
+
+		render(targetTime);
+
+		inputs(mousePos);
+
+		update(targetTime);
+
+		progressLevel();
+
+		//Use and diplay timers and trackers
+		loopTimer.sleepUntilElapsed(targetTime);
+		pPerformanceTracker->stopTracking("loop");
+
+		//cout << "Frame Took:" << pPerformanceTracker->getElapsedTime("loop") << " ms" << endl;
+	}
+
+	delete pPerformanceTracker;
+
+	endGame();
+}
+
+void Game::endGame()
+{
+	mpDisplay->drawCurrent(Vector2D(), Sprite(mpBufferManager->getBuffer("snow")), 1.0);
+	mpHud->drawScore(mpDisplay, mScore);
+	mpHud->drawEnd(mpDisplay);
+	mpDisplay->flipDisplay();
+
+	while (true)
+	{
+		shouldEndGame = mInput.getKeyState(ESCAPE_KEY);
+		shouldPlayAgain = mInput.getKeyState(SPACE_KEY);
+
+		if (shouldEndGame)
+		{
+			break;
+		}
+		else if (shouldPlayAgain)
+		{
+			resetGame();
+			doLoop();
+			break;
+		}
+	}
+}
+
+int Game::getFoodPoints()
+{
+	return mFoodPoints;
+}
+
+void Game::Init()
+{
+	readFiles();
+
+	mpDisplay->init();
+
+	mpBufferManager = new GraphicsBufferManager;
+	mpSnakeUnitManager = new UnitManager;
+	mpCollectibleUnitManager = new UnitManager;
+	mpWallManager = new UnitManager;
+
+	mpBufferManager->addBuffer("snow", ASSET_PATH + backgroundFileName);
+	mpBufferManager->addBuffer("balls", ASSET_PATH + snakeFileName);
+	mpBufferManager->addBuffer("speed", ASSET_PATH + speedFileName);
+	mpBufferManager->addBuffer("slow", ASSET_PATH + slowFileName);
+	mpBufferManager->addBuffer("points", ASSET_PATH + pointsFileName);
+	mpBufferManager->addBuffer("food", ASSET_PATH + foodFileName);
+	mpBufferManager->addBuffer("wall", ASSET_PATH + wallFileName);
+
+	mpBallsAnimation = new Animation(mpBufferManager->getBuffer("balls"), TIME_PER_FRAME, true, NUM_FRAMES, 6, 2, 60);
+	mpSpeedAnimation = new Animation(mpBufferManager->getBuffer("speed"), TIME_PER_FRAME, true, 8, 8, 1, 60);
+	mpSlowAnimation = new Animation(mpBufferManager->getBuffer("slow"), TIME_PER_FRAME, true, 8, 8, 1, 60);
+	mpPointsAnimation = new Animation(mpBufferManager->getBuffer("points"), TIME_PER_FRAME, true, 8, 8, 1, 60);
+	mpFoodAnimation = new Animation(mpBufferManager->getBuffer("food"), TIME_PER_FRAME, true, 35, 5, 7, 60);
+	mpWallAnimation = new Animation(mpBufferManager->getBuffer("wall"), TIME_PER_FRAME, true, 2, 2, 1, 60);
+
+	//loads level 1 data
+	readLevelData("lvl1.txt");
+
+	mpSnake = new Snake(mpSnakeUnitManager, mpBallsAnimation, mPlayerSpeed);
+	mpCollect = new Collectible(mpCollectibleUnitManager, mpSpeedAnimation, mpSlowAnimation, mpPointsAnimation, mpFoodAnimation, mSpawnRate);
+	mpHud = new HudManager();
+
+	pEventSystem = EventSystem::getInstance();
+
+	pCollideListener = new CollideListener;
+
+	isInit = true;
+}
+
+void Game::inputs(Vector2D pos)
+{
+	//Updates the event queue
+	mInput.runQueue();
+	
+	mFrameCount++;
+
+	shouldLoop = mInput.getKeyState(ESCAPE_KEY);
+
+	mpSnake->moveSnake();
+
+	if (mpWallManager->doesCollide(mpSnake->getHeadLoc(), false, "Wall"))
+	{
+		pEventSystem->fireEvent(CollideEvent("Wall"));
+	}
+	else if (mpSnakeUnitManager->doesCollide(mpSnake->getHeadLoc(), true, "Snake"))
+	{
+		pEventSystem->fireEvent(CollideEvent("Snake"));
+	}
+	else if (mpCollectibleUnitManager->doesCollide(mpSnake->getHeadLoc(), false, "Speed"))
+	{
+		pEventSystem->fireEvent(CollideEvent("Speed"));
+	}
+	else if (mpCollectibleUnitManager->doesCollide(mpSnake->getHeadLoc(), false, "Slow"))
+	{
+		pEventSystem->fireEvent(CollideEvent("Slow"));
+	}
+	else if (mpCollectibleUnitManager->doesCollide(mpSnake->getHeadLoc(), false, "Points"))
+	{
+		pEventSystem->fireEvent(CollideEvent("Points"));
+	}
+	else if (mpCollectibleUnitManager->doesCollide(mpSnake->getHeadLoc(), false, "Food"))
+	{
+		pEventSystem->fireEvent(CollideEvent("Food"));
+	}
+
+	mpCollect->spawnCollectible(mFrameCount);
+}
+
+Game::Game()
+{
+	mpDisplay = new GraphicsSystem(DISP_HEIGHT, DISP_WIDTH);
+
+	mpSnakeUnitManager = nullptr;
+	mpCollectibleUnitManager = nullptr;
+	mpWallManager = nullptr;
+
+	mpBufferManager = nullptr;
+
+	mpSnake = nullptr;
+	mpCollect = nullptr;
+	mpHud = nullptr;
+
+	mpBallsAnimation = nullptr;
+	mpSpeedAnimation = nullptr;
+	mpSlowAnimation = nullptr;
+	mpPointsAnimation = nullptr;
+	mpFoodAnimation = nullptr;
+	mpWallAnimation = nullptr;
+
+	isInit = false;
+	shouldLoop = false;
+	shouldStart = false;
+	shouldEndGame = false;
+	shouldPlayAgain = false;
+
+	mPlayerSpeed = 30;
+	mSpawnRate = 600;
+	mFrameCount = 0;
+	mScore = 0;
+	mBodyMax = 0;
+	mBodyStart = 1;
+	mCurrentLevel = 1;
+	mMaxLevels = 3;
+	mFoodPoints = 0;
+
+	pEventSystem = nullptr;
+	pCollideListener = nullptr;
+
+	mInput.Init();
+}
+
+Game::~Game()
+{
+	cleanUp();
+}
+
+Game* Game::getInstance()
+{
+	assert(mpGameInstance != nullptr);
+	return mpGameInstance;
+}
+
+void Game::progressLevel()
+{
+	if (mpSnake->getBodyCount() >= mBodyMax)
+	{
+		if (mCurrentLevel < mMaxLevels)
+		{
+			//Clears the snake bodies, walls, and collectibles from the screen
+			clearLevel();
+
+			//Reads the new data for the levels
+			string s = to_string(mCurrentLevel + 1);
+			readLevelData("lvl" + s + ".txt");
+
+			//Resets the snake speed and spawns a new head
+			mpSnake->setSpeed(mPlayerSpeed);
+			mpSnakeUnitManager->addUnit(mpBallsAnimation, mpBallsAnimation, Vector2D(450, 270), "Snake");
+			mpSnake->setBodyCount(1);
+			mpSnake->addAtStart(mBodyStart);
+
+			//Resets the collectible spawn rate and spawns a new starting food
+			mpCollect->setSpawnRate(mSpawnRate);
+			mpCollectibleUnitManager->addUnit(mpFoodAnimation, mpFoodAnimation, Vector2D(150, 150), "Food");
+
+			//Resets the timer
+			levelTimer.stop();
+			levelTimer.start();
+
+			mCurrentLevel++;
+		}
+		else
+		{
+			shouldLoop = true;
+		}
+	}
+}
+
+void Game::readFiles()
+{
+	string keyCode;
+
+	//loads buffers
+	ifstream fin;
+	fin.open("bufferFiles.txt");
+
+	while (!fin.eof())
+	{
+		fin >> keyCode;
+
+		if (keyCode == "bckgrnd")
+		{
+			fin >> backgroundFileName;
+		}
+		else if (keyCode == "snk")
+		{
+			fin >> snakeFileName;
+		}
+		else if (keyCode == "spd")
+		{
+			fin >> speedFileName;
+		}
+		else if (keyCode == "slw")
+		{
+			fin >> slowFileName;
+		}
+		else if (keyCode == "pnts")
+		{
+			fin >> pointsFileName;
+		}
+		else if (keyCode == "fd")
+		{
+			fin >> foodFileName;
+		}
+		else if (keyCode == "wll")
+		{
+			fin >> wallFileName;
+		}
+	}
+
+	fin.close();
+}
+
+void Game::readLevelData(string fileName)
+{
+	string keyCode;
+	int wallX = 0;
+	int wallY = 0;
+	Vector2D wallLoc;
+	int shouldWall;
+
+	fstream fin;
+	fin.open(fileName);
+
+	while (!fin.eof())
+	{
+		fin >> keyCode;
+
+		if (keyCode == "snksp")
+		{
+			fin >> mPlayerSpeed;
+		}
+		else if (keyCode == "spwnrt")
+		{
+			fin >> mSpawnRate;
+		}
+		else if (keyCode == "wlldim")
+		{
+			fin >> wallX;
+			fin >> wallY;
+		}
+		else if (keyCode == "wll")
+		{
+			for (int i = 0; i < wallY; i++)
+			{
+				for (int j = 0; j < wallX; j++)
+				{
+					fin >> shouldWall;
+
+					if (shouldWall == 1)
+					{
+						wallLoc.setX((j * 60) + 30);
+						wallLoc.setY((i * 60) + 30);
+						mpWallManager->addUnit(mpWallAnimation, mpWallAnimation, wallLoc, "Wall");
+					}
+				}
+			}
+		}
+		else if (keyCode == "bdymx")
+		{
+			fin >> mBodyMax;
+		}
+		else if (keyCode == "bdystrt")
+		{
+			fin >> mBodyStart;
+		}
+		else if (keyCode == "fdpnts")
+		{
+			fin >> mFoodPoints;
+		}
+	}
+
+	fin.close();
+}
+
+void Game::render(double time)
+{
+	//Render
+	mpDisplay->drawCurrent(Vector2D(), Sprite(mpBufferManager->getBuffer("snow")), 1.0);
+	mpSnakeUnitManager->drawAll(mpDisplay);
+	mpCollectibleUnitManager->drawAll(mpDisplay);
+	mpWallManager->drawAll(mpDisplay);
+	mpHud->drawScore(mpDisplay, mScore);
+	mpHud->drawTimer(mpDisplay, levelTimer.getElapsedTime());
+	mpHud->drawFPS(mpDisplay, (1000 / time));
+
+	mpDisplay->flipDisplay();
+}
+
+void Game::resetGame()
+{
+	shouldLoop = false;
+	shouldStart = false;
+	shouldEndGame = false;
+	shouldPlayAgain = false;
+
+	mPlayerSpeed = 30;
+	mSpawnRate = 600;
+	mFrameCount = 0;
+	mScore = 0;
+	mBodyMax = 0;
+	mBodyStart = 1;
+	mCurrentLevel = 1;
+	mFoodPoints = 0;
+
+	clearLevel();
+
+	readLevelData("lvl1.txt");
+
+	//Resets the snake speed and spawns a new head
+	mpSnake->setSpeed(mPlayerSpeed);
+	mpSnake->setBodyCount(1);
+
+	//Resets the collectible spawn rate and spawns a new starting food
+	mpCollect->setSpawnRate(mSpawnRate);
+}
+
+void Game::setShouldLoop(bool loop)
+{
+	shouldLoop = loop;
+}
+
+void Game::setShouldStart(bool start)
+{
+	shouldStart = start;
+}
+
+void Game::spawnFood()
+{
+	mpCollect->spawnFood();
+}
+
+void Game::update(double dt)
+{
+	//Updates the units
+	mpSnakeUnitManager->updateAll(dt);
+	mpCollectibleUnitManager->updateAll(dt);
+	mpWallManager->updateAll(dt);
+}

@@ -1,0 +1,17 @@
+//BP
+#include "Game.h"
+#include "HUDBox.h"
+
+HUDBox::HUDBox()
+{
+    position = Vector2D(0, 0);
+    boxColor = GREEN;
+}
+
+HUDBox::~HUDBox()
+{
+}
+
+void HUDBox::updateBox()
+{
+}

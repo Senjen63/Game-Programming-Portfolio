@@ -1,0 +1,25 @@
+#pragma once
+#include "EventListener.h"
+#include "Event.h"
+#include "GraphicsBuffer.h"
+#include "Unit.h"
+#include "GameEvents.h"
+
+const int FPS_X = 0;
+const int SCORE_X = 350;
+const int TIME_X = 600;
+const int PLACE_Y = 16;
+
+class HUD : public EventListener
+{
+public:
+	HUD();
+	~HUD() {};
+
+	void init();
+
+	void handleEvent(const Event& theEvent);
+
+private:
+	Unit* mpBar = nullptr;
+};

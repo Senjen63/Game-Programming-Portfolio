@@ -1,0 +1,29 @@
+#pragma once
+#include "Component.h"
+#include "GameEvents.h"
+#include "InputSystem.h"
+#include <EventListener.h>
+#include <EventSystem.h>
+#include "BulletPool.h"
+#include "PlayerInfo.h"
+#include "MathHelp.h"
+
+const std::string BULLET_FIRING_TYPE = "BulletFiring";
+
+class BulletFiring : public Component
+{
+public:
+	BulletFiring(float speed, PlayerNumber playerNum);
+
+	virtual void init();
+	virtual void cleanUp();
+	virtual void Update(double deltaTime) {};
+
+	void handleEvent(const Event& theEvent);
+
+	PlayerNumber getPlayerNumber() const { return mPlayerNum; }
+
+private:
+	PlayerNumber mPlayerNum;
+	float mBulletSpeed;
+};

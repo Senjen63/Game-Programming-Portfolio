@@ -1,0 +1,82 @@
+#include "Animation.h"
+
+Animation::Animation()
+{
+    mAnim = nullptr;
+    mShouldLoop = false;
+    mTimePerFrame = 0;
+    mTimeLeft = 0;
+    mNumSprites = 0;
+   
+}
+
+Animation::Animation(GraphicsBuffer* pBuff, int numSprites, float speed, bool loop)
+{
+    mAnim = Sprite::getSmurfs(pBuff, 60, 60, numSprites);
+
+    mNumSprites = numSprites;
+    mShouldLoop = loop;
+    mTimePerFrame = speed;
+    mTimeLeft = mTimePerFrame;
+
+}
+/*
+Animation::Animation(std::string spriteSheet, int width, int height, int numSprites, float speed, bool loop)
+{
+   
+}
+*/
+Animation::~Animation()
+{
+    delete[] mAnim;
+}
+
+void Animation::Update(float dt)
+{
+    mTimeLeft -= dt;
+    
+    if(mTimeLeft <= 0)
+    {
+        mCurrentSprite++;
+        mTimeLeft = mTimePerFrame;
+        if(mCurrentSprite >= 16)
+        {
+            if(mShouldLoop)
+            {
+                mCurrentSprite = 0;
+            }
+            else
+            {
+                mCurrentSprite = 0;
+            }
+        }
+    }
+
+      
+
+}
+
+void Animation::setFrameRate(float speed)
+{
+    mTimePerFrame = speed;
+}
+
+int Animation::getSpriteCount()
+{
+    return mCurrentSprite;
+}
+
+Sprite Animation::getCurrentSprite()
+{
+    return mAnim[getSpriteCount()];
+}
+
+float Animation::getFrameRate()
+{
+    return mTimePerFrame;
+}
+
+void Animation::changeSpeed(float x)
+{
+    mTimePerFrame -= x;
+}

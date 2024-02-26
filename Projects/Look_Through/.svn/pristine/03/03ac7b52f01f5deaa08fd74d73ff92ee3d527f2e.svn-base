@@ -1,0 +1,46 @@
+// W key: SDLK_w
+// A key: SDLK_a
+// S key: SDLK_s
+// D key: SDLK_d
+// shift key: SDLK_RSHIFT
+// enter key: SDLK_KP_ENTER
+// escape key: SDLK_ESCAPE
+
+#include "InputSystem.h"
+
+InputSystem::InputSystem()
+{
+	init();
+}
+
+InputSystem::~InputSystem()
+{
+	cleanup();
+}
+
+void InputSystem::init()
+{
+	mpEventSystem = EventSystem::getInstance();
+}
+
+void InputSystem::cleanup()
+{
+	mpEventSystem->cleanup();
+}
+
+////QUEUE Stuff and EVENTS
+void InputSystem::getKeyEvent()
+{
+	SDL_Event theEvent;
+
+	while (SDL_PollEvent(&theEvent))
+	{
+		if (theEvent.type == SDL_KEYDOWN)
+		{
+			if (theEvent.key.repeat == 0)
+			{
+				mpEventSystem->fireEvent(InputEvent((int)theEvent.key.keysym.sym));
+			}
+		}
+	}
+}

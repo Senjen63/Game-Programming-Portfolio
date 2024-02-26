@@ -1,0 +1,3 @@
+#include "ScoreModPowerUpComponent.h"
+
+const std::string ScoreModPowerUpComponent::SCORE_MOD_POWER_UP_COMPONENT_NAME = "ScoreModPowerUpComponent";

@@ -1,0 +1,49 @@
+#include "Sprite.h"
+Sprite::Sprite()
+{
+	mPos = Vector2D(0, 0);
+	mSize = Vector2D(0, 0);
+}
+
+Sprite::Sprite(GraphicsBuffer* imgBuffer, Vector2D pos)
+{
+	mImgBuffer = imgBuffer;
+	mPos = pos;
+	mSize = Vector2D(imgBuffer->getWidth(), imgBuffer->getHeight());
+}
+Sprite::Sprite(GraphicsBuffer* imgBuffer)
+{
+	mImgBuffer = imgBuffer;
+	mPos = Vector2D(0, 0);
+	mSize = Vector2D(imgBuffer->getWidth(), imgBuffer->getHeight());
+}
+
+Sprite::~Sprite() 
+{
+
+}
+
+GraphicsBuffer* Sprite::getBuffer()
+{
+	if (mImgBuffer != nullptr)
+	{
+		return mImgBuffer;
+	}
+}
+
+Vector2D Sprite::getPos()
+{
+	return mPos;
+}
+
+Vector2D Sprite::getSize()
+{
+	return mSize;
+}
+
+GraphicsBuffer Sprite::getSpriteGraphicsBuffer()
+{
+	return mImgBuffer;
+}
+
+

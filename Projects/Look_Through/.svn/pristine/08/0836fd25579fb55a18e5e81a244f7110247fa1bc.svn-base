@@ -1,0 +1,123 @@
+#pragma once
+#include <allegro5/allegro.h>
+#include <allegro5/allegro_font.h>
+#include <allegro5/allegro_ttf.h>
+#include <allegro5/allegro_audio.h>
+#include <allegro5/allegro_acodec.h>
+#include <allegro5/allegro_image.h>
+#include <allegro5/allegro_primitives.h>
+
+#include <iostream>
+#include <cassert>
+#include <string>
+
+#include <PerformanceTracker.h>
+#include <MemoryTracker.h>
+#include <Vector2D.h>
+#include <Timer.h>
+#include <random>
+
+#include "GraphicsSystem.h"
+#include "Sprite.h"
+#include "GraphicsBuffer.h"
+
+using namespace std;
+
+GraphicsSystem::GraphicsSystem()
+{
+	display = al_create_display(0, 0);
+	height = 0;
+	width = 0;
+	assert(display);
+};
+
+GraphicsSystem::GraphicsSystem(const int DISP_WIDTH, const int DISP_HEIGHT)
+{
+	display = al_create_display(DISP_WIDTH, DISP_HEIGHT);
+	assert(display);
+	width = DISP_WIDTH;
+	height = DISP_HEIGHT;
+}
+
+GraphicsSystem::~GraphicsSystem()
+{
+	al_destroy_display(display);
+}
+
+void GraphicsSystem::Draw(GraphicsBuffer* buffer)
+{
+	al_draw_bitmap(buffer->bitmap, 0, 0, 0);
+}
+
+void GraphicsSystem::Draw(GraphicsBuffer* buffer, float locX, float locY, float scale_factor)
+{
+	al_set_target_bitmap(al_get_backbuffer(display));
+	al_draw_scaled_bitmap(buffer->bitmap, 0, 0, buffer->getWidth(), buffer->getHeight(), locX, locY, buffer->getWidth() * scale_factor, buffer->getHeight() * scale_factor, 0);
+}
+
+void GraphicsSystem::Draw(float locX, float locY, Sprite* sprite, const int DISP_WIDTH, const int DISP_HEIGHT)
+{
+	al_draw_bitmap_region(sprite->getBuffer()->bitmap, locX, locY, sprite->getWidth(), sprite->getHeight(), rand() % (DISP_WIDTH - sprite->getWidth()), rand() % (DISP_HEIGHT - sprite->getHeight()), 0);
+}
+
+void GraphicsSystem::Draw(GraphicsBuffer* tBuffer, GraphicsBuffer* sBuffer, float locX, float locY)
+{
+	ALLEGRO_BITMAP* origBitmap = al_get_target_bitmap();
+
+	al_set_target_bitmap(tBuffer->bitmap);
+	al_draw_bitmap(sBuffer->bitmap, locX, locY, 0);
+
+	al_set_target_bitmap(origBitmap);
+}
+void GraphicsSystem::Draw(GraphicsBuffer* tBuffer, GraphicsBuffer* sBuffer, float locX, float locY, float scale_factor)
+{
+	ALLEGRO_BITMAP* origBitmap = al_get_target_bitmap();
+
+	al_set_target_bitmap(tBuffer->bitmap);
+	al_draw_scaled_bitmap(sBuffer->bitmap, 0, 0, sBuffer->getWidth(), sBuffer->getHeight(), locX, locY, sBuffer->getWidth() * scale_factor, sBuffer->getHeight() * scale_factor, 0);
+
+	al_set_target_bitmap(origBitmap);
+}
+
+void GraphicsSystem::Draw(GraphicsBuffer* buffer, float locX, float locY, Sprite* sprite, float scale_factor)
+{
+	al_draw_scaled_bitmap(buffer->bitmap, 0, 0, buffer->getWidth(), buffer->getHeight(), locX, locY, sprite->getWidth() * scale_factor, sprite->getHeight() * scale_factor, 0);
+}
+
+void GraphicsSystem::WriteText(float locX, float locY, ALLEGRO_FONT* cour_font, ALLEGRO_COLOR color, const char* TEXT)
+{
+	al_set_target_bitmap(al_get_backbuffer(display));
+	al_draw_text(cour_font, color, locX, locY, ALLEGRO_ALIGN_CENTER, TEXT);
+}
+
+void GraphicsSystem::WriteText(GraphicsBuffer* buffer, float locX, float locY, ALLEGRO_FONT* cour_font, ALLEGRO_COLOR color, const char* TEXT)
+{
+	ALLEGRO_BITMAP* origBitmap = al_get_target_bitmap();
+	al_set_target_bitmap(buffer->bitmap);
+	al_draw_text(cour_font, color, locX, locY, ALLEGRO_ALIGN_CENTER, TEXT);
+	al_set_target_bitmap(origBitmap);
+}
+
+void GraphicsSystem::Flip()
+{
+	al_flip_display();
+}
+
+void GraphicsSystem::saveBitmap(GraphicsBuffer* buffer, string outputName)
+{
+	al_save_bitmap(outputName.c_str(), buffer->bitmap);
+}
+void GraphicsSystem::Draw(float locX, float locY, Sprite* sprite, const int DISP_WIDTH, const int DISP_HEIGHT, float worldX, float worldY)
+{
+	al_draw_bitmap_region(sprite->getBuffer()->bitmap, locX, locY, sprite->getWidth(), sprite->getHeight(), worldX, worldY, 0);
+}
+
+int GraphicsSystem::getWidth()
+{
+	return width;
+}
+
+int GraphicsSystem::getHeight()
+{
+	return height;
+}

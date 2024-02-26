@@ -1,0 +1,18 @@
+﻿//     -------------------------------------------------------------------------
+//     Final Project
+//         Component.hpp
+//     
+//             Created:
+//                 07-04-2022
+//             Author(s):
+//                 Aven Presseisen
+//     -------------------------------------------------------------------------
+
+#pragma once
+
+using ComponentMask = unsigned int;
+
+struct Component
+{
+    virtual ~Component() = default;
+};

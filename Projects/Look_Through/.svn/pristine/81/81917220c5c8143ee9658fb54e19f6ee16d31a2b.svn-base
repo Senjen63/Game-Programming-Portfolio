@@ -1,0 +1,19 @@
+#pragma once
+#include "Unit.h"
+#include "InputSystem.h"
+
+class Game : public Trackable
+{
+	GraphicsSystem * mpGraphicsSystem;
+	InputSystem * mpInputSystem;
+
+public:
+	Game();
+	~Game();
+
+	void init();
+	void cleanup();
+
+	void doLoop();
+};
+

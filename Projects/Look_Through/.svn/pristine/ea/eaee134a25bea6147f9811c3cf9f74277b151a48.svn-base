@@ -1,0 +1,217 @@
+#include "Game.h"
+
+
+Game* Game::mpGame;
+
+
+void Game::update(float dt)
+{
+	mpUnitManager->update(dt);
+}
+
+
+void Game::render()
+{
+	mpUnitManager->draw(mpGraphicsSystem);
+}
+
+
+void Game::handleInput()
+{
+	mpInputSystem->handleInputQueue();
+}
+
+
+Game* Game::getInstance()
+{
+	return mpGame;
+}
+
+
+Game* Game::createInstance(int targetFramerate)
+{
+	assert(mpGame == nullptr);
+
+	mpGame = new Game(targetFramerate);
+
+	return mpGame;
+}
+
+
+void Game::initInstance(Vector2D windowSize)
+{
+	mWindowSize = windowSize;
+
+	mpGraphicsSystem = new GraphicsSystem();
+	mpGraphicsSystem->init(windowSize.getX(), windowSize.getY());
+
+	mpInputSystem = new InputSystem();
+	mpInputSystem->init();
+
+	mpUnitManager = new UnitManager();
+
+	mpGraphicsBufferManager = new GraphicsBufferManager(mpGraphicsSystem->getBackBuffer());
+
+	EventSystem::initInstance();
+	EventSystem::getInstance()->init();
+}
+
+
+void Game::cleanupInstance()
+{
+	EventSystem::cleanupInstance();
+
+	if (mpGraphicsBufferManager != nullptr)
+	{
+		delete mpGraphicsBufferManager;
+	}
+	
+	if (mpUnitManager != nullptr)
+	{
+		delete mpUnitManager;
+	}
+	
+	if (mpInputSystem != nullptr)
+	{
+		delete mpInputSystem;
+	}
+	
+	if (mpGraphicsSystem != nullptr)
+	{
+		delete mpGraphicsSystem;
+	}
+}
+
+
+void Game::importSprites(std::string assetDictionaryPath, std::string spritePath)
+{
+	std::ifstream input = std::ifstream(assetDictionaryPath);
+
+	if (!input.good())
+	{
+		throw "importSprites failed";
+	}
+
+	std::string name;
+	std::string spriteName;
+
+	while (!input.eof())
+	{
+		input >> name;
+		input >> spriteName;
+
+		mpGraphicsBufferManager->addGraphicsBuffer(name, spritePath + spriteName);
+	}
+}
+
+
+void Game::doLoop()
+{
+	const std::string SPRITE_PATH = "Sprites\\";
+	const std::string DATA_PATH = "Data\\";
+	const std::string FONT_PATH = "Fonts\\";
+
+	const int HUD_FONT_SIZE = 16;
+
+	bool keepGoing = true;
+
+	Timer loopTimer;
+	PerformanceTracker* pPerformanceTracker = new PerformanceTracker();
+
+	importSprites(ASSET_DICTIONARY_PATH, SPRITE_PATH);
+	
+	mpGraphicsBufferManager->addGraphicsBuffer("HUDBackground", Vector2D(mWindowSize.getX(), (float) HUD_FONT_SIZE), Color(0, 0, 0, 255));
+	mpGraphicsBufferManager->addGraphicsBuffer("InfoScreenBackground", mWindowSize, Color(0, 0, 0));
+
+	Sprite backgroundSprite = Sprite(&mpGraphicsBufferManager->getGraphicsBuffer("BackgroundBuffer"));
+	Sprite infoScreenBackgroundSprite = Sprite(&mpGraphicsBufferManager->getGraphicsBuffer("InfoScreenBackground"));
+
+	LevelManager* levelManager = new LevelManager();
+	levelManager->init();
+
+	std::string path = FONT_PATH + "cour.ttf";
+
+	Font font = Font(FONT_PATH + "cour.ttf", HUD_FONT_SIZE); 
+
+	HUD hud = HUD(*levelManager, font, Color(), &mpGraphicsBufferManager->getGraphicsBuffer("HUDBackground"));
+
+	ScreenChangeManager mScreenChangeManager;
+	mScreenChangeManager.init();
+
+	while (keepGoing)
+	{
+		pPerformanceTracker->clearTracker(PERFORMANCE_TRACKER_STRING);
+		pPerformanceTracker->startTracking(PERFORMANCE_TRACKER_STRING);
+
+		loopTimer.start();
+
+		if (mpInputSystem->getKeyState(Keycode::ESCAPE))
+		{
+			keepGoing = false;
+		}
+
+		if (mInLevel)
+		{
+			handleInput();
+
+			update(mTargetTimeInMilliseconds);
+			levelManager->update(mTargetTimeInMilliseconds);
+			hud.update(mTargetTimeInMilliseconds);
+
+			mpGraphicsSystem->draw(Vector2D(0, 0), backgroundSprite);
+			render();
+			hud.draw(mpGraphicsSystem);
+		}
+		else
+		{
+			if (mpInputSystem->getKeyState(Keycode::SPACE))
+			{
+				mInLevel = true;
+				handleInput(); // Handle with no receivers so we don't have leftover inputs
+				mpUnitManager->cleanup();
+				EventSystem::getInstance()->cleanup();
+				EventSystem::getInstance()->init();
+				delete levelManager;
+				levelManager = nullptr;
+				levelManager = new LevelManager();
+				levelManager->init();
+				levelManager->loadLevelFromFile(DATA_PATH + LEVEL_NAMES[mCurrentLevelIndex]);
+				mScreenChangeManager.init();
+			}
+			else
+			{
+				mpGraphicsSystem->draw(Vector2D(0, 0), infoScreenBackgroundSprite);
+
+				switch (mCurrentScreen)
+				{
+				case(ScreenType::LOSE_SCREEN):
+					mpGraphicsSystem->writeText(Vector2D(0, 0), &font, Color(), "You lost! Press space to try again");
+					break;
+
+				case(ScreenType::LEVEL_WIN_SCREEN):
+					mpGraphicsSystem->writeText(Vector2D(0, 0), &font, Color(), "You won the level! Press space to go to the next one");
+					break;
+
+				case(ScreenType::GAME_WIN_SCREEN):
+					mpGraphicsSystem->writeText(Vector2D(0, 0), &font, Color(), "You won the game! Press space to restart");
+					break;
+				
+				case(ScreenType::START_SCREEN):
+					mpGraphicsSystem->writeText(Vector2D(0, 0), &font, Color(), "Welcome to Snake! Press space to start");
+				}
+
+				mpGraphicsSystem->writeText(Vector2D(0, 100), &font, Color(), "Or press esc to quit");
+			}
+		}
+
+		mpGraphicsSystem->flip();
+
+		loopTimer.sleepUntilElapsed(mTargetTimeInMilliseconds);
+
+		pPerformanceTracker->stopTracking(PERFORMANCE_TRACKER_STRING);
+	}
+
+	if (levelManager != nullptr) delete levelManager;
+
+	delete pPerformanceTracker;
+}

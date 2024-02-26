@@ -1,0 +1,50 @@
+#include "Sprite.h"
+
+using namespace std;
+
+Sprite::Sprite()
+{
+	mpBuffer = nullptr;
+	mSourceLocation = Vector2D(0, 0);
+	mHeight = 0;
+	mWidth = 0;
+}
+
+//sprite sheets later on
+Sprite::Sprite(GraphicsBuffer* pBuffer, int height, int width, Vector2D sourceLocation)
+{
+	mSourceLocation = sourceLocation;
+	mpBuffer = pBuffer;
+	mHeight = height;
+	mWidth = width;
+}
+
+Sprite::~Sprite()
+{
+	/*
+	delete mpBuffer;
+	mSourceLocation = Vector2D(0, 0);
+	mHeight = 0;
+	mWidth = 0;
+	*/
+}
+
+Vector2D Sprite::getSourceLoc()
+{
+	return mSourceLocation;
+}
+
+int Sprite::getWidth()
+{
+	return mWidth;
+}
+
+int Sprite::getHeight()
+{
+	return mHeight;
+}
+
+GraphicsBuffer* Sprite::getGraphicsBuffer()
+{
+	return mpBuffer;
+}

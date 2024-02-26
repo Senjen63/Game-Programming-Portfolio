@@ -1,0 +1,36 @@
+/*
+Data
+• Allegro font
+• Font size
+
+Functions
+• Constructor/destructor
+• Accessors (size)
+*/
+
+#pragma once
+#include <allegro5/allegro.h>
+#include <allegro5/allegro_font.h>
+#include <allegro5/allegro_ttf.h>
+#include <Trackable.h>
+#include <string>
+using std::string;
+
+class Font : public Trackable
+{
+private:
+	friend class GraphicsSystem;
+
+	ALLEGRO_FONT* mpFont;
+	int mFontSize;
+	int mFlag;
+
+
+public:
+	Font(string filePath, int fontSize, int flag);
+	~Font();
+
+	float getFSize();
+
+};
+

@@ -1,0 +1,35 @@
+#pragma once
+
+#include "Vector2D.h"
+#include "Direction.h"
+#include "Animation.h"
+
+class FlyingFist : public Trackable
+{
+public:
+
+	FlyingFist(AnimationBase* animationb, Direction dir, Vector2D location, int size, int speed);
+	~FlyingFist();
+
+	void update();
+	void draw();
+	void moveFist();
+	bool isColliding(Vector2D locationColliding);
+	void checkEnemyCollisions(Vector2D locationColliding);
+
+	const double FIST_ANIM_SPEED = 0.01;
+
+private:
+
+	AnimationBase* mpPunchBase;
+	Animation* mpAnimation;
+	Direction mDirection;
+	Vector2D mLocation;
+	int mSpeed;
+	int mSize;
+
+	// movement timers
+	double mDefaultMoveTick;
+	double mCurrentMoveTick;
+	double mRemainingMoveTick;
+};

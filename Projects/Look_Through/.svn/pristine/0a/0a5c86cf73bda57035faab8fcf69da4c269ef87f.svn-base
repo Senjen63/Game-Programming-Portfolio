@@ -1,0 +1,41 @@
+#include "sprite.h"
+
+Sprite::Sprite()
+{
+	mSpriteHeight = 0;
+	mSpriteWidth = 0;
+	mpBitmap = NULL;
+	mSourceLocation = Vector2D(0, 0);
+}
+Sprite::Sprite(GraphicsBuffer* buff, Vector2D xyLocation, int width, int height)
+{
+	mpBitmap = buff;
+	mSourceLocation = xyLocation;
+	mSpriteHeight = width;
+	mSpriteHeight = height;
+	
+}
+Sprite::~Sprite()
+{
+	//Unsure should i reset to null?
+}
+Vector2D Sprite::getSourceLocation()
+{
+	return mSourceLocation;
+}
+Vector2D Sprite::getWidthAndHeigth()
+{
+	return Vector2D(mSpriteWidth, mSpriteHeight);
+}
+int Sprite::getSpriteWidth()
+{
+	return mSpriteWidth;
+}
+int Sprite::getSpriteHeight()
+{
+	return mSpriteHeight;
+}
+GraphicsBuffer* Sprite::getGraphicsBuffer()
+{
+	return mpBitmap;
+}

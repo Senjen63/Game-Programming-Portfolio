@@ -1,0 +1,47 @@
+#include "SpriteCreator.h"
+#include "Game.h"
+#include "GraphicsBuffer.h"
+#include "GraphicsBufferManager.h"
+#include "Sprite.h"
+#include "Vector2D.h"
+#include <fstream>
+
+SpriteCreator::SpriteCreator()
+{
+	ifstream inputDiff("../GalahadAssets/data/" + FILE_PATH);
+	if (inputDiff.good())
+	{
+		string key;
+
+		while (!inputDiff.eof())
+		{
+			inputDiff >> key;
+
+			if (key == "mLoc")
+			{
+				inputDiff >> mLoc;
+			}
+		}
+	}
+
+	Game* pGame = Game::getInstance();
+
+	pGame->getGraphicsBufferManager()->createAndAddGraphicsBuffer(SHIP_KEY, SHIP_PATH);
+	pGame->getGraphicsBufferManager()->createAndAddGraphicsBuffer(SHOT_KEY, SHOT_PATH);
+
+	this->mpShipSprite = new Sprite(pGame->getGraphicsBufferManager()->getGraphicsBuffer(SHIP_KEY)->getWidth(),
+		pGame->getGraphicsBufferManager()->getGraphicsBuffer(SHIP_KEY)->getHeight(),
+		&Vector2D(mLoc, mLoc),
+		pGame->getGraphicsBufferManager()->getGraphicsBuffer(SHIP_KEY));
+
+	this->mpShotSprite = new Sprite(pGame->getGraphicsBufferManager()->getGraphicsBuffer(SHOT_KEY)->getWidth(),
+		pGame->getGraphicsBufferManager()->getGraphicsBuffer(SHOT_KEY)->getHeight(),
+		&Vector2D(mLoc, mLoc),
+		pGame->getGraphicsBufferManager()->getGraphicsBuffer(SHOT_KEY));
+}
+
+SpriteCreator::~SpriteCreator()
+{
+	delete mpShipSprite;
+	delete mpShotSprite;
+}

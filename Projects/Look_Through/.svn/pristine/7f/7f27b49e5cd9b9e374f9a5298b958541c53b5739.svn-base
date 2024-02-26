@@ -1,0 +1,54 @@
+#include <random>
+#include <EventSystem.h>
+
+#include "Level.h"
+#include "SpawnEvent.h"
+
+using namespace std;
+
+Level::Level(int levelNum)
+{
+	mLevelNum = levelNum;
+
+	mPowerupTime = 0;
+	mTimeToPowerup = 0;
+	mStartingSize = 0;
+	mNeededSize = 0;
+	mPointsForFood = 0;
+	mSnakeSpeed = 0;
+	mPowerupChance[0] = 0;
+	mPowerupChance[1] = 0;
+	mPowerupChance[2] = 0;
+}
+
+Level::~Level()
+{
+}
+
+void Level::update(float elapsedTime)
+{
+	mTimeToPowerup -= elapsedTime;
+
+	if (mTimeToPowerup < 0)
+	{
+		mTimeToPowerup += mPowerupTime;
+
+		//get which type of powerup to spawn
+		int powerupRoll = rand() % 100;
+		int currentValue = 0;
+		PowerupType newType = NONE;
+
+		for (int i = 0; i < 3; i++)
+		{
+			currentValue += mPowerupChance[i];
+
+			if (currentValue > powerupRoll) 
+			{ 
+				newType = PowerupType(i+1);
+				break;
+			}
+		}
+
+		if (newType != NONE) { EventSystem::getInstance()->fireEvent(SpawnEvent(newType)); }
+	}
+}

@@ -1,0 +1,10 @@
+#include "MoveEvent.h"
+
+MoveEvent::MoveEvent(Vector2D location) : GameEvent((GameEventType)MOVE_EVENT)
+{
+    mLocation = location;
+}
+MoveEvent::~MoveEvent()
+{
+
+}

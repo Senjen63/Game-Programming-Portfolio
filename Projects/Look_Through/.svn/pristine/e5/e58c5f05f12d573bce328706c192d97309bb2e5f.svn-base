@@ -1,0 +1,94 @@
+//Evan Norzow, Nicolas Delbue, and Brandon Perry
+#pragma once
+#include "Trackable.h"
+#include "AudioSystem.h"
+#include "GraphicsSystem.h"
+#include "AnimationManager.h"
+#include "InputSystem.h"
+#include "LevelManager.h"
+#include "Level.h"
+#include "UnitManager.h"
+#include "GraphicsBufferManager.h"
+#include "Timer.h"
+#include "Unit.h"
+#include "Snake.h"
+#include "EventListener.h"
+#include "EventSystem.h"
+#include "GameEvent.h"
+#include "InputEvent.h"
+#include "CollisionEvent.h"
+#include "SaveData.h"
+#include "SDL_ttf.h"
+
+class Game : public EventListener
+{
+public:
+	bool init();
+	void cleanUp();
+	void doLoop();
+
+	GraphicsSystem* getGraphicsSystem() { return mpGraphicsSystem; };
+	InputSystem* getInputSystem() { return mpInputSystem; };
+	void handleEvent(const Event& theEvent);
+
+	void restartLevel();
+
+
+	static Game* getGameInstance();
+	static Game* createGameInstance();
+	static void destroyGameInstance();
+
+private:
+	static Game* mpsInstance;
+	bool mShouldContinue = true; //keeps the game loop looping
+	bool mStartLevel = false; //actually starts the game
+	bool mEnterMenu = true; //determines whether or not to bring users to the main menu
+	bool mEnterSettings = false; //determines whether or not to bring users to the settings
+	bool mLangSetEN = true; //English is the default language
+	bool mLangSetES = false; //Spanish
+	bool mLangSetFR = false; //French
+	bool mPlayer1Win = false; //will show the victory screen for player 1
+	bool mPlayer2Win = false; //will show the victory screen for player 2
+	
+	//0-2 difficulty
+	//Evan did this after he took away Brandon's bool system which was better in every way :P
+	int mDifficulty = 0;
+
+	bool mSnakeOne = false;
+
+	//snake scores
+	int mSnake1Score = 0;
+	int mSnake2Score = 0;
+	bool mDidWin = false; //if either character wins
+
+	bool mIsMuted = false; //determines whether to mute the audio or not
+
+	//Our three music files
+	Audio* mpMusic = nullptr;
+	Audio* mpClick = nullptr;
+	Audio* mpCrash = nullptr;
+
+	//Our "Snakes"
+	Snake* mpSnake = nullptr;
+	Snake* mpSnake2 = nullptr;
+
+	Game();
+	~Game();
+	//Instances of all these classes
+	LevelManager* mpLevelManager;
+	GraphicsSystem* mpGraphicsSystem;
+	InputSystem* mpInputSystem;
+	UnitManager* mpUnitManager;
+	AnimationManager* mpAnimationManager;
+	AudioSystem* mpAudioSystem;
+	GraphicsBufferManager* mpGraphicsBuffManager;
+	SaveData* mpSaveData;
+
+	//Information needed for levels
+	int mDirection = 0;
+	int mDirection2 = 0;
+	bool mScored = false;
+	bool mIsThereFood = false;
+	bool mIsPoweredUp = false;
+	bool newLevel = false;
+};

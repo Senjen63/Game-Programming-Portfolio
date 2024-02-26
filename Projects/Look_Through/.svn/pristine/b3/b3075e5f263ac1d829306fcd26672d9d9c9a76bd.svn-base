@@ -1,0 +1,33 @@
+/*******************************************************
+* Author: Aven Presseisen
+* Class: GPR-250-02
+* Assignment: Assignment 3
+* Certification of Authenticity:
+* I certify that this assignment is entirely my own work.
+************/
+
+#pragma once
+
+#include <Trackable.h>
+#include <allegro5/allegro.h>
+
+#include "EventSystems/EventSystemAven.h"
+
+class InputSystem final : public Trackable
+{
+    ALLEGRO_EVENT_QUEUE * mpQueue;
+    ALLEGRO_EVENT mEvent{};
+    
+    unsigned char mKeys[ ALLEGRO_KEY_MAX ]{};
+    MouseState mMouseState;
+
+public:
+    InputSystem();
+    ~InputSystem();
+
+    void cleanup();
+    KeyState::KeyClick getKeyState( Key key );
+    MouseState getMouseState();
+    void init();
+    void pollInputs();
+};

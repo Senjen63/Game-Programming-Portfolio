@@ -1,0 +1,106 @@
+#include "CollisionDriver.h"
+
+const std::string CollisionDriver::COLLISION_DRIVER_COMPONENT_NAME = "CollisionDriverComponent";
+
+CollisionDriver::CollisionDriver(std::vector<CollisionLayer> collisionMask)
+{
+	mCollisionMask = collisionMask;
+}
+
+
+void CollisionDriver::update(float dt)
+{
+	UnitManager* um = Game::getInstance()->getUnitManager();
+	int numUnits = um->getNumUnits();
+
+
+	for (int i = 0; i < numUnits; i++)
+	{
+		Unit* unit = um->getUnit(i);
+		CollisionLayer unitColLayer = unit->getCollisionLayer();
+
+		if (unitColLayer == CollisionLayer::NONE) continue; // If unit doesn't have layer, don't bother going through masks
+
+		for (unsigned int v = 0; v < mCollisionMask.size(); v++)
+		{
+			// Check if unit layer in mask and make sure this component is not attached to checked unit
+			if (unitColLayer == mCollisionMask[v] && unit != mpUnit)
+			{
+				Vector2D thisSpriteDimensions = mpUnit->getCurrentAnimation()->getCurrentFrame().getSize();
+				Vector2D otherSpriteDimensions = unit->getCurrentAnimation()->getCurrentFrame().getSize();
+
+				float thisX1 = mpUnit->getX() + 1;
+				float thisX2 = thisX1 + thisSpriteDimensions.getX() - 2;
+				float thisY1 = mpUnit->getY() + 1;
+				float thisY2 = thisY1 + thisSpriteDimensions.getY() - 2;
+
+				float otherX1 = unit->getX() + 1;
+				float otherX2 = otherX1 + otherSpriteDimensions.getX() - 2;
+				float otherY1 = unit->getY() + 1;
+				float otherY2 = otherY1 + otherSpriteDimensions.getY() - 2;
+
+				// Check for overlap
+				if (otherX1 < thisX2 && otherX2 > thisX1)
+				{
+					if (otherY1 < thisY2 && otherY2 > thisY1)
+					{
+						notifyObservers(unit, unitColLayer);
+					}
+				}
+			}
+		}
+	}
+}
+
+
+void CollisionDriver::notifyObservers(Unit* unit, CollisionLayer layer)
+{
+	for (ICollisionHandler* observer : mCollisionObservers)
+	{
+		observer->onCollision(unit, layer);
+	}
+}
+
+
+void CollisionDriver::addCollisionMask(CollisionLayer layer)
+{
+	auto it = std::find(mCollisionMask.begin(), mCollisionMask.end(), layer);
+
+	if (it == mCollisionMask.end())
+	{
+		mCollisionMask.push_back(layer);
+	}
+}
+
+
+void CollisionDriver::removeCollisionMask(CollisionLayer layer)
+{
+	auto it = std::find(mCollisionMask.begin(), mCollisionMask.end(), layer);
+
+	if (it != mCollisionMask.end())
+	{
+		mCollisionMask.erase(it);
+	}
+}
+
+
+void CollisionDriver::addCollisionObserver(ICollisionHandler* observer)
+{
+	auto it = std::find(mCollisionObservers.begin(), mCollisionObservers.end(), observer);
+
+	if (it == mCollisionObservers.end())
+	{
+		mCollisionObservers.push_back(observer);
+	}
+}
+
+
+void CollisionDriver::removeCollisionObserver(ICollisionHandler* observer)
+{
+	auto it = std::find(mCollisionObservers.begin(), mCollisionObservers.end(), observer);
+
+	if (it != mCollisionObservers.end())
+	{
+		mCollisionObservers.erase(it);
+	}
+}

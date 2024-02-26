@@ -1,0 +1,24 @@
+#pragma once
+
+#include "Audio.h"
+#include "SoundBuffer.h"
+
+class SoundBuffer;
+class Audio;
+class Game;
+
+class Sound : public Audio
+{
+public:
+	Sound() : Audio() {}
+
+	virtual void loadFile(const std::string& bufferName) override;
+
+	virtual void restart() override { ((sf::Sound*)mpSoundSource)->setPlayingOffset(sf::seconds(0)); }
+
+	virtual bool const getLooping() override { return ((sf::Sound*)mpSoundSource)->getLoop(); }
+	virtual void setLooping(bool shouldLoop) override { ((sf::Sound*)mpSoundSource)->setLoop(shouldLoop); }
+
+	virtual float const getSecondsProgress() override { return ((sf::Sound*)mpSoundSource)->getPlayingOffset().asSeconds(); };
+	virtual void setSecondsProgress(float progress) override { ((sf::Sound*)mpSoundSource)->setPlayingOffset(sf::seconds(progress)); }
+};

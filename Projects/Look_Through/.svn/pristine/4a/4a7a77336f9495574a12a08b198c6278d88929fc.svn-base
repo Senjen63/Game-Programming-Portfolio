@@ -1,0 +1,21 @@
+#pragma once
+
+#include <Event.h>
+
+enum class InputEventType
+{
+	KEYBOARD_INPUT_EVENT = NUM_BASE_EVENT_TYPES,
+	MOUSE_INPUT_EVENT,
+	NUM_INPUT_EVENT_TYPES
+};
+
+class InputEvent : public Event
+{
+public:
+
+	InputEvent(InputEventType type) : Event((EventType)type) {};
+	virtual ~InputEvent() {};
+
+private:
+};
+

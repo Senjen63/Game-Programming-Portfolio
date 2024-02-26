@@ -1,0 +1,22 @@
+//Evan Norzow, Nicolas Delbue, and Brandon Perry
+#pragma once
+#include <Trackable.h>
+#include <cassert>
+#include <string>
+#include "SDL_ttf.h"
+
+using namespace std;
+
+class Font : public Trackable 
+{
+private:
+	TTF_Font* mpFont = nullptr;
+	int mSize;
+	friend class GraphicsSystem;
+
+public:
+	Font(string path, int size);
+	~Font();
+	float getSize();
+	
+};

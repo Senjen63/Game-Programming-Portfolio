@@ -1,0 +1,46 @@
+#include "SnakeManager.h"
+
+/*
+	Clear: removes previous snake, if there is one
+	
+	Update: get direction (makes new head location by getting current head location and adding the vector (1,0) for right, (0,1) for down, etc.
+	Move: Adds head location, pops out last location (include powerup check, only pop last location if no powerup)
+	Draw: Draws (Creates and draws buffer at each location in the queue)
+
+	*/
+
+SnakeManager::SnakeManager()
+{
+	currentHead = Vector2D(DISP_WIDTH / 2, DISP_HEIGHT / 2);
+	snakeLoc.push(currentHead);
+}
+SnakeManager::~SnakeManager()
+{
+
+}
+
+
+void SnakeManager::Update(Vector2D dir)
+{
+	Vector2D temp = Vector2D(currentHead.getX() + (TILE_SIZE * dir.getX()), currentHead.getY() + (TILE_SIZE * dir.getY()));
+	snakeLoc.push(temp);
+}
+void SnakeManager::Move(bool isGrowing)
+{
+	if (!isGrowing)
+	{
+		snakeLoc.pop();
+	}
+}
+void SnakeManager::Draw()
+{
+	for (int i = 0; i < snakeLoc.size(); i++)
+	{
+		//Draw(snakeLoc[i]);
+	}
+}
+void SnakeManager::Clear()
+{
+
+}
+

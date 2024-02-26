@@ -1,0 +1,380 @@
+#include "Game.h"
+#include "InputSystem.h"
+#include "GraphicsSystem.h"
+#include "GraphicsBufferManager.h"
+#include "GraphicsBuffer.h"
+#include "PowerUps.h"
+#include "Sprite.h"
+#include "Animation.h"
+#include "UnitManager.h"
+#include "Unit.h"
+#include "SnakePlayer.h"
+#include "Vector2D.h"
+#include "Timer.h"
+#include "GameEvent.h"
+#include "DeathEvent.h"
+#include "InputEvent.h"
+#include "PowerUpEvent.h"
+#include "NextLevelEvent.h"
+#include "LevelManager.h"
+#include "Level.h"
+#include "Walls.h"
+#include "StartScreen.h"
+#include "DeathScreen.h"
+#include "NextLevelScreen.h"
+#include "WinScreen.h"
+#include <vector>
+#include <PerformanceTracker.h>
+#include <EventSystem.h>
+#include <EventListener.h>
+
+Game* Game::gpGame = nullptr;
+
+Game::Game()
+{
+	this->mIsGameContinuing = true;
+	this->mGameState = START_SCREEN;
+
+	this->mpInputSystem = nullptr;
+	this->mpGraphicsSystem = nullptr;
+	this->mpBufferManager = nullptr;
+	this->mpUnitManager = nullptr;
+	this->mpLevelManager = nullptr;
+	this->mpPowerUps = nullptr;
+	this->mpWalls = nullptr;
+	this->mpHUD = nullptr;
+
+	this->mpStartScreen = nullptr;
+	this->mpDeathScreen = nullptr;
+	this->mpNextLevelScreen = nullptr;
+	this->mpWinScreen = nullptr;
+
+	this->mpBackgroundSprite = nullptr;
+	this->mpPlayer = nullptr;
+
+	this->mpTimer = nullptr;
+	this->mpPerformanceTracker = nullptr;
+
+	EventSystem::getInstance()->addListener((EventType)INPUT_EVENT, this);
+	EventSystem::getInstance()->addListener((EventType)DEATH_EVENT, this);
+	EventSystem::getInstance()->addListener((EventType)NEXT_LEVEL_EVENT, this);
+	EventSystem::getInstance()->addListener((EventType)POWER_UP_EVENT, this);
+	EventSystem::getInstance()->addListener((EventType)MESSAGE_EVENT, this);
+}
+
+Game::~Game()
+{
+	cleanup();
+}
+
+void Game::init()
+{
+	mpGraphicsSystem = new GraphicsSystem;
+	mpGraphicsSystem->init(DISP_WIDTH, DISP_HEIGHT);
+
+	mpInputSystem = new InputSystem;
+	mpInputSystem->init();
+	mpBufferManager = new GraphicsBufferManager();
+	mpUnitManager = new UnitManager();
+	mpBufferManager->createGraphicsBuffer(BG_KEY, BG_SPRITE);
+	mpLevelManager = new LevelManager();
+	mpPowerUps = new PowerUps();
+	mpWalls = new Walls();
+
+	mpHUD = new HUD();
+
+	mpStartScreen = new StartScreen();
+	mpDeathScreen = new DeathScreen();
+	mpNextLevelScreen = new NextLevelScreen();
+	mpWinScreen = new WinScreen();
+
+	mpPlayer = new SnakePlayer();
+
+	mpBackgroundSprite = new Sprite(ORIGIN_LOCATION, mpBufferManager->getGraphicsBuffer(BG_KEY), 
+							   mpBufferManager->getGraphicsBuffer(BG_KEY)->getBitmapWidth(), mpBufferManager->getGraphicsBuffer(BG_KEY)->getBitmapHeight());
+
+	mpTimer = new Timer();
+	mpPerformanceTracker = new PerformanceTracker();
+}
+
+void Game::cleanup()
+{
+	delete mpInputSystem;
+	delete mpGraphicsSystem;
+	delete mpBufferManager;
+	delete mpUnitManager;
+	delete mpLevelManager;
+	delete mpPowerUps;
+	delete mpWalls;
+	delete mpHUD;
+
+	delete mpStartScreen;
+	delete mpDeathScreen;
+	delete mpNextLevelScreen;
+	delete mpWinScreen;
+
+	delete mpBackgroundSprite;
+	delete mpPlayer;
+
+	delete mpTimer;
+	delete mpPerformanceTracker;
+}
+
+void Game::gameLoop()
+{
+	while (mIsGameContinuing)
+	{
+		mpPerformanceTracker->clearTracker(LOOP);
+		mpPerformanceTracker->startTracking(LOOP);
+		mpTimer->start();
+
+		mpInputSystem->update();
+		mpUnitManager->updateAllUnits(GAME_TICK);
+
+		switch (mGameState)
+		{
+			case GAME_LOOP:
+			{
+				mpPlayer->playerMovement(GAME_TICK);
+				addTime();
+				powerUpRespawn();
+
+				break;
+			}
+		}
+
+		drawGame();
+
+		mpTimer->sleepUntilElapsed(GAME_TICK);
+		mpPerformanceTracker->stopTracking(LOOP);
+		std::cout << mpPerformanceTracker->getElapsedTime(LOOP) << std::endl;
+	}
+}
+
+void Game::handleEvent(const Event& currentEvent)
+{
+	if (currentEvent.getType() == INPUT_EVENT)
+	{
+		const InputEvent& inputEvent = static_cast<const InputEvent&>(currentEvent);
+		bool buttonReleased = inputEvent.getInputState() == "up";
+
+		// handle button presses for start screen
+		if (mGameState == START_SCREEN)
+		{
+			switch (inputEvent.getInput())
+			{
+				case KEY_ENTER:
+				{
+					resetScore();
+					resetTime();
+					resetPowerUpTick();
+					mpPowerUps->drawPowerUps();
+
+					mGameState = GAME_LOOP;
+
+					break;
+				}
+			}
+		}
+		// handle button presses for death screen
+		else if (mGameState == DEATH_SCREEN || mGameState == WIN_SCREEN)
+		{
+			switch (inputEvent.getInput())
+			{
+				case KEY_ENTER:
+				{
+					resetScore();
+					resetTime();
+					resetPowerUpTick();
+					mpPlayer->clearPlayer();
+					mpUnitManager->clearAllUnits();
+					mpLevelManager->resetCurrentLevel();
+					mpPlayer->resetPlayerDirection();
+					mpPlayer->resetPlayerSpeed();
+					mpPlayer->initPlayer();
+					mpPowerUps->drawPowerUps();
+
+					mGameState = GAME_LOOP;
+
+					break;
+				}
+			}
+		}
+		// handle button presses for win level screen
+		else if (mGameState == NEXT_LEVEL_SCREEN)
+		{
+			switch (inputEvent.getInput())
+			{
+				case KEY_ENTER:
+				{
+					resetTime();
+					resetPowerUpTick();
+					mpPlayer->clearPlayer();
+					mpUnitManager->clearAllUnits();
+					mpPlayer->resetPlayerDirection();
+					mpPlayer->resetPlayerSpeed();
+					mpPlayer->initPlayer();
+					mpPowerUps->drawPowerUps();
+
+					mGameState = GAME_LOOP;
+
+					break;
+				}
+			}
+		}
+		// handle button presses for gameplay loop
+		else if (mGameState == GAME_LOOP)
+		{
+
+			switch (inputEvent.getInput())
+			{
+				case KEY_UP:
+				{
+					if (buttonReleased) { mpPlayer->setPlayerDirection(MOVE_UP); };
+					break;
+				}
+				case KEY_LEFT:
+				{
+					if (buttonReleased) { mpPlayer->setPlayerDirection(MOVE_LEFT); };
+					break;
+				}
+				case KEY_DOWN:
+				{
+					if (buttonReleased) { mpPlayer->setPlayerDirection(MOVE_DOWN); };
+					break;
+				}
+				case KEY_RIGHT:
+				{
+					if (buttonReleased) { mpPlayer->setPlayerDirection(MOVE_RIGHT); };
+					break;
+				}
+			}
+		}
+	}
+	else if (currentEvent.getType() == DEATH_EVENT)
+	{
+		mGameState = DEATH_SCREEN;
+		mpPlayer->clearPlayer();
+		mpUnitManager->clearAllUnits();
+	}
+	else if (currentEvent.getType() == POWER_UP_EVENT)
+	{
+		const PowerUpEvent& powerUpEvent = static_cast<const PowerUpEvent&>(currentEvent);
+
+		if (powerUpEvent.getInputString() == "food")
+		{
+			mpUnitManager->deleteUnit(mpPowerUps->getFoodLocation());
+			mpPowerUps->resetPowerUp("food");
+			mCurrentScore += mpLevelManager->getLevelList()[mpLevelManager->getCurrentLevelIndex() - 1]->getFoodPointValue();
+			mpPlayer->growPlayerBody();
+			mpPlayer->resetPlayerSpeed();
+
+			if (mpPlayer->getPlayerSegmentCount() >= mpLevelManager->getLevelList()[mpLevelManager->getCurrentLevelIndex() - 1]->getSegmentsToWin())
+			{
+				if (mpLevelManager->getCurrentLevelIndex() == 3)
+				{
+					mpPlayer->clearPlayer();
+					mpUnitManager->clearAllUnits();
+					mGameState = WIN_SCREEN;
+				}
+				else
+				{
+					mpPlayer->clearPlayer();
+					mpUnitManager->clearAllUnits();
+					mGameState = NEXT_LEVEL_SCREEN;
+					mpLevelManager->increaseLevelIndex();
+				}
+			}
+		}
+		else if (powerUpEvent.getInputString() == "bonusPoints")
+		{
+			mpUnitManager->deleteUnit(mpPowerUps->getBonusFoodLocation());
+			mpPowerUps->resetPowerUp("bonusPoints");
+			mCurrentScore += mpLevelManager->getLevelList()[mpLevelManager->getCurrentLevelIndex() - 1]->getBonusPointValue();
+		}
+		else if (powerUpEvent.getInputString() == "speedup")
+		{
+			mpUnitManager->deleteUnit(mpPowerUps->getSpeedUpLocation());
+			mpPowerUps->resetPowerUp("speedup");
+			mpPlayer->increasePlayerSpeed();
+		}
+		else if (powerUpEvent.getInputString() == "slowdown")
+		{
+			mpUnitManager->deleteUnit(mpPowerUps->getSlowDownLocation());
+			mpPowerUps->resetPowerUp("slowdown");
+			mpPlayer->decreasePlayerSpeed();
+		}
+	}
+}
+
+void Game::drawGame()
+{
+	mpGraphicsSystem->draw(ORIGIN_LOCATION, *mpBackgroundSprite);
+
+	switch (mGameState)
+	{
+		case START_SCREEN:
+		{
+			mpStartScreen->drawStartScreen();
+			break;
+		}
+
+		case DEATH_SCREEN:
+		{
+			mpDeathScreen->drawDeathScreen();
+			break;
+		}
+
+		case NEXT_LEVEL_SCREEN:
+		{
+			mpNextLevelScreen->drawNextLevelScreen();
+			break;
+		}
+
+		case WIN_SCREEN:
+		{
+			mpWinScreen->drawWinScreen();
+			break;
+		}
+
+		case GAME_LOOP:
+		{
+			mpUnitManager->drawAllUnits();
+			mpPlayer->drawPlayer();
+			mpWalls->drawAllWalls();
+			mpHUD->drawHUD();
+
+			break;
+		}
+	}
+
+	mpGraphicsSystem->flip();
+}
+
+void Game::powerUpRespawn()
+{
+	Game* pGame = Game::getGameInstance();
+
+	mRemainingPowerUpTick -= GAME_TICK;
+
+	if (mRemainingPowerUpTick <= 0)
+	{
+		mpUnitManager->deleteUnit(mpPowerUps->getFoodLocation());
+		mpUnitManager->deleteUnit(mpPowerUps->getBonusFoodLocation());
+		mpUnitManager->deleteUnit(mpPowerUps->getSpeedUpLocation());
+		mpUnitManager->deleteUnit(mpPowerUps->getSlowDownLocation());
+		mpPowerUps->initPowerUps();
+		mpPowerUps->drawPowerUps();
+		resetPowerUpTick();
+	}
+}
+
+void Game::addTime()
+{
+	mTime += GAME_TICK;
+}
+
+void Game::resetPowerUpTick()
+{
+	mRemainingPowerUpTick = mpLevelManager->getLevelList()[mpLevelManager->getCurrentLevelIndex() - 1]->getPowerUpTick();
+}

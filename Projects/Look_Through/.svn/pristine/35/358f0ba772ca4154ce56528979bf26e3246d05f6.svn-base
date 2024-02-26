@@ -1,0 +1,26 @@
+﻿//     -------------------------------------------------------------------------
+//     Final Project
+//         InputSystem.hpp
+//     
+//             Created:
+//                 15-04-2022
+//             Author(s):
+//                 Aven Presseisen
+//     -------------------------------------------------------------------------
+
+#pragma once
+
+#include <memory>
+#include <SDL_events.h>
+
+#include "EventSystem.hpp"
+
+class InputSystem
+{
+    std::shared_ptr< EventSystem > mpEventSystem;
+    SDL_Event mEvent;
+public:
+    explicit InputSystem( std::shared_ptr< EventSystem > pEventSystem );
+
+    void pollInputs();
+};

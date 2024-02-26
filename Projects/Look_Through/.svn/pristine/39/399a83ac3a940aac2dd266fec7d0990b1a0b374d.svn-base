@@ -1,0 +1,130 @@
+#include "GraphicsSystem.h"
+#include <iostream>
+
+using namespace std;
+
+GraphicsSystem::GraphicsSystem()
+{
+	mpDisplay = nullptr;
+	mpBuffer = nullptr;
+}
+
+GraphicsSystem::~GraphicsSystem()
+{
+	cleanUp();
+}
+
+void GraphicsSystem::cleanUp()
+{
+	al_destroy_display(mpDisplay);
+	delete mpBuffer;
+	mpBuffer = nullptr;
+	mpDisplay = nullptr;
+}
+
+bool GraphicsSystem::initialize(int width, int height)
+{
+	if (!al_init())
+	{
+		cout << "error initting Allegro\n";
+		system("pause");
+		return false;
+	}
+	if (!al_init_image_addon())
+	{
+		cout << "error - Image Add-on not initted\n";
+		system("pause");
+		return false;
+	}
+	if (!al_init_font_addon())
+	{
+		cout << "error - Font Add-on not initted\n";
+		system("pause");
+		return false;
+	}
+	if (!al_init_ttf_addon())
+	{
+		cout << "error - TTF Add-on not initted\n";
+		system("pause");
+		return false;
+	}
+	if (!al_init_primitives_addon())
+	{
+		cout << "error - primitives Add-on not initted\n";
+		system("pause");
+		return false;
+	}
+
+	mpDisplay = al_create_display(width, height);
+	mpBuffer = new GraphicsBuffer(al_get_backbuffer(mpDisplay));
+
+	return true;
+}
+
+GraphicsBuffer* GraphicsSystem::getBackBuffer()
+{
+	return mpBuffer;
+}
+
+int GraphicsSystem::getHeight()
+{
+	return al_get_display_height(mpDisplay);
+}
+
+int GraphicsSystem::getWidth()
+{
+	return al_get_display_width(mpDisplay);
+}
+
+//draw background
+void GraphicsSystem::drawBackground(GraphicsBuffer* pBuffer)
+{
+	al_draw_bitmap(pBuffer->mpBitmap, 0, 0, 1); 
+}
+
+//draw to default backbuffer 
+void GraphicsSystem::draw(int locX, int locY, Sprite sprite, int scale)
+{
+	Vector2D location = sprite.getSourceLoc();
+
+	al_draw_scaled_bitmap(sprite.getGraphicsBuffer()->getBitmap(), location.getX(), location.getY(), 
+		sprite.getWidth(), sprite.getHeight(), locX, locY, sprite.getWidth() * scale, sprite.getHeight() * scale, 0);
+}
+
+//draw to given graphicsbuffer
+void GraphicsSystem::draw(GraphicsBuffer* gBuffer, int locX, int locY, Sprite sprite, int scale)
+{
+	Vector2D spritePos = sprite.getSourceLoc();
+	ALLEGRO_BITMAP* previousBitmap = al_get_target_bitmap();
+	al_set_target_bitmap(gBuffer->getBitmap());
+	al_draw_scaled_bitmap(sprite.getGraphicsBuffer()->getBitmap(), spritePos.getX(), spritePos.getY(), sprite.getWidth(), sprite.getHeight(), locX, locY, sprite.getWidth() * scale, sprite.getHeight() * scale, 0);
+	al_set_target_bitmap(previousBitmap);
+}
+
+void GraphicsSystem::draw(GraphicsBuffer* gBuffer, int locX, int locY, float scale)
+{
+	int destX = 150;
+	int destY = 100;
+
+	al_draw_scaled_bitmap(gBuffer->getBitmap(), 0, 0, gBuffer->getWidth(), gBuffer->getHeight(), destX, destY, locX * scale, locY * scale, 0);
+}
+
+//default buffer
+void GraphicsSystem::writeText(int locX, int locY, Font* font, Color color, string text)
+{
+	al_draw_text(font->mpFont, color.getColor(), locX, locY, 0, text.c_str());
+}
+
+//given buffer
+void GraphicsSystem::writeText(GraphicsBuffer* gBuffer, int locX, int locY, Font* font, Color color, string text)
+{
+	ALLEGRO_BITMAP* previousBitmap = al_get_target_bitmap();
+	al_set_target_bitmap(gBuffer->mpBitmap);
+	al_draw_text(font->mpFont, color.getColor(), locX, locY, ALLEGRO_ALIGN_CENTER, text.c_str());
+	al_set_target_bitmap(previousBitmap);
+}
+
+void GraphicsSystem::saveBuffer (GraphicsBuffer* gBuffer, string filename)
+{
+	al_save_bitmap((filename.c_str()), gBuffer->getBitmap());
+}

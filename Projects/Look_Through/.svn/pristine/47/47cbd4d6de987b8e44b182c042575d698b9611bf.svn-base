@@ -1,0 +1,30 @@
+#pragma once
+#include "Level.h"
+#include "AnimationManager.h"
+#include "UnitManager.h"
+#include "EventSystem.h"
+
+class LevelManager : public Trackable
+{
+private:
+    EventSystem* mpEventSystem = nullptr;
+
+    vector<Level*> mLevels;
+    int mCurrentLevel = 0;
+
+public:
+    LevelManager() {};
+    ~LevelManager() { cleanup(); };
+
+    bool init();
+    void cleanup();
+
+    void instantiateLevel(int num, UnitManager* um, AnimationManager* am, GraphicsBuffer* wall);
+    int nextLevel() { mCurrentLevel++; return mCurrentLevel; };
+
+    int getCurrentLevelNum() { return mCurrentLevel; };
+    Level* getCurrentLevel() { return mLevels[mCurrentLevel]; };
+
+    void loadLevel(string path, GraphicsBuffer* wall);
+    void deleteAllLevels();
+};

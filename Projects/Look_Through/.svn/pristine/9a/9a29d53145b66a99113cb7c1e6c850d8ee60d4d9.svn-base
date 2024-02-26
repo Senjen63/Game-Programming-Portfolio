@@ -1,0 +1,68 @@
+#include "Animation.h"
+
+Animation::Animation()
+{
+	mTimePerFrame = 1000.0 / 15;
+	mTimeLeft = 0;
+	mCurrentSprite = 0;
+}
+
+Animation::~Animation() {}
+
+void Animation::addAnimatedSprite(GraphicsBuffer* buffer, int x, int y, int height, int width)
+{
+	// create 2 sprites and add them to the vector
+	int srcX, srcY;
+
+	for (int i = 0; i < 2; i++)
+	{
+		for (int j = 0; j < 2; j++)
+		{
+			srcX = 32 * j;
+			srcY = 32 * i;
+			Sprite snakeSprite(buffer, srcX, srcY, buffer->getHeight()/2, buffer->getWidth()/2);
+
+			mSprites.push_back(snakeSprite);
+		}
+	}
+}
+
+void Animation::addSprite(GraphicsBuffer* buffer, int x, int y, int height, int width)
+{
+	Sprite sprites(buffer, x, y, buffer->getHeight(), buffer->getWidth());
+
+	mSprites.push_back(sprites);
+
+}
+
+//THIS CAUSES PROBLEMS
+void Animation::update(double dt)
+{
+	mTimeLeft -= dt;
+	if (mTimeLeft <= 0)
+	{
+		// loops while there is remaining time
+		mCurrentSprite++;
+		mTimeLeft = mTimePerFrame + mTimeLeft;
+	}
+
+	// if reached the end of the vector, move back to the front again
+	if (mCurrentSprite >= mSprites.size())
+		mCurrentSprite = 0;
+
+}
+
+Sprite Animation::getCurrentSprite()
+{
+	return mSprites[mCurrentSprite];
+}
+
+void Animation::speedUp()
+{
+	mTimePerFrame = 1000.0 / 50;
+}
+
+void Animation::slowDown()
+{
+	mTimePerFrame = 1000.0 / 5;
+}

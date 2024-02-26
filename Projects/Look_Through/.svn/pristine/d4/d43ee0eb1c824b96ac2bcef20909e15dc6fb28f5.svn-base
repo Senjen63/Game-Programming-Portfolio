@@ -1,0 +1,39 @@
+#include "HUD.h"
+#include "GraphicsSystem.h"
+#include "Game.h"
+
+HUD::HUD()
+{
+	mpFont = nullptr;
+	mFPS = 0;
+	mTime = 0;
+}
+
+HUD::~HUD()
+{
+	cleanUp();
+}
+
+void HUD::init(Font* font)
+{
+	GraphicsBuffer* mBlackBackground = new GraphicsBuffer(Color(0, 0, 0), HUD_WIDTH, HUD_HEIGHT);
+	mpFont = font;
+	mBufferManager.addBuffer(BLACK_KEY, mBlackBackground);
+}
+
+void HUD::cleanUp()
+{
+	mBufferManager.clear();
+}
+
+void HUD::drawHUD(GraphicsSystem* display)
+{
+
+	Color whiteColor = Color(255, 255, 255);
+	display->Draw(mBufferManager.getBuffer(BLACK_KEY), 0, 0, 1);
+
+	display->WriteText(100, 8, mpFont, whiteColor, "FPS: " + to_string(Game::getGame()->getFPS()));
+	display->WriteText(375, 8, mpFont, whiteColor, "Points: " + to_string(Game::getGame()->getPoints()));
+	display->WriteText(690, 8, mpFont, whiteColor, "Time: " + to_string(Game::getGame()->getTime()));
+
+}

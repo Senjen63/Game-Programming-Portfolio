@@ -1,0 +1,18 @@
+#pragma once
+
+#include <SFML/Graphics.hpp>
+#include <string>
+
+#include "Trackable.h"
+
+class Font : public Trackable
+{
+	friend class GraphicsSystem;
+	friend class Text;
+
+public:
+	Font(std::string filename); //stores a font file, doesn't store font size or anything like that
+	~Font();
+private:
+	sf::Font* mFont;
+};

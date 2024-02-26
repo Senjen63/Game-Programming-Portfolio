@@ -1,0 +1,51 @@
+#include "InputSystem.h"
+
+InputSystem::InputSystem()
+{
+	mMouseState;
+	mKeyboardState;
+}
+
+InputSystem::~InputSystem()
+{
+	cleanup();
+}
+
+void InputSystem::init()
+{
+	if (!al_init())
+	{
+		throw new exception("error initting Allegro\n");
+	}
+	if (!al_install_mouse())
+	{
+		throw new exception("error: mouse not installed\n");
+	}
+	if (!al_install_keyboard())
+	{
+		throw new exception("error: keyboard not installed\n");
+	}
+}
+
+void InputSystem::cleanup()
+{
+
+}
+
+Vector2D InputSystem::getMousePos()
+{
+	al_get_mouse_state(&mMouseState);
+	return Vector2D(mMouseState.x, mMouseState.y);
+}
+
+bool InputSystem::getMouseDown()
+{
+	al_get_mouse_state(&mMouseState);
+	return al_mouse_button_down(&mMouseState, 1);
+}
+
+bool InputSystem::getKeyState(int key)
+{
+	al_get_keyboard_state(&mKeyboardState);
+	return al_key_down(&mKeyboardState, key);
+}

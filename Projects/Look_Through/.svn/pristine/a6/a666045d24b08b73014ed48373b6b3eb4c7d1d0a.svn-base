@@ -1,0 +1,20 @@
+﻿//     -------------------------------------------------------------------------
+//     Final Project
+//         EventListener.hpp
+//     
+//             Created:
+//                 16-04-2022
+//             Author(s):
+//                 Aven Presseisen
+//     -------------------------------------------------------------------------
+
+#pragma once
+#include "Event.hpp"
+
+class EventListener
+{
+public:
+    virtual ~EventListener() = default;
+    
+    virtual void handleEvent( const Event & event ) = 0;
+};

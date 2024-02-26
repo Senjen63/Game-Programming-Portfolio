@@ -1,0 +1,28 @@
+/*******************************************************
+* Author: Aven Presseisen
+* Class: GPR-250-02
+* Assignment: Assignment 3
+* Certification of Authenticity:
+* I certify that this assignment is entirely my own work.
+************/
+
+#pragma once
+
+#include <unordered_map>
+
+#include "GraphicsBuffer.h"
+
+class GraphicsBufferManager : public Trackable
+{
+	std::unordered_map<std::string, GraphicsBuffer *> mBufferMap;
+
+public:
+	GraphicsBufferManager();
+	~GraphicsBufferManager();
+
+	void addGraphicsBuffer( std::string newKey, GraphicsBuffer * newBuffer );
+	void clear();
+	GraphicsBuffer * getGraphicsBuffer( std::string bufferKey );
+	void removeGraphicsBuffer( std::string bufferKey );
+};
+

@@ -1,0 +1,81 @@
+/*
+Author: David Silverman
+Class: GPR-250-01
+Assignment: Assignment 1
+Certification of Authenticity:
+I certify that this assignment is entirely my own work.
+ */
+
+
+#pragma once
+#include "font.h"
+#include <iostream>
+using namespace std;
+
+/* Pre:  Nothing
+*  Post:  The Font
+*  Purpose:  Get the font
+*********************************************************/
+ALLEGRO_FONT* Font::getFont()
+{
+	return mpFont;
+}
+
+/* Pre:  Nothing
+*  Post:  A font
+*  Purpose:  Create the font
+*********************************************************/
+Font::Font()
+{
+	mFontSize = DEFAULT_SIZE;
+	mpFont = al_load_ttf_font((FOLDERS + DEFAULT_FONT).c_str(), mFontSize, 0);
+	assert(mpFont);
+}
+
+/* Pre:  The font
+*  Post:  Nothing
+*  Purpose:  Delete the font
+*********************************************************/
+Font::~Font()
+{
+	mpFont = nullptr;
+}
+
+/* Pre:  A font and a size
+*  Post:  A font
+*  Purpose:  Create the font
+*********************************************************/
+Font::Font(ALLEGRO_FONT* given, int givenSize)
+{
+	mFontSize = givenSize;
+	mpFont = given;
+}
+
+/* Pre:  A string and a size
+*  Post:  A font
+*  Purpose:  Create the font
+*********************************************************/
+Font::Font(string given, int givenSize)
+{
+	mFontSize = givenSize;
+	this->mpFont = al_load_ttf_font((FOLDERS + given).c_str(), mFontSize, 0);
+	assert(mpFont);
+}
+
+/* Pre:  Nothing
+*  Post:  A size
+*  Purpose:  Get the font size
+*********************************************************/
+int Font::getFontSize()
+{
+	return mFontSize;
+}
+
+/* Pre:  A size
+*  Post:  Nothing
+*  Purpose:  Set the font size
+*********************************************************/
+void Font::setFontSize(int givenSize)
+{
+	mFontSize = givenSize;
+}

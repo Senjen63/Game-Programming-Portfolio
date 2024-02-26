@@ -1,0 +1,102 @@
+#include "Animation.h"
+
+#include <iostream>
+using namespace std;
+
+Animation::Animation()
+{
+	mAniLoop = false;//start at beginning of animation after reaching end
+	//mpSpriteList = nullptr;//make list of sprites
+	mCurrentSprite = 0;
+	mSpriteCount = 0;
+	mCount = 0;
+	mTime = 0.0;//fps
+	mTimeLeft = 0.0;
+}
+
+Animation::Animation(GraphicsBuffer* pAniBuffer, float time, int spriteCount, bool aniLoop)
+{
+	//mpSpriteList = new Sprite[spriteCount];
+
+	Vector2D location = Vector2D();
+
+	int i = 0;
+	int j = 0;
+	int count = 0;
+	int totalSprites = 4;
+
+	//do while, while to allow 16 smurfs to appear in different x and y positions
+	do//SOMETHING HERE IS SCREWING WITH FLIP()
+	{
+		while (j < totalSprites)
+		{
+			//send sprite to be generated
+			Sprite animationSprite(pAniBuffer, 60, 60, location);
+			mpSprites.push_back(animationSprite);
+			//count++;
+			j++;
+		}
+		j = 0;
+		i++;
+
+	} while (i < totalSprites);
+
+	mCount = 0;
+	mTime = time;
+	mTimeLeft = 0;
+	mSpriteCount = spriteCount;
+	mCurrentSprite = 0;
+	mAniLoop = aniLoop;
+}
+
+Animation::~Animation()
+{
+	mAniLoop = false;//start at beginning of animation after reaching end
+	//delete[] mpSpriteList;//make list of sprites
+	mCurrentSprite = 0;
+	mSpriteCount = 0;
+	mCount = 0;
+	mTime = 0.0;
+	mTimeLeft = 0.0;
+}
+
+void Animation::update(double dt) //find current sprite
+{
+	int nextSprite = 1;
+	mTimeLeft -= dt;
+
+	if (mTimeLeft <= 0)
+	{
+		mCurrentSprite++;
+		mTimeLeft = mTimePerFrame + mTimeLeft;
+	}
+
+	//max number of sprites
+	if (mCurrentSprite >= 16)
+	{
+		mCurrentSprite = 0;
+	}
+	
+}
+
+Sprite Animation::getCurrentSprite()
+{
+	return mpSprites[mCurrentSprite];
+}
+
+void Animation::speedUpSlowDown(float input)//adjust time to make animation faster or slower
+{
+	mTime += input;
+	double millisecond = .0001;
+
+	//give minimum speed
+	if (mTime <= 0)
+	{
+		mTime = millisecond;
+	}
+}
+
+float Animation::getTime()
+{
+	return mTime;
+}

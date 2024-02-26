@@ -1,0 +1,23 @@
+#pragma once
+
+#include <PerformanceTracker.h>
+#include <vector>
+#include "Level.h"
+
+class Game;
+class LevelManager:public Trackable
+{
+public:
+	LevelManager();
+	~LevelManager();
+
+	void cleanup();
+	void addLevel(Level* pLev);
+	Level* getLevel(int pos);
+	void setCurrentLevel(int level);
+	int getCurrentLevel();
+private:
+	int mLevelCount;
+	vector <Level*> mpLevels;
+	int mCurrentLevel;
+};

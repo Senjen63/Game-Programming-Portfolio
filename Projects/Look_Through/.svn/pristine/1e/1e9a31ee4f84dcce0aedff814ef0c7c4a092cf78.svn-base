@@ -1,0 +1,17 @@
+//BP
+#pragma once
+#include <Trackable.h>
+#include "GraphicsBuffer.h"
+
+class HUDBox : public Trackable
+{
+private:
+    Vector2D position;
+    Vector2D heightAndWidth;
+    Color boxColor = Color(0, 0, 0);
+    GraphicsBuffer* mpBox = nullptr;
+public:
+    HUDBox();
+    ~HUDBox();
+    void updateBox();
+};

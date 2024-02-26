@@ -1,0 +1,258 @@
+#include "MenuSystem.h"
+
+#include "Game.h"
+
+MenuSystem::MenuSystem()
+{
+    mCurrentMenuKey = START_MENU;
+    mFps = 0;
+}
+
+
+MenuSystem::MenuSystem(int fps)
+{
+    mCurrentMenuKey = START_MENU;
+    mFps = fps;
+}
+
+
+MenuSystem::~MenuSystem()
+{
+    cleanup();
+}
+
+
+void MenuSystem::init(AnimationManager* animManager, GraphicsSystem* graphics)
+{
+    mpLangSystem = LanguageSystem::getLanguageSystem();
+
+    mpAnimManager = animManager;
+    mpGraphics = graphics;
+
+    generateStartMenu();
+    generateOptionsMenu();
+    generateBetweenMenu();
+    generateEndMenu();
+
+    setCurrentMenu(mCurrentMenuKey);
+}
+
+
+void MenuSystem::cleanup()
+{
+    for (auto menu : mMenus)
+    {
+        delete menu.second;
+    }
+
+    mMenus.clear();
+}
+
+
+Menu* MenuSystem::getCurrentMenu()
+{
+    auto iter = mMenus.find(mCurrentMenuKey);
+
+    if (iter == mMenus.end())
+    {
+        return nullptr;
+    }
+
+    return iter->second;
+}
+
+
+void MenuSystem::setCurrentMenu(MenuType menuType)
+{
+    Menu* oldMenu = getCurrentMenu();
+
+    if (oldMenu)
+    {
+        oldMenu->setButtonsActive(false); //have to deactivate buttons in last menu because they still receive events
+    }
+
+    mCurrentMenuKey = menuType;
+
+    getCurrentMenu()->setButtonsActive(true); //activate buttons on current menu
+}
+
+
+void MenuSystem::resetAllTitles(string start, string options, string between, string end)
+{
+    if (mMenus[START_MENU] != nullptr)
+    {
+        mMenus[START_MENU]->setTitleText(start);
+    }
+
+    if (mMenus[OPTIONS_MENU] != nullptr)
+    {
+        mMenus[OPTIONS_MENU]->setTitleText(options);
+    }
+
+    if (mMenus[BETWEEN_MENU] != nullptr)
+    {
+        mMenus[BETWEEN_MENU]->setTitleText(between);
+    }
+
+    if (mMenus[END_MENU] != nullptr)
+    {
+        mMenus[END_MENU]->setTitleText(end);
+    }
+}
+
+
+void MenuSystem::update(float timeElapsed)
+{
+    getCurrentMenu()->update(timeElapsed);
+}
+
+
+void MenuSystem::generateStartMenu()
+{
+    Button* pStartButton = new Button(Vector2D(mpGraphics->getWidth() / 2, 300), mpAnimManager->getFrames(START_TAG),
+        mpAnimManager->getFrames(START_HOVER_TAG), mFps, false, ButtonTypes::BUTTON_START);
+
+    Button* pLoadButton = new Button(Vector2D(mpGraphics->getWidth() / 2, 400), mpAnimManager->getFrames(LOAD_TAG),
+        mpAnimManager->getFrames(LOAD_HOVER_TAG), mFps, false, ButtonTypes::BUTTON_LOAD);
+
+    Button* pOptionsButton = new Button(Vector2D(mpGraphics->getWidth() / 2, 500), mpAnimManager->getFrames(OPTIONS_TAG),
+        mpAnimManager->getFrames(OPTIONS_HOVER_TAG), mFps, false, ButtonTypes::BUTTON_OPTIONS);
+
+    Button* pQuitButton = new Button(Vector2D(mpGraphics->getWidth() / 2, 600), mpAnimManager->getFrames(QUIT_TAG),
+        mpAnimManager->getFrames(QUIT_HOVER_TAG), mFps, false, ButtonTypes::BUTTON_QUIT);
+
+    auto iter = mMenus.find(START_MENU);
+
+    if (iter == mMenus.end())
+    {
+        mMenus[START_MENU] = new Menu(pStartButton, pLoadButton, pOptionsButton, pQuitButton, mpLangSystem->getString(STRING_KEYS.TITLE_STRING));
+    }
+    else
+    {
+        iter->second->clearButtons();
+        iter->second = new Menu(pStartButton, pLoadButton, pOptionsButton, pQuitButton, mpLangSystem->getString(STRING_KEYS.TITLE_STRING));
+    }
+
+    mMenus[START_MENU]->setShowPoints(false);
+}
+
+
+void MenuSystem::generateOptionsMenu()
+{
+    Button* pFirstLangButton = new Button(Vector2D(mpGraphics->getWidth() / 4, 300), mpAnimManager->getFrames(FIRST_LANG_TAG),
+        mpAnimManager->getFrames(FIRST_LANG_HOVER_TAG), mFps, false, ButtonTypes::BUTTON_FIRST_LANG);
+
+    Button* pSecondLangButton = new Button(Vector2D(mpGraphics->getWidth() / 4, 400), mpAnimManager->getFrames(SECOND_LANG_TAG),
+        mpAnimManager->getFrames(SECOND_LANG_HOVER_TAG), mFps, false, ButtonTypes::BUTTON_SECOND_LANG);
+
+    Button* pThirdLangButton = new Button(Vector2D(mpGraphics->getWidth() / 4, 500), mpAnimManager->getFrames(THIRD_LANG_TAG),
+        mpAnimManager->getFrames(THIRD_LANG_HOVER_TAG), mFps, false, ButtonTypes::BUTTON_THIRD_LANG);
+
+    Button* pEasyButton = new Button(Vector2D((3 * mpGraphics->getWidth()) / 4, 300), mpAnimManager->getFrames(EASY_TAG),
+        mpAnimManager->getFrames(EASY_HOVER_TAG), mFps, false, ButtonTypes::BUTTON_EASY);
+
+    Button* pMediumButton = new Button(Vector2D((3 * mpGraphics->getWidth()) / 4, 400), mpAnimManager->getFrames(MEDIUM_TAG),
+        mpAnimManager->getFrames(MEDIUM_HOVER_TAG), mFps, false, ButtonTypes::BUTTON_MEDIUM);
+
+    Button* pHardButton = new Button(Vector2D((3 * mpGraphics->getWidth()) / 4, 500), mpAnimManager->getFrames(HARD_TAG),
+        mpAnimManager->getFrames(HARD_HOVER_TAG), mFps, false, ButtonTypes::BUTTON_HARD);
+
+    Button* pSoundOnButton = new Button(Vector2D(mpGraphics->getWidth() / 2, 350), mpAnimManager->getFrames(SOUND_ON_TAG),
+        mpAnimManager->getFrames(SOUND_ON_HOVER_TAG), mFps, false, ButtonTypes::BUTTON_SOUND_ON);
+
+    Button* pSoundOffButton = new Button(Vector2D(mpGraphics->getWidth() / 2, 450), mpAnimManager->getFrames(SOUND_OFF_TAG),
+        mpAnimManager->getFrames(SOUND_OFF_HOVER_TAG), mFps, false, ButtonTypes::BUTTON_SOUND_OFF);
+
+    Button* pBackButton = new Button(Vector2D(mpGraphics->getWidth() / 2, 600), mpAnimManager->getFrames(BACK_TAG),
+        mpAnimManager->getFrames(BACK_HOVER_TAG), mFps, false, ButtonTypes::BUTTON_BACK);
+
+    auto iter = mMenus.find(OPTIONS_MENU);
+
+    if (iter == mMenus.end())
+    {
+        mMenus[OPTIONS_MENU] = new Menu(pFirstLangButton, pSecondLangButton, pThirdLangButton, pEasyButton, pMediumButton, pHardButton, pSoundOnButton, pSoundOffButton,
+            pBackButton, mpLangSystem->getString(STRING_KEYS.OPTIONS_STRING));
+    }
+    else
+    {
+        iter->second->clearButtons();
+        iter->second = new Menu(pFirstLangButton, pSecondLangButton, pThirdLangButton, pEasyButton, pMediumButton, pHardButton, pSoundOnButton, pSoundOffButton,
+            pBackButton, mpLangSystem->getString(STRING_KEYS.OPTIONS_STRING));
+    }
+
+    mMenus[OPTIONS_MENU]->setShowPoints(false);
+}
+
+
+void MenuSystem::generateBetweenMenu()
+{
+    Button* pNextButton = new Button(Vector2D(mpGraphics->getWidth() / 2, 400), mpAnimManager->getFrames(NEXT_TAG),
+        mpAnimManager->getFrames(NEXT_HOVER_TAG), mFps, false, ButtonTypes::BUTTON_NEXT);
+
+    Button* pBackButton = new Button(Vector2D(mpGraphics->getWidth() / 2, 500), mpAnimManager->getFrames(BACK_TAG),
+        mpAnimManager->getFrames(BACK_HOVER_TAG), mFps, false, ButtonTypes::BUTTON_BACK);
+
+    auto iter = mMenus.find(BETWEEN_MENU);
+
+    if (iter == mMenus.end())
+    {
+        mMenus[BETWEEN_MENU] = new Menu(pNextButton, pBackButton, mpLangSystem->getString(STRING_KEYS.CLEAR_LEVEL_STRING));
+    }
+    else
+    {
+        iter->second->clearButtons();
+        iter->second = new Menu(pNextButton, pBackButton, mpLangSystem->getString(STRING_KEYS.CLEAR_LEVEL_STRING));
+    }
+
+    mMenus[BETWEEN_MENU]->setShowPoints(true);
+}
+
+
+void MenuSystem::generateEndMenu()
+{
+    Button* pBackButton = new Button(Vector2D(mpGraphics->getWidth() / 2, 500), mpAnimManager->getFrames(BACK_TAG),
+        mpAnimManager->getFrames(BACK_HOVER_TAG), mFps, false, ButtonTypes::BUTTON_BACK);
+
+    auto iter = mMenus.find(END_MENU);
+
+    if (iter == mMenus.end())
+    {
+        mMenus[END_MENU] = new Menu(pBackButton, mpLangSystem->getString(STRING_KEYS.WIN_STRING));
+    }
+    else
+    {
+        iter->second->clearButtons();
+        iter->second = new Menu(pBackButton, mpLangSystem->getString(STRING_KEYS.WIN_STRING));
+    }
+
+    mMenus[END_MENU]->setShowPoints(true);
+}
+
+
+/*void MenuSystem::drawMenu(Font* titleFont)
+{
+    mpGraphics->writeText(mpGraphics->getWidth() / 2, 200, titleFont, WHITE, getCurrentMenu()->getTitleText());
+
+    getCurrentMenu()->drawButtons();
+}*/
+
+
+void MenuSystem::drawMenu(Font* titleFont, int points, string pointsText)
+{
+    Menu* currentMenu = getCurrentMenu();
+    mpGraphics->writeText(mpGraphics->getWidth() / 2, 200, titleFont, WHITE, currentMenu->getTitleText());
+
+    //display points if this menu displays points
+    if (currentMenu->getShowPoints())
+    {
+        mpGraphics->writeText(mpGraphics->getWidth() / 2, 300, titleFont, WHITE, pointsText + to_string(points));
+    }
+
+    getCurrentMenu()->drawButtons();
+}
+
+
+void MenuSystem::toggleButtons(bool toggle)
+{
+    mMenus[mCurrentMenuKey]->setButtonsActive(toggle);
+}

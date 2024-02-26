@@ -1,0 +1,61 @@
+#include "GraphicsBuffer.h"
+
+/// <summary>
+/// Creates a GraphicsBuffer instance using a width and height.
+/// </summary>
+/// <param name="width">: Width of display.</param>
+/// <param name="height">: Height of display.</param>
+GraphicsBuffer::GraphicsBuffer( int width, int height )
+{
+	mpBitmap = al_create_bitmap( width, height );
+	assert( mpBitmap );
+}
+
+/// <summary>
+/// Creates a GraphicsBuffer instance using a bitmap file.
+/// </summary>
+/// <param name="filename">: Path to a bitmap file.</param>
+GraphicsBuffer::GraphicsBuffer( const char * filename )
+{
+	mpBitmap = al_load_bitmap( filename );
+	assert( mpBitmap );
+}
+
+/// <summary>
+/// Clears bitmap from memory.
+/// </summary>
+GraphicsBuffer::~GraphicsBuffer()
+{
+	al_destroy_bitmap( mpBitmap );
+	mpBitmap = nullptr;
+}
+
+/***
+*
+* ACCESSORS
+*
+**/
+
+/// <returns>
+/// ALLEGRO_BITMAP pointer of this buffer promising no changes.
+/// </returns>
+ALLEGRO_BITMAP * GraphicsBuffer::getBitmap() const
+{
+	return mpBitmap;
+}
+
+/// <returns>
+/// int of buffer height promising no changes.
+/// </returns>
+int GraphicsBuffer::getHeight() const
+{
+	return al_get_bitmap_height( mpBitmap );
+}
+
+/// <returns>
+/// int of buffer width promising no changes.
+/// </returns>
+int GraphicsBuffer::getWidth() const
+{
+	return al_get_bitmap_width( mpBitmap );
+}

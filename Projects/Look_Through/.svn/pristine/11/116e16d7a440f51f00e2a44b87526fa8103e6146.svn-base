@@ -1,0 +1,31 @@
+#pragma once
+#include "GraphicsBuffer.h"
+#include "Font.h"
+#include "Color.h"
+#include "GraphicsBufferManager.h"
+#include <vector>
+#include <string>
+
+class GraphicsSystem;
+
+const int HUD_HEIGHT = 35;
+const int HUD_WIDTH = 800;
+
+const std::string BLACK_KEY = "Black";
+
+class HUD : public Trackable
+{
+public:
+	HUD();
+	~HUD();
+
+	void init(Font* font);
+	void cleanUp();
+
+	void drawHUD(GraphicsSystem* display);
+private:
+
+	Font* mpFont = nullptr;
+
+	float mFPS, mTime;
+};

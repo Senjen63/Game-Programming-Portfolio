@@ -1,0 +1,155 @@
+#include "UnitManager.h"
+#include "Animation.h"
+#include <algorithm>
+#include "Unit.h"
+
+using namespace std;
+
+UnitManager::UnitManager(Animation* wallAnim, Animation* snakeAnim, Animation* foodAnim, Animation* pointsAnim, Animation* speedAnim, Animation* slowAnim, Animation* buttonAnim)
+	: mpWallAnim(wallAnim), mpSnakeAnim(snakeAnim), mpFoodAnim(foodAnim), mpPointsAmim(pointsAnim), mpSpeedAnim(speedAnim), mpSlowAnim(slowAnim), mpButtonAnim(buttonAnim)
+{
+	mpFirstAvailable = &mUnits[0];
+
+	for (int i = 0; i < UNIT_POOL_SIZE - 1; i++)
+	{
+		mUnits[i].setNext(&mUnits[i + 1]);
+	}
+
+	mUnits[UNIT_POOL_SIZE - 1].setNext(nullptr);
+}
+
+UnitManager::~UnitManager()
+{
+	clearUnits();
+
+	mpWallAnim = nullptr;
+	mpSnakeAnim = nullptr;
+	mpFoodAnim = nullptr;
+	mpPointsAmim = nullptr;
+	mpSpeedAnim = nullptr;
+	mpSlowAnim = nullptr;
+}
+
+//Unit* UnitManager::getLastUnit()
+//{
+//	return &mvpUnits.back();
+//}
+
+Unit* UnitManager::getUnitAt(Vector2D location)
+{
+	for each (auto iter in mUnits)
+	{
+		if (iter.checkIfIntersecting(location))
+		{
+			return &iter;			
+		}		
+	}
+	return nullptr;
+}
+
+void UnitManager::addUnitAt(Vector2D location, UnitType type)
+{
+	switch (type)
+	{
+	case UnitType::INVALID_TYPE:		
+		break;
+	case UnitType::WALL:
+		createUnit(location, *mpWallAnim, type);
+		break;
+	case UnitType::SNAKE:
+		createUnit(location, *mpSnakeAnim, type);
+		break;
+	case UnitType::FOOD:
+		createUnit(location, *mpFoodAnim, type);
+		break;
+	case UnitType::POINTS_POWER:
+		createUnit(location, *mpPointsAmim, type);
+		break;
+	case UnitType::SPEED_POWER:
+		createUnit(location, *mpSpeedAnim, type);
+		break;
+	case UnitType::SLOW_POWER:
+		createUnit(location, *mpSlowAnim, type);
+		break;
+	case UnitType::BUTTON:
+		createUnit(location, *mpButtonAnim, type);
+		break;
+	default:
+		break;
+	}
+
+	
+}
+
+void UnitManager::deleteAllUnitsAt(Vector2D location)
+{
+	for(int i = 0; i < UNIT_POOL_SIZE; i++)
+	{
+		if (mUnits[i].checkIfIntersecting(location))
+		{
+			mUnits[i].setNext(mpFirstAvailable);
+			mUnits[i].cleanUp();
+			mpFirstAvailable = &mUnits[i];
+		}		
+	}
+
+	//auto removeAfterIter = remove_if(mvpUnits.begin(), mvpUnits.end(),
+	//	[](Unit* const u) { return u == nullptr; });
+
+	//mvpUnits.erase(removeAfterIter, mvpUnits.end());	
+}
+
+void UnitManager::clearUnits()
+{
+
+	for each (auto iter in mUnits)
+	{
+		iter.cleanUp();
+	}
+
+	mpFirstAvailable = &mUnits[0];
+
+	for (int i = 0; i < UNIT_POOL_SIZE - 1; i++)
+	{
+		mUnits[i].setNext(&mUnits[i + 1]);
+	}
+
+	mUnits[UNIT_POOL_SIZE - 1].setNext(nullptr);
+}
+
+void UnitManager::setPauseAllUnitAnims(bool pause)
+{
+	for each (auto iter in mUnits)
+	{
+		iter.pauseAnimation(pause);
+	}
+}
+
+void UnitManager::updateAll(double dt)
+{
+	for each (auto iter in mUnits)
+	{
+		iter.update(dt);
+	}
+}
+
+void UnitManager::drawAll()
+{
+	for each (auto iter in mUnits)
+	{
+		iter.draw();
+	}
+}
+
+void UnitManager::createUnit(Vector2D location, Animation anim, UnitType type)
+{
+	if (mpFirstAvailable == nullptr)
+	{
+		return;
+	}
+
+	Unit* pNewUnit = mpFirstAvailable;
+	mpFirstAvailable = pNewUnit->getNext();
+
+	pNewUnit->init(location, anim, type);
+}

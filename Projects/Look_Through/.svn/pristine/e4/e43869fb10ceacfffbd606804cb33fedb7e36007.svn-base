@@ -1,0 +1,21 @@
+#pragma once
+
+#include <SDL.h>
+#include "Trackable.h"
+
+class Color : public Trackable
+{
+	friend class GraphicsSystem;
+	private:
+		int mRed, mGreen, mBlue, mAlpha;
+		SDL_Color mColor;
+		SDL_Color getColor() { return mColor; }
+	public:
+		Color(int red, int green, int blue, int alpha);
+		~Color();
+
+		int getRed() { return mRed; }
+		int getGreen() { return mGreen; }
+		int getBlue() { return mBlue; }
+		int getAlpha() { return mAlpha; }
+};

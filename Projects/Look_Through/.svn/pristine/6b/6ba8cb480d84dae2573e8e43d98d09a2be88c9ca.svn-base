@@ -1,0 +1,53 @@
+#pragma once
+#include "SDL_FILES.h"
+#include <Trackable.h>
+#include <Vector2D.h>
+#include <iostream>
+#include <cassert>
+#include <string>
+#include "GraphicsBuffer.h"
+#include "Font.h"
+#include "Sprite.h"
+#include "Color.h"
+
+using namespace std;
+
+class GraphicsSystem
+{
+	friend GraphicsBuffer;
+public:
+	GraphicsSystem();
+	GraphicsSystem(int height, int width);
+	~GraphicsSystem();
+
+	void init();
+	void cleanUp();
+	GraphicsBuffer* getBackBuffer();
+	int getHeight();
+	int getWidth();
+	void flipDisplay();
+	void border(Sprite* pSprite);
+	void draw(Vector2D& targetLocation, Sprite sprite, float scale);
+	void draw(Vector2D targetLocation, Sprite* pSprite, float randX, float randY);
+	void draw(Vector2D targetLocation, Sprite* pSprite);
+	void draw(GraphicsBuffer* pBuffer, Vector2D location, float scale);
+	void writeText(Vector2D targetLocation, Font* font, Color color, string text);
+	void clearToColor(GraphicsBuffer& targetBuffer, Color& color);
+	bool isInit();
+	void clearRenderer();
+	int getLanguage();
+	void setLanguage(int language);
+private:
+	SDL_Surface* getBuffer();
+	SDL_Window* mpDisplay;
+	SDL_Renderer* mpRenderer;
+	GraphicsBuffer* mpBack;
+	int mHeight;
+	int mWidth;
+	bool mIsInit;
+	SDL_Window* getDisplay()
+	{
+		return mpDisplay;
+	};
+	int mLanguage;
+};

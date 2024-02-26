@@ -1,0 +1,49 @@
+#include "GraphicsBuffer.h"
+
+// creates new bitmap from already existing one
+GraphicsBuffer::GraphicsBuffer(ALLEGRO_BITMAP* newBitmap)
+{
+	mpBitmap = newBitmap;
+	mHeight = al_get_bitmap_height(newBitmap);
+	mWidth = al_get_bitmap_width(newBitmap);
+	mOwnsBitmap = false;
+}
+
+// creates a bitmap from given dimensions
+GraphicsBuffer::GraphicsBuffer(int width, int height)
+{
+	mHeight = height;
+	mWidth = width;
+	mOwnsBitmap = true;
+
+	mpBitmap = al_create_bitmap(width, height);
+	assert(mpBitmap);
+}
+
+// creates a bitmap from file
+GraphicsBuffer::GraphicsBuffer(const char* location)
+{
+	mpBitmap = al_load_bitmap(location);
+	assert(mpBitmap);
+
+	mWidth = al_get_bitmap_width(mpBitmap);
+	mHeight = al_get_bitmap_height(mpBitmap);
+	mOwnsBitmap = true;
+}
+
+GraphicsBuffer::~GraphicsBuffer()
+{
+	if(mOwnsBitmap)
+		al_destroy_bitmap(mpBitmap);
+}
+
+// sets bitmap to the given color
+void GraphicsBuffer::setColor(Color red)
+{
+	ALLEGRO_BITMAP* oldBitmap = al_get_target_bitmap();
+	al_set_target_bitmap(mpBitmap);
+
+	al_clear_to_color(red.getColor());
+	
+	al_set_target_bitmap(oldBitmap);
+}

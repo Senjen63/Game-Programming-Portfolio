@@ -1,0 +1,213 @@
+#include "Game.h"
+
+//Game* gpGame = nullptr;
+Game* Game::mpGameInst = NULL;
+
+Game::Game(int width, int height)
+{
+	mpGameInst;
+
+	// initialize the member GraphicsSystem object
+	mpGraphics = new GraphicsSystem;
+	assert(mpGraphics);
+	mpGraphics->init(width, height);
+
+	// initialize the member InputSystem object
+	mpInput = new InputSystem;
+	assert(mpInput);
+
+	/*mpgBufferManager = nullptr;
+	mpUnitManager = nullptr;*/
+	//mpUnit = nullptr;
+}
+
+Game::Game()
+{
+	//mpGameInst = NULL;
+
+	// initialize the member GraphicsSystem object
+	mpGraphics = new GraphicsSystem;
+	assert(mpGraphics);
+	mpGraphics->init(DISP_WIDTH, DISP_HEIGHT);
+
+	// initialize the member InputSystem object
+	mpInput = new InputSystem;
+	assert(mpInput);
+
+	/*mpgBufferManager = nullptr;
+	mpUnitManager = nullptr;*/
+	//mpUnit = nullptr;
+}
+
+Game::~Game()
+{
+	cleanup();
+}
+
+void Game::cleanup()
+{
+	// clean up the program
+	//delete mpUnit;
+
+	//delete mpUnitManager;
+	//delete mpgBufferManager;
+	delete mpGraphics;
+	delete mpInput;
+
+	//mpUnitManager = nullptr;
+	//mpgBufferManager = nullptr;
+	mpInput = nullptr;
+	mpGraphics = nullptr;
+}
+
+Game* Game::getInstance()
+{
+	assert(mpGameInst != nullptr);
+	return mpGameInst;
+}
+
+void Game::createInstance() 
+{ 
+	if (mpGameInst == NULL)
+	{
+		mpGameInst = new Game;
+	}
+}
+
+void  Game::destroyInstance() 
+{ 
+	delete mpGameInst;
+	mpGameInst = NULL;
+}
+
+void Game::init()
+{
+	// initialize 3 GraphicsBuffers w/ BufferManager- woods.png, smurf_sprites.png, and dean_sprites.png
+	mpgBufferManager.createAndManageGraphicsBuffers(WOOD, (ASSET_PATH + BACKGROUND_FILENAME).c_str());
+	//assert(mpgBufferManager);
+	mpgBufferManager.createAndManageGraphicsBuffers(DEAN, (ASSET_PATH + DEAN_FILENAME).c_str());
+	//assert(mpgBufferManager);
+	mpgBufferManager.createAndManageGraphicsBuffers(SMURF, (ASSET_PATH + SMURFS_FILENAME).c_str());
+	//assert(mpgBufferManager);
+
+	// initialize 2 Animations - smurf_sprites and dean_sprites by adding sprite from buffers
+	mSmurfAnimation.addSprite(mpgBufferManager.getBuffer(DEAN), ORIGIN_X, ORIGIN_Y, mpgBufferManager.getBuffer(DEAN)->getHeight(),
+								mpgBufferManager.getBuffer(DEAN)->getWidth());
+	
+	mDeanAnimation.addSprite(mpgBufferManager.getBuffer(SMURF), ORIGIN_X, ORIGIN_Y, mpgBufferManager.getBuffer(SMURF)->getHeight(),
+								mpgBufferManager.getBuffer(SMURF)->getWidth());
+	
+	// initialize the Unit
+	//unitManager.createAndAddUnit(mSmurfAnimation, mDeanAnimation);
+
+	//mpUnit = new Unit(mSmurfAnimation, mDeanAnimation);
+}
+
+//Game* Game::getGame()
+//{
+//	assert(gpGame);
+//	return gpGame;
+//}
+
+void Game::doLoop()
+{
+
+	//left click creates units
+	//right click deletes unit: anywhere within the 16 pixels
+	//space bar stops animation and starts animation
+	//enter key changes last sprite between dean and smurf sprite
+	//escape key gets you out
+
+	bool shouldContinue = true;
+	double normalFPS = 60;
+	double targetTime = 1000.0 / normalFPS;
+
+	PerformanceTracker* pPerformanceTracker = new PerformanceTracker;
+	Timer loopTimer;
+
+	while (shouldContinue)
+	{
+
+		std::string currentAnimation = "smurf";
+		pPerformanceTracker->clearTracker("loop");
+		pPerformanceTracker->startTracking("loop");
+
+		loopTimer.start();
+
+		// update the input system during every loop
+		mpInput->update();
+		mpUnitManager.update(targetTime);//animates unit
+
+		// close the application (set shouldContinue to false)
+		shouldContinue = !mpInput->getKeyState(MyKeyCode::ESC_KEY);
+
+		//create Unit on mouse left click and hold
+		if (mpInput->isMouseDown(Mouse::LEFT))
+		{	
+			// std::cout << "Mouse is down" << std::endl;
+			Vector2D pos = mpInput->getMouseState();
+			/*mpUnit->setLocation(pos);*/
+
+			mpUnitManager.createAndAddUnit(mSmurfAnimation, mDeanAnimation);//create new unit
+			mpUnitManager.getUnit()->setLocation(pos);//set unit to mouse location
+			
+			//mpUnit->draw(mpGraphics);
+		}
+
+		//delete unit with right mouse click
+		if (mpInput->isMouseDown(Mouse::RIGHT))
+		{
+			Vector2D pos = mpInput->getMouseState();
+
+			mpUnitManager.deleteUnitOnClick(pos);
+		}
+
+		if (mpInput->getKeyState(MyKeyCode::SPACE))
+		{
+			mpUnitManager.pauseAllUnits();
+		}
+
+		//// speed up animation
+		//if (mpInput->getKeyState(MyKeyCode::F_KEY))
+		//{
+		//	// std::cout << "F is down" << std::endl
+		//	/*mpUnit->setAnimationSpeed(0);*/
+		//	unitManager.setUnitAniSpeed(0,firstUnit);
+		//}
+		//		
+		//// slow down animation
+		//if (mpInput->getKeyState(MyKeyCode::S_KEY))
+		//{
+		//	// std::cout << "S is down" << std::endl;
+		//	mpUnit->setAnimationSpeed(1);
+		//	unitManager.setUnitAniSpeed(0, firstUnit);
+		//}
+		
+		// switch between the two animations
+		if (mpInput->getKeyState(MyKeyCode::ENT_KEY) && !mHoldDown)
+		{
+			// std::cout << "Enter is down" << std::endl;
+			/*mpUnit->setAnimation();*/
+			mpUnitManager.getUnit()->setAnimation();
+			mHoldDown = true;
+		}
+		else
+		{
+			mHoldDown = false;
+		}
+
+		// draw the woods buffer to the back buffer
+		mpGraphics->draw(mpgBufferManager.getBuffer(WOOD), ORIGIN_X, ORIGIN_Y, 1);
+		mpUnitManager.draw(mpGraphics);// draw the animation
+		// flip the screen
+		mpGraphics->flip();
+		
+
+		loopTimer.sleepUntilElapsed(targetTime);
+		pPerformanceTracker->stopTracking("loop");
+		std::cout << pPerformanceTracker->getElapsedTime("loop") << std::endl;
+	}
+
+
+	delete pPerformanceTracker;
+}

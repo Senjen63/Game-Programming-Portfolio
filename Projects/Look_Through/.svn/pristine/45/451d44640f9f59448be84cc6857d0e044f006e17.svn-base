@@ -1,0 +1,51 @@
+#include "CollideListener.h"
+#include <EventSystem.h>
+#include "GameEvent.h"
+#include "CollideEvent.h"
+#include "MoveEvent.h"
+
+CollideListener::CollideListener()
+{
+	EventSystem* pEventSystem = EventSystem::getInstance();
+	pEventSystem->addListener((EventType)COLLIDE_EVENT, this);
+	pEventSystem->addListener((EventType)MOVE_EVENT, this);
+}
+
+CollideListener::~CollideListener()
+{
+}
+
+void CollideListener::handleEvent(const Event& theEvent)
+{
+	if (theEvent.getType() == COLLIDE_EVENT)
+	{
+		const CollideEvent& collideEvent = static_cast<const CollideEvent&>(theEvent);
+
+		if (collideEvent.getCollision() == "Wall")
+		{
+			Game::getInstance()->setShouldLoop(true);
+		}
+		else if (collideEvent.getCollision() == "Snake")
+		{
+			Game::getInstance()->setShouldLoop(true);
+		}
+		else if (collideEvent.getCollision() == "Food")
+		{
+			Game::getInstance()->spawnFood();
+			Game::getInstance()->addScore(Game::getInstance()->getFoodPoints());
+		}
+		else if (collideEvent.getCollision() == "Points")
+		{
+			Game::getInstance()->addScore(100);
+		}
+	}
+	else if (theEvent.getType() == MOVE_EVENT)
+	{
+		const MoveEvent& moveEvent = static_cast<const MoveEvent&>(theEvent);
+
+		if (moveEvent.getDirection() == "Space")
+		{
+			Game::getInstance()->setShouldStart(true);
+		}
+	}
+}

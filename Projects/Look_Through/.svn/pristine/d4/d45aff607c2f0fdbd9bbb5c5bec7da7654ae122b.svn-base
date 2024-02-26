@@ -1,0 +1,56 @@
+#include "Unit.h"
+
+Unit::Unit(Animation anim)
+{
+	mAnimation = anim;
+
+	// set animation location to center of the screen
+	mLocation = Vector2D(300, 300);
+
+	mTimePerFrame = 1000.0 / 12;
+	mTimeLeft = 0;
+}
+
+Unit::Unit(Animation anim, Vector2D pos)
+{
+	mAnimation = anim;
+
+	// set animation location to given position
+	mLocation = pos;
+
+	mTimePerFrame = 1000.0 / 12;
+	mTimeLeft = 0;
+}
+
+Unit::~Unit() {}
+
+void Unit::update(double dt)
+{
+	// update the animation
+	mAnimation.update(dt);
+}
+
+void Unit::updateSnake(double dt, Vector2D newDir)
+{
+	mLocation = newDir;
+
+	// update the animation
+	mAnimation.update(dt);
+}
+
+void Unit::draw(GraphicsSystem* graphSys)
+{
+	// draw the animation to the screen
+	graphSys->draw(mLocation.getX(), mLocation.getY(), mAnimation.getCurrentSprite(), 1);
+}
+
+Vector2D Unit::getLocation()
+{
+	return mLocation;
+}
+
+void Unit::setLocation(Vector2D loc)
+{
+	// set the mouse location to the unit's location
+	mLocation = loc;
+}

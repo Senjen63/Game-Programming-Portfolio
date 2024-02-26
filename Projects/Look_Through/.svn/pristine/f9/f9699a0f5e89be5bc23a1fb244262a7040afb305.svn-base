@@ -1,0 +1,144 @@
+#include <allegro5/allegro.h>
+#include <allegro5/allegro_font.h>
+#include <allegro5/allegro_ttf.h>
+#include <allegro5/allegro_audio.h>
+#include <allegro5/allegro_acodec.h>
+#include <allegro5/allegro_image.h>
+#include <allegro5/allegro_primitives.h>
+
+#include <iostream>
+#include <cassert>
+#include <string>
+#include <random>
+#include <time.h>
+
+#include <PerformanceTracker.h>
+#include <MemoryTracker.h>
+#include <Vector2D.h>
+#include <Timer.h>
+
+#include "GraphicsSystem.h"
+#include "GraphicsBuffer.h"
+#include "Color.h"
+#include "Sprite.h"
+#include "Font.h"
+
+using namespace std;
+
+int main()
+{
+	//Starting a performance tracker.
+	PerformanceTracker* pPerformanceTracker = new PerformanceTracker;
+
+	const string INIT_TRACKER_NAME = "init";
+	const string DRAW_TRACKER_NAME = "draw";
+	const string WAIT_TRACKER_NAME = "wait";
+
+	const int DISP_WIDTH = 800;
+	const int DISP_HEIGHT = 600;
+
+	const string ASSET_PATH = "..\\..\\common\\assets\\";
+	const string BACKGROUND_FILENAME = "steps.png";
+	const string QUIMBY_FILENAME = "mayor_quimby.png";
+	const string SMURFS_FILENAME = "smurf_sprites.png";
+	const string FONT_FILENAME = "cour.ttf";
+	const int FONT_SIZE = 48;
+
+	const double SLEEP_TIME = 5.0;
+	const double MILLI_TO_SECONDS = 1000;
+
+	const Vector2D QUIMBY_POSITION = Vector2D(0,0);
+	const string QUIMBY_CURSE = "Curse you Papa Smurf!!!";
+	const float SCALE_FACTOR = .666666667;
+	const float ONE_SIXTH = .166666667;
+
+	const int SMURFS_PER_ROW = 4;
+	const int SMURFS_PER_COL = 4;
+	const int SMURF_SIZE = 60;
+	Vector2D smurfPosition;
+	
+	//Seeds and initializes the random number generator.
+	srand(time(NULL));
+	
+	//Setting up the display and initializing Allegro.
+	GraphicsSystem* pDisplay = new GraphicsSystem(DISP_HEIGHT, DISP_WIDTH);
+	pDisplay->init();
+	
+	//Colors that will be commonly used.
+	const Color RED = Color(255, 0, 0);
+	const Color BLACK = Color(0, 0, 0);
+
+	//Setting up the font to be used.
+	Font* pFont = new Font((ASSET_PATH + FONT_FILENAME).c_str(), FONT_SIZE);
+	
+	//Setting up graphics buffers to be used to make sprites.
+	GraphicsBuffer* pSmurfs = new GraphicsBuffer((ASSET_PATH + SMURFS_FILENAME).c_str());
+
+	GraphicsBuffer* pQuimby = new GraphicsBuffer((ASSET_PATH + QUIMBY_FILENAME).c_str());
+	Sprite* pQuimbySprite = new Sprite(pQuimby, QUIMBY_POSITION, pQuimby->getHeight(), pQuimby->getWidth());
+
+	GraphicsBuffer* pBackground = new GraphicsBuffer((ASSET_PATH + BACKGROUND_FILENAME).c_str());
+	Sprite* pBackgroundSprite = new Sprite(pBackground, Vector2D(0, 0));
+
+	//Making a buffer that is colored red.
+	GraphicsBuffer* pRedBox = new GraphicsBuffer(DISP_HEIGHT, DISP_WIDTH, RED);
+
+	//Adding the Quimby sprite and his curse to the backbuffer.
+	pDisplay->draw(pRedBox, Vector2D(0, 0), pQuimbySprite, 1);
+	pDisplay->writeText(pRedBox, Vector2D(0, 0), pFont, BLACK, QUIMBY_CURSE);
+	
+	//Putting the background in the backbuffer
+	pDisplay->draw(Vector2D(0,0), pBackgroundSprite, 1);
+
+	//Making the red buffer a sprite and placing it in the backbuffer.
+	Sprite* pSpriteRedBox = new Sprite(pRedBox, Vector2D(0, 0), pRedBox->getHeight(), pRedBox->getWidth());
+	pDisplay->draw(Vector2D(DISP_WIDTH * ONE_SIXTH, DISP_HEIGHT * ONE_SIXTH), pSpriteRedBox, .67);
+	
+	//Create and draw each smurf sprite in a random position.
+	for (int i = 0; i < SMURFS_PER_ROW; i++)
+	{
+		for (int j = 0; j < SMURFS_PER_COL; j++)
+		{
+			smurfPosition.setX(rand () % (DISP_WIDTH - SMURF_SIZE));
+			smurfPosition.setY(rand() % (DISP_HEIGHT - SMURF_SIZE));
+			Sprite* pSmurf = new Sprite(pSmurfs, Vector2D(SMURF_SIZE * i, SMURF_SIZE * j), SMURF_SIZE, SMURF_SIZE);
+			pDisplay->draw(smurfPosition, pSmurf, 1);
+			delete pSmurf;
+		}
+	}
+	
+	//Save the buffers as images.
+	pDisplay->saveBuffer(pDisplay->getBackBuffer(), "backbuffer.jpg");
+	pDisplay->saveBuffer(pSpriteRedBox->getBuffer(), "redbuffer.jpg");
+	
+	//Present the buffer to the user.
+	pDisplay->flip();
+	
+	//A timer to keep the display up for.
+	bool keepRunning = true;
+	Timer timer;
+	timer.sleep(SLEEP_TIME * MILLI_TO_SECONDS);
+
+	//Stopping the performance tracker and displaying its results.
+	pPerformanceTracker->stopTracking("loop");
+	cout << "Frame Took:" << pPerformanceTracker->getElapsedTime("loop") << " ms" << endl;
+	pPerformanceTracker->clearTracker("loop");
+
+	//Deleting the dynamic memory items to prevent leakage.
+	delete pPerformanceTracker;
+	delete pDisplay;
+	delete pBackground;
+	delete pBackgroundSprite;
+	delete pSmurfs;
+	delete pQuimby;
+	delete pQuimbySprite;
+	delete pRedBox;
+	delete pFont;
+	delete pSpriteRedBox;
+	
+	//Reporting on memory leaks.
+	MemoryTracker::getInstance()->reportAllocations(cout);
+
+	system("pause");
+	return 0;
+}

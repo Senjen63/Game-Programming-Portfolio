@@ -1,0 +1,17 @@
+#pragma once
+
+#include "GameEvent.h"
+#include "InputSystem.h"
+
+class MousePressEvent : public GameEvent
+{
+	Mousecode mCode;
+
+public:
+
+	MousePressEvent(Mousecode _code) : GameEvent(GameEventType::MOUSE_PRESS_EVENT), mCode(_code) {}
+	~MousePressEvent() {}
+
+	Mousecode getKey() const { return mCode; }
+};
+

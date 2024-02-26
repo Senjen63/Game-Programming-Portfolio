@@ -1,0 +1,44 @@
+#pragma once
+#include <PerformanceTracker.h>
+#include <Timer.h>
+#include <Trackable.h>
+#include <Vector2D.h>
+#include <vector>
+
+#include "GraphicsBufferManager.h"
+#include "GraphicsSystem.h"
+#include "Level.h"
+#include "Animation.h"
+#include "Unit.h"
+
+#include <iostream>
+#include <fstream>
+
+//const std::string LEVEL_ONE = "text\\level1.txt";
+//const std::string LEVEL_TWO = "text\\level2.txt";
+//const std::string LEVEL_THREE = "text\\level3.txt";
+
+class Level;
+
+class LevelManager : public Trackable
+{
+    public:
+
+        LevelManager();
+        ~LevelManager();
+
+        void cleanup();
+
+        void changeLevel(int levelNum);
+        void createAndAddLevel(int levelNum, Animation anim, GraphicsSystem* mpGraphics, GraphicsBuffer* buffer);
+        //void initLevel(GraphicsSystem* mpGraphics);
+        void loadLevel(GraphicsSystem* mpGraphics);
+        bool collisionWithWall(Unit* snakeHead);
+        bool isFoodOnWall(Vector2D pos);
+
+        Level* returnLevel() { return mpLevels[currentLevel]; };
+
+    private:
+        int currentLevel;
+        std::vector<Level*> mpLevels;
+};

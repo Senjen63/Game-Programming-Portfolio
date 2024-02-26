@@ -1,0 +1,68 @@
+#pragma once
+#include <EventSystem.h>
+#include <EventListener.h>
+
+#include "InputSystem.h"
+#include "ActionEvent.h"
+
+enum Actions
+{
+    MOVE_LEFT = 100,
+    STOP_MOVE_LEFT,
+    MOVE_RIGHT,
+    STOP_MOVE_RIGHT,
+    MOVE_UP,
+    JUMP = MOVE_UP,
+    MOVE_DOWN,
+    SELECT,
+    START_GAME,
+    OPTIONS,
+    LOAD,
+    EXIT_GAME,
+    NEXT_LEVEL,
+    MAIN_MENU,
+    SWAP_TO_FIRST_LANGUAGE,
+    SWAP_TO_SECOND_LANGUAGE,
+    SWAP_TO_THIRD_LANGUAGE,
+    CHANGE_EASY,
+    CHANGE_MEDIUM,
+    CHANGE_HARD,
+    SOUND_ON,
+    SOUND_OFF,
+    NUM_KEYBIND_EVENTS
+};
+
+/*
+============================
+
+Each keycode is one higher
+than the SFML keycode b/c
+negative values denote a
+released key and if A = 0,
+it is never negative
+
+============================
+*/
+const enum KeyCodes 
+{
+    A_KEY = 1, B_KEY = 2, C_KEY = 3, D_KEY = 4, E_KEY = 5, F_KEY = 6, G_KEY = 7, H_KEY = 8, I_KEY = 9, J_KEY = 10, K_KEY = 11, L_KEY = 12, M_KEY = 13,
+    N_KEY = 14, O_KEY = 15, P_KEY = 16, Q_KEY = 17, R_KEY = 18, S_KEY = 19, T_KEY = 20, U_KEY = 21, V_KEY = 22, W_KEY = 23, X_KEY = 24, Y_KEY = 25,
+    Z_KEY = 26, ESCAPE = 37, L_CONTROL = 38, L_SHIFT = 39, L_ALT = 40, SPACE = 58, ENTER = 59, TAB = 61, LEFT = 72, RIGHT = 73, UP = 74, DOWN = 75,
+    
+    LEFT_MOUSE = 1000,
+    RIGHT_MOUSE = 1001
+};
+
+class InputTranslator : public EventListener
+{
+    private:
+        EventSystem* mpEventSystem;
+
+    public:
+        InputTranslator();
+        ~InputTranslator();
+
+        void init();
+
+        virtual void handleEvent(const Event& currentEvent);
+};

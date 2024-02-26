@@ -1,0 +1,19 @@
+#pragma once
+
+class Color
+{
+public:
+	Color(float redValue, float blueValue, float greenValue, float alphaValue);
+	~Color() {};
+
+	float getRedValue() { return mRed; }
+	float getBlueValue() { return mBlue; }
+	float getGreenValue() { return mGreen; }
+	float getAlphaValue() { return mAlpha; }
+
+private:
+	float mRed;
+	float mBlue;
+	float mGreen;
+	float mAlpha;
+};

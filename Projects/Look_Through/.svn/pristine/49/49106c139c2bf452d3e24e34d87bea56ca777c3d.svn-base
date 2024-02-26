@@ -1,0 +1,26 @@
+#include "Font.h"
+
+using namespace std;
+
+ALLEGRO_FONT* Font::getFont()
+{
+    return mFont;
+}
+
+int Font::getFontSize()
+{
+    return mFontSize;
+}
+
+Font::Font(string& pathToFont, int fontSize)
+{
+    this->mFontSize = fontSize;
+
+    mFont = al_load_ttf_font(pathToFont.c_str(), fontSize, 0);
+    assert(mFont);
+}
+
+Font::~Font()
+{
+    al_destroy_font(mFont);
+}

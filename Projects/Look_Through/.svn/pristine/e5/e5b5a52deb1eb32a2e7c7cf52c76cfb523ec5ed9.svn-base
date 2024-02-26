@@ -1,0 +1,72 @@
+#pragma once
+
+#include <Vector2D.h>
+#include <vector>
+#include <fstream>
+#include <iostream>
+#include "Trackable.h"
+#include "Level.h"
+#include "UnitParameters.h"
+
+class Unit;
+class Level;
+
+enum class DifficultyLevel
+{
+	INVALID_DIFFICULTY = -1, EASY_DIFFICULTY = 1, NORMAL_DIFFICULTY, HARD_DIFFICULTY
+};
+
+
+class LevelManagerNew : public Trackable
+{
+	const std::string SAVE_PATH = "Data\\SaveData.txt";
+
+	friend class Level;
+
+	int mCurLevel;
+	DifficultyLevel mCurDiff;
+
+	std::vector<std::string> mLevelLoadPaths;
+	int mCurrentLevelLoadPathIndex = 0;
+
+	std::vector<Level*> mLevels;
+
+	bool mInitialized = false;
+
+	UnitParameters mFrogParams;
+	UnitParameters mWaterParams;
+	UnitParameters mGrassParams;
+	UnitParameters mStreetParams;
+	UnitParameters mTruckParams;
+	UnitParameters mLogParams;
+
+	void unitSetUp();
+
+public:
+	const static int CELL_SIZE;
+	const static int LEVEL_WIDTH;
+	const static float ANIM_SPEED;
+
+	LevelManagerNew();
+	~LevelManagerNew();
+
+	void initLevelLoadPaths(std::vector<std::string> levelLoadPaths) { mLevelLoadPaths = levelLoadPaths; }
+	void init();
+	void initLoad();
+	void cleanup();
+
+	void update(float dt);
+
+	void createLevel(std::string fileName);
+	void deleteLevels();
+	Level* getCurLevel() { return mLevels[mCurLevel]; }
+	DifficultyLevel getCurDiffLev() { return mCurDiff; };
+
+	void setCurDiffLev(DifficultyLevel diflev) { mCurDiff = diflev; };
+
+	bool getInitialized() { return mInitialized; }
+
+	void incrementLevel() { mCurrentLevelLoadPathIndex = (mCurrentLevelLoadPathIndex + 1) % mLevelLoadPaths.size(); }
+
+	void saveData();
+};

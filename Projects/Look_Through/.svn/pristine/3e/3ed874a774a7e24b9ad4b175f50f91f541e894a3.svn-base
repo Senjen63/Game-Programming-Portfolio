@@ -1,0 +1,23 @@
+#pragma once
+#include <vector>
+
+#include "Unit.h"
+
+class UnitManager : public Trackable
+{
+public:
+	UnitManager();
+	~UnitManager();
+
+	void cleanup();
+
+	void addUnit(Unit* toAdd);
+	void removeUnit(int pos);
+	Unit* getUnit(int pos);
+	int getUnitsSize() { return mUnits.size(); }
+
+	void updateAll(float elapsedTime);
+	void drawAll();
+private:
+	std::vector<Unit*> mUnits;
+};

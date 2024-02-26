@@ -1,0 +1,45 @@
+#include "Sprite.h"
+
+//Constructors
+Sprite::Sprite(GraphicsBuffer* graphicsBuffer, Vector2D location, int height, int width)
+{
+	mHeight = height;
+	mWidth = width;
+	mLocation = location;
+	mpGraphicsBuffer = graphicsBuffer;
+}
+
+Sprite::Sprite(GraphicsBuffer* graphicsBuffer, Vector2D location)
+{
+	mHeight = graphicsBuffer->getHeight();
+	mWidth = graphicsBuffer->getWidth();
+	mLocation = location;
+	mpGraphicsBuffer = graphicsBuffer;
+}
+
+//Destructor
+Sprite::~Sprite()
+{
+	
+}
+
+//Accessors
+int Sprite::getHeight()
+{
+	return mHeight;
+}
+
+int Sprite::getWidth()
+{
+	return mWidth;
+}
+
+GraphicsBuffer* Sprite::getBuffer()
+{
+	return mpGraphicsBuffer;
+}
+
+Vector2D Sprite::getLocation()
+{
+	return mLocation;
+}

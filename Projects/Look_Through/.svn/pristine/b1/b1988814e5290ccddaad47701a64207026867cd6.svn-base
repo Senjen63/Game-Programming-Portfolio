@@ -1,0 +1,10 @@
+#pragma once
+
+#include "GameEvent.h"
+
+class WinEvent : public GameEvent
+{
+public:
+	WinEvent();
+	virtual ~WinEvent();
+};

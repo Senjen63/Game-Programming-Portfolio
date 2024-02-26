@@ -1,0 +1,20 @@
+#include "SnakeSegment.h"
+
+SnakeSegment::SnakeSegment(std::pair<float, float>location, Animation* currentAnimation, std::pair<int, int>startDirection, bool head) : Unit(location, currentAnimation)
+{
+	mForwardDirection = startDirection;
+
+	mHead = head;
+}
+
+void SnakeSegment::moveSegment(std::pair<int, int> newDirection, float cellSize)
+{
+	mForwardDirection = newDirection;
+
+	std::pair<float, float> mOldPos = getLocation();
+	float newXCoord = mOldPos.first + (mForwardDirection.first * cellSize);
+	float newYCoord = mOldPos.second + (mForwardDirection.second * cellSize);
+	std::pair<float, float> newLocation = std::make_pair(newXCoord, newYCoord);
+
+	updateLocation(newLocation);
+}

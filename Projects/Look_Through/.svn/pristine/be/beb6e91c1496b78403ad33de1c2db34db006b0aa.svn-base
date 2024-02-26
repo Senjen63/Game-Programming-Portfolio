@@ -1,0 +1,29 @@
+#pragma once
+
+#include <unordered_map>
+
+#include "GraphicsBuffer.h"
+
+class GraphicsBufferManager : public Trackable
+{
+	std::unordered_map<std::string, GraphicsBuffer*> mBuffers;
+	GraphicsBuffer* mpBackBuffer;
+
+	bool doesBufferExist(std::string name);
+
+public:
+	GraphicsBufferManager(GraphicsBuffer* backBuffer);
+	~GraphicsBufferManager() { cleanup(); }
+
+	void cleanup();
+
+	GraphicsBuffer& addGraphicsBuffer(std::string name, std::string fullPath);
+	GraphicsBuffer& addGraphicsBuffer(std::string name, Vector2D size);
+	GraphicsBuffer& addGraphicsBuffer(std::string name, Vector2D size, Color col);
+	GraphicsBuffer& addGraphicsBuffer(std::string name, const GraphicsBuffer* og);
+
+	bool deleteGraphicsBuffer(std::string name);
+	GraphicsBuffer& getGraphicsBuffer(std::string name);
+	GraphicsBuffer& getBackBuffer();
+};
+

@@ -1,0 +1,287 @@
+#include "Game.h"
+
+Game* gpGame = nullptr;
+
+Game::Game() : mDisplay()
+{
+	mpBackground = nullptr;
+	mpSmurfSheet = nullptr;
+	mpDeanSheet = nullptr;
+
+	mpPlayerAnim = nullptr;
+	mpPlayer = nullptr;
+
+	mTargetTime = DEFAULT_TARGET_TIME;
+
+	mIsActive = false;
+}
+
+
+Game::Game(int height, int width, float targetTime) : mDisplay(height, width)
+{
+	mpBackground = nullptr;
+	mpSmurfSheet = nullptr;
+	mpDeanSheet = nullptr;
+
+	mpPlayerAnim = nullptr;
+	mpPlayer = nullptr;
+
+	mTargetTime = targetTime;
+
+	mIsActive = false;
+}
+
+
+Game::~Game()
+{
+	delete mpPlayer;
+	mpPlayer = nullptr;
+
+	delete mpPlayerAnim;
+	mpPlayerAnim = nullptr;
+
+	delete mpDeanSheet;
+	mpDeanSheet = nullptr;
+
+	delete mpSmurfSheet;
+	mpSmurfSheet = nullptr;
+
+	delete mpBackground;
+	mpBackground = nullptr;
+
+	if (mIsActive)
+	{
+		deinit();
+	}
+}
+
+
+bool Game::init()
+{
+	al_init();
+
+	PerformanceTracker initTracker = PerformanceTracker();
+
+	initTracker.startTracking(INIT_TRACKER_NAME);
+
+	initTracker.startTracking(GRAPHICS_INIT_TRACKER_NAME);
+	bool displaySuccess = mDisplay.init();
+	initTracker.stopTracking(GRAPHICS_INIT_TRACKER_NAME);
+	cout << "Initializing graphics system took: " << initTracker.getElapsedTime(GRAPHICS_INIT_TRACKER_NAME) << " ms\n";
+	initTracker.clearTracker(GRAPHICS_INIT_TRACKER_NAME);
+
+	initTracker.startTracking(INPUT_INIT_TRACKER_NAME);
+	bool inputSuccess = mInput.init();
+	initTracker.stopTracking(INPUT_INIT_TRACKER_NAME);
+	cout << "Initializing input system took: " << initTracker.getElapsedTime(INPUT_INIT_TRACKER_NAME) << " ms\n";
+	initTracker.clearTracker(INPUT_INIT_TRACKER_NAME);
+
+	initTracker.startTracking(ASSET_LOAD_TRACKER_NAME);
+	// Load background.
+	mpBackground = new GraphicsBuffer(ASSET_PATH + BACKGROUND_PATH);
+
+	// Load spritesheets
+	mpSmurfSheet = new GraphicsBuffer(ASSET_PATH + SMURF_PATH);
+	mpDeanSheet = new GraphicsBuffer(ASSET_PATH + DEAN_PATH);
+
+	// Construct animations and units
+	mpPlayerAnim = new Animation(mpSmurfSheet, Vector2D(SPRITE_WIDTH, SPRITE_WIDTH), ANIM_SPEED);
+	
+	// Calculate the center of the window for the starting position for the player
+	Vector2D startingPos = Vector2D((DISP_WIDTH / 2) + (SPRITE_WIDTH / 2), (DISP_HEIGHT / 2) + (SPRITE_HEIGHT / 2));
+	mpPlayer = new Unit(mpPlayerAnim, startingPos);
+
+	initTracker.stopTracking(ASSET_LOAD_TRACKER_NAME);
+	cout << "Asset loading took: " << initTracker.getElapsedTime(ASSET_LOAD_TRACKER_NAME) << " ms\n";
+	initTracker.clearTracker(ASSET_LOAD_TRACKER_NAME);
+
+	initTracker.stopTracking(INIT_TRACKER_NAME);
+	cout << "Initialization took: " << initTracker.getElapsedTime(INIT_TRACKER_NAME) << " ms\n\n";
+	initTracker.clearTracker(INIT_TRACKER_NAME);
+
+	if (!displaySuccess || !inputSuccess)
+	{
+		mIsActive = false;
+		return false;
+	}
+	else
+	{
+		mIsActive = true;
+		return true;
+	}
+}
+
+
+void Game::deinit()
+{
+	mInput.deinit();
+	mDisplay.deinit();
+
+	mIsActive = false;
+}
+
+
+int Game::getHeight()
+{
+	return mDisplay.getHeight();
+}
+
+
+int Game::getWidth()
+{
+	return mDisplay.getWidth();
+}
+
+
+void Game::doLoop()
+{
+	Timer loopTimer = Timer();
+	loopTimer.start();
+
+	PerformanceTracker loopTracker = PerformanceTracker();
+	bool proceed = true;
+
+	double current;
+	double last = loopTimer.getElapsedTime();
+	double dt;
+
+	Vector2D mousePos = Vector2D(0, 0); // Starting value;
+	bool leftClick = false;
+	bool fKeyPressed = false;
+	bool sKeyPressed = false;
+	bool enterKeyPressed = false;
+	bool escKeyPressed = false;
+
+	bool smurfSpriteSheetActive = true;
+	bool enterLifted = true;
+	bool fLifted = true;
+	bool sLifted = true;
+
+	// Calculate background scale
+	float scaleX = float(mDisplay.getWidth()) / float(mpBackground->getWidth());
+	float scaleY = float(mDisplay.getHeight()) / float(mpBackground->getHeight());
+
+	while (proceed)
+	{
+		loopTracker.clearTracker(LOOP_TRACKER_NAME);
+		loopTracker.startTracking(LOOP_TRACKER_NAME);
+
+		current = loopTimer.getElapsedTime();
+		dt = current - last;
+		last = current;
+
+		// Get input
+		mInput.update();
+		mousePos = mInput.getMousePosition();
+		leftClick = mInput.getMouseButtonState(MOUSE_LEFT);
+		escKeyPressed = mInput.getKeyState(KEY_ESCAPE);
+
+		// Extra processing for pressing enter so it only swaps once per keypress.
+		if (mInput.getKeyState(KEY_ENTER) && enterKeyPressed)
+		{
+			enterKeyPressed = true;
+			enterLifted = false;
+		}
+		else if (mInput.getKeyState(KEY_ENTER))
+		{
+			enterKeyPressed = true;
+		}
+		else
+		{
+			enterKeyPressed = false;
+			enterLifted = true;
+		}
+
+		if (mInput.getKeyState(KEY_F) && fKeyPressed)
+		{
+			fKeyPressed = true;
+			fLifted = false;
+		}
+		else if (mInput.getKeyState(KEY_F))
+		{
+			fKeyPressed = true;
+		}
+		else
+		{
+			fKeyPressed = false;
+			fLifted = true;
+		}
+
+		if (mInput.getKeyState(KEY_S) && sKeyPressed)
+		{
+			sKeyPressed = true;
+			sLifted = false;
+		}
+		else if (mInput.getKeyState(KEY_S))
+		{
+			sKeyPressed = true;
+		}
+		else
+		{
+			sKeyPressed = false;
+			sLifted = true;
+		}
+
+
+		// Update game state
+		
+		// Mark exit requested
+		if (escKeyPressed)
+		{
+			proceed = false;
+		}
+
+		// If left click is down move the smurf to the mouse's position.
+		if (leftClick)
+		{
+			// Calculate the position for the anchor where the sprite would be centered on the mouse.
+			Vector2D newPosition = Vector2D(mousePos.getX() - (SPRITE_WIDTH / 2), mousePos.getY() - (SPRITE_WIDTH / 2));
+			mpPlayer->setPosition(newPosition);
+		}
+
+		// If S and F are pressed don't do anything.
+		if (fKeyPressed && !sKeyPressed && fLifted)
+		{			
+			// Allow the speeds to step but clamp them within a range of values.
+			mpPlayerAnim->setDuration(max(mpPlayerAnim->getDuration() / ANIM_STEP, ANIM_SPEED / ANIM_STEP));
+		}
+		else if (sKeyPressed && !fKeyPressed && sLifted)
+		{
+			mpPlayerAnim->setDuration(min(mpPlayerAnim->getDuration() * ANIM_STEP, ANIM_SPEED * ANIM_STEP));
+		}
+
+		// Swap spritesheets
+		if (enterKeyPressed && enterLifted)
+		{
+			// Since the spritesheets and sprites are the same size we can just swap the spritesheets
+			// directly and keep our place in the animation loop.
+			if (smurfSpriteSheetActive)
+			{
+				mpPlayerAnim->setSpriteSheet(mpDeanSheet);
+				smurfSpriteSheetActive = false;
+			}
+			else
+			{
+				mpPlayerAnim->setSpriteSheet(mpSmurfSheet);
+				smurfSpriteSheetActive = true;
+			}
+		}
+
+
+		// Render
+		mDisplay.draw(Vector2D(0, 0), mpBackground, scaleX, scaleY);
+		mpPlayer->update(dt);
+		mpPlayer->draw(&mDisplay);
+		mDisplay.flip();
+
+		loopTracker.stopTracking(LOOP_TRACKER_NAME);
+		cout << "Frame took: " << loopTracker.getElapsedTime(LOOP_TRACKER_NAME) << " ms\n";
+		
+		double sleepTime = (current + mTargetTime) - loopTimer.getElapsedTime();
+		if (sleepTime > 0)
+		{
+			cout << "Sleeping for: " << sleepTime << " ms\n\n";
+			loopTimer.sleep(sleepTime);
+		}
+	}
+}

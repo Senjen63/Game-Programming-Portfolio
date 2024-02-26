@@ -1,0 +1,56 @@
+#include "OptionsButton.h"
+#include "Game.h"
+
+OptionsButton::OptionsButton(std::pair<float, float>location, std::pair<float, float>scale, string text, string animationDataFilePath, string updatedOption, string newOptionValue)
+	: Button(location, scale, text, animationDataFilePath)
+{
+	mUpdatedOption = updatedOption;
+	mNewOptionValue = newOptionValue;
+}
+
+OptionsButton::~OptionsButton()
+{
+
+}
+
+void OptionsButton::onClicked()
+{
+	if (mUpdatedOption == "Difficulty")
+	{
+		try
+		{
+			float newDifficulty = stof(mNewOptionValue);
+
+			if (newDifficulty < 0 || newDifficulty > 2)
+			{
+				newDifficulty = 1;
+			}
+
+			Game::getGame()->changeDifficulty(newDifficulty);
+		}
+
+		catch(...)
+		{
+			Game::getGame()->changeDifficulty(1);
+		}
+	}
+
+	// having this be an enum would help greatly in ensuring a viable language is given
+	else if (mUpdatedOption == "Language")
+	{
+		// do nothing yet
+	}
+
+	else if (mUpdatedOption == "Sound")
+	{
+		if (mNewOptionValue == "On")
+		{
+			Game::getGame()->changeSoundEnabled(true);
+		}
+
+		else if (mNewOptionValue == "Off")
+		{
+			Game::getGame()->changeSoundEnabled(false);
+		}
+	}
+}

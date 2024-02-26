@@ -1,0 +1,328 @@
+//BP
+#include "UnitManager.h"
+#include "Game.h"
+
+UnitManager::UnitManager()
+{
+
+}
+
+UnitManager::~UnitManager()
+{
+    cleaner();
+}
+
+void UnitManager::drawAll()
+{
+    for (int i = mUnitList.size() - 1; i >= 0; i--)
+    {
+
+        mUnitList[i]->draw();
+
+    }
+}
+
+void UnitManager::cleaner()
+{
+    clearAll();
+}
+
+void UnitManager::clearAll()
+{
+    for (unsigned int i = 0; i < mUnitList.size(); i++)
+    {
+
+        delete mUnitList[i];
+
+    }
+    mUnitList.clear();
+}
+
+void UnitManager::playAllChange()
+{
+    for (unsigned int i = 0; i < mUnitList.size(); i++)
+    {
+
+        Unit* thisUnit = mUnitList[i];
+        thisUnit->verifyIsPlaying(!thisUnit->getIsPlaying());
+
+    }
+}
+
+Unit* UnitManager::getUnitAtEnd()
+{
+    if (mUnitList.size() > 0)
+    {
+
+        return mUnitList.back();
+
+    }
+    return nullptr;
+}
+
+void UnitManager::playAll(bool isPlaying)
+{
+    for (unsigned int i = 0; i < mUnitList.size(); i++)
+    {
+
+        Unit* thisUnit = mUnitList[i];
+        thisUnit->verifyIsPlaying(isPlaying);
+
+    }
+}
+
+void UnitManager::deleteUnitByType(int type)
+{
+    for (unsigned int i = 0; i < mUnitList.size(); i++)
+    {
+
+        if (mUnitList[i]->getUnitType() == type)
+        {
+
+            deleteSingleUnit(mUnitList[i]);
+            i--;
+
+        }
+
+    }
+}
+
+void UnitManager::nextAnimationForLastUnit()
+{
+    int nextAnimationIndex = getUnitAtEnd()->getIndex() + 1;
+    if (nextAnimationIndex >= getUnitAtEnd()->getAnimations())
+    {
+
+        nextAnimationIndex = 0;
+
+    }
+    getUnitAtEnd()->setAnimation(nextAnimationIndex);
+}
+
+void UnitManager::updateAll(float timePassed)
+{
+    for (int i = mUnitList.size() - 1; i >= 0; i--)
+    {
+
+        if (mUnitList[i]->getDelete())
+        {
+
+            deleteSingleUnit(mUnitList[i]);
+
+        }
+
+        else
+        {
+
+            mUnitList[i]->update(timePassed);
+
+        }
+
+    }
+}
+
+void UnitManager::deleteSingleUnit(Unit* unit)
+{
+    delete unit;
+    vector<Unit*>::iterator selected = find(mUnitList.begin(),
+        mUnitList.end(), unit);
+    mUnitList.erase(selected);
+}
+
+Unit* UnitManager::addNewUnit(Vector2D location, int fps)
+{
+    Unit* newUnit = new Unit(location, fps);
+    mUnitList.push_back(newUnit);
+    return getUnitAtEnd();
+}
+
+Unit* UnitManager::highlightedUnit(Vector2D mouseLocation)
+{
+    for (int i = mUnitList.size() - 1; i >= 0; i--)
+    {
+
+        if (mUnitList[i]->detectMouseHover(mouseLocation))
+        {
+
+            return mUnitList[i];
+
+        }
+
+    }
+    return nullptr;
+}
+
+void UnitManager::deleteMultipleUnits(vector<Unit*>* units)
+{
+    for (unsigned int i = 0; i < units->size(); i++)
+    {
+
+        deleteSingleUnit((*units)[i]);
+
+    }
+}
+
+void UnitManager::handleEvent(const Event& thisEvent)
+{
+
+}
+
+vector<Unit*> UnitManager::collisionCheck(Unit* thisUnit)
+{
+    vector<Unit*> hit;
+    for (auto partHit : mUnitList)
+    {
+
+        if (partHit != nullptr)
+        {
+
+            if (partHit != thisUnit && !partHit->getDelete())
+            {
+
+                float horiDistance = abs(partHit->getPosition().getX()
+                    - thisUnit->getPosition().getX());
+                float vertDistance = abs(partHit->getPosition().getY()
+                    - thisUnit->getPosition().getY());
+                float horiPartRadius = partHit->getDimensions().getX() / 2;
+                float vertPartRadius = partHit->getDimensions().getY() / 2;
+                float horiRadius = thisUnit->getDimensions().getX() / 2;
+                float vertRadius = thisUnit->getDimensions().getY() / 2;
+                if ((horiDistance <= horiPartRadius + horiRadius)
+                    && (vertDistance <= vertPartRadius + vertRadius))
+                {
+
+                    hit.push_back(partHit);
+                    mpEventSystem->fireEvent(Collision(thisUnit, partHit));
+
+                }
+
+            }
+
+        }
+
+        else
+        {
+        }
+
+    }
+    return hit;
+}
+
+void UnitManager::deleteUnitByLocation(Vector2D mouseLocation)
+{
+    for (int i = mUnitList.size() - 1; i >= 0; i--)
+    {
+
+        if (mUnitList[i]->detectMouseHover(mouseLocation))
+        {
+
+            delete mUnitList[i];
+            mUnitList.erase(mUnitList.begin() + i);
+
+        }
+    }
+}
+
+vector<Unit*>* UnitManager::highlightedUnits(Vector2D mouseLocation)
+{
+    vector<Unit*>* unitVec = new vector<Unit*>;
+    for (unsigned int i = 0; i < mUnitList.size(); i++)
+    {
+
+        if (mUnitList[i]->detectMouseHover(mouseLocation))
+        {
+
+            unitVec->push_back(mUnitList[i]);
+
+        }
+
+    }
+    return unitVec;
+}
+
+vector<Unit*> UnitManager::checkCollisionByType(Unit* thisUnit, int type)
+{
+    vector<Unit*> hit;
+    for (auto partHit : mUnitList)
+    {
+
+        if (partHit != nullptr)
+        {
+
+            if (partHit != thisUnit && partHit->getUnitType()
+                == type && !partHit->getDelete())
+            {
+
+                float horiDistance = abs(partHit->getPosition().getX()
+                    - thisUnit->getPosition().getX());
+                float vertDistance = abs(partHit->getPosition().getY()
+                    - thisUnit->getPosition().getY());
+                float horiPartRadius = partHit->getDimensions().getX() / 2;
+                float vertPartRadius = partHit->getDimensions().getY() / 2;
+                float horiRadius = thisUnit->getDimensions().getX() / 2;
+                float vertRadius = thisUnit->getDimensions().getY() / 2;
+                if ((horiDistance <= horiPartRadius + horiRadius)
+                    && (vertDistance <= vertPartRadius + vertRadius))
+                {
+
+                    hit.push_back(partHit);
+
+                }
+
+            }
+
+        }
+
+        else
+        {
+        }
+
+    }
+    return hit;
+}
+
+Unit* UnitManager::addNewUnit(Vector2D location, GraphicsBuffer* newBuff, int fps, bool loop, int type)
+{
+    Unit* newUnit = new Unit(location,
+        newBuff, fps, loop, type);
+    mUnitList.push_back(newUnit);
+    return getUnitAtEnd();
+}
+
+vector<Unit*> UnitManager:: checkCollisionByLocation(Vector2D location, float horiDiameter, float vertDiameter)
+{
+    vector<Unit*> hit;
+    float locationHoriRadius = horiDiameter / 2;
+    float locationVertRadius = vertDiameter / 2;
+    for (auto partHit : mUnitList)
+    {
+
+        if (partHit != nullptr)
+        {
+
+            if (!partHit->getDelete())
+            {
+
+                float horiDist = abs(partHit->getPosition().getX() - location.getX());
+                float vertDist = abs(partHit->getPosition().getY() - location.getY());
+                float horiPartRadius = partHit->getDimensions().getX() / 2;
+                float vertPartRadius = partHit->getDimensions().getY() / 2;
+                if ((horiDist <= horiPartRadius + locationHoriRadius) && 
+                    (vertDist <= vertPartRadius + locationVertRadius))
+                {
+
+                    hit.push_back(partHit);
+
+                }
+
+            }
+
+        }
+
+        else
+        {
+        }
+        
+    }
+    return hit;
+}

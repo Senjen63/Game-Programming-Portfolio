@@ -1,0 +1,25 @@
+#pragma once
+#include "Unit.h"
+
+class Player;
+class Projectile;
+
+class Enemy : public Unit
+{
+public:
+	Enemy(std::pair<float, float>location, std::pair<float, float>scale, int health, int damage, int moveSpeed, std::string animationDataFilePath);
+	virtual ~Enemy();
+
+	virtual void update(float deltaTime);
+
+	int getHealth() { return mHealth; }
+	int getDamage() { return mDamage; }
+	int getMoveSpeed() { return mMoveSpeed; }
+	void updateHealth(int healthChange);
+
+private:
+	int mHealth = 10;
+	int mMaxHealth = mHealth;
+	int mDamage = 5;
+	int mMoveSpeed = 5;
+};

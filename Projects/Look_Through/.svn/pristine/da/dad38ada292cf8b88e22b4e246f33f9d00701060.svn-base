@@ -1,0 +1,28 @@
+#pragma once
+
+#include <PerformanceTracker.h>
+#include <MemoryTracker.h>
+#include "Animation.h"
+#include <unordered_map>
+
+typedef string AnimationName;
+
+class Animation;
+
+class AnimationManager : public Trackable
+{
+private:
+	unordered_map<AnimationName, Animation*> mMap;
+	float mTime;
+
+public:
+	AnimationManager();
+	~AnimationManager();
+
+	void cleanUp();
+	
+	void createAnimation(const AnimationName& key, Animation* pAnim);
+	void update(float elapsedTime);
+
+	Animation* getAnimation(const AnimationName& key);
+};

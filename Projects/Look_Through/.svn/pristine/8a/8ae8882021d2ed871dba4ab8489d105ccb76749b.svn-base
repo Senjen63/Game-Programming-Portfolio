@@ -1,0 +1,27 @@
+#pragma once
+
+#include <string>
+#include <trackable.h>
+#include <Event.h>
+
+using namespace std;
+
+enum GameEventType
+{
+	INPUT_EVENT = NUM_BASE_EVENT_TYPES,
+	SCORE_EVENT,
+	LEVEL_EVENT,
+	DEAD_EVENT,
+	POWER_UP_EVENT,
+	NUM_GAME_EVENT_TYPES
+};
+
+class GameEvent : public Event
+{
+	public:
+		GameEvent(GameEventType type);
+		virtual ~GameEvent();
+
+	private:
+
+};

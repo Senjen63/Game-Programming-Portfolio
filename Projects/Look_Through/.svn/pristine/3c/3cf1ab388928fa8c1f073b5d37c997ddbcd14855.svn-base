@@ -1,0 +1,16 @@
+#pragma once
+#include <Vector2D.h>
+
+#include "GameEvent.h"
+
+class EndLevelEvent : public GameEvent
+{
+private:
+    bool mNextLevel = false; //false means the player died
+
+public:
+    EndLevelEvent(bool nextLevel);
+    ~EndLevelEvent();
+
+    bool getNextLevel() const { return mNextLevel; }
+};

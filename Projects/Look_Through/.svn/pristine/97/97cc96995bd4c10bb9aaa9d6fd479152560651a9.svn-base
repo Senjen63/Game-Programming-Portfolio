@@ -1,0 +1,53 @@
+#pragma once
+
+#include <vector>
+#include <Trackable.h>
+#include "Vector2D.h"
+#include "Animation.h"
+
+using namespace std;
+
+class Sprite;
+class GraphicsBuffer;
+class Color;
+
+class Level : public Trackable
+{
+	private:
+		int mSnakeSpeed = 0;
+		int mSnakeStartSegements = 0;
+		int mSnakeEndSegements = 0;
+		int mFoodPoints = 0;
+		int mSlowDownFrequency = 0;
+		int mSpeedUpFrequency = 0;
+		int mBonusPoints = 0;
+		int mSnakeGrowth = 0;
+
+		Vector2D mSnakeStartLocation;
+
+		vector<int> mWallLocations;
+		vector<Vector2D> mWallCoords;
+
+		vector<Vector2D> mEmptySpaces;
+	public:
+		Level(string);
+		~Level();
+
+		void initWallCoords();
+
+		int getSnakeSpeed() { return mSnakeSpeed; }
+		int getSnakeStartSegements() { return mSnakeStartSegements; }
+		int getSnakeEndSegements() { return mSnakeEndSegements; }
+		int getFoodPoints() { return mFoodPoints; }
+		int getBonusPoints() { return mBonusPoints; } 
+		int getSlowDownPowerUpFrequency() { return mSlowDownFrequency; }
+		int getSpeedUpPowerUpFrequency() { return mSpeedUpFrequency; }
+		int getSnakeGrowth() { return mSnakeGrowth; }
+		
+		Vector2D getSnakeStartLocation() { return mSnakeStartLocation; }
+
+		vector<int> getWallLocations() { return mWallLocations; }
+		vector<Vector2D> getWallCoords() { return mWallCoords; }
+
+		vector<Vector2D> getEmptySpaces() { return mEmptySpaces; }
+};

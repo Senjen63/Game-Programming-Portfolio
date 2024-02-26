@@ -1,0 +1,96 @@
+#include "Game.h"
+
+Game* gpGame = new Game();
+
+Game::Game()
+{
+	mpDisplay = new GraphicsSystem();
+}
+
+Game::~Game()
+{
+	clean();
+}
+void Game::init()
+{
+	mpDisplay->init();
+	mControls->init();
+
+	mpDisplay = new GraphicsSystem(DISP_WIDTH, DISP_HEIGHT);
+	mControls = new InputSystem();
+	
+}
+
+void Game::doLoop()
+{
+	Sprite smurfs = Sprite();
+	Sprite deans = Sprite();
+	mpBackground = new GraphicsBuffer((ASSET_PATH + BACK_FILE).c_str());
+	mpSmurf = new GraphicsBuffer(((ASSET_PATH + SMURF_FILE).c_str()));
+	mpDean = new GraphicsBuffer((ASSET_PATH + DEAN_FILE).c_str());
+	mpSmurfs = new Animation(mpSmurf, SMURF_SIZE, SPRITE_NUM, FPS, true, smurfs);
+	mpDeans = new Animation(mpDean, SMURF_SIZE, SPRITE_NUM, FPS, true, deans);
+	mpAnimationStore = new Unit(DISP_WIDTH / 2, DISP_HEIGHT / 2, mpSmurfs, mpDeans);
+	mpAnimationStore->storeAnimations(mpSmurfs, mpDeans);
+
+
+	Vector2D pos = Vector2D(DISP_WIDTH / 2, DISP_HEIGHT / 2);
+	PerformanceTracker* pTracker = new PerformanceTracker();
+	string looped = "looped";
+	Timer timer;
+	bool Quit = false;
+	float speedAdjust = .45;
+	float slowDown = -1.4;
+
+	while (!Quit)
+	{
+		pTracker->clearTracker(looped);
+		pTracker->startTracking(looped);
+		timer.start();
+		if (mControls->getKeyState(ALLEGRO_KEY_ESCAPE)) 
+		{
+			Quit = true;
+		}
+		if (mControls->getMouseState())
+		{
+			pos = mControls->mousePos();
+		}
+		if (mControls->getKeyState(ALLEGRO_KEY_ENTER))
+		{
+			mpAnimationStore->setAnimation();
+		}
+		
+		mpAnimationStore->Update(.45);
+		mpDisplay->draw(mpBackground, 0, 0);
+		mpAnimationStore->draw(mpDisplay, pos);
+		mpDisplay->flip();
+
+		if (mControls->getKeyState(ALLEGRO_KEY_F))
+		{
+			mpAnimationStore->changeSpeed(speedAdjust);
+		}
+		
+		if (mControls->getKeyState(ALLEGRO_KEY_S))
+		{
+			mpAnimationStore->changeSpeed(slowDown);
+		}
+		timer.sleepUntilElapsed(TIME_TIL_SLEEP);
+		pTracker->stopTracking(looped);
+		cout << "Time of Frame: " << pTracker->getElapsedTime(looped) << "\n";
+	}
+	
+
+
+}
+
+void Game::clean()
+{
+	mpDisplay->cleanUp();
+	mControls->cleanUp();
+	delete mpBackground;
+	delete mpSmurf;
+	delete mpDean;
+	delete mpSmurfs;
+	delete mpDeans;
+	delete mpAnimationStore;
+}

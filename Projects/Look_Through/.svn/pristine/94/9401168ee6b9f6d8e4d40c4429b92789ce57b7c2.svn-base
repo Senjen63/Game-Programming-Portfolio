@@ -1,0 +1,7 @@
+#include "CollisionEvent.h"
+
+CollisionEvent::CollisionEvent(Unit* thisUnit, Unit* collidingUnit) : GameEvent(COLLISION_EVENT)
+{
+	mpThisUnit = thisUnit;
+	mpCollidingUnit = collidingUnit;
+}

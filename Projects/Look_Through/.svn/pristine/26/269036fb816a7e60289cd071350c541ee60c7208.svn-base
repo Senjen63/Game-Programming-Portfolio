@@ -1,0 +1,197 @@
+﻿#include "include/BaseSystems.hpp"
+
+#include <iomanip>
+#include <iostream>
+
+#include "include/BaseComponents.hpp"
+
+SpriteSystem::SpriteSystem( GraphicsSystem * pGraphicsSystem ) : mpGraphicsSystem( pGraphicsSystem )
+{
+}
+
+void SpriteSystem::createQueries()
+{
+    mQueries.clear();
+    EntityQuery * queryWorldSprites = ( new EntityQuery )->
+                                      withAll< SpriteHolder, Translation, Scale >()->
+                                      withNone< UIElement >();
+    EntityQuery * queryUISprites = ( new EntityQuery )->withAll< SpriteHolder, Translation, Scale, UIElement >();
+    EntityQuery * queryTextUIElements = ( new EntityQuery )->withAll< TextElement, Translation, UIElement >();
+    mQueries.emplace_back( queryWorldSprites );
+    mQueries.emplace_back( queryUISprites );
+    mQueries.emplace_back( queryTextUIElements );
+}
+
+void SpriteSystem::onUpdate()
+{
+    mpGraphicsSystem->clearScreen();
+
+    const auto pEntityManager = mpEntityManager.lock();
+    const auto pCamera = mpCamera.lock();
+    const auto pAssetMan = mpAssetManager.lock();
+
+    for ( const auto & ent : mQueries[ 0 ]->entities )
+    {
+        const std::shared_ptr< SpriteHolder > spriteHolder = pEntityManager->getComponentFromEntity< SpriteHolder >( ent );
+        const std::shared_ptr< Translation > translation = pEntityManager->getComponentFromEntity< Translation >( ent );
+        const std::shared_ptr< Scale > scale = pEntityManager->getComponentFromEntity< Scale >( ent );
+
+        const Sprite * pSprite = pAssetMan->getSprite( spriteHolder->name );
+        Rect2DF screenPos = pCamera->worldToScreen( *translation, *scale );
+        screenPos.setW( screenPos.w * ( static_cast< float >(pSprite->getWidth()) / static_cast< float >(pSprite->getHeight()) ) );
+        mpGraphicsSystem->drawSpriteCentered( pSprite, screenPos );
+
+        if ( abs( pCamera->getPosition().x ) - abs( translation->x ) > 10 || abs( pCamera->getPosition().x ) - abs( translation->x ) < -10)
+        {
+            mpEntityCommandBuffer.lock()->deleteEntity( ent );
+        }
+    }
+
+    for ( const auto & ent : mQueries[ 1 ]->entities )
+    {
+        const std::shared_ptr< SpriteHolder > spriteHolder = pEntityManager->getComponentFromEntity< SpriteHolder >( ent );
+        const std::shared_ptr< Translation > translation = pEntityManager->getComponentFromEntity< Translation >( ent );
+        const std::shared_ptr< Scale > scale = pEntityManager->getComponentFromEntity< Scale >( ent );
+        const std::shared_ptr< UIElement > ui = pEntityManager->getComponentFromEntity< UIElement >( ent );
+
+        const Sprite * pSprite = pAssetMan->getSprite( spriteHolder->name );
+        Rect2DF screenPos = ui->centered ? pCamera->uiToScreenCentered( *translation, *scale ) : pCamera->uiToScreen( *translation, *scale );
+        screenPos.setW( screenPos.w * ( static_cast< float >(pSprite->getWidth()) / static_cast< float >(pSprite->getHeight()) ) );
+        mpGraphicsSystem->drawSprite( pSprite, screenPos );
+    }
+
+    for ( const auto & ent : mQueries[ 2 ]->entities )
+    {
+        const std::shared_ptr< TextElement > textHolder = pEntityManager->getComponentFromEntity< TextElement >( ent );
+        const std::shared_ptr< Translation > translation = pEntityManager->getComponentFromEntity< Translation >( ent );
+
+        const Font * pFont = pAssetMan->getFont( textHolder->fontName );
+        const Rect2DF screenPos = pCamera->uiToScreen( *translation, Scale{ 0, 0 } );
+        mpGraphicsSystem->writeText( pFont, textHolder->text.data(), screenPos.x, screenPos.y, textHolder->alignment );
+    }
+
+    mpGraphicsSystem->renderScreen();
+}
+
+void FPSViewerSystem::createQueries()
+{
+    mQueries.clear();
+    EntityQuery * queryWorldSprites = ( new EntityQuery )->
+        withAll< FPSShower, TextElement, Translation >();
+    mQueries.emplace_back( queryWorldSprites );
+}
+
+void FPSViewerSystem::onUpdate()
+{
+    const auto pEntityManager = mpEntityManager.lock();
+    const auto pTime = mpTime.lock();
+
+    mTimer += pTime->getUnlockedDeltaTime();
+    if ( mTimer < 1.0f ) return;
+
+    mTimer = 0;
+
+    for ( const auto & ent : mQueries[ 0 ]->entities )
+    {
+        const std::shared_ptr< TextElement > textHolder = pEntityManager->getComponentFromEntity< TextElement >( ent );
+        std::stringstream stream;
+        stream << std::fixed << std::setprecision( 2 ) << 1.0f / pTime->getUnlockedDeltaTime();
+        textHolder->text = stream.str();
+    }
+}
+
+void PhysicsSystem::createQueries()
+{
+    mQueries.clear();
+    EntityQuery * queryRigidbodies = ( new EntityQuery )->
+        withAll< RigidBody, Collider, Translation >();
+    mQueries.emplace_back( queryRigidbodies );
+    EntityQuery * queryColliders = ( new EntityQuery )->
+        withAll< Collider, Translation >();
+    mQueries.emplace_back( queryColliders );
+}
+
+void PhysicsSystem::onUpdate()
+{
+    const auto pEntityManager = mpEntityManager.lock();
+    const auto pTime = mpTime.lock();
+
+    std::vector< std::pair< std::shared_ptr< Collider >, std::shared_ptr< Translation > > > colliderEntities;
+
+    for ( const auto & colEnt : mQueries[ 1 ]->entities )
+    {
+        colliderEntities.push_back( std::make_pair< std::shared_ptr< Collider >, std::shared_ptr< Translation > >( pEntityManager->getComponentFromEntity< Collider >( colEnt ), pEntityManager->getComponentFromEntity< Translation >( colEnt ) ) );
+    }
+
+    float frameTime = pTime->getDeltaTime();
+    mAccumulator += frameTime;
+
+    while ( mAccumulator >= mDT )
+    {
+        for ( const auto & ent : mQueries[ 0 ]->entities )
+        {
+            const std::shared_ptr< Translation > translation = pEntityManager->getComponentFromEntity< Translation >( ent );
+            const std::shared_ptr< RigidBody > rigidBody = pEntityManager->getComponentFromEntity< RigidBody >( ent );
+            const std::shared_ptr< Collider > collider = pEntityManager->getComponentFromEntity< Collider >( ent );
+
+            bool collidedX = false, collidedY = false;
+            std::weak_ptr< Translation > collidedTX;
+            std::weak_ptr< Collider > collidedCX;
+            std::weak_ptr< Translation > collidedTY;
+            std::weak_ptr< Collider > collidedCY;
+
+            int i = -1;
+            const Translation newTrans( translation->x + rigidBody->force.x * mDT, translation->y + rigidBody->force.y * mDT );
+            for ( const auto & colEnt : mQueries[ 1 ]->entities )
+            {
+                ++i;
+                if ( ent == colEnt ) continue;
+
+                if ( !collidedX && abs( newTrans.x - colliderEntities[ i ].second->x ) < collider->size + colliderEntities[ i ].first->size &&
+                    abs( translation->y - colliderEntities[ i ].second->y ) < collider->size + colliderEntities[ i ].first->size )
+                {
+                    collidedX = true;
+                    collidedCX = colliderEntities[ i ].first;
+                    collidedTX = colliderEntities[ i ].second;
+                }
+
+                if ( !collidedY && abs( newTrans.y - colliderEntities[ i ].second->y ) < collider->size + colliderEntities[ i ].first->size && abs( translation->x - colliderEntities[ i ].second->x ) < collider->size + colliderEntities[ i ].first->size )
+                {
+                    collidedY = true;
+                    collidedCY = colliderEntities[ i ].first;
+                    collidedTY = colliderEntities[ i ].second;
+                }
+
+                if ( collidedX && collidedY ) break;
+            }
+
+            constexpr float GRAVITY = .0000987999f;
+
+            if ( collidedY && collidedTY.lock()->y > translation->y || !collidedY )
+            {
+                rigidBody->force.y -= GRAVITY/* * pTime->getDeltaTime()*/;
+            } else
+            {
+                rigidBody->force.y = 0;
+            }
+
+            /*if ( collidedX && ( ( collidedTX.lock()->x > translation->x && rigidBody->force.x > 0 ) || collidedTX.lock()->x < translation->x && rigidBody->force.x < 0 ) )
+            {
+                rigidBody->force.x = 0;
+            } else
+            {
+                if ( rigidBody->drag > 0 )
+                {
+                    rigidBody->force.x += rigidBody->force.x > 0 ? -rigidBody->drag : rigidBody->drag;
+                }
+            }*/
+
+            // change this to account for fixed timestep as opposed to variable time
+            translation->x = newTrans.x;
+            translation->y = newTrans.y;
+        }
+        mAccumulator -= mDT;
+        mT += mDT;
+    }
+    colliderEntities.clear();
+}

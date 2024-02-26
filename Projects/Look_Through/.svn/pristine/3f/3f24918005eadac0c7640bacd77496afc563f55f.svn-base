@@ -1,0 +1,61 @@
+#pragma once
+
+#include "graphicsSystem.h"
+#include "inputSystem.h"
+#include "unit.h"
+
+#include<Trackable.h>
+#include<PerformanceTracker.h>
+
+#include<iostream>
+#include<time.h>
+#include<Timer.h>
+#include <algorithm>
+
+//List of Consts
+const float TIME_SCALE = 1000.0; //converts seconds to milliseconds
+const int X_SECTIONS = 4;
+const int Y_SECTIONS = 4;
+const int FRAME_CHANGE_FACTOR = 35;
+const int FRAME_RATE_CAP = 120;
+const int FRAME_RATE_MIN = 1;
+const string LOOP_TRACKER_NAME = "loop";
+const string ASSET_PATH = "..\\..\\common\\assets\\";
+const string WOODS_FILENAME = "Woods.png";
+const string SMURF_FILENAME = "smurf_sprites.png";
+const string DEAN_FILENAME = "dean_sprites.png";
+
+const enum MyKeyCode
+{
+	F_KEY = ALLEGRO_KEY_F,
+	S_KEY = ALLEGRO_KEY_S,
+	ENTER_KEY = ALLEGRO_KEY_ENTER,
+	ESC_KEY = ALLEGRO_KEY_ESCAPE,
+	LEFT_MOUSE_BUTTON = 1//change later
+};
+
+class Game
+{
+public:
+	Game();
+	Game(int, int);
+	~Game();
+	
+	void gameInit();
+	void gameCleanup();
+
+	void doLoop(); //While loop inside
+	//needs to get user input, adjust game state, draw current game state
+	//and wait until target time passed
+	//Time the game loop-maybe a function
+private:
+	GraphicsSystem* mpGraphicsSystemObject;
+	InputSystem mInputSystemObject;
+	bool mLoopRunning = true, mInit = false, mClean = false;
+	int mFps = 60;
+	float mTimeFps = 1000.0 / mFps;
+	float mWidth, mHeight;
+	//Add other data when needed
+};
+
+extern Game* gpGame;

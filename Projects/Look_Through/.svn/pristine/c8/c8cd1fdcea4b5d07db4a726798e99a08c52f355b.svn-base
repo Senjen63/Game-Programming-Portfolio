@@ -1,0 +1,81 @@
+#pragma once
+#include <PerformanceTracker.h>
+#include <MemoryTracker.h>
+#include <Timer.h>
+#include <string.h>
+#include "GraphicsSystem.h"
+#include "Animation.h"
+#include "InputSystem.h"
+#include "Unit.h"
+#include "GraphicsBufferManager.h"
+#include "MoveEvent.h"
+#include "Listener.h"
+#include "Vector2D.h"
+#include "LevelManager.h"
+#include "HUD.h"
+
+const int DISP_WIDTH = 1260;
+const int DISP_HEIGHT = 960;
+const int SPRITE_WIDTH = 60;
+const int SPRITE_HEIGHT = 60;
+const int FONT_SIZE = 44;
+const int SPRITE_SHEET_WIDTH = 4;
+const int SPRITE_SHEET_HEIGHT = 4;
+const float MOVE_DISTANCE = 60.0f;
+const string FONT_PATH = "..\\..\\common\\assets\\";
+const string ASSET_PATH = "Assets\\";
+const string BACKGROUND_FILENAME = "background.png";
+const string WALL_FILENAME = "wall.jpg";
+const string SNAKE_FILENAME = "snake.jpg";
+const string FOOD_FILENAME = "food.png";
+const string SCORE_FILENAME = "points.png";
+const string FAST_FILENAME = "fast.png";
+const string SLOW_FILENAME = "slow.png";
+const string FONT_FILENAME = "cour.ttf";
+
+class Game : public EventListener
+{
+public:
+	static Game* getInstance();
+	static void destroyInstance();
+	void init();
+	void cleanup();
+	void doLoop();
+	GraphicsSystem* getGraphicsSystem();
+	UnitManager* getSnakeManager();
+	GraphicsBufferManager* getGraphicsBufferManager();
+	float getFrameTime();
+	virtual void handleEvent(const Event& event);
+private:
+	Game();
+	~Game();
+
+	static Game* mpsGame;
+	GraphicsSystem* mpGraphicsSystem;
+	InputSystem* mpInputSystem;
+	GraphicsBufferManager* mpBufferManager;
+	UnitManager* mpSnakeManager;
+	UnitManager* mpWallManager;
+	UnitManager* mpFoodManager;
+	UnitManager* mpScoreManager;
+	UnitManager* mpFastManager;
+	UnitManager* mpSlowManager;
+	float mFrameTime;
+	EventSystem* mpSystem;
+	Vector2D currPos = Vector2D(600, 420);
+	bool mLeft, mRight, mUp, mDown,mExit, mHasChangedDirection;
+	string mKey;
+	int mNumKey;
+	bool mHomeScreen,mLost,mWon;
+	Font* mpFont;
+	Color blackColor = Color(0, 0, 0);
+	Animation* mpFoodAnimation;
+	Animation* mpScoreAnimation;
+	Animation* mpFastAnimation;
+	Animation* mpSlowAnimation;
+	Level* mpLev1;
+	Level* mpLev2;
+	Level* mpLev3;
+	HUD* mpHUD;
+	LevelManager mLevelManager;
+};

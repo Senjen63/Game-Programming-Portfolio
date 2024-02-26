@@ -1,0 +1,28 @@
+#pragma once
+#include <unordered_map>
+#include <PerformanceTracker.h>
+#include "color.h"
+#include "Font.h"
+
+using namespace std;
+
+typedef string BufferName;
+class GraphicsBuffer;
+
+class BufferManager : public Trackable
+{
+private:
+	unordered_map<BufferName, GraphicsBuffer*> mMap;
+
+public:
+	BufferManager();
+	~BufferManager();
+	void CleanUp();
+	void DeleteBuffer(const BufferName& key);
+	void DeleteBuffer(GraphicsBuffer* pWidget);
+	GraphicsBuffer* CreateBuffer(const BufferName& key, string fileName);
+	GraphicsBuffer* CreateBuffer(const BufferName& key, Color col, int width, int height);
+
+
+	GraphicsBuffer* GetBuffer(const BufferName& key);
+};

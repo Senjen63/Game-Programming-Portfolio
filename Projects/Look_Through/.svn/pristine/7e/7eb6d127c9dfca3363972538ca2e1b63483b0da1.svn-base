@@ -1,0 +1,129 @@
+#include "SnakeUnit.h"
+
+SnakeUnit::SnakeUnit()
+{
+    mDirection = Vector2D(0, 0);
+}
+
+
+SnakeUnit::SnakeUnit(Vector2D direction, Vector2D position, int fps)
+{
+    mDirection = direction;
+    mPos = position;
+    mFps = fps;
+}
+
+
+SnakeUnit::SnakeUnit(Vector2D direction, Vector2D pos, GraphicsBuffer* newBuffer, int fps, float startTime, float turnTime, bool loopAnimation, int type)
+{
+    mDirection = direction;
+    mPos = pos;
+    mFps = fps;
+    mStartTimer = startTime; //milliseconds segment waits after spawning before moving
+    mTurnTimer = turnTime;
+    addAnimation(newBuffer, fps, loopAnimation);
+    mType = type;
+}
+
+
+SnakeUnit::~SnakeUnit()
+{
+
+}
+
+
+Vector2D SnakeUnit::getDirection()
+{
+    //don't move until other segments pass after spawned
+    if (!(mStartTimer > 0))
+    {
+        return mDirection;
+    }
+    return Vector2D(0, 0);
+}
+
+
+void SnakeUnit::setDirection(Vector2D direction)
+{
+    mDirection = direction;
+}
+
+void SnakeUnit::updateUnit(float timeElapsed)
+{
+    if (mStartTimer > 0)
+    {
+        mStartTimer--; //one frame passes, timed by game loop, decrement
+
+        if (mStartTimer <= 0)
+        {
+            
+        }
+    }
+
+    updateTurns();
+}
+
+
+void SnakeUnit::updateTurns()
+{
+    for (unsigned int i = 0; i < mTurnList.size(); i++)
+    {
+        auto p = mTurnList[i];
+
+        p->second--;
+
+        if (p->second <= 0)
+        {
+            mDirection = p->first;
+            delete mTurnList.front();
+            mTurnList.erase(mTurnList.begin());
+        }
+    }
+}
+
+
+void SnakeUnit::addTurn(Vector2D direction, int index)
+{
+    pair<Vector2D, int>* newPair = new pair<Vector2D, int>(direction, index * mTurnTimer);
+
+    for (unsigned int i = 0; i < mTurnList.size(); i++)
+    {
+        if (newPair->second < mTurnList[i]->second)
+        {
+            delete mTurnList[i];
+            mTurnList.erase(mTurnList.begin() + i);
+        }
+    }
+
+    mTurnList.push_back(newPair);
+}
+
+
+void SnakeUnit::syncTurnList(SnakeUnit* tail, int offset)
+{
+    if (tail->mTurnList.size() > 0 && mTurnList.size() == 1)
+    {
+        delete mTurnList[0];
+        mTurnList.erase(mTurnList.begin());
+    }
+    for (auto turn : tail->mTurnList)
+    {
+        mTurnList.push_back(new pair<Vector2D, int>(turn->first, turn->second + (offset * mTurnTimer)));
+    }
+}
+
+
+void SnakeUnit::speedChange(float newSpeed, float oldSpeed, float newTurnTimer)
+{
+    if (mStartTimer > 0)
+    {
+        mStartTimer *= (newSpeed / oldSpeed);
+    }
+
+    for (unsigned int i = 0; i < mTurnList.size(); i++)
+    {
+        mTurnList[i]->second = (mTurnList[i]->second / mTurnTimer) * newTurnTimer; //scale time left to new overall turn timer
+    }
+
+    mTurnTimer = newTurnTimer;
+}

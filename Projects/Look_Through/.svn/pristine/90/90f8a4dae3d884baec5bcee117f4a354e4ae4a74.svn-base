@@ -1,0 +1,67 @@
+#include "InputSystem.h"
+#include "Vector2D.h"
+#include "SDL.h"
+#include <EventSystem.h>
+#include "InputEvent.h"
+#include <fstream>
+
+InputSystem::InputSystem()
+{
+	ifstream inputDiff("../GalahadAssets/data/" + FILE_PATH);
+	if (inputDiff.good())
+	{
+		string key;
+
+		while (!inputDiff.eof())
+		{
+			inputDiff >> key;
+
+			if (key == "null")
+			{
+				inputDiff >> mNullVal;
+			}
+		}
+	}
+}
+
+InputSystem::~InputSystem()
+{
+
+}
+
+void InputSystem::init()
+{
+
+}
+
+void InputSystem::cleanUp()
+{
+
+}
+
+void InputSystem::update()
+{
+	SDL_Event event;
+
+	Uint8 const *key = SDL_GetKeyboardState(NULL);
+
+	while (SDL_PollEvent(&event) != mNullVal) {
+		if (event.type == SDL_KEYUP)
+		{
+			EventSystem::getInstance()->fireEvent(InputEvent("up", event.key.keysym.sym));
+		}
+		else if (event.type == SDL_KEYDOWN)
+		{
+			EventSystem::getInstance()->fireEvent(InputEvent("down", event.key.keysym.sym));
+		}
+		else if (event.type == SDL_QUIT)
+		{
+			EventSystem::getInstance()->fireEvent(InputEvent("quit", event.type));
+		}
+
+		if (key[SDL_SCANCODE_SPACE])
+		{
+			EventSystem::getInstance()->fireEvent(InputEvent("left", event.key.keysym.sym));
+		}
+	}
+}

@@ -1,0 +1,111 @@
+English Swedish German
+
+LanguageString:
+Language
+Sprak
+Sprache
+
+EnglishString:
+English
+Engelsk
+Englisch
+
+SwedishString:
+Swedish
+Svenska
+Schwedisch
+
+GermanString:
+German
+Tysk
+Deutsch
+
+TitleString:
+Platformer
+Plattformsspel
+Plattformer
+
+StartString:
+Start
+Start
+Anfang
+
+LoadString:
+Load
+Ladda
+Laden
+
+OptionsString:
+Options
+Alternativ
+Optionen
+
+QuitString:
+Quit
+Sluta
+Aufhoren
+
+TimeString:
+Time
+Tid
+Zeit
+
+FpsString:
+FPS
+BPS
+BPS
+
+PointsString:
+Points
+Poang
+Punkte
+
+LoseString:
+Game Over
+Spelet Over
+Spiel Ist Aus
+
+WinString:
+You Win!
+Du Vinner!
+Du Gewinnst!
+
+ClearLevelString:
+Level Cleared!
+Niva Rensad!
+Level Abgeschlossen!
+
+NextString:
+Next Level
+Nasta Niva
+Nachste
+
+BackString:
+Main Menu
+Huvudmeny
+Haputmenu
+
+EasyString:
+Easy
+Latt
+Leicht
+
+MediumString:
+Medium
+Medium
+Mittel
+
+HardString:
+Hard
+Hard
+Schwer
+
+SoundOnString:
+Sound On
+Ljud Pa
+Ton An
+
+SoundOffString:
+Sound Off
+Ljud Av
+Ton Aus

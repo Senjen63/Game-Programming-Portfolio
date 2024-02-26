@@ -1,0 +1,23 @@
+#pragma once
+#include <PerformanceTracker.h>
+#include "GraphicsBuffer.h"
+
+typedef string BufferName;
+
+class GraphicsBufferManager : public Trackable
+{
+public:
+	GraphicsBufferManager() {};
+	~GraphicsBufferManager() { cleanup(); };
+
+	void init( string fileName );
+	void cleanup();
+
+	void addGraphicsBuff( string file, const BufferName& name );
+	void deleteGraphicsBuff( string name );
+
+	GraphicsBuffer* getGraphicsBuff( string name );
+
+private:
+	unordered_map<string, GraphicsBuffer*> mGBs;
+};

@@ -1,0 +1,24 @@
+#pragma once
+
+#include "Trackable.h"
+#include "Animation.h"
+#include "GraphicsSystem.h"
+#include "Vector2D.h"
+#include <vector>
+
+class Unit : public Trackable
+{
+	public:
+		Unit(Animation smurfAnimation, Animation deanAnimation);
+		~Unit();
+		void update(double dt);
+		void draw(GraphicsSystem* graphSys);
+		void setAnimation();
+		void setLocation(Vector2D loc);
+		void setAnimationSpeed(int opt);
+
+	private:
+		Vector2D mLocation;
+		int mCurrentAnimation;
+		std::vector<Animation> mAnimations;
+};

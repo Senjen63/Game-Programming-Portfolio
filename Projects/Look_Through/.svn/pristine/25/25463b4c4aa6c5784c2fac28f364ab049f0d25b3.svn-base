@@ -1,0 +1,12 @@
+#include "SpawnFoodEvent.h"
+
+SpawnFoodEvent::SpawnFoodEvent(/*Unit* unit*/) : SpawnEvent((SpawnEventType)SPAWN_FOOD_EVENT)
+{
+    //mpUnit = unit;
+}
+
+
+SpawnFoodEvent::~SpawnFoodEvent()
+{
+
+}

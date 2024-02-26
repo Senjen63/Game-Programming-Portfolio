@@ -1,0 +1,20 @@
+#pragma once
+#include <map>
+
+#include "GraphicsBuffer.h"
+
+class GraphicsBufferManager
+{
+public:
+	GraphicsBufferManager();
+	~GraphicsBufferManager();
+
+	void addBuffer(std::string imageFilePath, std::string key);
+	void addBuffer(float bitmapScaleX, float bitmapScaleY, float leftBound, float topBound, float rightBound, float bottomBound, Color color, std::string key);
+	void deleteBuffer(std::string bufferKey);
+	GraphicsBuffer* getBuffer(std::string bufferKey);
+	void clearAll();
+
+private:
+	std::map<std::string, GraphicsBuffer*> graphicsBufferMap;
+};

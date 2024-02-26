@@ -1,0 +1,77 @@
+#pragma once
+#include <Trackable.h>
+#include <EventListener.h>
+#include <EventSystem.h>
+#include <iostream>
+#include <string>
+#include <fstream>
+#include <sstream>
+#include <vector>
+#include "GraphicsSystem.h"
+
+enum class Language
+{
+	ENGLISH = 0,
+	SPANISH = 1,
+	FRENCH = 2
+};
+
+enum class ScriptType
+{
+	START = 0,
+	OPTIONS, LOAD, QUIT,
+	MENU, SOUND, ENGLISH, SPANISH, FRENCH, DIFFICULTY,
+	PLAYER_ONE_SCORE, PLAYER_TWO_SCORE, //these are for HUD
+	VICTORY,
+	MAIN_MENU_FIRST = START,
+	MAIN_MENU_LAST = QUIT,
+	OPTIONS_MENU_FIRST = MENU,
+	OPTIONS_MENU_LAST = DIFFICULTY
+
+
+};
+
+class Menu : public EventListener
+{
+public:
+	Menu() {};
+	~Menu();
+
+	void init(Font* font);
+	void cleanUp();
+
+	void readFile(string file);
+
+	bool getInMenu() { return mInMenu; };
+
+	string getScript(int type, int language);
+	int getEnum(string temp);
+
+	int getLanguage() { return mLanguage; };
+
+	string getP1Score();
+	string getP2Score();
+
+	void drawMenu();
+	void checkWin();
+	void playerWon(int victor);
+
+	void handleEvent(const Event& theEvent);
+
+private:
+	string mScriptArray[3][13];
+
+	Font* mpFont = nullptr;
+
+	bool mPlayer1Ready = false;
+	bool mPlayer2Ready = false;
+
+	bool mMainMenu = true; //true for man menu, false for options
+	bool mSoundOn = true; //true for sound on, false for muted
+	int mLanguage = 0; //english by default
+	bool mInMenu = true;
+	bool mInEnd = false;
+	int mPlayerWon = -1; //will just store which player won
+
+};
+

@@ -1,0 +1,39 @@
+/*
+Author: David Silverman
+Class: GPR-250-01
+Assignment: Assignment 3
+Certification of Authenticity:
+I certify that this assignment is entirely my own work.
+ */
+
+#include "unit.h"
+#include "foodmanager.h"
+
+FoodManager::FoodManager()
+{
+
+}
+
+FoodManager::FoodManager(Animation* wallAni)
+{
+	mpSmurfAnimation = wallAni;
+}
+
+FoodManager::~FoodManager()
+{
+
+}
+
+void FoodManager::AddNewUnit()
+{
+	Unit* pUnit = new Unit(POWERUPITEM);
+	pUnit->setAnimation(mpSmurfAnimation);
+	mpUnits.push_back(pUnit);
+}
+
+void FoodManager::AddNewUnit(Vector2D loc)
+{
+	Unit* pUnit = new Unit(FOODITEM, *mpSmurfAnimation, *mpDeanAnimation, loc);
+	assert(pUnit);
+	mpUnits.push_back(pUnit);
+}

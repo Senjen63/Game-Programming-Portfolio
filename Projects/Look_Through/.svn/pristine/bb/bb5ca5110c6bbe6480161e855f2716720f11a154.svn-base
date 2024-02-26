@@ -1,0 +1,39 @@
+#pragma once
+
+#include <Trackable.h>
+#include <allegro5/allegro.h>
+
+class GraphicsBuffer : public Trackable
+{
+    friend class GraphicsSystem;
+
+public:
+    /* Constuctors */
+    /// <summary>
+    /// Creates an empty bitmap of size width, height 
+    /// </summary>
+    GraphicsBuffer(int width, int height);
+
+    /// <summary>
+    /// Opens an asset file as a bitmap 
+    /// </summary>
+    GraphicsBuffer(const std::string& pathToAsset);
+
+    GraphicsBuffer() = delete;
+    GraphicsBuffer(GraphicsBuffer&) = delete; // No copy 
+
+    ~GraphicsBuffer();
+
+    /* Accessors */
+    int getWidth() const;
+    int getHeight() const;
+
+private:
+    // Constuctor used in GraphicsSystem 
+    GraphicsBuffer(ALLEGRO_BITMAP* pBitmap);
+    ALLEGRO_BITMAP* mpBitmap;
+    ALLEGRO_BITMAP* getBitmap() const { return mpBitmap; }
+
+    bool mOwnedBitmap; // If this graphics buffer owns the bitmap (and therefore need so destroy it) 
+};
+

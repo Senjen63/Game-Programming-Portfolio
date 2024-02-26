@@ -1,0 +1,52 @@
+#include "HUD.h"
+#include <sstream>
+
+HUD::HUD()
+{
+	mpScoreLocation = Vector2D(650, 55);
+	mpColor = Color(255, 255, 255);
+	mpTimeLocation = Vector2D(650, 80);
+	mpFPSLocation = Vector2D(650, 105);
+	mMessage = "";
+}
+
+HUD::HUD(string message, Vector2D pos)
+{
+	mMessage = message;
+	mpScoreLocation = pos;
+	mpColor = Color(255, 255, 255);
+	mpTimeLocation = Vector2D(-10, -10);
+	mpFPSLocation = Vector2D(-10, -10);
+}
+
+HUD::~HUD()
+{
+	mpColor = Color(0, 0, 0);
+	mpScoreLocation = Vector2D(0, 0);
+	mpTimeLocation = Vector2D(0, 0);
+	mpFPSLocation = Vector2D(0, 0);
+	mMessage = "";
+}
+
+void HUD::update(Font* pFont, int score, float FPS, float time)
+{
+	stringstream ss, fs, ts;
+	string sScore, sTime, sFPS;
+	ss << (score - 1) * 10;
+	ss >> sScore;
+	fs << FPS * 120;
+	fs >> sFPS;
+	ts << (time / 1000);
+	ts >> sTime;
+	string scoreText = "Score: " + sScore;
+	string timeText = "Time: " + sTime;
+	string FPSText = "FPS: " + sFPS;
+	al_draw_text(pFont->getFont(), mpColor.getColor(), mpScoreLocation.getX(), mpScoreLocation.getY(), ALLEGRO_ALIGN_CENTER, scoreText.c_str());
+	al_draw_text(pFont->getFont(), mpColor.getColor(), mpTimeLocation.getX(), mpTimeLocation.getY(), ALLEGRO_ALIGN_CENTER, timeText.c_str());
+	al_draw_text(pFont->getFont(), mpColor.getColor(), mpFPSLocation.getX(), mpFPSLocation.getY(), ALLEGRO_ALIGN_CENTER, FPSText.c_str());
+}
+
+void HUD::update(Font* pFont)
+{
+	al_draw_text(pFont->getFont(), mpColor.getColor(), mpScoreLocation.getX(), mpScoreLocation.getY(), ALLEGRO_ALIGN_CENTER, mMessage.c_str());
+}

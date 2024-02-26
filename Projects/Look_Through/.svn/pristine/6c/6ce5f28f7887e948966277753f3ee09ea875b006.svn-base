@@ -1,0 +1,41 @@
+#pragma once
+
+#include <Vector2D.h>
+#include <unordered_map>
+
+#include "GraphicsSystem.h"
+#include "Animation.h"
+
+class Unit : public Trackable
+{
+	Vector2D mPosition;
+	
+	std::unordered_map<std::string, Animation*> mpAnimations;
+
+	std::string mCurrentAnimationName;
+	Animation* mpCurrentAnimation;
+
+public:
+	Unit(Vector2D startPos = Vector2D(0, 0), std::unordered_map<std::string, Animation*> animations = 
+		std::unordered_map<std::string, Animation*>(), std::string startAnimName = "");
+
+	Vector2D getPos() { return mPosition; }
+	void setPos(Vector2D pos) { mPosition = pos; }
+
+	float getX() { return mPosition.getX(); }
+	void setX(float x) { mPosition.setX(x); }
+
+	float getY() { return mPosition.getY(); }
+	void setY(float y) { mPosition.setY(y); }
+
+	void addAnimation(std::string animName, Animation* newAnim);
+	Animation* getAnimation(std::string animName);
+
+	Animation* getCurrentAnimation() { return mpCurrentAnimation; }
+	std::string getCurrentAnimationName() { return mCurrentAnimationName; }
+	void setCurrentAnimation(std::string animName);
+
+	void update(float dt); // Delta time in milliseconds
+	void draw(GraphicsSystem* gSys);
+};
+

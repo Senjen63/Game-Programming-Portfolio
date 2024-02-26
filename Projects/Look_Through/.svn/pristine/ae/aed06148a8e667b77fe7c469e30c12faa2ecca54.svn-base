@@ -1,0 +1,20 @@
+#pragma once
+
+#include "EnemyBase.h"
+#include "Vector2D.h"
+
+class Bullet : public EnemyBase
+{
+public:
+
+	// initialization
+	Bullet(Direction dir, Vector2D location, Animation* anim, int speed);
+
+	// enemy actions
+	void move();
+	bool isColliding(Vector2D locationColliding);
+
+	std::string getType() { return "Bullet"; }
+
+private:
+};

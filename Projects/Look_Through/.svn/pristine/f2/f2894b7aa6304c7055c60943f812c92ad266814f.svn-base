@@ -1,0 +1,66 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="Animation.cpp" />
+    <ClCompile Include="Asteroid.cpp" />
+    <ClCompile Include="AsteroidManager.cpp" />
+    <ClCompile Include="Color.cpp" />
+    <ClCompile Include="Font.cpp" />
+    <ClCompile Include="Game.cpp" />
+    <ClCompile Include="GameEvent.cpp" />
+    <ClCompile Include="GraphicsBuffer.cpp" />
+    <ClCompile Include="GraphicsBufferManager.cpp" />
+    <ClCompile Include="GraphicsSystem.cpp" />
+    <ClCompile Include="HUD.cpp" />
+    <ClCompile Include="InputEvent.cpp" />
+    <ClCompile Include="InputSystem.cpp" />
+    <ClCompile Include="LanguageManager.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="OptionsManager.cpp" />
+    <ClCompile Include="ShipManager.cpp" />
+    <ClCompile Include="ShotManager.cpp" />
+    <ClCompile Include="SoundEffect.cpp" />
+    <ClCompile Include="SoundEffectManager.cpp" />
+    <ClCompile Include="Sprite.cpp" />
+    <ClCompile Include="SpriteCreator.cpp" />
+    <ClCompile Include="StartScreen.cpp" />
+    <ClCompile Include="Unit.cpp" />
+    <ClCompile Include="UnitManager.cpp" />
+    <ClCompile Include="LoseEvent.cpp" />
+    <ClCompile Include="EndScreen.cpp" />
+    <ClCompile Include="PowerEvent.cpp" />
+    <ClCompile Include="DifficultyLoader.cpp" />
+    <ClCompile Include="DataLoader.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Animation.h" />
+    <ClInclude Include="Asteroid.h" />
+    <ClInclude Include="AsteroidManager.h" />
+    <ClInclude Include="Color.h" />
+    <ClInclude Include="Font.h" />
+    <ClInclude Include="Game.h" />
+    <ClInclude Include="GameEvent.h" />
+    <ClInclude Include="GraphicsBuffer.h" />
+    <ClInclude Include="GraphicsBufferManager.h" />
+    <ClInclude Include="GraphicsSystem.h" />
+    <ClInclude Include="HUD.h" />
+    <ClInclude Include="InputEvent.h" />
+    <ClInclude Include="InputSystem.h" />
+    <ClInclude Include="LanguageManager.h" />
+    <ClInclude Include="OptionsManager.h" />
+    <ClInclude Include="ShipManager.h" />
+    <ClInclude Include="ShotManager.h" />
+    <ClInclude Include="SoundEffect.h" />
+    <ClInclude Include="SoundEffectManager.h" />
+    <ClInclude Include="Sprite.h" />
+    <ClInclude Include="SpriteCreator.h" />
+    <ClInclude Include="StartScreen.h" />
+    <ClInclude Include="Unit.h" />
+    <ClInclude Include="UnitManager.h" />
+    <ClInclude Include="LoseEvent.h" />
+    <ClInclude Include="EndScreen.h" />
+    <ClInclude Include="PowerEvent.h" />
+    <ClInclude Include="DifficultyLoader.h" />
+    <ClInclude Include="DataLoader.h" />
+  </ItemGroup>
+</Project>

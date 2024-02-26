@@ -1,0 +1,33 @@
+#pragma once
+#include <Trackable.h>
+#include <string>
+
+using namespace std;
+
+//Global because when calling else just type "Singleton::(name of function)"
+class Singleton : public Trackable
+{
+	//main 
+	//create the instance
+	//create a pointer for the instance
+	//destroy the instance
+	
+private: 
+	static Singleton* mpsInstance;
+
+	Singleton() { mAString = "Hi"; mAnInt = 12; };
+	~Singleton() {};
+
+	int mAnInt;
+	string mAString;
+
+public:
+
+	static Singleton* getInstance(); //can only access static Single information because it is a static single function
+	static void createInstance();
+	static void destroyInstance();
+
+	int getInt() { return mAnInt; };
+
+
+};

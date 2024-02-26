@@ -1,0 +1,82 @@
+#pragma once
+
+#include "GraphicsSystem.h"
+#include "UnitManager.h"
+#include "GraphicsBufferManager.h"
+
+#include <fstream>
+#include <string>
+
+const int BUTTON_WIDTH = 240;
+const int BUTTON_HEIGHT = 80;
+
+const int COLOR_DIFFERENCE = 100;
+
+const string GREEN = "green";
+const string BLUE = "blue";
+const string RED = "red";
+const string PURPLE = "purple";
+const string DIM = "dim";
+
+const string LANGUAGE_ONE = "Language1.txt";
+const string LANGUAGE_TWO = "Language2.txt";
+const string LANGUAGE_THREE = "Language3.txt";
+
+enum class Speed
+{
+	SLOW_SPEED,
+	MEDIUM_SPEED,
+	FAST_SPEED
+};
+
+enum class MenuState
+{
+	PLAY_GAME,
+	OPTIONS_MENU,
+	MAIN_MENU,
+	EXIT,
+	LOAD_SAVE,
+	TOGGLE_SOUND,
+	CHANGE_SPEED,
+	DEFAULT
+};
+
+class MenuManager : public Trackable
+{
+private:
+	MenuState mCurrentState;
+	Speed mCurrentSpeed;
+
+	GraphicsBufferManager mBufferManager;
+
+	UnitManager mMainMenuButtons;
+	UnitManager mOptionsMenuButtons;
+
+	string mPlayText = "", mOptionsText = "", mExitText = "", mLoadText = "", mReturnText = "", mSoundText = "", mOnText = "", mOffText = "",
+		mLanguage1 = "", mLanguage2 = "", mLanguage3 = "", mFastSpeed = "", mMediumSpeed = "", mSlowSpeed = "", mWhiteText = "", mBlackText = "";
+
+	bool mSoundOn;
+
+	void swapSoundText();
+	void swapSpeedText();
+	void changeSpeed();
+
+public:
+	MenuManager();
+	~MenuManager();
+
+	void drawMenuButtons(GraphicsSystem* pDisplay);
+	void drawOptionsButtons(GraphicsSystem *pDisplay);
+	void loadAssets(string filePath);
+
+	void cleanUp();
+	void mouseOverButton(Vector2D mousePos);
+
+	void readText(string file);
+	void changeText();
+
+	MenuState checkMainMenuCollision(Vector2D mousePos);
+	MenuState checkOptionsMenuCollision(Vector2D mousePos, int desiredButton);
+	MenuState getCurrentState() { return mCurrentState; };
+	Speed getCurrentSpeed() { return mCurrentSpeed; };
+};

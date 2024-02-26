@@ -1,0 +1,42 @@
+//BP
+#pragma once
+#include <string>
+#include <fstream>
+#include <Trackable.h>
+#include "GameLevel.h"
+#include <EventSystem.h>
+#include "UnitManager.h"
+
+using namespace std;
+
+const string SPEED = "Speed:";
+const string BONUS = "BonusProb:";
+const string SPEED_UP = "FastProb:";
+const string SLOW_DOWN = "SlowProb:";
+const string FOOD_SCORE = "FoodVal:";
+const string WALL_PIECES = "Walls:";
+const string POWER_UP = "StartItemSpawnRate:";
+const string END_BODY_PARTS = "EndBodyLength:";
+const string START_BODY_PARTS = "StartBodyLength:";
+const string POWER_UP_PROBABILITY = "RandomItemSpawnRate:";
+
+class LevelManager : public Trackable
+{
+private:
+    vector<GameLevel*> mLevelList;
+    unsigned int mCurrentLevel = 0;
+    EventSystem* mpEventSystem = nullptr;
+public:
+    LevelManager();
+    ~LevelManager();
+    void init();
+    void cleaner();
+    void deleteLevels();
+    GameLevel* getThisLevel();
+    int getThisLevelIndex();
+    int getPreviousLevelIndex();
+    void printInfo(unsigned int index);
+    void setLevelIndex(unsigned int levelIndex);
+    GameLevel* getLevelByIndex(unsigned int index);
+    GameLevel* loadNewLevel(string filePath, GraphicsBuffer* wallBuff, Vector2D wallPieces);
+};

@@ -1,0 +1,128 @@
+#include "CollideListener.h"
+#include <EventSystem.h>
+#include "GameEvent.h"
+#include "CollideEvent.h"
+#include "MoveEvent.h"
+
+CollideListener::CollideListener()
+{
+	EventSystem* pEventSystem = EventSystem::getInstance();
+	pEventSystem->addListener((EventType)COLLIDE_EVENT, this);
+	pEventSystem->addListener((EventType)MOVE_EVENT, this);
+}
+
+CollideListener::~CollideListener()
+{
+}
+
+void CollideListener::handleEvent(const Event& theEvent)
+{
+	if (theEvent.getType() == COLLIDE_EVENT)
+	{
+		const CollideEvent& collideEvent = static_cast<const CollideEvent&>(theEvent);
+
+		if (collideEvent.getCurrentAnim() == 1)
+		{
+			Game::getInstance()->addScore(-5);
+		}
+		else if (collideEvent.getCurrentAnim() == 2)
+		{
+			Game::getInstance()->addScore(1);
+		}
+	}
+	else if (theEvent.getType() == MOVE_EVENT)
+	{
+		const MoveEvent& moveEvent = static_cast<const MoveEvent&>(theEvent);
+
+		if (moveEvent.getDirection() == "Space")
+		{
+			Game::getInstance()->setShouldStart();
+		}
+		else if (moveEvent.getDirection() == "Right")
+		{
+			if (Game::getInstance()->getCurrentOption() == 1)
+			{
+				//Change difficulty on right
+				if (Game::getInstance()->getDifficulty() == easy)
+				{
+					Game::getInstance()->setDifficulty("medium");
+				}
+				else if (Game::getInstance()->getDifficulty() == medium)
+				{
+					Game::getInstance()->setDifficulty("hard");
+				}
+				else if (Game::getInstance()->getDifficulty() == hard)
+				{
+					Game::getInstance()->setDifficulty("easy");
+				}
+			}
+			else if (Game::getInstance()->getCurrentOption() == 2)
+			{
+				//change language on right
+				if (Game::getInstance()->getLanguage() == English)
+				{
+					Game::getInstance()->setLanguage("spanish");
+				}
+				else if (Game::getInstance()->getLanguage() == Spanish)
+				{
+					Game::getInstance()->setLanguage("french");
+				}
+				else if (Game::getInstance()->getLanguage() == French)
+				{
+					Game::getInstance()->setLanguage("english");
+				}
+			}
+			else if (Game::getInstance()->getCurrentOption() == 3)
+			{
+				Game::getInstance()->setSound();
+			}
+		}
+		else if (moveEvent.getDirection() == "Left")
+		{
+			if (Game::getInstance()->getCurrentOption() == 1)
+			{
+				//Change difficulty on left
+				if (Game::getInstance()->getDifficulty() == easy)
+				{
+					Game::getInstance()->setDifficulty("hard");
+				}
+				else if (Game::getInstance()->getDifficulty() == medium)
+				{
+					Game::getInstance()->setDifficulty("easy");
+				}
+				else if (Game::getInstance()->getDifficulty() == hard)
+				{
+					Game::getInstance()->setDifficulty("medium");
+				}
+			}
+			else if (Game::getInstance()->getCurrentOption() == 2)
+			{
+				//change language on left
+				if (Game::getInstance()->getLanguage() == English)
+				{
+					Game::getInstance()->setLanguage("french");
+				}
+				else if (Game::getInstance()->getLanguage() == Spanish)
+				{
+					Game::getInstance()->setLanguage("english");
+				}
+				else if (Game::getInstance()->getLanguage() == French)
+				{
+					Game::getInstance()->setLanguage("spanish");
+				}
+			}
+			else if (Game::getInstance()->getCurrentOption() == 3)
+			{
+				Game::getInstance()->setSound();
+			}
+		}
+		else if (moveEvent.getDirection() == "Up")
+		{
+			Game::getInstance()->setCurrentOption("Up");
+		}
+		else if (moveEvent.getDirection() == "Down")
+		{
+			Game::getInstance()->setCurrentOption("Down");
+		}
+	}
+}

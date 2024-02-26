@@ -1,0 +1,37 @@
+#pragma once
+
+#include <vector>
+#include "Component.h"
+#include "CollisionLayer.h"
+#include "Game.h"
+#include "UnitManager.h"
+#include "ICollisionHandler.h"
+
+class CollisionDriver : public Component
+{
+	std::vector<CollisionLayer> mCollisionMask; // Which layers this driver should be checking for
+	std::vector<ICollisionHandler*> mCollisionObservers;
+
+public:
+	static const std::string COLLISION_DRIVER_COMPONENT_NAME;
+
+	CollisionDriver(std::vector<CollisionLayer> collisionMask = std::vector<CollisionLayer>());
+	CollisionDriver(const CollisionDriver& colDriver);
+
+	void update(float dt) override;
+	void draw(GraphicsSystem* gSys) override {}
+
+	void notifyObservers(Unit* unit, CollisionLayer layer);
+
+	std::string getIdentifier() override { return COLLISION_DRIVER_COMPONENT_NAME; }
+
+	void addCollisionMask(CollisionLayer layer);
+	void removeCollisionMask(CollisionLayer layer);
+	void setCollisionMask(std::vector<CollisionLayer> collisionMask) { mCollisionMask = collisionMask; }
+
+	void addCollisionObserver(ICollisionHandler* observer);
+	void removeCollisionObserver(ICollisionHandler* observer);
+
+	void handleEvent(const Event& theEvent) override {};
+};
+

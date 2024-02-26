@@ -1,0 +1,350 @@
+#include "Game.h"
+
+Game* Game::mpsGame = nullptr;
+
+Game::Game()
+{
+	mDisplayHeight = DISP_HEIGHT;
+	mDisplayWidth = DISP_WIDTH;
+	mpGraphicsSystem = nullptr;
+	mpFont = nullptr;
+	mpEventSystem = nullptr;
+}
+
+Game::~Game()
+{
+	cleanup();
+}
+
+Game* Game::getInstance()
+{
+	if (mpsGame == nullptr)
+	{
+		mpsGame = new Game;
+	}
+	return mpsGame;
+}
+
+void Game::cleanup()
+{
+	mpEventSystem->cleanup();
+	mInputSystem.cleanup();
+	delete mpGraphicsSystem;
+}
+
+void Game::init()
+{
+	EventSystem::initInstance();
+	mpGraphicsSystem = new GraphicsSystem(mDisplayHeight, mDisplayWidth);
+	mpGraphicsSystem->init();
+	mInputSystem.init();
+	mpEventSystem = EventSystem::getInstance();
+	mpEventSystem->init();
+	mpEventSystem->addListener((EventType)INPUT_EVENT, this);
+
+	mLevels.addLevel(Level(LEVEL_ONE_FILE));
+	mLevels.addLevel(Level(LEVEL_TWO_FILE));
+	mLevels.addLevel(Level(LEVEL_THREE_FILE));
+	
+	ifstream gameData(GAME_SETTINGS);
+	if (gameData.good())
+	{
+		string key;
+		string data;
+		int fontSize;
+
+		while(!gameData.eof())
+		{
+			
+			gameData >> key;
+			if (key == "snakebody")
+			{
+				gameData >> data;
+				mBuffers.addBuffer(new GraphicsBuffer(data), "body");
+				mSnake.setBody(Sprite(mBuffers.getBuffer("body"), DEFAULT_LOCATION));
+			}
+			if (key == "snakehead")
+			{
+				gameData >> data;
+				mBuffers.addBuffer(new GraphicsBuffer(data), "snake head");
+				mSnake.setHead(Sprite(mBuffers.getBuffer("snake head"), DEFAULT_LOCATION));
+			}
+			if (key == "slowdown")
+			{
+				gameData >> data;
+				mBuffers.addBuffer(new GraphicsBuffer(data), "slow");
+				mPowerSettings.setSlow(Animation(mBuffers.getBuffer("slow"), (MILLISECOND_TO_SECOND/FRAMES_PER_SECOND), true));
+			}
+			if (key == "speedup")
+			{
+				gameData >> data;
+				mBuffers.addBuffer(new GraphicsBuffer(data), "speed");
+				mPowerSettings.setSpeed(Animation(mBuffers.getBuffer("speed"), (MILLISECOND_TO_SECOND / FRAMES_PER_SECOND), true));
+			}
+			if (key == "score")
+			{
+				gameData >> data;
+				mBuffers.addBuffer(new GraphicsBuffer(data), "score");
+				mPowerSettings.setScore(Animation(mBuffers.getBuffer("score"), (MILLISECOND_TO_SECOND / FRAMES_PER_SECOND), true));
+			}
+			if (key == "food")
+			{
+				gameData >> data;
+				mBuffers.addBuffer(new GraphicsBuffer(data), "food");
+				mPowerSettings.setFood(Animation(mBuffers.getBuffer("food"), (MILLISECOND_TO_SECOND / FRAMES_PER_SECOND), true));
+			}
+			if (key == "wall")
+			{
+				gameData >> data;
+				mBuffers.addBuffer(new GraphicsBuffer(data), "wall");
+				mWall = (Sprite(mBuffers.getBuffer("wall"), DEFAULT_LOCATION));
+			}
+			if (key == "font")
+			{
+				gameData >> data;
+				gameData >> fontSize;
+				mpFont = new Font(data, fontSize);
+			}
+			if (key == "color")
+			{
+				int r, g, b;
+				gameData >> r;
+				gameData >> g;
+				gameData >> b;
+				mTextColor = Color(r, g, b);
+			}
+		}
+	}
+	mHud = HUD(mpFont, mTextColor);
+}
+
+void Game::doLoop()
+{
+	PerformanceTracker* pPerformanceTracker = new PerformanceTracker;
+
+	float targetTime = MILLISECOND_TO_SECOND / FRAMES_PER_SECOND;
+	float mFrames;
+
+	Timer loopTimer;
+	mFrames = 0;
+	Color black = Color(0, 0, 0);
+	GraphicsBuffer* pBackground = new GraphicsBuffer(mDisplayHeight, mDisplayWidth, black);
+	Sprite* pSpriteBackground = new Sprite(pBackground, Vector2D(0, 0), pBackground->getHeight(), pBackground->getWidth());
+
+	while (keepGoing)
+	{
+		pPerformanceTracker->clearTracker("loop");
+		pPerformanceTracker->startTracking("loop");
+		loopTimer.start();
+
+		mpGraphicsSystem->draw(Vector2D(0, 0), pSpriteBackground, 1);
+
+		mInputSystem.getKeyEvent();
+
+		if (restart)
+		{
+			for (int i = 0; i <= mCurrentLevel; i++)
+			{
+				mLevels.getLevel(i).reset();
+			}
+			points = 0;
+			mCurrentLevel = -1;
+			restart = false;
+			mainMenu = true;
+		}
+
+		//Updates everything that needs to be updated for the next level.
+		if (nextLevel)
+		{
+			mTimePassed = 0;
+			mCurrentLevel++;
+			nextLevel = false;
+			if (mCurrentLevel >= mLevels.getTotalLevels())
+			{
+				win = true;
+			}
+			else
+			{
+				transition = true;
+				mPowerSettings.setFrequency(mLevels.getLevel(mCurrentLevel).getFrequency());
+				mPowerSettings.setPointChance(mLevels.getLevel(mCurrentLevel).getPointChance());
+				mPowerSettings.setSpeedChance(mLevels.getLevel(mCurrentLevel).getSpeedChance());
+				mPowerSettings.setSlowChance(mLevels.getLevel(mCurrentLevel).getSlowChance());
+				mSnake.setSpeed(mLevels.getLevel(mCurrentLevel).getSnakeSpeed());
+				mSnake.setPosition(mLevels.getLevel(mCurrentLevel).getSquare(mLevels.getLevel(mCurrentLevel).getStartX(), mLevels.getLevel(mCurrentLevel).getStartY()));
+			}
+		}
+
+		if (mainMenu)
+		{
+			mpGraphicsSystem->writeText(Vector2D(100,300), mpFont, mTextColor, TITLE);
+			mpGraphicsSystem->writeText(Vector2D(100, 500), mpFont, mTextColor, TRANSITION_TEXT);
+			points = 0;
+		}
+		
+		if (level)
+		{
+			
+			for (int i = 0; i < LEVEL_HEIGHT; i++)
+			{
+				for (int j = 0; j < LEVEL_WIDTH; j++)
+				{
+					if (mLevels.getLevel(mCurrentLevel).getSquare(i, j)->checkWall())
+					{
+						mpGraphicsSystem->draw(mLevels.getLevel(mCurrentLevel).getSquare(i, j)->getPosition(), mWall, 1);
+					}
+				}
+			}
+
+			mSnake.update(loopTimer.getElapsedTime(), mLevels.getLevel(mCurrentLevel));
+			mSnake.draw(mpGraphicsSystem);
+
+			mPowerSettings.update(mLevels.getLevel(mCurrentLevel), loopTimer.getElapsedTime());
+			mPowerSettings.draw(mpGraphicsSystem, mLevels.getLevel(mCurrentLevel));
+			mFrames++;
+			
+			mFramesPerSecond = MILLISECOND_TO_SECOND/mTime;
+			mHud.display(mpGraphicsSystem, points, mFramesPerSecond, mTimePassed);
+
+			//If statements to check the snakes collision.
+			if (mSnake.getCurrentSquare()->checkFood())
+			{
+				points++;
+				mSnake.addSegment();
+				mSnake.getCurrentSquare()->reset();
+			}
+			else if (mSnake.getCurrentSquare()->checkWall() || mSnake.getCurrentSquare()->checkSnake())
+			{
+				level = false;
+				dead = true;
+			}
+			else if (mSnake.getCurrentSquare()->checkSpeed())
+			{
+				mSnake.getCurrentSquare()->reset();
+				mSnake.speedUp();
+			}
+			else if (mSnake.getCurrentSquare()->checkSlow())
+			{
+				mSnake.getCurrentSquare()->reset();
+				mSnake.slowDown();
+			}
+			else if (mSnake.getCurrentSquare()->checkPoint())
+			{
+				points++;
+				mSnake.getCurrentSquare()->reset();
+			}
+
+			if (mSnake.getLength() >= mLevels.getLevel(mCurrentLevel).getWinLength())
+			{
+				level = false;
+				nextLevel = true;
+			}
+		}
+
+		if (transition)
+		{
+			mpGraphicsSystem->writeText(Vector2D(100, 300), mpFont, mTextColor, TRANSITION_TITLE + " " + to_string(mCurrentLevel + 1));
+			mpGraphicsSystem->writeText(Vector2D(100, 500), mpFont, mTextColor, TRANSITION_TEXT);
+		}
+
+		if (win)
+		{
+			mpGraphicsSystem->writeText(Vector2D(100, 300), mpFont, mTextColor, WIN_MESSAGE);
+			mpGraphicsSystem->writeText(Vector2D(100, 500), mpFont, mTextColor, WIN_INSTRUCTION);
+		}
+
+		if (dead)
+		{
+			mpGraphicsSystem->writeText(Vector2D(100, 300), mpFont, mTextColor, DEATH_MESSAGE);
+			mpGraphicsSystem->writeText(Vector2D(100, 500), mpFont, mTextColor, DEATH_INSTRUCTION);
+			mSnake.resetLength();
+		}
+
+		mpGraphicsSystem->flip();
+		loopTimer.sleepUntilElapsed(targetTime);
+		pPerformanceTracker->stopTracking("loop");
+		if (level)
+		{
+			mTime = loopTimer.getElapsedTime();
+			mTimePassed += loopTimer.getElapsedTime() / MILLISECOND_TO_SECOND;
+		}
+		std::cout << "Frame Took:" << pPerformanceTracker->getElapsedTime("loop") << " ms" << endl;
+	}
+	
+	delete pBackground;
+	delete pSpriteBackground;
+	mLevels.cleanUp();
+	mBuffers.clearList();
+	delete mpFont;
+	delete pPerformanceTracker;
+}
+
+void Game::handleEvent(const Event& event)
+{
+	if (event.getType() == INPUT_EVENT)
+	{
+		const InputEvent& inputEvent = static_cast<const InputEvent&>(event);
+
+		if (inputEvent.getKeyCode() == (int)KeyCode::ESCAPE)
+		{
+			keepGoing = false;
+			
+		}
+
+		if (inputEvent.getKeyCode() == (int)KeyCode::SPACE)
+		{
+			if (mainMenu)
+			{
+				mCurrentLevel = -1;
+				mainMenu = false;
+				nextLevel = true;
+			}
+			else if (transition)
+			{
+				transition = false;
+				level = true;
+				mSnake.resetLength();
+				mLevels.getLevel(mCurrentLevel).reset();
+				mSnake.setPosition(mLevels.getLevel(mCurrentLevel).getSquare(mLevels.getLevel(mCurrentLevel).getStartX(), mLevels.getLevel(mCurrentLevel).getStartY()));
+				for (int i = 0; i < mLevels.getLevel(mCurrentLevel).getStartLength(); i++)
+				{
+					mSnake.addSegment();
+				}
+				mFrames = 0;
+				mStartTime = time(&mTimer);
+			}
+			else if (dead)
+			{
+				dead = false;
+				mainMenu = true;
+				mSnake.resetLength();
+			}
+			else if (win)
+			{
+				win = false;
+				mainMenu = true;
+			}
+		}
+
+		if (level)
+		{
+			if (inputEvent.getKeyCode() == (int)KeyCode::LEFT)
+			{
+				mSnake.setMoveDirection('L');
+			}
+			if (inputEvent.getKeyCode() == (int)KeyCode::UP)
+			{
+				mSnake.setMoveDirection('U');
+			}
+			if (inputEvent.getKeyCode() == (int)KeyCode::RIGHT)
+			{
+				mSnake.setMoveDirection('R');
+			}
+			if (inputEvent.getKeyCode() == (int)KeyCode::DOWN)
+			{
+				mSnake.setMoveDirection('D');
+			}
+		}
+	}
+	
+}

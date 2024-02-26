@@ -1,0 +1,21 @@
+#pragma once
+
+#include <SDL.h>
+#include <SDL_ttf.h>
+#include <string>
+
+class Font
+{
+public:
+	Font(std::string fontLocation, float fontSize, int red, int blue, int green);
+	~Font();
+
+	float getFontSize() { return mFontSize; }
+	TTF_Font* getFont() { return mpFont; }
+	SDL_Color getColor() { return mColor; }
+
+private:
+	TTF_Font* mpFont;
+	SDL_Color mColor;
+	float mFontSize;
+};

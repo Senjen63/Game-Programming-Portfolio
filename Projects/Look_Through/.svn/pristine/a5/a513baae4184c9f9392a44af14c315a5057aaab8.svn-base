@@ -1,0 +1,211 @@
+#include "Snake.h"
+#include <EventSystem.h>
+#include "GameEvent.h"
+#include "MoveEvent.h"
+#include "CollideEvent.h"
+
+void Snake::addAtStart(int toAdd)
+{
+	while (snakeCount <= (toAdd - 1))
+	{
+		addToEnd();
+	}
+}
+
+void Snake::addToEnd()
+{
+	Vector2D newLoc;
+
+	if (snakeCount > 1)
+	{
+		Vector2D lastLoc = mpUnitManager->getLastLoc();
+
+		//Isn't adding to correct spot
+		if (lastLoc.getX() < mpUnitManager->getSecondLastLoc().getX())
+		{
+			newLoc.setX(lastLoc.getX() - snakeSpriteSize);
+			newLoc.setY(lastLoc.getY());
+			mpUnitManager->addUnit(mpSnakeAnimation, mpSnakeAnimation, newLoc, "Snake");
+		}
+		else if (lastLoc.getX() > mpUnitManager->getSecondLastLoc().getX())
+		{
+			newLoc.setX(lastLoc.getX() + snakeSpriteSize);
+			newLoc.setY(lastLoc.getY());
+			mpUnitManager->addUnit(mpSnakeAnimation, mpSnakeAnimation, newLoc, "Snake");
+		}
+		else if (lastLoc.getY() < mpUnitManager->getSecondLastLoc().getY())
+		{
+			newLoc.setX(lastLoc.getX());
+			newLoc.setY(lastLoc.getY() - snakeSpriteSize);
+			mpUnitManager->addUnit(mpSnakeAnimation, mpSnakeAnimation, newLoc, "Snake");
+		}
+		else if (lastLoc.getY() > mpUnitManager->getSecondLastLoc().getY())
+		{
+			newLoc.setX(lastLoc.getX());
+			newLoc.setY(lastLoc.getY() + snakeSpriteSize);
+			mpUnitManager->addUnit(mpSnakeAnimation, mpSnakeAnimation, newLoc, "Snake");
+		}
+	}
+	else if (snakeCount == 1)
+	{
+		Vector2D firstLoc = mpUnitManager->getFirstLoc();
+
+		if (goingUp)
+		{
+			newLoc.setX(firstLoc.getX());
+			newLoc.setY(firstLoc.getY() + snakeSpriteSize);
+			mpUnitManager->addUnit(mpSnakeAnimation, mpSnakeAnimation, newLoc, "Snake");
+		}
+		else if (goingDown)
+		{
+			newLoc.setX(firstLoc.getX());
+			newLoc.setY(firstLoc.getY() - snakeSpriteSize);
+			mpUnitManager->addUnit(mpSnakeAnimation, mpSnakeAnimation, newLoc, "Snake");
+		}
+		else if (goingLeft)
+		{
+			newLoc.setX(firstLoc.getX() + snakeSpriteSize);
+			newLoc.setY(firstLoc.getY());
+			mpUnitManager->addUnit(mpSnakeAnimation, mpSnakeAnimation, newLoc, "Snake");
+		}
+		else if (goingRight)
+		{
+			newLoc.setX(firstLoc.getX() - snakeSpriteSize);
+			newLoc.setY(firstLoc.getY());
+			mpUnitManager->addUnit(mpSnakeAnimation, mpSnakeAnimation, newLoc, "Snake");
+		}
+	}
+	snakeCount++;
+}
+
+int Snake::getBodyCount()
+{
+	return snakeCount;
+}
+
+Vector2D Snake::getHeadLoc()
+{
+	return mpUnitManager->getFirstLoc();
+}
+
+void Snake::handleEvent(const Event& theEvent)
+{
+	if (theEvent.getType() == MOVE_EVENT)
+	{
+		const MoveEvent& moveEvent = static_cast<const MoveEvent&>(theEvent);
+
+		if (moveEvent.getDirection() == "Up" && !goingDown)
+		{
+			goingUp = true;
+			goingDown = false;
+			goingLeft = false;
+			goingRight = false;
+		}
+		else if (moveEvent.getDirection() == "Down" && !goingUp)
+		{
+			goingUp = false;
+			goingDown = true;
+			goingLeft = false;
+			goingRight = false;
+		}
+		else if (moveEvent.getDirection() == "Left" && !goingRight)
+		{
+			goingUp = false;
+			goingDown = false;
+			goingLeft = true;
+			goingRight = false;
+		}
+		else if (moveEvent.getDirection() == "Right" && !goingLeft)
+		{
+			goingUp = false;
+			goingDown = false;
+			goingLeft = false;
+			goingRight = true;
+		}
+	}
+	else if (theEvent.getType() == COLLIDE_EVENT)
+	{
+		const CollideEvent& collideEvent = static_cast<const CollideEvent&>(theEvent);
+
+		if (collideEvent.getCollision() == "Speed")
+		{
+			if (snakeSpeed > 5)
+			{
+				snakeSpeed -= 5;
+			}
+		}
+		else if (collideEvent.getCollision() == "Slow")
+		{
+			if (snakeSpeed < 55)
+			{
+				snakeSpeed += 5;
+			}
+		}
+		else if (collideEvent.getCollision() == "Food")
+		{
+			addToEnd();
+		}
+	}
+}
+
+void Snake::moveSnake()
+{
+	frameCount++;
+
+	if (frameCount % snakeSpeed == 0)
+	{
+		if (goingUp)
+		{
+			mpUnitManager->moveUnit("Up", snakeSpriteSize);
+		}
+		else if (goingDown)
+		{
+			mpUnitManager->moveUnit("Down", snakeSpriteSize);
+		}
+		else if (goingLeft)
+		{
+			mpUnitManager->moveUnit("Left", snakeSpriteSize);
+		}
+		else if (goingRight)
+		{
+			mpUnitManager->moveUnit("Right", snakeSpriteSize);
+		}
+
+		frameCount = 0;
+	}
+}
+
+void Snake::setBodyCount(int count)
+{
+	snakeCount = count;
+}
+
+void Snake::setSpeed(int speed)
+{
+	snakeSpeed = speed;
+}
+
+Snake::Snake(UnitManager* manager, Animation* anim, int initSpeed)
+{
+	EventSystem* pEventSystem = EventSystem::getInstance();
+	pEventSystem->addListener((EventType)MOVE_EVENT, this);
+	pEventSystem->addListener((EventType)COLLIDE_EVENT, this);
+
+	mpUnitManager = manager;
+	mpSnakeAnimation = anim;
+
+	goingUp = false;
+	goingDown = false;
+	goingLeft = false;
+	goingRight = true;
+
+	snakeSpriteSize = 60;
+	snakeSpeed = initSpeed;
+	snakeCount = 1;
+
+	frameCount = 0;
+}
+
+Snake::~Snake()
+{
+}

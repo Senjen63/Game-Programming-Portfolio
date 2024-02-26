@@ -1,0 +1,51 @@
+#pragma once
+
+#include <PerformanceTracker.h>
+#include <vector>
+#include <iostream>
+#include "GraphicsSystem.h"
+#include "Vector2D.h"
+
+using namespace std;
+
+const float SPAWN_TIME = 500.0;
+
+class Unit;
+
+class UnitManager : public Trackable
+{
+private:
+	vector<Unit*> mpUnits;
+	int mNumUnits = 0;
+	float mElapsedTime = 0.0;
+
+public:
+	UnitManager();
+	~UnitManager();
+
+	void cleanup();
+
+	void createAndAddUnit(GraphicsBuffer* pBuffer, int numFrames);
+	void createAndAddUnit(GraphicsBuffer* pBuffer);
+	void createAndAddUnit(GraphicsBuffer* pBuffer, Vector2D location);
+	void setUnitPos(int index, Vector2D& position);
+	void destroyUnit(Unit* pUnit);
+	void deleteUnits(Vector2D position);
+	bool detectUnits(Vector2D location);
+	bool detectUnits();
+	void update(float elapsedTime);
+	void update(float elapsedTime, Vector2D newPos);
+	void updateTiming(float amount);
+	void doAnimation();
+	void draw(GraphicsSystem* pGraphicsSystem);
+	int getNumUnits();
+	Unit* getUnit();
+	Unit* getUnit(int index);
+	Unit* getLastUnit();
+	Vector2D getPosition(int index);
+	float getTiming();
+
+	void setLast();
+
+	friend class Game;
+};

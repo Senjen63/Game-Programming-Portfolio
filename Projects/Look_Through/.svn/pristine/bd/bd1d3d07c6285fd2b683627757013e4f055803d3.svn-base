@@ -1,0 +1,27 @@
+#pragma once
+
+
+#include <SDL.h>
+#include <SDL_ttf.h>
+#include "Trackable.h"
+
+using namespace std;
+
+class Font : public Trackable
+{
+	friend class GraphicsSystem;
+	private:
+		TTF_Font* mpFont;
+		TTF_Font* getFont() { return mpFont; }
+		const string ASSET_PATH = "../GalahadAssets/font/";
+		int mFontSize;
+	public:
+		Font(int fontSize, string fileName);
+		~Font();
+		
+		// getters
+		int getFontSize() { return mFontSize; }
+		
+		// setters 
+		void setFontSize(int newSize) { mFontSize = newSize; }
+};

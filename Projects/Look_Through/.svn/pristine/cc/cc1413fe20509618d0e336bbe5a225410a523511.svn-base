@@ -1,0 +1,35 @@
+#pragma once
+#include "Trackable.h"
+#include <SDL.h>
+#include "GraphicsBuffer.h"
+#include <Vector2D.h>
+
+class GraphicsBuffer;
+class Vector2D;
+
+class Sprite : public Trackable
+{	
+	private:
+		GraphicsBuffer* mpSurface;
+		Vector2D* mpSourceLocation;
+		int mSpriteWidth;
+		int mSpriteHeight;
+	public:
+		Sprite();
+		Sprite(int width, int height, Vector2D* pLocation, GraphicsBuffer* pBuffer);
+		~Sprite();
+
+		// getters
+		Vector2D getSpriteDimen() { return Vector2D(mSpriteWidth, mSpriteHeight); }
+		int getSpriteHeight() { return mSpriteHeight; }
+		int getSpriteWidth() { return mSpriteWidth; }
+		GraphicsBuffer* getBuffer() { return mpSurface; }
+		Vector2D* getSourceLocation() { return mpSourceLocation; }
+
+		// setters
+		void setSpriteHeight(int height) { mSpriteHeight = height; }
+		void setSpriteWidth(int width) { mSpriteWidth = width; }
+		void setBuffer(GraphicsBuffer* buff) { mpSurface = buff; }
+		void setSourceLocation(Vector2D* vec) { mpSourceLocation = vec; }
+
+};

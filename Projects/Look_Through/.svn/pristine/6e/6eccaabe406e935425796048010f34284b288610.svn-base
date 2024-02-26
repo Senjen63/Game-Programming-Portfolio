@@ -1,0 +1,55 @@
+﻿//     -------------------------------------------------------------------------
+//     Final Project
+//         EntityQuery.hpp
+//     
+//             Created:
+//                 08-04-2022
+//             Author(s):
+//                 Aven Presseisen
+//     -------------------------------------------------------------------------
+
+#pragma once
+
+#include <typeindex>
+#include <vector>
+
+#include "Archetype.hpp"
+
+struct EntityQuery
+{
+    std::vector< Entity > entities;
+
+    template <typename ... Components>
+    EntityQuery * withAll();
+    template <typename ... Components>
+    EntityQuery * withAny();
+    template <typename ... Components>
+    EntityQuery * withNone();
+private:
+    friend class EntityManager;
+    std::vector< std::type_index > mWithAll;
+    std::vector< std::type_index > mWithAny;
+    std::vector< std::type_index > mWithNone;
+
+};
+
+template <typename ... Components>
+EntityQuery * EntityQuery::withAll()
+{
+    mWithAll = { std::type_index( typeid( Components ) )..., };
+    return this;
+}
+
+template < typename ... Components >
+EntityQuery * EntityQuery::withAny()
+{
+    mWithAny = { std::type_index( typeid( Components ) )..., };
+    return this;
+}
+
+template < typename ... Components >
+EntityQuery * EntityQuery::withNone()
+{
+    mWithNone = { std::type_index( typeid( Components ) )..., };
+    return this;
+}

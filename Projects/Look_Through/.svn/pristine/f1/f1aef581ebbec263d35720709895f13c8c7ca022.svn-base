@@ -1,0 +1,223 @@
+#include <allegro5/allegro.h>
+#include <allegro5/allegro_font.h>
+#include <allegro5/allegro_ttf.h>
+#include <allegro5/allegro_audio.h>
+#include <allegro5/allegro_acodec.h>
+#include <allegro5/allegro_image.h>
+#include <allegro5/allegro_primitives.h>
+
+#include <iostream>
+#include <cassert>
+#include <string>
+
+#include <PerformanceTracker.h>
+#include <MemoryTracker.h>
+#include <Vector2D.h>
+#include <Timer.h>
+
+#include "Game.h"
+#include "Unit.h"
+#include "InputSystem.h"
+//#include "Buffer.h"
+using namespace std;
+
+
+//----------------------------------------Game----------------------------------------
+Game* Game::msGame = nullptr;
+
+Game::Game()
+{
+	gameWidth = 0;
+	gameHeight = 0;
+	gameFPS = 16.66f; //60fps
+}
+
+Game::~Game()
+{
+	mpUManager = nullptr;
+	mpGBManager = nullptr;
+	mpGSystem = nullptr;
+	mpISystem = nullptr;
+	delete mpUManager;
+	delete mpGBManager;
+	delete mpGSystem;
+	delete mpISystem;
+
+	destroyInstance();
+}
+
+bool Game::init(unsigned int width, unsigned int height, float fps)
+{
+	mpGSystem = new GraphicsSystem(width, height);
+	mpISystem = new InputSystem();
+
+	gameWidth = width;
+	gameHeight = height;
+	gameFPS = fps;
+
+	if (mpGSystem->setup() == 1)
+	{
+		return 1;
+	}
+	mpISystem->init();
+
+	return 0;
+}
+
+void Game::cleanup()
+{
+	mpGSystem->cleanup();
+	mpISystem->cleanup();
+}
+
+void Game::createInstance()
+{
+	if (msGame == nullptr)
+	{
+		msGame = new Game;
+	}
+}
+
+void Game::destroyInstance()
+{
+	msGame = nullptr;
+	delete msGame;
+}
+
+void Game::doLoop()
+{
+	//run the full game here
+	
+	//file names
+	const string ASSET_PATH = "..\\..\\common\\assets\\";
+	const string BACKGROUND_FILENAME = "woods.png";
+	const string SMURF_FILENAME = "smurf_sprites.png"; //Animation 1
+	const string DEAN_FILENAME = "dean_sprites.png"; //Animation 2
+	const string FONT_FILENAME = "cour.ttf";
+	const string UNIT_NAME = "Unit ";
+	const int SMURF_ROWS = 4;
+	const int SMURF_COLS = 4;
+	const int SMURF_SIZE = 64;
+	const float FRAME_SPEED = 10.00f; //time
+	bool isUnitOne = true;
+	bool looping = true;
+
+
+	//make buffers
+	mpGBManager = new GraphicsBufferManager();
+	GraphicsBuffer* backgroundBuffer = new GraphicsBuffer(BACKGROUND_FILENAME);
+
+	GraphicsBuffer* smurfBuffer = new GraphicsBuffer(SMURF_FILENAME);
+	GraphicsBuffer* deanBuffer = new GraphicsBuffer(DEAN_FILENAME);
+	mpGBManager->addGraphicsBuffer(smurfBuffer, "Smurf");
+	mpGBManager->addGraphicsBuffer(deanBuffer, "Dean");
+
+
+	//make sprites / animations
+	Sprite backgroundSprite = Sprite(backgroundBuffer->getWidth(), backgroundBuffer->getHeight(), 0, 0, backgroundBuffer);
+	Animation* uAnimOne = new Animation(FRAME_SPEED, smurfBuffer, 1); //create animation 1
+	Animation* uAnimTwo = new Animation(FRAME_SPEED, deanBuffer, 1); //create animation 2
+
+
+	//create map and add first unit to map
+	mpUManager = new UnitManager();
+	Unit* start = new Unit(mpGSystem->getWidth() / 2, mpGSystem->getHeight() / 2, uAnimOne);
+	mpUManager->addUnit(start);
+
+	//set up loop tracking
+	PerformanceTracker* pPerformanceTracker = new PerformanceTracker;
+	Timer timer;
+	timer.start();
+
+	//do gameplay loop
+	while (looping)
+	{
+		pPerformanceTracker->clearTracker("loop");
+		pPerformanceTracker->startTracking("loop");
+
+		//--------------------Get user input--------------------
+		if (mpISystem->getKeyState(keyF))
+		{
+			//increase animation speed
+			if (isUnitOne)
+			{
+				uAnimOne->increaseSpeed();
+			}
+			else
+			{
+				uAnimTwo->increaseSpeed();
+			}
+		}
+		else if (mpISystem->getKeyState(keyS))
+		{
+			//slow animation speed
+			if (isUnitOne)
+			{
+				uAnimOne->decreaseSpeed();
+			}
+			else
+			{
+				uAnimTwo->decreaseSpeed();
+			}
+		}
+		else if (mpISystem->getKeyState(keyEnter))
+		{
+			//swap animation
+			if (isUnitOne)
+			{
+				mpUManager->getUnit(mpUManager->getSize()-1)->setAnimation(uAnimTwo);
+				isUnitOne == false;
+			}
+			else
+			{
+				mpUManager->getUnit(mpUManager->getSize()-1)->setAnimation(uAnimOne);
+				isUnitOne == true;
+			}
+		}
+		else if (mpISystem->getKeyState(keyESC))
+		{
+			//quit
+			looping = false; //break out of loop to end in main.cpp
+		}
+		
+
+		if (mpISystem->getMouseState(LMB))
+		{
+			//create and place unit
+			Unit* temp = new Unit(mpGSystem->getWidth() / 2, mpGSystem->getHeight() / 2, uAnimOne);
+			mpUManager->addUnit(temp);
+			temp->setPosition(mpISystem->getMouseX() - (SMURF_SIZE / 2), mpISystem->getMouseY() - (SMURF_SIZE / 2));
+		}
+		else if (mpISystem->getMouseState(RMB))
+		{
+			//destroy units in path
+			for (auto i = 0; i < (mpUManager->getSize()); i++)
+			{
+				if (mpUManager->getUnit(i)->Collision(mpISystem->getMouseX(), mpISystem->getMouseY()))
+				{
+					mpUManager->deleteUnit(i);
+				}
+			}
+		}
+
+		//--------------------Update--------------------
+		mpUManager->UpdateAll();
+
+		//--------------------Draw--------------------
+		mpGSystem->draw(0, 0, backgroundSprite, (mpGSystem->getWidth() / float(backgroundBuffer->getWidth())));
+		mpUManager->DrawAll();
+		mpGSystem->flip();
+
+		//--------------------Wait--------------------
+		timer.sleepUntilElapsed(gameFPS);
+		pPerformanceTracker->stopTracking("loop");
+		cout << "Time to Process Frame:" << pPerformanceTracker->getElapsedTime("loop") << " ms" << endl;
+	}
+	
+	delete smurfBuffer;
+	delete deanBuffer;
+	delete backgroundBuffer;
+	delete uAnimOne;
+	delete uAnimTwo;
+}
+//Game* game = nullptr;

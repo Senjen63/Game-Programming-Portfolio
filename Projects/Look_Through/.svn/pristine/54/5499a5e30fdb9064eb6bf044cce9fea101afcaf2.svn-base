@@ -1,0 +1,22 @@
+SnakeSpeed: 8
+SnakeSegments: 2
+SnakeReqLength: 7
+FoodPoints: 7
+ItemFreq: 230
+Map:
+W W W W W W W W W W W W W W W W 
+W F F W F F F F F F F F F F F W 
+W F F W F F F F F F F F F F F W 
+W F F W F F F F F F F F F F F W 
+W F F F F F F F F F F F F F F W 
+W F F F F F F F F F F F F F F W 
+W F F F F F F F F F F F F F F W 
+W F F F F F F F F F F F F F F W 
+W F F F F F F F F F F F F F F W 
+W F F F F F F F F F F F F F F W 
+W F F F F F F F F F F F F F F W 
+W F F F F F F F F F F F F F F W 
+W F F W F F F F F F F W W F F W 
+W F F W F F F F F F F F W F F W 
+W F F W F F F F F F F F W F F W 
+W W W W W W W W W W W W W W W W 

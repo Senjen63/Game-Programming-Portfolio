@@ -1,0 +1,47 @@
+#pragma once
+
+#include <allegro5/allegro.h>
+#include <allegro5/allegro_font.h>
+#include <allegro5/allegro_ttf.h>
+#include <allegro5/allegro_audio.h>
+#include <allegro5/allegro_acodec.h>
+#include <allegro5/allegro_image.h>
+#include <allegro5/allegro_primitives.h>
+
+#include <Trackable.h>
+#include <Vector2D.h>
+
+#include <iostream>
+#include <cassert>
+#include <string>
+#include <vector>
+
+#include <PerformanceTracker.h>
+#include <Timer.h>
+
+#include "Font.h"
+#include "Color.h"
+#include "GraphicsBuffer.h"
+#include "GraphicsSystem.h"
+
+using namespace std;
+
+class EventSystem;
+
+class HudManager : public Trackable
+{
+public:
+	HudManager();
+	~HudManager();
+
+	void drawScore(GraphicsSystem* system, int score);
+	void drawTimer(GraphicsSystem* system, double time);
+	void drawFPS(GraphicsSystem* system, double time);
+	void drawStart(GraphicsSystem* system);
+	void drawEnd(GraphicsSystem* system);
+
+private:
+	string fontFileName;
+	int fontSize;
+	Font* pFont;
+};

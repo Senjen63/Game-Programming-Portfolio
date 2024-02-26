@@ -1,0 +1,93 @@
+#include "Unit.h"
+#include "SceneManager.h"
+
+Unit::Unit(std::pair<float, float>location, AnimationManager* animationManager, std::pair<float, float>scale)
+{
+	mLocation = location;
+	mpAnimationManager = animationManager;
+	mScale = scale;
+
+	float spriteWidth = mpAnimationManager->getCurrentAnimation()->getCurrentSprite().getWidth() * mScale.first;
+	float spriteHeight = mpAnimationManager->getCurrentAnimation()->getCurrentSprite().getHeight() * mScale.second;
+
+	mSize = make_pair(spriteWidth, spriteHeight);
+}
+
+Unit::Unit(std::pair<float, float>location, std::pair<float, float>scale, std::string animationDataFilePath)
+{
+	mLocation = location;
+	mpAnimationManager = new AnimationManager(animationDataFilePath);
+	mScale = scale;
+
+	float spriteWidth = mpAnimationManager->getCurrentAnimation()->getCurrentSprite().getWidth() * mScale.first;
+	float spriteHeight = mpAnimationManager->getCurrentAnimation()->getCurrentSprite().getHeight() * mScale.second;
+
+	mSize = make_pair(spriteWidth, spriteHeight);
+}
+
+Unit::~Unit()
+{
+	delete mpAnimationManager;
+}
+
+// I'm realizing now how dangerous relying on this can be.
+void Unit::deleteSelf()
+{
+	Game::getGame()->getSceneManager()->removeUnit(this);
+}
+
+void Unit::update(float deltaTime)
+{
+	if (mpAnimationManager != nullptr)
+	{
+		mpAnimationManager->update(deltaTime);
+	}
+}
+
+// Probably not the most efficient way to handle this.
+std::vector<Unit*> Unit::collision(std::pair<int, int>positionToCheck)
+{
+	const std::vector<Unit*> allObjects = Game::getGame()->getSceneManager()->getUnitVector();
+	std::vector<Unit*> collidedObjects;
+
+	for (int i = 0; i < allObjects.size(); i++)
+	{
+
+		// Credit to https://developer.mozilla.org/en-US/docs/Games/Techniques/2D_collision_detection for helping wrap my head around how collision detection would work with basic rectangles
+		if (positionToCheck.first - (mSize.first / 2) < allObjects[i]->mLocation.first + (allObjects[i]->mSize.first / 2) &&
+			positionToCheck.first + (mSize.first / 2) > allObjects[i]->mLocation.first - (allObjects[i]->mSize.first / 2) &&
+			positionToCheck.second - (mSize.second / 2) < allObjects[i]->mLocation.second + (allObjects[i]->mSize.second / 2) &&
+			positionToCheck.second + (mSize.second / 2) > allObjects[i]->mLocation.second - (allObjects[i]->mSize.second / 2) &&
+			allObjects[i] != this)
+		{
+			collidedObjects.push_back(allObjects[i]);
+		}
+	}
+
+	return collidedObjects;
+}
+
+void Unit::draw(GraphicsSystem* currentGraphicsSystem)
+{
+	if (mpAnimationManager != nullptr)
+	{
+		float spriteWidth = mpAnimationManager->getCurrentAnimation()->getCurrentSprite().getWidth() * mScale.first;
+		float spriteHeight = mpAnimationManager->getCurrentAnimation()->getCurrentSprite().getHeight() * mScale.second;
+		currentGraphicsSystem->draw(mpAnimationManager->getCurrentAnimation()->getCurrentSprite(), mLocation.first - (spriteWidth / 2), mLocation.second - (spriteHeight / 2), spriteWidth, spriteHeight);
+	}
+}
+
+void Unit::setAnimation(std::string animationName)
+{
+	mpAnimationManager->changeAnimation(animationName);
+}
+
+void Unit::updateScale(std::pair<float, float> newScale)
+{
+	mScale = newScale;
+
+	float spriteWidth = mpAnimationManager->getCurrentAnimation()->getCurrentSprite().getWidth() * mScale.first;
+	float spriteHeight = mpAnimationManager->getCurrentAnimation()->getCurrentSprite().getHeight() * mScale.second;
+
+	mSize = make_pair(spriteWidth, spriteHeight);
+}

@@ -1,0 +1,9 @@
+#include "Color.h"
+
+Color::Color(float redValue, float blueValue, float greenValue, float alphaValue)
+{
+	mRed = redValue;
+	mBlue = blueValue;
+	mGreen = greenValue;
+	mAlpha = alphaValue;
+}

@@ -1,0 +1,107 @@
+#include "Animation.h"
+
+Animation::Animation()
+{
+	mTimeLeft = 0;
+	mTimePerFrame = 0;
+	mSpeed = 0;
+	mCurrentSprite = 0;
+	mLooping = 0;
+}
+
+Animation::Animation(GraphicsBuffer* spriteSheet, float timePerFrame, bool loops)
+{
+	mLooping = loops;
+	mTimePerFrame = timePerFrame;
+	mTimeLeft = 0;
+	mSpeed = DEFAULT_SPEED;
+	mCurrentSprite = 0;
+
+	for (int i = 0; i < DEFAULT_PER_ROW; i++)
+	{
+		for (int j = 0; j < DEFAULT_PER_COL; j++)
+		{
+			Sprite cutSprite = Sprite(spriteSheet, Vector2D(DEFAULT_WIDTH * i, DEFAULT_HEIGHT * j), DEFAULT_HEIGHT, DEFAULT_WIDTH);
+			mSpriteList.push_back(cutSprite);
+		}
+	}
+}
+
+Animation::Animation(GraphicsBuffer* spriteSheet, int perColumn, int perRow, int spriteWidth, int spriteHeight, float timePerFrame, bool loops)
+{
+	mLooping = loops;
+	mTimePerFrame = timePerFrame;
+	mTimeLeft = 0;
+	mSpeed = DEFAULT_SPEED;
+	mCurrentSprite = 0;
+
+	for (int i = 0; i < perRow; i++)
+	{
+		for (int j = 0; j < perColumn; j++)
+		{
+			Sprite cutSprite = Sprite(spriteSheet, Vector2D(spriteWidth * j, spriteHeight * i), spriteHeight, spriteWidth);
+			mSpriteList.push_back(cutSprite);
+		}
+	}
+}
+
+Animation::~Animation()
+{
+
+}
+
+void Animation::operator=(const Animation& aAnimation)
+{
+	this->mLooping = aAnimation.mLooping;
+	this->mTimePerFrame = aAnimation.mTimePerFrame;
+	this->mTimeLeft = aAnimation.mTimeLeft;
+	this->mSpeed = aAnimation.mSpeed;
+	this->mCurrentSprite = aAnimation.mCurrentSprite;
+	this->mSpriteList = aAnimation.mSpriteList;
+}
+
+void Animation::update(float timePassed)
+{
+	mTimeLeft -= timePassed;
+	if (mTimeLeft <= 0)
+	{
+		if (mCurrentSprite < mSpriteList.size())
+		{
+			mCurrentSprite++;
+		}
+		if (mCurrentSprite >= mSpriteList.size() && mLooping)
+		{
+			mCurrentSprite = 0;
+		}
+		mTimeLeft = mTimePerFrame;
+	}
+}
+
+void Animation::speedUp()
+{
+	mSpeed += DEFAULT_SPEED_CHANGE;
+}
+
+void Animation::slowDown()
+{
+	mSpeed -= DEFAULT_SPEED_CHANGE;
+	if (mSpeed < 0)
+	{
+		mSpeed = 0;
+	}
+}
+
+Sprite Animation::getCurrentSprite()
+{
+	return mSpriteList.at(mCurrentSprite);
+}
+
+Sprite Animation::getCurrentSprite(int frameNum)
+{
+	return mSpriteList.at(frameNum);
+}
+
+int Animation::getTotalFrames()
+{
+	return mSpriteList.size();
+}

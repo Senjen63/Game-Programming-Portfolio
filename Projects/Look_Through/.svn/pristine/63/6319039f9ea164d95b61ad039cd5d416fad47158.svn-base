@@ -1,0 +1,32 @@
+#pragma once
+
+#include "..\Unit.h"
+
+class PieceManager;
+
+class Pawn : public Unit
+{
+private:
+	bool mSelected = false;
+	bool mFirstMove;
+	bool mWhite;
+	vector<Unit*> mpMovePts;
+	vector<Unit*> mpAttackPts;
+
+public:
+	Pawn();
+	Pawn(GraphicsBuffer* pBuffer, Vector2D location, bool white, bool firstMove);
+	~Pawn();
+
+	void cleanUp();
+	void createMovePts();
+	void draw(GraphicsSystem* pGraphicsSystem, PieceManager& team, PieceManager &otherTeam);
+	void selected(bool selected);
+	void checkMovePts(Vector2D mousePos, PieceManager& team, PieceManager& otherTeam);
+	bool checkAttackPts(Vector2D position, Vector2D& location);
+
+	bool getTeam()      { return mWhite; };
+	bool getSelected()  { return mSelected; };
+	bool getFirstMove() { return mFirstMove; };
+	unsigned int getNumAttackPts() { return mpAttackPts.size(); };
+};

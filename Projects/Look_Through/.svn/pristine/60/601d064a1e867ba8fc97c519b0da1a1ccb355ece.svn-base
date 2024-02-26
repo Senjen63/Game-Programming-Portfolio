@@ -1,0 +1,57 @@
+#pragma once
+
+#include <string>
+#include <iostream>
+#include "Trackable.h"
+#include <SDL.h>
+#include <SDL_ttf.h>
+#include <Vector2D.h>
+
+#include "Font.h"
+#include "Color.h"
+#include "Sprite.h"
+#include "GraphicsBuffer.h"
+
+
+//class Sprite;
+//class Font;
+//class Color;
+//class GraphicsBuffer;
+//class Vector2D;
+
+using namespace std;
+
+class GraphicsSystem : public Trackable
+{
+	private:
+		const string FILE_PATH = "system_data.txt";
+
+		SDL_Window* mpWindow;
+		SDL_Renderer* mpRenderer;
+		int mWidth;
+		int mHeight;
+		string mTitle;
+		int mMax;
+		int mMin;
+		int mRend;
+		int mHalf;
+	
+	public:
+		GraphicsSystem();
+		~GraphicsSystem();
+
+		void init(int displayWidth, int displayHeight, string);
+		void cleanUp();
+
+		void flip();
+
+		void draw(Vector2D* loc, Sprite*, float scale = 1.0);
+
+		void setColor(GraphicsBuffer* buffer, Color*);
+
+		void writeText(Vector2D* loc, Font*, Color*, string text, bool isCentered = false, bool isUnderlined = false);
+
+		void clearScreen();
+
+		Vector2D getTextSize(Font*, string);
+};

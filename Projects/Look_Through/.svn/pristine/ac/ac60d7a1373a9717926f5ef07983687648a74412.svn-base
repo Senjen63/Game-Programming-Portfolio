@@ -1,0 +1,49 @@
+﻿//     -------------------------------------------------------------------------
+//     Final Project
+//         Font.hpp
+//     
+//             Created:
+//                 06-04-2022
+//             Author(s):
+//                 Aven Presseisen
+//             Credits:
+//                 FontCache library: https://github.com/grimfang4/SDL_FontCache
+//     -------------------------------------------------------------------------
+
+#pragma once
+
+#include <SDL_FontCache.h>
+
+#include "Color.hpp"
+
+class Font
+{
+    friend class GraphicsSystem;
+
+    FC_Font * mpFont;
+
+public:
+    enum class Style
+    {
+        Normal = 0b00000000,
+        Bold = 0b00000001,
+        Italic = 0b00000010,
+        Underline = 0b00000100,
+        Strikethrough = 0b00001000,
+    };
+
+    enum class Align
+    {
+        Left,
+        Center,
+        Right,
+    };
+
+    Font( const char * pFilename, SDL_Renderer * pRenderer, int fontSize = 25, const Color & color = Color( 0, 0, 0, 255 ), Style style = Style::Normal );
+    ~Font();
+};
+
+inline Font::Style operator|( Font::Style left, Font::Style right )
+{
+    return static_cast< Font::Style >(static_cast< int >(left) | static_cast< int >(right));
+}

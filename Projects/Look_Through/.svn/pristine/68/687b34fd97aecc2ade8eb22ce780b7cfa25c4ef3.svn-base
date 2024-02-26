@@ -1,0 +1,11 @@
+#include "KeyboardEvent.h"
+
+KeyboardEvent::KeyboardEvent(int keyboardInput)
+	:LevelEvent(KEYBOARD_EVENT)
+	,mInput(keyboardInput)
+{
+}
+
+KeyboardEvent::~KeyboardEvent()
+{
+}

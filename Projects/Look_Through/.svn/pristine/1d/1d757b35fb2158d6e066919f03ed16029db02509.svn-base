@@ -1,0 +1,56 @@
+//BP
+#pragma once
+#include <list>
+#include <Trackable.h>
+#include "Animation.h"
+#include "UnitVariations.h"
+
+const bool LOOP_CONDITION = true;
+const int FPS = 60;
+const int X_POS = 0;
+const int Y_POS = 0;
+
+class Unit : public Trackable
+{
+//private: (Doesn't Work)
+protected:
+    int mFps;
+    int mUnitType;
+    float mAngle = 0;
+    Vector2D mLocation;
+    int mAnimationIndex;
+    bool mToDelete = false;
+    bool mIsPlaying = true;
+    vector<Animation> mAnimations;
+public:
+    Unit();
+    Unit(Vector2D location, int fps);
+    Unit(Vector2D location, GraphicsBuffer* newBuff, int fps , bool loop, int type);
+    ~Unit();
+    void draw();
+    Vector2D getDimensions();
+    void setFramerate(int framerate);
+    void setAnimation(int index);
+    void update(float timePassed);
+    virtual void unitUpdate(float timePassed);
+    void addNewAnimation(GraphicsBuffer* buff);
+    bool detectMouseHover(Vector2D mouseLocation);
+    void addNewAnimation(GraphicsBuffer* buff, int fps, bool loop);
+    
+    //Inline Functions
+    void verifyIsPlaying(bool play) { mIsPlaying = play; }
+    void moveLocation(Vector2D newPos) { mLocation = newPos; }
+
+    //Inline Getters and Setters
+    int getFramerate() { return mFps; }
+    float getAngle() { return mAngle; }
+    bool getDelete() { return mToDelete; } //Throws exceptions the first time the code is run after making some changes for some reason... Not sure why
+    int getUnitType() { return mUnitType; }
+    bool getIsPlaying() { return mIsPlaying; }
+    int getIndex() { return mAnimationIndex; }
+    Vector2D getPosition() { return mLocation; }
+    void setAngle(float angle) { mAngle = angle; }
+    void setUnitType(int type) { mUnitType = type; }
+    int getAnimations() { return mAnimations.size(); }
+    void setDelete(bool toDelete) { mToDelete = toDelete; }
+};

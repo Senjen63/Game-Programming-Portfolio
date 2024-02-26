@@ -1,0 +1,26 @@
+#pragma once
+
+#include <Trackable.h>
+
+#include "GraphicsBuffer.h"
+
+class Sprite : public Trackable
+{
+	public:		
+		Sprite(GraphicsBuffer* buffer, int x, int y, int height, int width);
+		~Sprite();
+
+		int getX() { return mX; }
+		int getY() { return mY; }
+		int getHeight() { return mHeight; }
+		int getWidth() { return mWidth; }
+		GraphicsBuffer* getBuffer() { return mpBuffer; }
+
+	private:
+		int mX;
+		int mY;
+		int mHeight;
+		int mWidth;
+		GraphicsBuffer* mpBuffer;
+
+};

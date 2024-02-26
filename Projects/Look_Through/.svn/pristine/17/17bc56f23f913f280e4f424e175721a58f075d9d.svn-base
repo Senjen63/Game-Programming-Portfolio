@@ -1,0 +1,45 @@
+
+#pragma once
+
+#include <allegro5/allegro.h>
+#include <allegro5/allegro_font.h>
+#include <allegro5/allegro_ttf.h>
+#include <allegro5/allegro_audio.h>
+#include <allegro5/allegro_acodec.h>
+#include <allegro5/allegro_image.h>
+#include <allegro5/allegro_primitives.h>
+
+#include <iostream>
+#include <cassert>
+#include <string>
+
+#include<Trackable.h>
+#include "Assets.h"
+
+
+
+//A class to hold a chunk of memory used to display something 
+class GraphicsBuffer {
+	friend class GraphicsSystem;
+public:
+	//constructor/destructor
+	GraphicsBuffer();
+	GraphicsBuffer(ALLEGRO_BITMAP* bitmap);
+	GraphicsBuffer(int width, int height, Color color);
+	GraphicsBuffer(std::string fileName);
+	GraphicsBuffer(std::string fileName, std::string filePath);
+	~GraphicsBuffer();
+
+	//accessors
+	int getWidth() { return al_get_bitmap_width(mpBitmap); };
+	int getHeight() { return al_get_bitmap_height(mpBitmap); };
+	ALLEGRO_BITMAP* GraphicsBuffer::getBitmap() { return mpBitmap; };
+
+	void clearToColor(Color color);
+protected:
+	//allegro bitmap
+	ALLEGRO_BITMAP* mpBitmap;
+	//bool ownsBit;
+	const std::string mDEAN_FILE_PATH = "..\\..\\common\\assets\\";
+};
+

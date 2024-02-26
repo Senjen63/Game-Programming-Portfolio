@@ -1,0 +1,115 @@
+#include "FlyingFist.h"
+#include "EnemyBase.h"
+#include "Vector2D.h"
+#include "Animation.h"
+#include "Game.h"
+
+FlyingFist::FlyingFist(AnimationBase* animationb, Direction dir, Vector2D location, int size, int speed)
+{
+	this->mLocation = location;
+	this->mpPunchBase = animationb;
+	this->mDirection = dir;
+	this->mSpeed = speed;
+	this->mSize = size;
+
+	this->mpAnimation = new Animation(FIST_ANIM_SPEED, animationb);
+}
+
+FlyingFist::~FlyingFist()
+{
+	//delete mpPunchBase;
+	delete mpAnimation;
+}
+
+void FlyingFist::update()
+{
+	moveFist();
+	checkEnemyCollisions(mLocation);
+}
+
+void FlyingFist::draw()
+{
+	Game* pGame = Game::getInstance();
+	mpAnimation->setPosition(mLocation);
+	mpAnimation->update(pGame->GAME_FPS);
+	pGame->getGraphics()->draw(mpAnimation);
+}
+
+void FlyingFist::moveFist()
+{
+	switch (mDirection)
+	{
+		case UP:
+		{
+			Vector2D locationToMove = Vector2D(mLocation.getX(), mLocation.getY() - mSpeed);
+			mLocation = locationToMove;
+
+			break;
+		}
+		case DOWN:
+		{
+			Vector2D locationToMove = Vector2D(mLocation.getX(), mLocation.getY() + mSpeed);
+			mLocation = locationToMove;
+
+			break;
+		}
+		case LEFT:
+		{
+			Vector2D locationToMove = Vector2D(mLocation.getX() - mSpeed, mLocation.getY());
+			mLocation = locationToMove;
+
+			break;
+		}
+		case RIGHT:
+		{
+			Vector2D locationToMove = Vector2D(mLocation.getX() + mSpeed, mLocation.getY());
+			mLocation = locationToMove;
+
+			break;
+		}
+	}
+}
+
+bool FlyingFist::isColliding(Vector2D locationColliding)
+{
+	Game* pGame = Game::getInstance();
+
+	float currentXPos = locationColliding.getX();
+	float currentYPos = locationColliding.getY();
+
+	for (auto wall : pGame->getLevels()->getWalls())
+	{
+		if (currentXPos < wall->getX() + wall->getSize() &&
+			currentXPos + mSize > wall->getX() &&
+			currentYPos < wall->getY() + wall->getSize() &&
+			currentYPos + mSize > wall->getY())
+		{
+			//check for wall type
+			if (wall->getType() == WALL) { return true; }
+		}
+	}
+
+	return false;
+}
+
+void FlyingFist::checkEnemyCollisions(Vector2D locationColliding)
+{
+
+	Game* pGame = Game::getInstance();
+
+	float currentXPos = locationColliding.getX();
+	float currentYPos = locationColliding.getY();
+
+	for (auto enemy : pGame->getLevels()->getEnemies())
+	{
+		if (currentXPos < enemy->getX() + enemy->getSize() &&
+			currentXPos + mSize > enemy->getX() &&
+			currentYPos < enemy->getY() + enemy->getSize() &&
+			currentYPos + mSize > enemy->getY())
+		{
+			enemy->getHit();
+
+			return;
+		}
+	}
+}

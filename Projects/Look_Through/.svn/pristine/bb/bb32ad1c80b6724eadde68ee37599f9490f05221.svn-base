@@ -1,0 +1,12 @@
+#pragma once
+
+enum class ScreenType
+{
+	MAIN_GAME,
+	LOSE_SCREEN,
+	LEVEL_WIN_SCREEN,
+	GAME_WIN_SCREEN,
+	START_MENU,
+	SETTINGS,
+	LOADED_MAIN_GAME
+};

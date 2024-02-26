@@ -1,0 +1,11 @@
+#include "LoseEvent.h"
+
+LoseEvent::LoseEvent(const int& status) : GameEvent(LOSE_EVENT), mStatus(status)
+{
+	
+}
+
+LoseEvent::~LoseEvent()
+{
+
+}

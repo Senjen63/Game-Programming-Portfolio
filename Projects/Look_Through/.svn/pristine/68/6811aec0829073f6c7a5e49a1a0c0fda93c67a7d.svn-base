@@ -1,0 +1,44 @@
+#pragma once
+
+#include <allegro5/allegro.h>
+#include <allegro5/allegro_font.h>
+#include <allegro5/allegro_ttf.h>
+#include <allegro5/allegro_audio.h>
+#include <allegro5/allegro_acodec.h>
+#include <allegro5/allegro_image.h>
+#include <allegro5/allegro_primitives.h>
+
+#include <Trackable.h>
+#include <Vector2D.h>
+#include <MemoryTracker.h>
+
+#include <iostream>
+#include <cassert>
+#include <string>
+
+#include "Animation.h"
+
+using namespace std;
+
+class Unit : public Trackable
+{
+public:
+	Unit();
+	Unit(Animation* anim1, Animation* anim2, Vector2D location);
+	~Unit();
+
+	void Update(double dt);
+	Sprite* draw();
+	void setAnimation();
+	void setTimeMod(float timeMod);
+	float getLocationX();
+	float getLocationY();
+	void setShouldUpdate();
+
+private:
+	Vector2D mLocation;
+	Animation* mAnimation1;
+	Animation* mAnimation2;
+	int mCurrentAnimation;
+	bool mShouldUpdate;
+};

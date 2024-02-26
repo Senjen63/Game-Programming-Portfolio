@@ -1,0 +1,38 @@
+#pragma once
+
+#include <SDL_surface.h>
+#include <SDL_image.h>
+#include "Trackable.h"
+
+#include "Color.h"
+
+class GraphicsBuffer : public Trackable
+{
+    friend class GraphicsSystem;
+
+public:
+    GraphicsBuffer(std::string filePath);
+    GraphicsBuffer(Color color, int width, int height);
+
+    GraphicsBuffer() = delete;
+    GraphicsBuffer(GraphicsBuffer& other) = delete; // No copy 
+    GraphicsBuffer& operator=(GraphicsBuffer& other) = delete;
+
+    ~GraphicsBuffer();
+
+    /* Accessors */
+    int getWidth() const;
+    int getHeight() const;
+
+private:
+    GraphicsBuffer(SDL_Surface* pSurface);
+
+    SDL_Texture* getTexture() const { return mpTexture; };
+    void initTexture(SDL_Renderer* pRenderer);
+    void cleanUpTexture();
+
+    SDL_Surface* mpSurface;
+    SDL_Texture* mpTexture = nullptr;
+    bool mOwnsBitmap = true;
+};
+

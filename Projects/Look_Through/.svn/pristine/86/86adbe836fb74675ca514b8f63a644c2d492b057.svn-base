@@ -1,0 +1,70 @@
+#include "RandomlyMovingEnemy.h"
+
+#include "Projectile.h"
+#include "Player.h"
+
+RandomlyMovingEnemy::RandomlyMovingEnemy(std::pair<float, float>location, std::pair<float, float>scale, int health, int damage, int moveSpeed, std::string animationDataFilePath, float timeBeforeUpdate) : Enemy(location, scale, health, damage, moveSpeed, animationDataFilePath)
+{
+	mTimeToDirectionChange = timeBeforeUpdate;
+	mCurrentTime = mTimeToDirectionChange;
+}
+
+RandomlyMovingEnemy::~RandomlyMovingEnemy()
+{
+
+}
+
+void RandomlyMovingEnemy::update(float deltaTime)
+{
+	if (mCurrentTime >= mTimeToDirectionChange)
+	{
+		mCurrentTime = 0;
+		changeDirection();
+	}
+
+	else
+	{
+		mCurrentTime += deltaTime;
+	}
+
+	std::pair<float, float> currentLocation = getLocation();
+	std::pair<float, float> newLocation = std::make_pair(currentLocation.first + (mCurrentVelocity.first * (0.01 * deltaTime)), currentLocation.second + (mCurrentVelocity.second * (0.01 * deltaTime)));
+
+	std::vector<Unit*> collidedObjectsX = collision(make_pair(newLocation.first, currentLocation.second));
+	std::vector<Unit*> collidedObjectsY = collision(make_pair(currentLocation.first, newLocation.second));
+
+	for (int i = 0; i < collidedObjectsX.size(); i++)
+	{
+		if (dynamic_cast<Projectile*>(collidedObjectsX[i]) == nullptr &&
+			dynamic_cast<Player*>(collidedObjectsX[i]) == nullptr &&
+			dynamic_cast<Enemy*>(collidedObjectsX[i]) == nullptr)
+		{
+			newLocation.first = currentLocation.first;
+		}
+	}
+
+	for (int i = 0; i < collidedObjectsY.size(); i++)
+	{
+		if (dynamic_cast<Projectile*>(collidedObjectsY[i]) == nullptr &&
+			dynamic_cast<Player*>(collidedObjectsY[i]) == nullptr &&
+			dynamic_cast<Enemy*>(collidedObjectsY[i]) == nullptr)
+		{
+			newLocation.second = currentLocation.second;
+		}
+	}
+
+	updateLocation(newLocation);
+
+	Unit::update(deltaTime);
+}
+
+void RandomlyMovingEnemy::changeDirection()
+{
+	float randomAngle = rand() % 360;
+	randomAngle = randomAngle * (M_PI / 180);
+
+	float velocityX = getMoveSpeed() * sin(randomAngle);
+	float velocityY = getMoveSpeed() * cos(randomAngle);
+
+	mCurrentVelocity = make_pair(velocityX, velocityY);
+}

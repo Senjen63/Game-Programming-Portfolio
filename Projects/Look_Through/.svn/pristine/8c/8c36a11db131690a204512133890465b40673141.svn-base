@@ -1,0 +1,49 @@
+#include "BulletFiring.h"
+#include "Game.h"
+
+BulletFiring::BulletFiring(float speed, PlayerNumber playerNum) : 
+	Component(BULLET_FIRING_TYPE), mBulletSpeed(speed), mPlayerNum(playerNum)
+{}
+
+void BulletFiring::init()
+{
+	EventSystem::getInstance()->addListener((EventType)PLAYER_1_SHOOT, static_cast<EventListener*>(this));
+	EventSystem::getInstance()->addListener((EventType)PLAYER_2_SHOOT, static_cast<EventListener*>(this));
+}
+
+void BulletFiring::cleanUp()
+{
+	EventSystem::getInstance()->removeListener((EventType)PLAYER_1_SHOOT, static_cast<EventListener*>(this));
+	EventSystem::getInstance()->removeListener((EventType)PLAYER_2_SHOOT, static_cast<EventListener*>(this));
+}
+
+void BulletFiring::handleEvent(const Event& theEvent)
+{
+	bool correctPlayer = false;
+
+	switch (theEvent.getType())
+	{
+		// See PlayerMovement.cpp to understand what is happening here 
+	case PlayerEventType::PLAYER_1_SHOOT:
+		if (mPlayerNum == PlayerNumber::PLAYER_ONE) correctPlayer = true;
+		break;
+	case PlayerEventType::PLAYER_2_SHOOT:
+		if (mPlayerNum == PlayerNumber::PLAYER_TWO) correctPlayer = true;
+		break;
+	}
+
+	switch (theEvent.getType())
+	{
+	case PlayerEventType::PLAYER_2_SHOOT:
+	case PlayerEventType::PLAYER_1_SHOOT:
+		if (correctPlayer)
+		{
+			auto pBulletPool = Game::getInstance()->getBulletPool();
+			pBulletPool->makeBullet(mpParentEntity->getPosition(), mpParentEntity->getAngle(), mBulletSpeed, mPlayerNum);
+
+			// Play sound 
+			Game::getInstance()->getAudioManager()->play(SoundType::TANK_SHOOT);
+		}
+		break;
+	}
+}

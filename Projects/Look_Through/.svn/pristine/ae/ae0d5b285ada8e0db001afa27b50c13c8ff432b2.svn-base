@@ -1,0 +1,23 @@
+#pragma once
+#include "Level.h"
+
+class LevelManager : public Trackable
+{
+public:
+	LevelManager();
+	~LevelManager();
+
+	void cleanup();
+
+	void addLevel();
+	void addLevel(string message);
+	void addLevel(int wallArray[10][14], string path, string sprite);
+
+	void drawHUD(int target, Font* font);
+	void drawHUD(int target, Font* pFont, int score, float FPS, float time);
+	void drawWalls(int target, ALLEGRO_DISPLAY* backBuff, GraphicsBuffer* pBuff, int scale);
+
+private:
+	vector<Level*> mpLevels;
+	int mNumLevels;
+};

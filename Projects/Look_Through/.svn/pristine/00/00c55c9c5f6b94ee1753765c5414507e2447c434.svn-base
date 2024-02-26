@@ -1,0 +1,46 @@
+﻿#include "include/BufferManager.hpp"
+
+BufferManager::BufferManager() = default;
+
+BufferManager::~BufferManager()
+{
+    clearBuffers();
+}
+
+void BufferManager::addBuffer( const std::string & key, GraphicsBuffer * pBuffer )
+{
+    if ( !mBuffers.contains( key ) )
+    {
+        mBuffers[ key ] = pBuffer;
+    }
+}
+
+void BufferManager::clearBuffers()
+{
+    if ( mBuffers.empty() ) return;
+
+    for ( auto tmp = mBuffers.begin(); tmp != mBuffers.end(); ++tmp )
+    {
+        delete tmp->second;
+        tmp->second = nullptr;
+    }
+
+    mBuffers.clear();
+}
+
+void BufferManager::deleteBuffer( const std::string & key )
+{
+    if ( mBuffers.contains( key ) )
+    {
+        delete mBuffers[ key ];
+        mBuffers[ key ] = nullptr;
+        mBuffers.erase( key );
+    }
+}
+
+GraphicsBuffer * BufferManager::getBuffer( const std::string & key )
+{
+    if ( !mBuffers.contains(key) ) return nullptr;
+    
+    return mBuffers[ key ];
+}

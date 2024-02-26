@@ -1,0 +1,37 @@
+#pragma once
+
+#include "Trackable.h"
+#include "Animation.h"
+
+enum PowerupType
+{
+	NONE = -1,
+	FRUIT = 0,
+	SPEED_UP = 1,
+	SPEED_DOWN = 2,
+	BONUS_POINTS = 3
+};
+
+class Powerup : public Trackable
+{
+public:
+	Powerup();
+	Powerup(PowerupType type, Animation* anim, int id);
+	~Powerup();
+
+	int getX() { return mX; }
+	int getY() { return mY; }
+	int getID() { return mID; }
+	const PowerupType getType() { return mCurrentType; }
+
+	void update(float elapsedTime);
+	void draw();
+	void setNewPosition();
+private:
+	int mX;
+	int mY;
+	int mID;
+
+	PowerupType mCurrentType;
+	Animation* mAnimation;
+};

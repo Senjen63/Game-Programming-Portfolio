@@ -1,0 +1,18 @@
+//Evan Norzow, Nicolas Delbue, and Brandon Perry
+#include "Font.h"
+
+Font::Font(string path, int size)
+{
+	mSize = size;
+	mpFont = TTF_OpenFont(path.c_str(), mSize);
+}
+
+Font::~Font()
+{
+	TTF_CloseFont(mpFont);
+}
+
+float Font::getSize()
+{
+	return mSize;
+}

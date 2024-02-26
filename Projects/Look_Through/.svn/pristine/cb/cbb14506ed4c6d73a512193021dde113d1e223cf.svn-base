@@ -1,0 +1,62 @@
+#pragma once
+
+#include <PerformanceTracker.h>
+#include <MemoryTracker.h>
+#include <fstream>
+
+#include "King.h"
+#include "Queen.h"
+#include "Bishop.h"
+#include "Knight.h"
+#include "Rook.h"
+#include "Pawn.h"
+
+class Game;
+
+class PieceManager : public Trackable
+{
+private:
+	bool mInCheck = false;
+	bool mCheckMate = false;
+	Vector2D mUpperBounds = Vector2D(720, 720);
+	Vector2D mLowerBounds = Vector2D(160, 160);
+
+	King* mpKing;
+	vector<Queen*> mpQueens;
+	vector<Bishop*> mpBishops;
+	vector<Knight*> mpKnights;
+	vector<Rook*> mpRooks;
+	vector<Pawn*> mpPawns;
+
+	Unit* mSelectedPiece;
+
+public:
+	PieceManager();
+	~PieceManager();
+
+	void cleanUp();
+	void resetStartW();
+	void loadStartW(ifstream& fin);
+	void resetStartB();
+	void loadStartB(ifstream& fin);
+	void save(ofstream& fout);
+
+	void drawAll(GraphicsSystem* pGraphicsSystem, PieceManager& team, PieceManager& otherTeam);
+	bool checkSelection(Vector2D mousePos, PieceManager& team, PieceManager& otherTeam);
+	bool checkPosition(Vector2D position);
+	void checkCheck(PieceManager& team, PieceManager& otherTeam);
+	void checkMate();
+	void deletePiece(Vector2D position);
+	void movePiece(Vector2D position, Vector2D newLocation);
+	void unselect();
+	bool inBounds(Vector2D position);
+	void promote(Vector2D position);
+	void castle(Rook* pRook);
+	bool getAttackPts(Vector2D position, PieceManager& team, PieceManager& otherTeam, Vector2D& location);
+
+	Vector2D getUpperBounds() { return mUpperBounds; };
+	Vector2D getLowerBounds() { return mLowerBounds; };
+	Vector2D getKingPosition() { return mpKing->getPosition(); };
+	bool getKingFirstMove() { return mpKing->getFirstMove(); };
+	bool inCheck() { return mInCheck; };
+};

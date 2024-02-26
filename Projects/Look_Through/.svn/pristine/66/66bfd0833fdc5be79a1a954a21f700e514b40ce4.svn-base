@@ -1,0 +1,23 @@
+﻿//     -------------------------------------------------------------------------
+//     Final Project
+//         MoveTestSystem.hpp
+//     
+//             Created:
+//                 15-04-2022
+//             Author(s):
+//                 Aven Presseisen
+//     -------------------------------------------------------------------------
+
+#pragma once
+
+#include "System.hpp"
+
+class PongTestSystem final : public System
+{
+public:
+    void createQueries() override;
+    void onCreate() override;
+    void onStart() override;
+    void onUpdate() override;
+    void onStop() override;
+};

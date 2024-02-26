@@ -1,0 +1,50 @@
+#include "InputSystem.h"
+#include "Vector2D.h"
+
+InputSystem::InputSystem()
+{
+}
+
+InputSystem::~InputSystem()
+{
+	cleanUp();
+}
+
+void InputSystem::init()
+{
+	al_install_keyboard();
+	al_install_mouse();
+}
+
+void InputSystem::cleanUp()
+{
+	al_uninstall_keyboard();
+	al_uninstall_mouse();
+}
+
+bool InputSystem::getKeyState(KeyBoardKeys key)
+{
+	ALLEGRO_KEYBOARD_STATE keyState;
+	al_get_keyboard_state(&keyState);
+	return al_key_down(&keyState, key);
+}
+
+bool InputSystem::getMouseState(MouseButtons mouseButton)
+{
+	ALLEGRO_MOUSE_STATE mouseState;
+	al_get_mouse_state(&mouseState);
+	if (mouseState.buttons & mouseButton)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+Vector2D InputSystem::getMousePosition()
+{ 
+	ALLEGRO_MOUSE_STATE mouseState;
+	al_get_mouse_state(&mouseState);
+	return Vector2D(mouseState.x, mouseState.y);
+}

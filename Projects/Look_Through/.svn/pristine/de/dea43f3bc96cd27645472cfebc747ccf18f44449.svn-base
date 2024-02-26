@@ -1,0 +1,97 @@
+
+#include <iostream>
+#include <cassert>
+#include <string>
+
+#include <PerformanceTracker.h>
+#include <MemoryTracker.h>
+#include <Vector2D.h>
+#include <Timer.h>
+#include <EventSystem.h>
+
+#include "Game.h"
+#include "GameEvent.h"
+#include "MoveEvent.h"
+#include "MessageEvent.h"
+#include "InputSystem.h"
+
+
+//----------------------------------------InputSystem----------------------------------------
+
+InputSystem::InputSystem()
+{
+	mpEventSystem = nullptr;
+}
+
+InputSystem::~InputSystem()
+{
+	cleanup();
+	mpEventSystem->cleanup();
+}
+
+void InputSystem::init()
+{
+	if (!al_init())
+	{
+		throw new std::exception("cannot init Allegro!\n");
+	}
+
+	al_install_keyboard();
+	al_install_mouse();
+
+	mpEventSystem = EventSystem::getInstance();
+	mpEventSystem->init();
+
+	mpQueue = al_create_event_queue();
+	al_register_event_source(mpQueue, al_get_keyboard_event_source());
+}
+
+bool InputSystem::getKeyState(KeyBindings keyPressed)
+{
+	ALLEGRO_KEYBOARD_STATE keyState;
+	al_get_keyboard_state(&keyState);
+
+	return al_key_down(&keyState, keyPressed);
+}
+
+void InputSystem::getKeyState()
+{
+	while (!al_is_event_queue_empty(mpQueue))
+	{
+		ALLEGRO_EVENT theEvent;
+		al_get_next_event(mpQueue, &theEvent);
+
+		if (theEvent.type == ALLEGRO_EVENT_KEY_DOWN)
+		{
+			mpEventSystem->fireEvent(MoveEvent((int)theEvent.keyboard.keycode));
+		}
+	}
+}
+
+bool InputSystem::getMouseState(KeyBindings mouseButton)
+{
+	ALLEGRO_MOUSE_STATE mouseState;
+	al_get_mouse_state(&mouseState);
+
+	return al_mouse_button_down(&mouseState, mouseButton);
+}
+
+int InputSystem::getMouseX()
+{
+	ALLEGRO_MOUSE_STATE mouseState;
+	al_get_mouse_state(&mouseState);
+	return mouseState.x;
+}
+
+int InputSystem::getMouseY()
+{
+	ALLEGRO_MOUSE_STATE mouseState;
+	al_get_mouse_state(&mouseState);
+	return mouseState.y;
+}
+
+void InputSystem::cleanup()
+{
+	al_uninstall_keyboard();
+	al_uninstall_mouse();
+}

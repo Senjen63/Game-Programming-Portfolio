@@ -1,0 +1,27 @@
+#pragma once
+
+#include <allegro5/allegro.h>
+//could just have rgb nums and convert to alegro colors when needed may or may not have alegre
+class Color
+{
+public:
+	Color();
+	Color(int, int, int, int);
+	~Color();
+
+	int GetR();
+	int GetG();
+	int GetB();
+	int GetA();
+	void SetR(int);
+	void SetG(int);
+	void SetB(int);
+	void SetA(int);
+
+	void SetColor();
+	ALLEGRO_COLOR GetColor();
+
+private:
+	ALLEGRO_COLOR mColor;
+	int mR, mG, mB, mA;
+};

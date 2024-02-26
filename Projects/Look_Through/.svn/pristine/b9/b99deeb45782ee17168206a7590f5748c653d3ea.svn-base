@@ -1,0 +1,104 @@
+#include "GraphicsSystem.h"
+
+GraphicsSystem::GraphicsSystem(float displayWidth, float displayHeight)
+{
+	al_init();
+	mpDisplay = al_create_display(displayWidth, displayHeight);
+	mpDisplayBuffer = new GraphicsBuffer(al_get_backbuffer(mpDisplay));
+}
+
+GraphicsSystem::~GraphicsSystem()
+{
+	clean();
+}
+
+void GraphicsSystem::init()
+{
+	al_init_image_addon();
+	al_init_font_addon();
+	al_init_ttf_addon();
+	al_init_primitives_addon();
+}
+
+void GraphicsSystem::clean()
+{
+	//delete mpDisplayBuffer; //unsure as to why this doesn't lead to a memory leak
+	al_destroy_display(mpDisplay);
+}
+
+void GraphicsSystem::draw(float xPos, float yPos, Sprite sprite, float scaleX, float scaleY)
+{
+	// Get sprite Bitmap
+	GraphicsBuffer* pSpriteGraphicsBuffer = sprite.getGraphicsBuffer();
+	ALLEGRO_BITMAP* pSpriteBitmap = pSpriteGraphicsBuffer->mpBitmap;
+	
+	// Get sprite values
+	float spriteSourceX = sprite.getSourceLocationX();
+	float spriteSourceY = sprite.getSourceLocationY();
+	float spriteWidth = sprite.getWidth();
+	float spriteHeight = sprite.getHeight();
+
+	// Draw to the current buffer with a scaled bitmap using the info given by the sprite
+	al_draw_scaled_bitmap(pSpriteBitmap, spriteSourceX, spriteSourceY, spriteWidth, spriteHeight, xPos - (spriteWidth * scaleX / 2), yPos - (spriteHeight * scaleY / 2), spriteWidth * scaleX, spriteHeight * scaleY, 0);
+}
+
+void GraphicsSystem::draw(GraphicsBuffer* graphicsBuffer, float xPos, float yPos, Sprite sprite, float scaleX, float scaleY)
+{
+	// Get target bitmap
+	ALLEGRO_BITMAP* pTargetBitmap = graphicsBuffer->mpBitmap;
+
+	// Set target bitmap to the desired bitmap
+	al_set_target_bitmap(pTargetBitmap);
+
+	// Call the other overloaded Draw function
+	draw(xPos, yPos, sprite, scaleX, scaleY);
+
+	// Set the desired bitmap back to the backbuffer
+	al_set_target_bitmap(al_get_backbuffer(mpDisplay));
+}
+
+void GraphicsSystem::writeText(float xPos, float yPos, Font* font, Color color, std::string text)
+{
+	// Get font object
+	ALLEGRO_FONT* pFontObj = font->pmFont;
+	float fontSize = font->getFontSize();
+
+	// Get color components
+	float redVal = color.getRedValue();
+	float blueVal = color.getBlueValue();
+	float greenVal = color.getGreenValue();
+	float alphaVal = color.getAlphaValue();
+	ALLEGRO_COLOR desiredColor = al_map_rgba(redVal, greenVal, blueVal, alphaVal);
+
+	// Write text to current buffer
+	al_draw_text(pFontObj, desiredColor, xPos, yPos, ALLEGRO_ALIGN_LEFT, text.c_str());
+}
+
+void GraphicsSystem::writeText(GraphicsBuffer* graphicsBuffer, float xPos, float yPos, Font* font, Color color, std::string text)
+{
+	// Get target bitmap
+	ALLEGRO_BITMAP* pTargetBitmap = graphicsBuffer->mpBitmap;
+
+	// Set target bitmap to the desired bitmap
+	al_set_target_bitmap(pTargetBitmap);
+
+	// Call the other overloaded WriteText function
+	writeText(xPos, yPos, font, color, text);
+
+	// Set the desired bitmap back to the backbuffer
+	al_set_target_bitmap(al_get_backbuffer(mpDisplay));
+}
+
+void GraphicsSystem::saveBuffer(ALLEGRO_BITMAP* bitmap, std::string filename)
+{
+	al_save_bitmap(filename.c_str(), bitmap);
+}
+
+void GraphicsSystem::saveBuffer(GraphicsBuffer* graphicsBuffer, std::string filename)
+{
+	// Get target bitmap
+	ALLEGRO_BITMAP* pTargetBitmap = graphicsBuffer->mpBitmap;
+
+	// Save Buffer
+	al_save_bitmap(filename.c_str(), pTargetBitmap);
+}

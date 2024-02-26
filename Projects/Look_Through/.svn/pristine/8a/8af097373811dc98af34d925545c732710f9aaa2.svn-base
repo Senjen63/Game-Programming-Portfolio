@@ -1,0 +1,814 @@
+#include "Game.h"
+
+//IMPORTANT FOR SINGLETON
+Game* Game::mpGameInst = NULL;
+
+
+Game::Game()
+{
+	mpGameInst;
+
+	mpInputSystem = nullptr;
+	mpEventSystem = nullptr;
+
+	mpUnitManager = nullptr;
+	mpAnimationManager = nullptr;
+	mpGraphicsBufferManager = nullptr;
+
+	mpMenu = nullptr;
+	mpHUD = nullptr;
+	mpFont = nullptr;
+
+	mpGraphicsSystem = nullptr;
+}
+
+Game::~Game()
+{
+	cleanup();
+}
+
+void Game::createInstance()
+{
+	if (mpGameInst == NULL)
+	{
+		mpGameInst = new Game();
+	}
+}
+
+Game* Game::getInstance()
+{
+	assert(mpGameInst != nullptr);
+	return mpGameInst;
+}
+
+void Game::destroyInstance()
+{
+	delete mpGameInst;
+	mpGameInst = NULL;
+}
+
+void Game::cleanup()
+{
+	delete mpInputSystem;
+	delete mpUnitManager;
+	delete mpAnimationManager;
+	delete mpGraphicsBufferManager;
+	delete mpMenu;
+	delete mpHUD;
+	delete mpFont;
+
+	mpInputSystem = nullptr;
+	mpUnitManager = nullptr;
+	mpAnimationManager = nullptr;
+	mpGraphicsBufferManager = nullptr;
+	mpMenu = nullptr;
+	mpHUD = nullptr;
+	mpFont = nullptr;
+
+	delete mpGraphicsSystem;
+	mpGraphicsSystem = nullptr;
+
+	mpEventSystem->cleanup();
+}
+
+void Game::loadFiles()
+{
+	//dataManager.loadFile();
+}
+
+void Game::init()
+{
+
+	mpGraphicsSystem = new GraphicsSystem;
+	mpGraphicsSystem->init(SCREEN_WIDTH, SCREEN_HEIGHT);
+
+	mpFont = new Font(FONT_FILENAME, 20);
+	mpHUD = new HUD(mpFont);
+	mpMenu = new Menu(mpFont);
+
+	mpMenu->initializeMenuSystemFiles(1);
+
+	mpGraphicsBufferManager = new GraphicsBufferManager;
+	mpAnimationManager = new AnimationManager;
+	mpUnitManager = new UnitManager;
+	mpUnitManager->setScreenSize(SCREEN_WIDTH, SCREEN_HEIGHT);
+
+	mpInputSystem = new InputSystem;
+
+	mpEventSystem = EventSystem::getInstance();
+	mpEventSystem->init();
+	mpEventSystem->getInstance()->addListener((EventType)INPUT_EVENT, this);
+
+	//SPRITE LOCATION DATA
+	mDataManager.LoadingSpriteInfo(EASY_FILE);
+	mDataManager.LoadingSpriteInfo(MEDIUM_FILE);
+	mDataManager.LoadingSpriteInfo(HARD_FILE);
+	
+
+	//MAKE EDITS BASED ON LOAD FILE FUNCTION
+	//Takes in the Filename of each sound effect in .WAV format
+	mSFX.initializeSFX(mDataManager.getFile(LOAD_FILE, EAT_SOUND).c_str(),
+		mDataManager.getFile(LOAD_FILE, BABB_SOUND).c_str(),
+		mDataManager.getFile(LOAD_FILE, FRIEND_SOUND).c_str(),
+		mDataManager.getFile(LOAD_FILE, TOBB_SOUND).c_str(),
+		mDataManager.getFile(LOAD_FILE, TREE_THUNK_SOUND).c_str());
+
+	// ADD ALL THE GRAPHICS BUFFERS TO THE GRAPHICS BUFFER MANAGER
+	mpGraphicsBufferManager->createAndAddGraphicsBuffer(BACKGROUND, mDataManager.getFile(LOAD_FILE, BACKGROUND).c_str());
+	mpGraphicsBufferManager->createAndAddGraphicsBuffer(BABB, mDataManager.getFile(LOAD_FILE, BABB).c_str());
+	mpGraphicsBufferManager->createAndAddGraphicsBuffer(TREE_A, mDataManager.getFile(LOAD_FILE, TREE_A).c_str());
+	mpGraphicsBufferManager->createAndAddGraphicsBuffer(TREE_B, mDataManager.getFile(LOAD_FILE, TREE_B).c_str());
+
+	mpGraphicsBufferManager->createAndAddGraphicsBuffer(HAPPY, mDataManager.getFile(LOAD_FILE, HAPPY).c_str());
+	mpGraphicsBufferManager->createAndAddGraphicsBuffer(MEH, mDataManager.getFile(LOAD_FILE, MEH).c_str());
+	mpGraphicsBufferManager->createAndAddGraphicsBuffer(SAD, mDataManager.getFile(LOAD_FILE, SAD).c_str());
+
+	mpGraphicsBufferManager->createAndAddGraphicsBuffer(BACK, mDataManager.getFile(LOAD_FILE, BACK).c_str());
+	mpGraphicsBufferManager->createAndAddGraphicsBuffer(FRONT, mDataManager.getFile(LOAD_FILE, FRONT).c_str());
+	mpGraphicsBufferManager->createAndAddGraphicsBuffer(LEFT, mDataManager.getFile(LOAD_FILE, LEFT).c_str());
+	mpGraphicsBufferManager->createAndAddGraphicsBuffer(RIGHT, mDataManager.getFile(LOAD_FILE, RIGHT).c_str());
+
+	mpGraphicsBufferManager->createAndAddGraphicsBuffer(BACK_A, mDataManager.getFile(LOAD_FILE, BACK_A).c_str());
+	mpGraphicsBufferManager->createAndAddGraphicsBuffer(FRONT_A, mDataManager.getFile(LOAD_FILE, FRONT_A).c_str());
+	mpGraphicsBufferManager->createAndAddGraphicsBuffer(LEFT_A, mDataManager.getFile(LOAD_FILE, LEFT_A).c_str());
+	mpGraphicsBufferManager->createAndAddGraphicsBuffer(RIGHT_A, mDataManager.getFile(LOAD_FILE, RIGHT_A).c_str());
+
+
+	// ADD ALL THE ANIMATION PROTOTYPES TO ANIMATION MANAGER
+	mpAnimationManager->createAndAddAnimation(BABB, mpGraphicsBufferManager->getGraphicsBuffer(BABB), 1);
+	mpAnimationManager->createAndAddAnimation(TREE_A, mpGraphicsBufferManager->getGraphicsBuffer(TREE_A), 0);
+	mpAnimationManager->createAndAddAnimation(TREE_B, mpGraphicsBufferManager->getGraphicsBuffer(TREE_B), 0);
+
+	mpAnimationManager->createAndAddAnimation(HAPPY, mpGraphicsBufferManager->getGraphicsBuffer(HAPPY), 1);
+	mpAnimationManager->createAndAddAnimation(MEH, mpGraphicsBufferManager->getGraphicsBuffer(MEH), 1);
+	mpAnimationManager->createAndAddAnimation(SAD, mpGraphicsBufferManager->getGraphicsBuffer(SAD), 1);
+
+	mpAnimationManager->createAndAddAnimation(FRONT, mpGraphicsBufferManager->getGraphicsBuffer(FRONT), 1);
+	mpAnimationManager->createAndAddAnimation(BACK, mpGraphicsBufferManager->getGraphicsBuffer(BACK), 1);
+	mpAnimationManager->createAndAddAnimation(LEFT, mpGraphicsBufferManager->getGraphicsBuffer(LEFT), 1);
+	mpAnimationManager->createAndAddAnimation(RIGHT, mpGraphicsBufferManager->getGraphicsBuffer(RIGHT), 1);
+
+	mpAnimationManager->createAndAddAnimation(FRONT_A, mpGraphicsBufferManager->getGraphicsBuffer(FRONT_A), 1);
+	mpAnimationManager->createAndAddAnimation(BACK_A, mpGraphicsBufferManager->getGraphicsBuffer(BACK_A), 1);
+	mpAnimationManager->createAndAddAnimation(LEFT_A, mpGraphicsBufferManager->getGraphicsBuffer(LEFT_A), 1);
+	mpAnimationManager->createAndAddAnimation(RIGHT_A, mpGraphicsBufferManager->getGraphicsBuffer(RIGHT_A), 1);
+
+}
+
+void Game::updateAndDraw(float targetTime)
+{
+	mFriendManager.update(targetTime);
+	mTreeManager.update(targetTime);
+	mBabbManager.moveBabb(targetTime);
+	mTobbManager.update(targetTime);
+	
+	mFriendManager.draw(mpGraphicsSystem);
+	mTreeManager.draw(mpGraphicsSystem);
+	mBabbManager.draw(mpGraphicsSystem);
+	mTobbManager.draw(mpGraphicsSystem);
+}
+
+void Game::doLoop()
+{
+	double targetTime = 1000.0 / 60;
+
+	PerformanceTracker* pPerformanceTracker = new PerformanceTracker;
+
+	Timer timer;
+	Timer elapsedTime;
+	elapsedTime.start();
+
+	while (mContinueGame)
+	{
+		//IMPORTANT FOR HANDLE EVENT TO WORK!!!!!!
+		mpInputSystem->getKeyEvent();
+
+		//Langauge Loading
+		//******************************************************
+		if (mEnglish == true)
+		{
+			mpMenu->initializeMenuSystemFiles(1);
+		}
+		else if (mSpanish == true)
+		{
+			mpMenu->initializeMenuSystemFiles(2);
+		}
+		else if (mFrench == true)
+		{
+			mpMenu->initializeMenuSystemFiles(3);
+		}
+		//******************************************************
+
+		//Menu Choices
+		//******************************************************
+		if (mMenuDisplay && !stop)
+		{
+			stop = true;
+			mpMenu->displayMainMenu(mpGraphicsSystem);
+			mpGraphicsSystem->flip();
+		}
+		if (mOptionDisplay && !stop)
+		{
+			stop = true;
+			mpMenu->displayOptions(mpGraphicsSystem);
+			mpGraphicsSystem->flip();
+		}
+		if (mDifficultyDisplay && !stop)
+		{
+			stop = true;
+			mpMenu->displayDifficulty(mpGraphicsSystem);
+			mpGraphicsSystem->flip();
+		}
+		if (mLanguageDisplay && !stop)
+		{
+			stop = true;
+			mpMenu->displayLanguages(mpGraphicsSystem);
+			mpGraphicsSystem->flip();
+		}
+		//**********************************************************
+
+		//GAME PLAY
+		//************************************************************
+		//MEMORY GROWS TO BE TOO LARGE 1.9GB. POTENTIAL PROBLEM IS THAT PRINTED CONTENT DOES NOT DELETE THEN GET REPRINTED TO THE SCREEN
+		if(mPlayGame)
+		{
+			mFriendIndex = mFriendManager.collideWithFriend(mTobbManager.getLocation());
+			if (mBabbManager.attackTobb(mTobbManager.getLocation()))
+			{
+				mHasApple = false;
+				mTobbManager.setTobbUnit(0);
+				mTreeManager.setTree(0);
+
+				if (mSoundOn)
+					mSFX.playSoundEffect(1);
+			}
+
+			//background
+			mpGraphicsSystem->draw(mpGraphicsBufferManager->getGraphicsBuffer(BACKGROUND), SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, 1, 1);
+			
+			if (mSadFriends == 0)
+			{
+				mpHUD->winText(mpGraphicsSystem);
+				mpGraphicsSystem->flip();
+
+				timer.sleep(500.0);
+
+				if (mSoundOn)
+					mSFX.playSoundEffect(3);
+
+				timer.sleep(2000.0);
+
+				mMenuDisplay = true;
+				stop = false;
+				mPlayGame = false;
+
+				mTobbManager.cleanup();
+				mFriendManager.friendCleanup();
+				mTreeManager.cleanup();
+				mBabbManager.cleanup();
+				//mDataManager.cleanUp();
+			}
+
+			if (mSadFriends != 0)
+			{
+				mpHUD->writeFriendState(mpGraphicsSystem, mpMenu->getLevelHUDLanguage(2), mpMenu->getLevelHUDLanguage(3), mpMenu->getLevelHUDLanguage(4), mHappyFriends, mSadFriends);
+
+				mpHUD->elapsedTime(mpGraphicsSystem, (elapsedTime.getElapsedTime() / 1000), mpMenu->getLevelHUDLanguage(1));
+
+				if (mEasy)
+				{
+					mpHUD->displayLevel(mpGraphicsSystem, mpMenu->getLevelHUDLanguage(5), mpMenu->getLevelHUDLanguage(6));
+				}
+				if (mMedium)
+				{
+					mpHUD->displayLevel(mpGraphicsSystem, mpMenu->getLevelHUDLanguage(5), mpMenu->getLevelHUDLanguage(7));
+				}
+				if (mHard)
+				{
+					mpHUD->displayLevel(mpGraphicsSystem, mpMenu->getLevelHUDLanguage(5), mpMenu->getLevelHUDLanguage(8));
+				}
+				
+				updateAndDraw(targetTime);
+				mpGraphicsSystem->flip();
+			}
+			
+		}
+
+		//LOADED SAVED GAME
+		//************************************************************
+		//MEMORY GROWS TO BE TOO LARGE 1.9GB. POTENTIAL PROBLEM IS THAT PRINTED CONTENT DOES NOT DELETE THEN GET REPRINTED TO THE SCREEN
+		if (mLoadSave)
+		{
+			mFriendIndex = mFriendManager.collideWithFriend(mTobbManager.getLocation());
+			if (mBabbManager.attackTobb(mTobbManager.getLocation()))
+			{
+				mHasApple = false;
+				mTobbManager.setTobbUnit(0);
+				mTreeManager.setTree(0);
+
+				if (mSoundOn)
+					mSFX.playSoundEffect(1);
+			}
+
+			//background
+			mpGraphicsSystem->draw(mpGraphicsBufferManager->getGraphicsBuffer(BACKGROUND), SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, 1, 1);
+
+			if (mSadFriends == 0)
+			{
+				mpHUD->winText(mpGraphicsSystem);
+				mpGraphicsSystem->flip();
+
+				timer.sleep(500.0);
+
+				if (mSoundOn)
+					mSFX.playSoundEffect(3);
+
+				timer.sleep(2000.0);
+
+				mMenuDisplay = true;
+				stop = false;
+				mLoadSave = false;
+
+				mTobbManager.cleanup();
+				mFriendManager.friendCleanup();
+				mTreeManager.cleanup();
+				mBabbManager.cleanup();
+
+			}
+
+			if (mSadFriends != 0)
+			{
+				mpHUD->writeFriendState(mpGraphicsSystem, mpMenu->getLevelHUDLanguage(2), mpMenu->getLevelHUDLanguage(3), mpMenu->getLevelHUDLanguage(4), mHappyFriends, mSadFriends);
+
+				mpHUD->elapsedTime(mpGraphicsSystem, (elapsedTime.getElapsedTime() / 1000), mpMenu->getLevelHUDLanguage(1));
+
+				if (mEasy)
+				{
+					mpHUD->displayLevel(mpGraphicsSystem, mpMenu->getLevelHUDLanguage(5), mpMenu->getLevelHUDLanguage(6));
+				}
+				if (mMedium)
+				{
+					mpHUD->displayLevel(mpGraphicsSystem, mpMenu->getLevelHUDLanguage(5), mpMenu->getLevelHUDLanguage(7));
+				}
+				if (mHard)
+				{
+					mpHUD->displayLevel(mpGraphicsSystem, mpMenu->getLevelHUDLanguage(5), mpMenu->getLevelHUDLanguage(8));
+				}
+
+				updateAndDraw(targetTime);
+				mpGraphicsSystem->flip();
+			}
+		}
+	}
+
+	delete pPerformanceTracker;
+}
+
+//HANDLER
+void Game::handleEvent(const Event& event)
+{
+	if (event.getType() == INPUT_EVENT)
+	{
+		const InputEvent& inputEvent = static_cast<const InputEvent&>(event);
+
+		//MOVEMENT
+		//********************************************************
+		if (inputEvent.getKeyCode() == (int)MyKeyCode::W_KEY)
+		{
+			// MOVE UP
+			std::cout << "W Pressed" << std::endl;
+			mTobbManager.setTobbAnimation(1);
+			mTobbManager.moveTobb(0);
+
+		}
+
+		if (inputEvent.getKeyCode() == (int)MyKeyCode::A_KEY)
+		{
+			// MOVE LEFT
+			std::cout << "A Pressed" << std::endl;
+			mTobbManager.setTobbAnimation(2);
+			mTobbManager.moveTobb(3);
+
+		}
+
+		if (inputEvent.getKeyCode() == (int)MyKeyCode::S_KEY)
+		{
+			// MOVE DOWN
+			std::cout << "S Pressed" << std::endl;
+			mTobbManager.setTobbAnimation(0);
+			mTobbManager.moveTobb(1);
+
+		}
+
+		if (inputEvent.getKeyCode() == (int)MyKeyCode::D_KEY)
+		{
+			// MOVE RIGHT
+			std::cout << "D Pressed" << std::endl;
+			mTobbManager.setTobbAnimation(3);
+			mTobbManager.moveTobb(2);
+
+		}
+		//*****************************************************
+
+		if (inputEvent.getKeyCode() == (int)MyKeyCode::SHIFT)
+		{
+			// GRAB FRUIT
+			std::cout << "SHIFT Pressed" << std::endl;
+			if (mTreeManager.collideWithTree(mTobbManager.getLocation()))
+			{
+				mHasApple = true;
+				mTobbManager.setTobbUnit(1);
+				mTreeManager.setTree(1);
+
+				if (mSoundOn)
+					mSFX.playSoundEffect(4);
+			}
+		}
+
+		if (inputEvent.getKeyCode() == (int)MyKeyCode::ENTER)
+		{
+			// FEED FRIEND
+			std::cout << "Enter Pressed" << std::endl;
+			if (mHasApple && (mFriendIndex != -1))
+			{
+				mHasApple = false;
+				mTobbManager.setTobbUnit(0);
+				mTreeManager.setTree(0);
+
+				if (mFriendManager.incFriendMood(mFriendIndex))
+				{
+					mSadFriends -= 1;
+					mHappyFriends += 1;
+					mFriendIndex = -1;
+				}
+	
+				if (mSoundOn)
+					mSFX.playSoundEffect(0);
+			}
+		}
+
+		if (inputEvent.getKeyCode() == (int)MyKeyCode::ESCAPE)
+		{
+			// EXIT THE GAME AND GO BACK TO MAIN MENU
+			mContinueGame = false;
+		}
+
+		//SAVE GAME
+		//***************************************************************
+		if (inputEvent.getKeyCode() == (int)MyKeyCode::SPACE)
+		{
+			std::cout << "SPACE Pressed" << std::endl;
+
+			int NumOfFriends = 3;
+			int hardNumOfFriends = 4;
+
+			if (mEasy)
+			{
+				mDataManager.saveGame(EASY_DIF, NumOfFriends, mFriendManager);
+			}
+			if (mMedium)
+			{
+				mDataManager.saveGame(MEDIUM_DIF, NumOfFriends, mFriendManager);
+			}
+			if (mHard)
+			{
+				mDataManager.saveGame(HARD_DIF, hardNumOfFriends, mFriendManager);
+			}
+		}
+		//***************************************************************
+
+		//MENU
+		//***************************************************************
+		if (inputEvent.getKeyCode() == (int)MyKeyCode::ONE_KEY)
+		{
+			cout << "1 Pressed" << endl;
+		
+			if (mMenuDisplay)
+			{
+				mPlayGame = true;
+				mMenuDisplay = false;
+
+				mTobbManager.createAndAddUnit(mpAnimationManager->getAnimation(FRONT), mpAnimationManager->getAnimation(BACK),
+												mpAnimationManager->getAnimation(LEFT), mpAnimationManager->getAnimation(RIGHT));
+
+				mTobbManager.createAndAddUnit(mpAnimationManager->getAnimation(FRONT_A), mpAnimationManager->getAnimation(BACK_A),
+												mpAnimationManager->getAnimation(LEFT_A), mpAnimationManager->getAnimation(RIGHT_A));
+
+				mTreeManager.createAndAddUnit(mpAnimationManager->getAnimation(TREE_A), mpAnimationManager->getAnimation(TREE_B));
+				mBabbManager.createAndAddUnit(mpAnimationManager->getAnimation(BABB));
+
+				mTobbManager.setLocation(Vector2D(256, 576));
+				mTreeManager.setLocation(Vector2D(0, 384));
+				mBabbManager.setLocation(Vector2D(64, 64));
+
+				// GET THE NUMBER OF FRIENDS FROM THE LEVEL FILE
+				int numFriends = 0;
+				if (mEasy)
+				{
+					numFriends = stoi(mDataManager.getLevelFileValue(EASY_FILE, FRIEND_POS_DATA));
+					cout << "Friend Num: " << mDataManager.getLevelFileValue(EASY_FILE, FRIEND_POS_DATA) << endl;
+					//ALL FRIENDS ARE SAD, NO FRIENDS ARE HAPPY
+					mSadFriends = numFriends;
+					mHappyFriends = 0;
+				}
+				else if (mMedium)
+				{
+					numFriends = stoi(mDataManager.getLevelFileValue(MEDIUM_FILE, FRIEND_POS_DATA));
+					cout << "Friend Num: " << mDataManager.getLevelFileValue(MEDIUM_DIF, FRIEND_POS_DATA) << endl;
+					// ALL FRIENDS ARE SAD, NO FRIENDS ARE HAPPY
+					mSadFriends = numFriends;
+					mHappyFriends = 0;
+
+				}
+				else if (mHard)
+				{
+					numFriends = stoi(mDataManager.getLevelFileValue(HARD_FILE, FRIEND_POS_DATA));
+					cout << "Friend Num: " << mDataManager.getLevelFileValue(HARD_FILE, FRIEND_POS_DATA) << endl;
+					// ALL FRIENDS ARE SAD, NO FRIENDS ARE HAPPY
+					mSadFriends = numFriends;
+					mHappyFriends = 0;
+				}
+					
+
+				// FOR THE NUMBER OF FRIENDS
+				for (int i = 0; i < numFriends; i++)
+				{
+					// CREATE THE NUMBER OF FRIENDS
+					mFriendManager.createAndAddUnit(mpAnimationManager->getAnimation(HAPPY), 
+													mpAnimationManager->getAnimation(MEH),
+													mpAnimationManager->getAnimation(SAD));
+
+					// DEPENDING ON THE LEVEL, SET THE LOCATION FOR EACH UNIT
+					if (mEasy)
+					{
+						mFriendManager.setLocation(mDataManager.getLocationFriend(EASY_DIF, i + 3), i);
+						mFriendManager.setFriendMood(i, mDataManager.getFriendMood(EASY_DIF));
+						cout << "Friend " << i << " Loc: " << mDataManager.getLocationFriend(EASY_DIF, i + 3) << endl;
+					}	
+					if (mMedium)
+					{
+						mFriendManager.setLocation(mDataManager.getLocationFriend(MEDIUM_DIF, i + 3), i);
+						mFriendManager.setFriendMood(i, mDataManager.getFriendMood(MEDIUM_DIF));
+						cout << "Friend " << i << " Loc: " << mDataManager.getLocationFriend(MEDIUM_DIF, i + 3) << endl;
+					}
+					if (mHard)
+					{
+						mFriendManager.setLocation(mDataManager.getLocationFriend(HARD_DIF, i + 3), i);
+						mFriendManager.setFriendMood(i, mDataManager.getFriendMood(HARD_DIF));
+						cout << "Friend " << i << " Loc: " << mDataManager.getLocationFriend(HARD_DIF, i + 3) << endl;
+					}
+
+				}
+
+				if (mSoundOn)
+					mSFX.playSoundEffect(2);
+			}
+
+			if (mOptionDisplay)
+			{
+				mMenuDisplay = true;
+				stop = false;
+
+				mOptionDisplay = false;
+			}
+
+			if (mDifficultyDisplay)
+			{
+				mOptionDisplay = true;
+				stop = false;
+
+				mDifficultyDisplay = false;
+			}
+
+			if (mLanguageDisplay)
+			{
+				mLanguageDisplay = false;
+				stop = false;
+
+				mOptionDisplay = true;
+			}
+		}
+
+		if (inputEvent.getKeyCode() == (int)MyKeyCode::TWO_KEY)
+		{
+			cout << "2 Pressed" << endl;
+
+			//LEVEL DIFFICULTY
+			if (mDifficultyDisplay)
+			{
+				cout << "Easy Level" << endl;
+				mEasy = true;
+				mMedium = false;
+				mHard = false;
+			
+			}
+
+			if (mOptionDisplay)
+			{
+				mDifficultyDisplay = true;
+				stop = false;
+
+				mOptionDisplay = false;
+			}
+
+			if (mMenuDisplay)
+			{
+				mOptionDisplay = true;
+				stop = false;
+
+				mMenuDisplay = false;
+			}
+
+			if (mLanguageDisplay)
+			{
+				cout << "English" << endl;
+				mEnglish = true;
+				mSpanish = false;
+				mFrench = false;
+
+				stop = false;
+			}
+		}
+
+		if (inputEvent.getKeyCode() == (int)MyKeyCode::THREE_KEY)
+		{
+			cout << "3 Pressed" << endl;
+
+			//LOAD SAVE
+			//**************************************************************
+			if (mMenuDisplay)
+			{
+				mLoadSave = true;
+				mMenuDisplay = false;
+
+				string level;
+				ifstream input;
+				input.open(SAVED_DATA);
+				input >> level;
+				input.close();
+
+				if (level == EASY_DIF)
+				{
+					mEasy = true;
+					mMedium = false;
+					mHard = false;
+				}
+				else if (level == MEDIUM_DIF)
+				{
+					mMedium = true;
+					mEasy = false;
+					mHard = false;
+				}
+				else if (level == HARD_DIF)
+				{
+					mHard = true;
+					mMedium = false;
+					mEasy = false;
+				}
+
+				mTobbManager.createAndAddUnit(mpAnimationManager->getAnimation(FRONT), mpAnimationManager->getAnimation(BACK),
+					mpAnimationManager->getAnimation(LEFT), mpAnimationManager->getAnimation(RIGHT));
+
+				mTobbManager.createAndAddUnit(mpAnimationManager->getAnimation(FRONT_A), mpAnimationManager->getAnimation(BACK_A),
+					mpAnimationManager->getAnimation(LEFT_A), mpAnimationManager->getAnimation(RIGHT_A));
+
+				mTreeManager.createAndAddUnit(mpAnimationManager->getAnimation(TREE_A), mpAnimationManager->getAnimation(TREE_B));
+				mBabbManager.createAndAddUnit(mpAnimationManager->getAnimation(BABB));
+
+				mTobbManager.setLocation(Vector2D(256, 576));
+				mTreeManager.setLocation(Vector2D(0, 384));
+				mBabbManager.setLocation(Vector2D(64, 64));
+
+				int numFriends = 0;
+				
+				numFriends = stoi(mDataManager.getLevelFileValue(SAVED_DATA, FRIEND_POS_DATA));
+				cout << "Friend Num: " << numFriends << endl;
+				//ALL FRIENDS ARE SAD, NO FRIENDS ARE HAPPY
+
+				mSadFriends = numFriends;
+				mHappyFriends = 0;
+			
+				// FOR THE NUMBER OF FRIENDS
+				for (int i = 0; i < numFriends; i++)
+				{
+					// CREATE THE NUMBER OF FRIENDS
+					mFriendManager.createAndAddUnit(mpAnimationManager->getAnimation(HAPPY),
+													mpAnimationManager->getAnimation(MEH),
+													mpAnimationManager->getAnimation(SAD));
+
+					// DEPENDING ON THE LEVEL, SET THE LOCATION FOR EACH UNIT
+
+					mFriendManager.setLocation(mDataManager.getSavedLocation(i), i);
+					cout << "Friend " << i << " Loc: " << mDataManager.getSavedLocation(i) << endl;	
+					
+					mFriendManager.setFriendMood(i, mDataManager.getFriendSavedMood(i));
+
+					//if a friend is happy
+					if (mDataManager.getFriendSavedMood(i) == 0)
+					{
+						mSadFriends--;
+						mHappyFriends++;
+					}
+				}
+
+				if (mSoundOn)
+					mSFX.playSoundEffect(3);
+			}
+			//**************************************************************
+			
+			//LEVEL DIFFICULTY
+			if (mDifficultyDisplay)
+			{
+				cout << "Medium Level" << endl;
+				mEasy = false;
+				mMedium = true;
+				mHard = false;
+
+			}
+
+			//Sound Effects
+			if (mOptionDisplay)
+			{
+				press++;
+
+				if (press % 2 != 0)
+				{
+					cout << "Sound Off" << endl;
+					mSoundOn = false;
+					stop = false;
+					mpMenu->setSound(mSoundOn);
+				}
+				if (press % 2 == 0)
+				{
+					cout << "Sound On" << endl;
+					mSoundOn = true;
+					stop = false;
+					mpMenu->setSound(mSoundOn);
+				}
+				if (press == 6)
+				{
+					press = 0;
+				}
+			}
+
+			//Spanish
+			if (mLanguageDisplay)
+			{
+				cout << "Spanish" << endl;
+				mEnglish = false;
+				mSpanish = true;
+				mFrench = false;
+
+				stop = false;
+			}
+
+		}
+
+		if (inputEvent.getKeyCode() == (int)MyKeyCode::FOUR_KEY)
+		{
+			cout << "4 Pressed" << endl;
+
+			//LEVEL DIFFICULTY
+			if (mDifficultyDisplay)
+			{
+				cout << "Hard Level" << endl;
+				mEasy = false;
+				mMedium = false;
+				mHard = true;
+
+			}
+			if (mLanguageDisplay)
+			{
+				cout << "French" << endl;
+				mEnglish = false;
+				mSpanish = false;
+				mFrench = true;
+
+				stop = false;
+			}
+			if (mOptionDisplay)
+			{
+				mLanguageDisplay = true;
+				stop = false;
+
+				mOptionDisplay = false;
+			}
+			if (mMenuDisplay)
+			{
+				mContinueGame = false;
+			}
+		}
+
+		if (inputEvent.getKeyCode() == (int)MyKeyCode::FIVE_KEY)
+		{
+			cout << "5 Pressed" << endl;
+			// mSadFriends -= 1;
+		}
+
+		if (inputEvent.getKeyCode() == (int)MyKeyCode::SIX_KEY)
+		{
+			cout << "6 Pressed" << endl;
+			cout << "This is friend #" << mFriendIndex << endl;
+		}
+	}
+}

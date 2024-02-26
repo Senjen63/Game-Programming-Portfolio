@@ -1,0 +1,92 @@
+#include "Unit.h"
+#include "Game.h"
+Unit::Unit(Animation* one, Animation* two, Vector2D loc)
+{
+    mCurrentAnim = one;
+    mAltAnim = two;
+    mLocation = loc;
+
+    mIsPaused = false;
+}
+
+Unit::Unit()
+{
+    mCurrentAnim = new Animation(Game::getInstance()->getGraphicsBuffer(SMURFS_FILENAME), NUM_FRAMES, STARTING_TIMING, true);
+    mAltAnim = new Animation(Game::getInstance()->getGraphicsBuffer(DEAN_SMURFS_FILENAME), NUM_FRAMES, STARTING_TIMING, true);
+    mLocation = Vector2D();
+}
+
+Unit::~Unit()
+{
+    delete mCurrentAnim;
+    delete mAltAnim;
+
+    mCurrentAnim = nullptr;
+    mAltAnim = nullptr;
+
+}
+
+float Unit::getTiming()
+{
+    return mCurrentAnim->getFrameRate();
+}
+
+void Unit::Update()
+{
+    if (!mIsPaused)
+    {
+        mCurrentAnim->Update();
+        mAltAnim->Update();
+    }
+
+}
+
+void Unit::Draw(GraphicsSystem* pGSys, Vector2D location, float xPos, float yPos)
+{
+    pGSys->Draw(location, getSprite(), xPos, yPos);
+}
+
+int Unit::getCurrentSprite()
+{
+    return mCurrentAnim->getSpriteCount();
+}
+
+Sprite* Unit::getSprite()
+{
+    return mCurrentAnim->getCurrentSprite();
+}
+
+
+void Unit::swapAnim()
+{
+    Animation* temp = mCurrentAnim;
+    mCurrentAnim = mAltAnim;
+    mAltAnim = temp;
+}
+
+void Unit::changeFrameRate(float speed)
+{
+    mCurrentAnim->changeSpeed(speed);
+    mAltAnim->changeSpeed(speed);
+}
+
+void Unit::setPosition(Vector2D position)
+{
+    mLocation = position;
+}
+void Unit::setPaused()
+{
+    if (mIsPaused)
+    {
+        mIsPaused = false;
+    }
+    else
+    {
+        mIsPaused = true;
+    }
+       
+}
+Vector2D Unit::getLocation()
+{
+    return mLocation;
+}

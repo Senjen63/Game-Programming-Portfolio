@@ -1,0 +1,64 @@
+#include "InputSystem.h"
+
+bool InputSystem::init()
+{
+	if (!al_install_keyboard())
+	{
+		std::cout << "Issues with keyboard." << std::endl;
+		system("pause");
+		return false;
+	}
+	if (!al_install_mouse())
+	{
+		std::cout << "Issues with mouse." << std::endl;
+		system("pause");
+		return false;
+	}
+	return true;
+}
+
+void InputSystem::cleanUp()
+{
+	al_uninstall_mouse();
+	al_uninstall_keyboard();
+}
+
+bool InputSystem::getKeyState(int which_key)
+{
+	ALLEGRO_KEYBOARD_STATE keyState;
+	al_get_keyboard_state(&keyState);
+	return al_key_down(&keyState, which_key);
+}
+
+int InputSystem::getMouseState()
+{
+	ALLEGRO_MOUSE_STATE mouseState;
+	al_get_mouse_state(&mouseState);
+	if (mouseState.buttons & 1)
+	{
+		//left mouse button down
+		return 1;
+	}
+	if (mouseState.buttons & 2)
+	{
+		//right mouse button down
+		return 2;
+	}
+	if (mouseState.buttons & 4)
+	{
+		//middle mouse button down
+		return 4;
+	}
+	else
+	{
+		return 0;
+	}
+}
+
+Vector2D InputSystem::getMousePosition()
+{
+	ALLEGRO_MOUSE_STATE mouseState;
+	al_get_mouse_state(&mouseState);
+	Vector2D mousePos(mouseState.x, mouseState.y);
+	return mousePos;
+}

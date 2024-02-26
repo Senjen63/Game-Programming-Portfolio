@@ -1,0 +1,10 @@
+#pragma once
+
+#include "Unit.h"
+#include "CollisionLayer.h"
+
+class ICollisionHandler : public Trackable // Interface for classes that want to receive info about a collision
+{
+public:
+	virtual void onCollision(Unit* unit, CollisionLayer layer) = 0;
+};

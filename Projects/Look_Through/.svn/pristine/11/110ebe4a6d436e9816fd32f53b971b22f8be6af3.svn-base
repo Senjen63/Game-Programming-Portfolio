@@ -1,0 +1,23 @@
+#include "GraphicsSystem.h"
+#include <iostream>
+#include <cassert>
+#include <string>
+#include <PerformanceTracker.h>
+#include <MemoryTracker.h>
+#include <Vector2D.h>
+#include <stdlib.h>
+#include <time.h>
+#include <Timer.h>
+#include "game.h"
+using namespace std;
+int main()
+{		
+	gpGame = new Game();
+	gpGame->init();
+	gpGame->doLoop();
+	gpGame->clean();
+	
+	MemoryTracker::getInstance()->reportAllocations(cout);
+	system("pause");
+	return 0;
+}

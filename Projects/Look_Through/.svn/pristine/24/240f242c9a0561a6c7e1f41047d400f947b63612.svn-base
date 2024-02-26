@@ -1,0 +1,10 @@
+#include "MoveEvent.h"
+
+MoveEvent::MoveEvent(int keycode) : GameEvent(MOVE_EVENT)
+{
+	mKeycode = keycode;
+}
+
+MoveEvent::~MoveEvent()
+{
+}

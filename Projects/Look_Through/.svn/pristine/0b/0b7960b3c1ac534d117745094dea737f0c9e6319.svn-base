@@ -1,0 +1,39 @@
+﻿#include "InputTranslator.h"
+
+#include "EventSystems/EventSystemAven.h"
+
+void InputTranslator::init()
+{
+    EventSystemAven::getInstance().addListener( EventType::Input, this );
+}
+
+void InputTranslator::handleEvent( const EventAven & event )
+{
+    EventSystemAven & eventSystem = EventSystemAven::getInstance();
+
+    if ( event.mInput.mKeyState.mClickType == KeyState::RELEASED ) return;
+
+    switch ( event.mInput.mKeyState.mKey )
+    {
+    case Key::UP_ARROW:
+        eventSystem.invokeEvent( EventAven( EventType::MoveUp ) );
+        break;
+    case Key::RIGHT_ARROW:
+        eventSystem.invokeEvent( EventAven{ EventType::MoveRight } );
+        break;
+    case Key::DOWN_ARROW:
+        eventSystem.invokeEvent( EventAven{ EventType::MoveDown } );
+        break;
+    case Key::LEFT_ARROW:
+        eventSystem.invokeEvent( EventAven{ EventType::MoveLeft } );
+        break;
+    case Key::SPACE:
+        eventSystem.invokeEvent( EventAven{ EventType::MenuSelect } );
+        break;
+    case Key::ESCAPE:
+        eventSystem.invokeEvent( EventAven{ EventType::MenuOpen } );
+        break;
+    default:
+        break;
+    }
+}

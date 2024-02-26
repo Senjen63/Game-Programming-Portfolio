@@ -1,0 +1,26 @@
+﻿//     -------------------------------------------------------------------------
+//     Final Project
+//         AsteroidsSystem.hpp
+//     
+//             Created:
+//                 06-05-2022
+//             Author(s):
+//                 Aven Presseisen
+//     -------------------------------------------------------------------------
+
+#pragma once
+#include "System.hpp"
+
+struct Asteroid final : Component
+{
+};
+
+class AsteroidsSystem final : public System
+{
+    std::vector< Entity > mAsteroids;
+    float mNextAsteroid{};
+public:
+    void createQueries() override;
+    void onCreate() override;
+    void onUpdate() override;
+};

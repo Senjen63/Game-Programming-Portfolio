@@ -1,0 +1,44 @@
+/*
+Author: David Silverman
+Class: GPR-250-01
+Assignment: Assignment 1
+Certification of Authenticity:
+I certify that this assignment is entirely my own work.
+ */
+
+
+#pragma once
+#include <allegro5/allegro.h>
+#include <allegro5/allegro_font.h>
+#include <allegro5/allegro_ttf.h>
+#include <allegro5/allegro_audio.h>
+#include <allegro5/allegro_acodec.h>
+#include <allegro5/allegro_image.h>
+#include <allegro5/allegro_primitives.h>
+#include <Trackable.h>
+#include <Vector2D.h>
+
+class Sprite : public Trackable
+{
+	    friend class GraphicsBuffer;
+		friend class GraphicsSystem;
+		GraphicsBuffer* mpSprite;
+		Vector2D mLoc;
+		int mWidth;
+		int mHeight;
+		const Vector2D DEFAULT_LOCATION = Vector2D(0, 0);
+		const int DEFAULT_WIDTH = 300;
+		const int DEFAULT_HEIGHT = 300;
+	public:
+		Sprite();
+		~Sprite();
+		Sprite(Vector2D loca, int hi, int wi, GraphicsBuffer* spri);
+		void setLoc(Vector2D loca);
+		void setHeight(int hi);
+		void setWidth(int wi);
+		void setSprite(GraphicsBuffer* spri);
+		Vector2D getLoc();
+		int getHeight();
+		int getWidth();
+		GraphicsBuffer* getSprite();
+};

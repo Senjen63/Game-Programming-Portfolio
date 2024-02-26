@@ -1,0 +1,20 @@
+#pragma once
+
+#include "GameEvent.h"
+#include "Unit.h"
+
+class MoveEvent : public GameEvent
+{
+public:
+	MoveEvent(std::pair<float, float>position, Unit* object, std::string mObjectTag);
+	virtual ~MoveEvent();
+
+	std::pair<float, float> getPosition() const { return mPosition; }
+	Unit* getObject() const { return mpObject; }
+	std::string getObjectTag() const { return mObjectTag; }
+
+private:
+	const std::pair<float, float> mPosition;
+	Unit* mpObject;
+	const std::string mObjectTag;
+};

@@ -1,0 +1,43 @@
+#include "GraphicsBufferManager.h"
+#include "GraphicsBuffer.h"
+
+GraphicsBufferManager::~GraphicsBufferManager()
+{
+    clearGraphicsBuffer();
+}
+
+GraphicsBuffer* GraphicsBufferManager::getGraphicsBuffer(string key)
+{
+    return mpGraphicsBufferMap.at(key);
+}
+
+void GraphicsBufferManager::addGraphicsBuffer(GraphicsBuffer* buffer, string key)
+{
+    mpGraphicsBufferMap.insert(pair<string, GraphicsBuffer*>(key, buffer));
+}
+
+void GraphicsBufferManager::addGraphicsBuffer(string fileName, string key)
+{
+    mpGraphicsBufferMap.insert(pair<string, GraphicsBuffer*>(key, new GraphicsBuffer(fileName)));
+}
+
+void GraphicsBufferManager::addGraphicsBuffer(int width, int height, string key)
+{
+    mpGraphicsBufferMap.insert(pair<string, GraphicsBuffer*>(key, new GraphicsBuffer(width,height)));
+}
+
+void GraphicsBufferManager::deleteGraphicsBuffer(string key)
+{
+    delete mpGraphicsBufferMap.at(key);
+    mpGraphicsBufferMap.erase(key);
+}
+
+void GraphicsBufferManager::clearGraphicsBuffer()
+{
+    for each (auto iter in mpGraphicsBufferMap)
+    {
+        delete iter.second;
+    }
+
+    mpGraphicsBufferMap.clear();
+}

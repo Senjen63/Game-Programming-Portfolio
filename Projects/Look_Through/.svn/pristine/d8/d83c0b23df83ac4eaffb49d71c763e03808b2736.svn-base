@@ -1,0 +1,170 @@
+#include "UnitManager.h"
+#include "Game.h"
+
+UnitManager::UnitManager()
+{
+
+}
+
+
+UnitManager::~UnitManager()
+{
+    cleanup();
+}
+
+
+void UnitManager::cleanup()
+{
+    clearAll();
+}
+
+
+Unit* UnitManager::getLastUnit()
+{
+    if (mpUnits.size() > 0)
+    {
+        return mpUnits.back();
+    }
+    
+    return nullptr;
+}
+
+
+int UnitManager::getUnitCount()
+{
+    return mpUnits.size();
+}
+
+
+Unit* UnitManager::addUnit(Vector2D pos, int fps)
+{
+    Unit* newUnit = new Unit(pos, fps);
+
+    mpUnits.push_back(newUnit);
+
+    return getLastUnit();
+}
+
+
+void UnitManager::deleteUnit(Unit* unit)
+{
+    delete unit;
+
+    vector<Unit*>::iterator target = find(mpUnits.begin(), mpUnits.end(), unit);
+    mpUnits.erase(target);
+}
+
+
+void UnitManager::deleteUnits(vector<Unit*>* units)
+{
+    for (unsigned int i = 0; i < units->size(); i++)
+    {
+        deleteUnit((*units)[i]);
+    }
+}
+
+
+void UnitManager::deleteUnitsAtPosition(Vector2D mousePosition)
+{
+    for (int i = mpUnits.size() - 1; i >= 0; i--) //delete last unit first
+    {
+        if (mpUnits[i]->isMouseOver(mousePosition))
+        {
+            delete mpUnits[i];
+
+            mpUnits.erase(mpUnits.begin() + i);
+        }
+    }
+}
+
+
+void UnitManager::clearAll()
+{
+    for (unsigned int i = 0; i < mpUnits.size(); i++)
+    {
+        delete mpUnits[i];
+    }
+
+    mpUnits.clear();
+}
+
+
+void UnitManager::nextAnimationForLastUnit()
+{
+    int nextIndex = getLastUnit()->getCurrentIndex() + 1;
+
+    if (nextIndex >= getLastUnit()->getAnimCount())
+    {
+        nextIndex = 0;
+    }
+
+    getLastUnit()->setAnimation(nextIndex);
+}
+
+
+void UnitManager::setAllPlay(bool play)
+{
+    for (unsigned int i = 0; i < mpUnits.size(); i++)
+    {
+        Unit* current = mpUnits[i];
+        current->togglePlay(play);
+    }
+}
+
+
+void UnitManager::switchAllPlay()
+{
+    for (unsigned int i = 0; i < mpUnits.size(); i++)
+    {
+        Unit* current = mpUnits[i];
+        current->togglePlay(!current->getIsPlaying());
+    }
+}
+
+
+void UnitManager::updateAll(float elapsedTime)
+{
+    for (unsigned int i = 0; i < mpUnits.size(); i++)
+    {
+        mpUnits[i]->update(elapsedTime);
+    }
+}
+
+
+void UnitManager::drawAll()
+{
+    for (unsigned int i = 0; i < mpUnits.size(); i++)
+    {
+        mpUnits[i]->draw();
+    }
+}
+
+
+Unit* UnitManager::clickedUnit(Vector2D mousePos)
+{
+    for (int i = mpUnits.size() - 1; i >= 0; i--) //delete last unit first
+    {
+        if (mpUnits[i]->isMouseOver(mousePos))
+        {
+            return mpUnits[i];
+        }
+    }
+
+    return nullptr;
+}
+
+
+vector<Unit*>* UnitManager::clickedUnits(Vector2D mousePos)
+{
+    vector<Unit*>* units = new vector<Unit*>;
+
+    for (unsigned int i = 0; i < mpUnits.size(); i++)
+    {
+        if (mpUnits[i]->isMouseOver(mousePos))
+        {
+            units->push_back(mpUnits[i]);
+        }
+    }
+
+    return units;
+}

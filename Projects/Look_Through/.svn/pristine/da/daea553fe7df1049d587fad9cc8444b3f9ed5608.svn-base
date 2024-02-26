@@ -1,0 +1,19 @@
+#pragma once
+
+#include "UnitManager.h"
+
+const int TREE_SIZE = 128;
+
+class TreeManager : public UnitManager
+{
+private:
+	int mCurrentAnimation = 0;
+
+public:
+	TreeManager();
+	~TreeManager();
+
+	void draw(GraphicsSystem* graphSys);
+	void setTree(int index);
+	bool collideWithTree(Vector2D loc);
+};

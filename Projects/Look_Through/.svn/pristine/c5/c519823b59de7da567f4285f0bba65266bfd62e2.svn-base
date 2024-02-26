@@ -1,0 +1,55 @@
+﻿//     -------------------------------------------------------------------------
+//     Final Project
+//         Archetype.hpp
+//     
+//             Created:
+//                 08-04-2022
+//             Author(s):
+//                 Aven Presseisen
+//             Notes:
+//                 This took forever.
+//     -------------------------------------------------------------------------
+
+#pragma once
+
+#include <memory>
+#include <unordered_map>
+#include <vector>
+
+#include "Component.hpp"
+#include "ComponentManager.hpp"
+
+using Entity = uint32_t;
+
+class Archetype
+{
+    friend class EntityManager;
+
+    ComponentMask mComponentMask;
+
+    // entity id to index in archetype chunk
+    std::unordered_map< Entity, std::vector< std::shared_ptr< Component > > > mEntities;
+    // each top vector is an entity "chunk" ( chunks are not implemented as they should be so this doesn't save anything )
+public:
+    explicit Archetype( ComponentMask mask );
+    ~Archetype();
+
+    void addEntity( Entity entityID, const std::vector< Component * > & components );
+    std::vector< std::shared_ptr< Component > > & getComponentsFromEntity( Entity entity );
+
+    template < typename T >
+    std::shared_ptr< T > getComponentFromEntity( Entity entity );
+};
+
+template < typename T >
+std::shared_ptr< T > Archetype::getComponentFromEntity( const Entity entity )
+{
+    for ( auto & comp : mEntities[ entity ] )
+    {
+        if ( auto & decomp = *comp; typeid( decomp ) == typeid( T ) )
+        {
+            return std::dynamic_pointer_cast< T >( comp );
+        }
+    }
+    return nullptr;
+}

@@ -1,0 +1,32 @@
+#pragma once
+
+#include "Trackable.h"
+#include "GraphicsBuffer.h"
+#include "GraphicsSystem.h"
+#include "Font.h"
+#include "Color.h"
+#include <string>
+
+class HUD : public Trackable
+{
+	public:
+		HUD(Font* font);
+		~HUD();
+
+		void startText(GraphicsSystem* mpGraphics, GraphicsBuffer* buffer);
+		void gamePlayText(GraphicsSystem* mpGraphics, GraphicsBuffer* buffer, double time, double fps, int levelNum, int score);
+
+		void endText(GraphicsSystem* mpGraphics, GraphicsBuffer* buffer);
+		void winText(GraphicsSystem* mpGraphics, GraphicsBuffer* buffer);
+
+	private:
+		Font* mpFont;
+		Color mpWhite = Color(255, 255, 255, 255);
+		Color mClearColor = Color(68, 236, 108, 255);
+		
+		std::string mStartingText;
+		
+		std::string mOver;
+		std::string mAgain;
+		std::string mWin;
+};

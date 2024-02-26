@@ -1,0 +1,27 @@
+#pragma once
+
+#include <allegro5/allegro.h>
+#include <allegro5/allegro_font.h>
+#include <allegro5/allegro_ttf.h>
+#include <allegro5/allegro_image.h>
+#include <allegro5/allegro_primitives.h>
+
+#include "Color.h"
+#include <string>
+
+class GraphicsBuffer
+{
+public:
+	friend class GraphicsSystem;
+
+	GraphicsBuffer(std::string imageFilePath); // Image constructor
+	GraphicsBuffer(float bitmapScaleX, float bitmapScaleY, float leftBound, float topBound, float rightBound, float bottomBound, Color color); // Rectangle constructor
+	GraphicsBuffer(ALLEGRO_BITMAP* bitmap); // bitmap constructor
+	~GraphicsBuffer();
+
+	float getBitmapHeight() { return al_get_bitmap_height(mpBitmap); }
+	float getBitmapWidth() { return al_get_bitmap_width(mpBitmap); }
+
+private:
+	ALLEGRO_BITMAP* mpBitmap;
+};

@@ -1,0 +1,33 @@
+#pragma once
+
+#include "Component.h"
+#include <Vector2D.h>
+#include "PlayerInfo.h"
+
+const std::string BULLET_MOVE_TYPE = "BulletMove";
+
+class BulletMove : public Component
+{
+public:
+    BulletMove(const Vector2D& dir, float speed);
+
+    void setDirection(const Vector2D& dir) { mDirection = dir; }
+    Vector2D getDirection() const { return mDirection; }
+
+    void setSpeed(float speed) { mSpeed = speed; }
+    float getSpeed() const { return mSpeed; }
+
+    void setPlayer(PlayerNumber playerNum) { mShootingPlayer = playerNum; }
+    PlayerNumber getPlayer() const { return mShootingPlayer; }
+
+    virtual void init() {};
+    virtual void cleanUp() {};
+    virtual void Update(double deltaTime);
+    virtual void handleEvent(const Event& theEvent) {};
+
+private:
+    PlayerNumber mShootingPlayer = PlayerNumber::INVALID;
+
+    Vector2D mDirection;
+    float mSpeed;
+};

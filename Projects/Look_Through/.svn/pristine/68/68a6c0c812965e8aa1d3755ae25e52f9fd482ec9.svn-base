@@ -1,0 +1,17 @@
+#include "Game.h"
+#include "MemoryTracker.h"
+
+using namespace std;
+
+int main()
+{
+	Game* game = Game::createInstance();
+	game->initInstance();
+	game->doLoop();
+	game->destroyInstance();
+
+	MemoryTracker::getInstance()->reportAllocations(cout);
+	system("pause");
+	
+	return 0;
+}

@@ -1,0 +1,43 @@
+#pragma once
+#include <vector>
+#include <Trackable.h>
+
+#include "Entity.h"
+#include "GraphicsSystem.h"
+
+
+class EntityManager : public Trackable
+{
+public:
+	//constructors, destructor
+	EntityManager();
+	~EntityManager();
+
+	void init();
+	void cleanUp();
+
+	//calling functions on all Entities in vector
+	void UpdateAll(double deltaTime);
+	void DrawAll(GraphicsSystem* pDisplay);
+	void RotateAll(float add);
+
+
+	//adding/removing from vector
+	void addEntity(Entity* x) { mpEntityVector.push_back(x); };
+	void removeEntity(Entity* destroy);
+	void clearAllEntities();
+	Entity* makeEntity(Animation* anim, Vector2D pos, float scale);
+
+	void reserveEntityMemory(size_t numEntities);
+
+	//get/set functions
+	Entity* getEntity(int index) { return mpEntityVector[index]; };
+	int getSize() { return mpEntityVector.size(); };
+
+private:
+	bool mIsInitted = false;
+
+	std::vector<Entity*> mpEntityVector;
+
+};
+

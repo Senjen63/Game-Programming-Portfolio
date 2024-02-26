@@ -1,0 +1,63 @@
+#pragma once
+
+#include <allegro5/allegro.h>
+#include <allegro5/allegro_font.h>
+#include <allegro5/allegro_ttf.h>
+#include <allegro5/allegro_audio.h>
+#include <allegro5/allegro_acodec.h>
+#include <allegro5/allegro_image.h>
+#include <allegro5/allegro_primitives.h>
+
+#include <Trackable.h>
+#include <Vector2D.h>
+#include "EventSystem.h"
+#include "InputEvent.h"
+
+
+enum class MyKeyCode
+{
+	F_KEY = ALLEGRO_KEY_F,
+	S_KEY = ALLEGRO_KEY_S,
+
+	ENT_KEY = ALLEGRO_KEY_ENTER,
+	ESC_KEY = ALLEGRO_KEY_ESCAPE,
+	SPACE = ALLEGRO_KEY_SPACE,
+
+	LEFT_ARROW = ALLEGRO_KEY_LEFT,
+	RIGHT_ARROW = ALLEGRO_KEY_RIGHT,
+	UP_ARROW = ALLEGRO_KEY_UP,
+	DOWN_ARROW = ALLEGRO_KEY_DOWN
+};
+
+enum class Mouse
+{
+	LEFT = 1,
+	RIGHT = 2
+};
+
+class InputSystem : public Trackable
+{
+	private:
+		ALLEGRO_KEYBOARD_STATE mState;
+		ALLEGRO_MOUSE_STATE mMouseState;
+
+		ALLEGRO_EVENT_QUEUE* mpQueue; //smash keyboard shows order of when things will happen
+		EventSystem* mpEventSystem;
+
+	public:
+		InputSystem();
+		~InputSystem();
+
+		void update();
+		void init();
+		void cleanup();
+
+		void getKeyEvent();
+
+		bool getKeyState(MyKeyCode key);
+
+		bool isMouseDown(Mouse m);
+		Vector2D getMouseState();
+	
+
+};

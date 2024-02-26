@@ -1,0 +1,19 @@
+#pragma once
+#include <SDL.h>
+#include "EventSystem.h"
+#include "InputEvent.h"
+#include "MouseEvent.h"
+
+class InputSystem
+{
+public:
+	InputSystem();
+	~InputSystem() {};
+
+	//void init();
+	//void clean();
+
+	void update();
+
+private:
+};

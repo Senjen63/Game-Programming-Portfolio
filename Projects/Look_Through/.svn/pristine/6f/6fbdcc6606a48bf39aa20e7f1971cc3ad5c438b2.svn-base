@@ -1,0 +1,23 @@
+tree
+treePos 0 384
+
+tobb
+256 576
+
+babb
+1
+babbPos1 192 64
+
+friendPos
+4
+friendPos1 64 192
+friendPos2 192 256
+friendPos3 448 448
+friendPos4 512 320
+
+friendState
+4
+friendState1 sad
+friendState2 sad
+friendState3 sad
+friendState4 sad

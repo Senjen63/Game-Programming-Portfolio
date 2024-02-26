@@ -1,0 +1,28 @@
+#pragma once
+#include <allegro5/allegro.h>
+#include <allegro5/allegro_font.h>
+#include <allegro5/allegro_ttf.h>
+#include <allegro5/allegro_audio.h>
+#include <allegro5/allegro_acodec.h>
+#include <allegro5/allegro_image.h>
+#include <allegro5/allegro_primitives.h>
+
+#include <PerformanceTracker.h>
+#include <MemoryTracker.h>
+
+class Color : public Trackable
+{
+public:
+	friend class GraphicsBuffer;
+	friend class GraphicsSystem;
+	friend class HUD;
+
+	Color();
+	Color(int red, int green, int blue);
+	~Color();
+	
+private:
+	ALLEGRO_COLOR getColor();
+
+	ALLEGRO_COLOR mColor;
+};

@@ -1,0 +1,15 @@
+#pragma once
+
+#include "GameEvent.h"
+
+class CollideEvent : public GameEvent
+{
+public:
+	CollideEvent(const string& col);
+	~CollideEvent();
+
+	string getCollision() const { return mCollider; };
+
+private:
+	string mCollider;
+};

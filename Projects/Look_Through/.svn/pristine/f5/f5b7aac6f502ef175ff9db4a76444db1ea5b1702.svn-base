@@ -1,0 +1,13 @@
+spwnRngSz 100
+minSpwnX 350
+minSpwnY 250
+numSpwnOrb 10
+numSpdOrb 15
+numSpwnUp 5.0
+numSpdUp 0.5
+easyMod 1.0
+easyChance 100
+medMod 1.5
+medChance 75
+hardMod 2.0
+hardChance 50

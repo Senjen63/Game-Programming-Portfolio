@@ -1,0 +1,33 @@
+#pragma once
+
+#include <Trackable.h>
+#include <Vector2D.h>
+
+#include <iostream>
+#include <cassert>
+#include <string>
+#include <fstream>
+
+using namespace std;
+
+class AnimationManager : public Trackable
+{
+public:
+	AnimationManager();
+	~AnimationManager();
+
+	int getNumSprites();
+	bool getShouldLoop();
+	int getSpriteHeight();
+	int getSpriteWidth();
+	int getSpriteSize();
+	float getTimePerFrame();
+
+private:
+	float timePerFrame;
+	bool shouldLoop;
+	int numSprites;
+	int spriteWidth;
+	int spriteHeight;
+	int spriteSize;
+};

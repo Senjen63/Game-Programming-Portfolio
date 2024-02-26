@@ -1,0 +1,21 @@
+#pragma once
+#include "Sprite.h"
+
+#include <Trackable.h>
+
+#include <vector>
+
+class AnimationFrames : public Trackable
+{
+    private:
+        vector<Sprite> mFrameSprites; //stores a sprite sheet split into different frames
+
+    public:
+        AnimationFrames(GraphicsBuffer* frames);
+        ~AnimationFrames();
+
+        unsigned int getFrameTotal() const; //returns count of frames, mFrameSprites.size()
+        Sprite getSprite(unsigned int index); //returns sprite at specified index
+
+        void addSprite(Sprite newSprite); //adds sprite to the end of mFrameSprites
+};

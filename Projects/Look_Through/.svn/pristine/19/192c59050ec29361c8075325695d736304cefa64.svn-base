@@ -1,0 +1,120 @@
+#include "Animation.h"
+
+/// <summary>
+/// Placeholder constructor.
+/// </summary>
+Animation::Animation() = default;
+
+/// <summary>
+/// Clears all sprites in animation from memory.
+/// </summary>
+Animation::~Animation()
+{
+    mSprites.clear();
+}
+
+/// <summary>
+/// Adds given sprite pointer to animation sprite list.
+/// </summary>
+/// <param name="pSprite">: Sprite ptr to add to list.</param>
+void Animation::addSprite( Sprite * pSprite )
+{
+    mSprites.push_back( pSprite );
+}
+
+/// <summary>
+/// Cleans all of the sprites from memory.
+/// </summary>
+void Animation::cleanup() const
+{
+    for ( int i = static_cast< int >(mSprites.size()) - 1; i >= 0; --i )
+    {
+        delete mSprites[ i ];
+    }
+}
+
+/// <summary>
+/// Creates an animation with the given graphics buffer using pixel offsets and sprite information.
+/// </summary>
+/// <param name="pBuffer">: GraphicsBuffer ptr to use as spritesheet.</param>
+/// <param name="pixelStride">: Stride from sprite to sprite.</param>
+/// <param name="spritesPerRow">: Amount of sprites per row.</param>
+/// <param name="totalSprites">: Total sprites in buffer.</param>
+/// <param name="looping">: Is the animation looping.</param>
+void Animation::createAnimation( GraphicsBuffer * pBuffer, const int pixelStride, const int spritesPerRow, const int totalSprites, const bool looping )
+{
+    mIsLooping = looping;
+    for ( int i = 0, row = 0, col = 0; i < totalSprites; i++ )
+    {
+        addSprite( new Sprite{ *pBuffer, col * pixelStride, row * pixelStride, pixelStride, pixelStride } );
+
+        if ( ++col % spritesPerRow == 0 )
+        {
+            col = 0;
+            row++;
+        }
+    }
+}
+
+/// <summary>
+/// Gets the sprite currently active on the animation.
+/// </summary>
+/// <returns>Active sprite.</returns>
+Sprite * Animation::getCurrentSprite() const
+{
+    return mSprites[ mCurrentIndex ];
+}
+
+/// <summary>
+/// Slows down the animation a considerable amount.
+/// </summary>
+void Animation::slowDown()
+{
+    mFramesPerSpriteChange *= 2;
+}
+
+/// <summary>
+/// Speeds up the animation a considerable amount.
+/// </summary>
+void Animation::speedUp()
+{
+    if ( mFramesPerSpriteChange <= 1 )
+    {
+        return;
+    }
+    mFramesPerSpriteChange /= 2;
+}
+
+/// <summary>
+/// Pauses animation.
+/// </summary>
+void Animation::pauseAnimation()
+{
+    const int tmp = mOldFramesPerSpriteChange;
+    mOldFramesPerSpriteChange = mFramesPerSpriteChange;
+    mFramesPerSpriteChange = tmp;
+}
+
+/// <summary>
+/// Updates the animation frame index.
+/// </summary>
+void Animation::updateSprite()
+{
+    mCurrentFramesTotal++;
+    if ( mFramesPerSpriteChange == 0 )
+    {
+        return;
+    }
+
+    mCurrentIndex = mCurrentFramesTotal / mFramesPerSpriteChange;
+    if ( mCurrentIndex >= static_cast< int >(mSprites.size()) )
+    {
+        if ( mIsLooping )
+        {
+            mCurrentIndex = 0;
+            mCurrentFramesTotal = 0;
+            return;
+        }
+        mCurrentIndex--;
+    }
+}

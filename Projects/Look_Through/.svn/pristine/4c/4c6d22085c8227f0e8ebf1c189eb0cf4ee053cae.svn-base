@@ -1,0 +1,132 @@
+#include "SnakeManager.h"
+
+SnakeManager::SnakeManager()
+{
+	mSpeed = 0;
+	mTimePerFrame = 1000.0 / 3;
+	mTimeLeft = 0;
+}
+
+SnakeManager::~SnakeManager()
+{
+	cleanup();
+}
+
+
+void SnakeManager::cleanup()
+{
+
+	for (int i = 0; i < mpSnakeUnits.size(); i++)
+	{
+		Unit* pUnit = mpSnakeUnits[i];
+		delete pUnit;
+	}
+
+	mpSnakeUnits.clear();
+}
+
+void SnakeManager::createAndAddUnit(Animation anim)
+{
+	// create unit
+	Unit* pUnit = new Unit(anim, mPrevPos);
+
+	// manage the unit
+	mpSnakeUnits.push_back(pUnit);
+
+}
+
+void SnakeManager::draw(GraphicsSystem* graphSys)
+{
+	for (int i = 0; i < mpSnakeUnits.size(); i++)
+	{
+		Unit* pUnit = mpSnakeUnits[i];
+		pUnit->draw(graphSys);
+	}
+	
+}
+
+Unit* SnakeManager::getUnit()
+{
+	if (mpSnakeUnits.size() > 0)
+		return mpSnakeUnits[(mpSnakeUnits.size() - 1)];
+	else
+		return nullptr;
+}
+
+Unit* SnakeManager::getUnit(int index)
+{
+	if (mpSnakeUnits.size() > 0)
+		return mpSnakeUnits[index];
+	else
+		return nullptr;
+}
+
+void SnakeManager::update(int dir, double dt)
+{
+	// animates the snake movement
+	mTimeLeft -= dt;
+	if (mTimeLeft <= 0)
+	{
+		Unit* pUnit;
+		Unit* pNext;
+
+		mPrevPos = mpSnakeUnits[mpSnakeUnits.size() - 1]->getLocation();
+
+		if (mpSnakeUnits.size() > 1)
+		{
+			for (int i = mpSnakeUnits.size() - 1; i > 0; --i)
+			{
+				pUnit = mpSnakeUnits[i];
+				pNext = mpSnakeUnits[i - 1];
+				pUnit->updateSnake(dt, pNext->getLocation());
+			}
+			
+		}
+
+		pUnit = mpSnakeUnits[0];
+		Vector2D currLoc = pUnit->getLocation();
+
+		// moves the head unit last
+		switch (dir)
+		{
+			case 1: pUnit->updateSnake(dt, currLoc + mUp); break;
+			case 2: pUnit->updateSnake(dt, currLoc + mDown); break;
+			case 3: pUnit->updateSnake(dt, currLoc + mRight); break;
+			case 4: pUnit->updateSnake(dt, currLoc + mLeft); break;
+		}
+
+		mTimeLeft = mTimePerFrame + mTimeLeft;
+	}
+}
+
+void SnakeManager::changeSpeed(int speed)
+{
+	mSpeed += speed;
+
+	if(mSpeed > 0)
+		mTimePerFrame = 1000.0 / mSpeed;
+}
+
+bool SnakeManager::collideWithSelf()
+{
+	Unit* pHead = mpSnakeUnits[0];
+
+	for (int i = 1; i < mpSnakeUnits.size(); i++)
+	{
+		Unit* pUnit = mpSnakeUnits[i];
+
+		// get location of the snake sprite
+		Vector2D aniPos = pUnit->getLocation();
+
+		// get location of the snake head
+		Vector2D headPos = pHead->getLocation();
+
+		// if the head is within the bounds, send event
+		if (aniPos == headPos)
+		{
+			return true;
+		}
+	}
+
+	return false;
+}

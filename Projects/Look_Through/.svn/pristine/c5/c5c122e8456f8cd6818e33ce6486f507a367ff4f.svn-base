@@ -1,0 +1,56 @@
+#include "Background.h"
+#include "Game.h"
+#include "GraphicsBufferManager.h"
+#include "GraphicsBuffer.h"
+#include "GraphicsSystem.h"
+#include "Color.h"
+#include <fstream>
+
+
+Background::Background(int width, int height)
+{
+	Game* pGame = Game::getInstance();
+
+	const string BACKGROUND_KEY = "background";
+
+	int red = 0;
+	int green = 0;
+	int blue = 0;
+	int a = 0;
+
+	ifstream input("./data_files/background.txt");
+	if (input.good())
+	{
+		string key;
+
+		while (!input.eof())
+		{
+			input >> key;
+			if (key == "background_color")
+			{
+				input >> red >> green >> blue >> a;
+				this->mpBackgroundColor = new Color(red, green, blue, a);
+			}
+		}
+	}
+	input.close();
+
+	pGame->getGraphicsBufferManager()->createAndAddGraphicsBuffer(BACKGROUND_KEY, width, height);
+	pGame->getGraphicsSystem()->setColor(pGame->getGraphicsBufferManager()->getGraphicsBuffer(BACKGROUND_KEY), mpBackgroundColor);
+
+	this->mpBackground = new Sprite(pGame->getGraphicsBufferManager()->getGraphicsBuffer(BACKGROUND_KEY)->getBitmapWidth(), pGame->getGraphicsBufferManager()->getGraphicsBuffer(BACKGROUND_KEY)->getBitmapHeight(), Vector2D(0, 0), pGame->getGraphicsBufferManager()->getGraphicsBuffer(BACKGROUND_KEY));
+}
+
+Background::~Background()
+{
+	delete mpBackgroundColor;
+	delete mpBackground;
+}
+
+void Background::drawBackground()
+{
+	Game* pGame = Game::getInstance();
+
+	pGame->getGraphicsSystem()->draw(Vector2D(0, 0), *mpBackground);
+
+}

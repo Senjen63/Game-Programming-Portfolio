@@ -1,0 +1,162 @@
+#include "PhysicsComponent.h"
+#include "Unit.h"
+#include "Game.h"
+
+PhysicsComponent::PhysicsComponent()
+{
+    mVelocity = Vector2D(0.0f, 0.0f);
+    mAcceleration = Vector2D(0.0f, 0.0f);
+    mpSelf = nullptr;
+}
+
+
+PhysicsComponent::PhysicsComponent(float timePerFrame)
+{
+    mVelocity = Vector2D(0.0f, 0.0f);
+    mAcceleration = Vector2D(0.0f, 0.0f);
+    //mTimePerFrame = timePerFrame;
+    mpSelf = nullptr;
+}
+
+
+PhysicsComponent::PhysicsComponent(Unit* self, float timePerFrame, bool active, bool gravity)
+{
+    mVelocity = Vector2D(0.0f, 0.0f);
+    mAcceleration = Vector2D(0.0f, 0.0f);
+    mpSelf = self;
+    //mTimePerFrame = timePerFrame;
+    mActive = active;
+    mGravityActive = gravity;
+}
+
+
+PhysicsComponent::~PhysicsComponent()
+{
+    cleanup();
+}
+
+
+void PhysicsComponent::init()
+{
+    mpUnitManager = Game::getGame()->getUnitManager();
+}
+
+
+void PhysicsComponent::cleanup()
+{
+
+}
+
+
+void PhysicsComponent::update(float timeElapsed)
+{
+    if (mActive)
+    {
+        mLastJumpCount = mJumpCount; //log current jump count
+
+        if (mGravityActive /*&& !mStopGravTemporary*/)
+        {
+            mAcceleration = GRAVITY_CONST;
+
+            //player can't fall faster than terminal velocity, limiting fall speed may help eliminate weird bugs
+            if (mVelocity.getY() > TERMINAL_VELOCITY)
+            {
+                mVelocity.setY(TERMINAL_VELOCITY);
+            }
+        }
+        else
+        {
+            //here in case gravity is set to inactive during runtime, stops Y acceleration which should only be gravity for our purposes
+            mAcceleration = Vector2D(mAcceleration.getX(), 0.0f);
+        }
+
+        mVelocity += mAcceleration * (timeElapsed / 1000); //velocity equation with acceleration, v = v0 + at but done incrementally
+
+        // Vavg = (s1 - s0) / (t1 - t0) ~ s1 = (Vavg * timeElapsed) + s0
+        //1000 converts miliseconds to seconds
+        Vector2D newPos = mpSelf->getPosition() + (mVelocity * (timeElapsed / 1000));
+        Vector2D newXPos = Vector2D(newPos.getX(), mpSelf->getPosition().getY()); //X component of new position
+        Vector2D newYPos = Vector2D(mpSelf->getPosition().getX(), newPos.getY()); //Y component of new position
+
+        //ignores physics collisions if physics collider inactive
+        if (mpSelf->getPhysicsColliderActive())
+        {
+            //don't need to check movement collision if not moving
+            if (newPos != mpSelf->getPosition())
+            {
+                //check for future collisions where the player is about to be in X direction
+                vector<Unit*> futureXCollisions = mpUnitManager->checkCollisionInArea(newXPos,
+                    mpSelf->getDimensions().getX(), mpSelf->getDimensions().getY(), mpSelf, true); //check next area, ignore self in calculations
+
+                //if there are future collisions, stop player
+                if (futureXCollisions.size() > 0)
+                {
+                    for (Unit* pUnit : futureXCollisions)
+                    {
+                        //other unit
+                        float unitWidthRadius = pUnit->getDimensions().getX() / 2; //distance from center to upper or lower bound
+
+                        float unitRightBound = pUnit->getPosition().getX() + unitWidthRadius;   //position of center right bound
+                        float unitLeftBound = pUnit->getPosition().getX() - unitWidthRadius;    //positon of center left bound
+
+                        //player
+                        float playerWidthRadius = pUnit->getDimensions().getX() / 2;
+
+                        float playerRightBound = newPos.getX() + playerWidthRadius;
+                        float playerLeftBound = newPos.getX() - playerWidthRadius;
+
+                        if (unitRightBound > playerLeftBound && mVelocity.getX() < 0) //player is right of unit moving left
+                        {
+                            //mVelocity.setX(0.0f);
+                            newPos.setX(pUnit->getPosition().getX() + unitWidthRadius + playerWidthRadius); //puts player seamlessly against unit in X axis
+                        }
+                        else if (unitLeftBound < playerRightBound && mVelocity.getX() > 0) //player is left of unit and moving right
+                        {
+                            //mVelocity.setX(0.0f);
+                            newPos.setX(pUnit->getPosition().getX() - unitWidthRadius - playerWidthRadius); //puts player seamlessly against unit in X axis
+                        }
+                    }
+                }
+
+                //check for future collisions where the player is about to be in Y direction
+                vector<Unit*> futureYCollisions = mpUnitManager->checkCollisionInArea(newYPos,
+                    mpSelf->getDimensions().getX(), mpSelf->getDimensions().getY(), mpSelf, true); //check next area, ignore self in calculations
+
+                //if there are future collisions, stop player
+                if (futureYCollisions.size() > 0)
+                {
+                    for (Unit* pUnit : futureYCollisions)
+                    {
+                        //other unit
+                        float unitHeightRadius = pUnit->getDimensions().getY() / 2; //distance from center to left or right bound
+
+                        float unitUpperBound = pUnit->getPosition().getY() - unitHeightRadius;  //position of center upper bound
+                        float unitLowerBound = pUnit->getPosition().getY() + unitHeightRadius;  //position of center lower bound
+
+                        //player
+                        float playerHeightRadius = pUnit->getDimensions().getY() / 2;
+
+                        float playerUpperBound = newPos.getY() - playerHeightRadius;
+                        float playerLowerBound = newPos.getY() + playerHeightRadius;
+
+                        if (unitUpperBound < playerLowerBound && mVelocity.getY() > 0) //player is above unit moving down, remember, top Left is (0,0) so higher Y means lower on the screen
+                        {
+                            mJumpCount = MAX_JUMPS; //reset jump count on floor collision
+
+                            mAcceleration.setY(0.0f);
+                            mVelocity.setY(0.0f);
+                            newPos.setY(pUnit->getPosition().getY() - unitHeightRadius - playerHeightRadius); //puts player seemlessly against unit in Y axis
+                        }
+                        else if (unitLowerBound > playerUpperBound && mVelocity.getY() < 0) //player is below unit moving up
+                        {
+                            mAcceleration.setY(0.0f);
+                            mVelocity.setY(0.0f);
+                            newPos.setY(pUnit->getPosition().getY() + unitHeightRadius + playerHeightRadius); //puts player seemlessly against unit in Y axis
+                        }
+                    }
+                }
+            }
+        }
+        mpSelf->setPosition(newPos);
+    }
+}

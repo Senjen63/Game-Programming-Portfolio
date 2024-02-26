@@ -1,0 +1,23 @@
+#pragma once
+#include "Unit.h"
+
+class UnitManager;
+
+class ArrowUnit : public Unit
+{
+    private:
+        UnitManager* mpUnitManager;
+
+        float mMaxLife = 0.0f; //max time before despawning
+        Vector2D mVelocity;
+
+    public:
+        ArrowUnit(Vector2D pos, AnimationFrames* anim, int fps, bool loopAnimation, int type, bool physicsActive,
+            bool gravityActive, bool physicsColliderActive, float maxLife, Vector2D velocity);
+        ~ArrowUnit();
+
+        void init();
+        void cleanup();
+
+        void update(float timeElapsed) override;
+};

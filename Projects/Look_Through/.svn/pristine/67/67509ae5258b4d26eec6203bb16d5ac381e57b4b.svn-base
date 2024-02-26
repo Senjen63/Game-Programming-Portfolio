@@ -1,0 +1,73 @@
+#include "LevelManager.h"
+#include "Game.h"
+
+LevelManager::LevelManager()
+{
+	mCurLevel = 0;
+}
+
+LevelManager::~LevelManager()
+{
+	cleanup();
+}
+
+void LevelManager::init()
+{
+	createLevel("StartScreen.txt");
+	createLevel("Level1.txt");
+	createLevel("Level2.txt");
+	createLevel("Level3.txt");
+	//createLevel("EndScreen.txt");
+}
+
+void LevelManager::cleanup()
+{
+	for (int i = 0; i < mLevels.size(); i++)
+	{
+		delete mLevels[i];
+	}
+	mLevels.clear();
+}
+
+void LevelManager::createLevel( string fileName )
+{
+	Level* level = new Level( fileName );
+	mLevels.push_back(level);
+}
+
+void LevelManager::loadLevel( int levnum )
+{
+	mLevels[levnum]->init();
+	Game::getGame()->getEventSys()->addListener((EventType)CHANGE_DIR_EVENT, mLevels[levnum]->getSnake());
+	Game::getGame()->getEventSys()->addListener((EventType)CHANGE_SPEED_EVENT, mLevels[levnum]->getSnake());
+}
+
+void LevelManager::deleteLevel()
+{
+
+}
+
+void LevelManager::increaseLevel()
+{
+	Game::getGame()->getUnitMan()->clearAll();
+	Game::getGame()->getHUD()->init();
+	if (mCurLevel >= mLevels.size() - 1)
+	{
+		mCurLevel = 0;
+	}
+	else
+		mCurLevel++;
+	loadLevel(mCurLevel);
+}
+
+void LevelManager::setCurLevelNum(int levnum)
+{
+	mCurLevel = levnum;
+	loadLevel(levnum);
+}
+
+Level* LevelManager::getCurLevel()
+{
+	return mLevels[mCurLevel];
+}
+

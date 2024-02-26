@@ -1,0 +1,25 @@
+#pragma once
+#include "UnitManager.h"
+#include <unordered_map>
+
+const int FRIEND_SIZE = 64;
+typedef int FriendKey;
+
+class FriendManager : public UnitManager
+{
+public:
+	FriendManager();
+	~FriendManager();
+
+	void friendCleanup();
+
+	int collideWithFriend(Vector2D loc);
+	void setFriendMood(int index, int mood);
+	bool incFriendMood(int index);
+
+	int getFriendMood(int index);
+
+private:
+	int mCurrentAnimation = 0;
+	std::unordered_map <FriendKey, int> mMap;
+};

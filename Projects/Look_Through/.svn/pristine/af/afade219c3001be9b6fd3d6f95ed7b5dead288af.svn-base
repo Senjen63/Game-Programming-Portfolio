@@ -1,0 +1,19 @@
+#pragma once
+#include "Unit.h"
+#include "Font.h"
+
+class Button : public Unit
+{
+public:
+	Button(std::pair<float, float>location, std::pair<float, float>scale, string text, string animationDataFilePath);
+	virtual ~Button();
+
+	virtual void draw(GraphicsSystem* currentGraphicsSystem);
+
+	virtual void onClicked();
+
+private:
+	string mDisplayText = "Button";
+	GraphicsBuffer* mpTextBuffer = nullptr;
+	Font* mpFont;
+};

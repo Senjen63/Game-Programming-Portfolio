@@ -1,0 +1,108 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Resource Files\Assignment1">
+      <UniqueIdentifier>{084a1884-529e-44bc-8618-d518ba87f514}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\Assignment2">
+      <UniqueIdentifier>{9f7ef4bc-adef-4ff5-b0f1-e799de4ab4ce}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\Assignment1\Source">
+      <UniqueIdentifier>{31c8c649-6a30-468a-8d88-4d1f04b8a0ee}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\Assignment2\Source">
+      <UniqueIdentifier>{88d946cc-5a07-4d1a-bfac-fcfd146bde55}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\Assignment1\Headers">
+      <UniqueIdentifier>{6b1314c1-a335-4c71-9677-197a33ecc80a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\Assignment2\Headers">
+      <UniqueIdentifier>{b2ce23c8-755b-47e4-be3e-fdcb0430869a}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Include\Color.h">
+      <Filter>Resource Files\Assignment1\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\Font.h">
+      <Filter>Resource Files\Assignment1\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\GraphicsSystem.h">
+      <Filter>Resource Files\Assignment1\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\Sprite.h">
+      <Filter>Resource Files\Assignment1\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\InputSystem.h">
+      <Filter>Resource Files\Assignment2\Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\Game.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\GraphicsBuffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\Entity.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\EntityManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\GraphicsBufferManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\Animation.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Color.cpp">
+      <Filter>Resource Files\Assignment1\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Font.cpp">
+      <Filter>Resource Files\Assignment1\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="GraphicsSystem.cpp">
+      <Filter>Resource Files\Assignment1\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Sprite.cpp">
+      <Filter>Resource Files\Assignment1\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="InputSystem.cpp">
+      <Filter>Resource Files\Assignment2\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Game.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="EntityManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GraphicsBufferManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GraphicsBuffer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Entity.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Animation.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

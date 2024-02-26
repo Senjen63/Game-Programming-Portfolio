@@ -1,0 +1,20 @@
+#include "Bullet.h"
+
+Bullet::Bullet(Entity* pEntity) : 
+    mpEntity(pEntity)
+{}
+
+Bullet::~Bullet()
+{
+    cleanUp();
+}
+
+void Bullet::setInUse(bool inUse)
+{
+    mInUse = inUse;
+
+    if (inUse)
+        mTimer.start();
+    else
+        mTimer.stop();
+}

@@ -1,0 +1,32 @@
+#pragma once
+
+#include <PerformanceTracker.h>
+#include <MemoryTracker.h>
+
+#include "Vector2D.h"
+
+#include "Font.h"
+#include "Color.h"
+#include "GraphicsSystem.h"
+
+class HUD : public Trackable
+{
+public:
+	HUD();
+	HUD(Font* font, Color color);
+	~HUD();
+	void cleanUp();
+	void display(GraphicsSystem* system, int points, float frames, int time);
+	void display(GraphicsSystem* system, int points, float frames, int time, string pointsText, string framesText, string timerText);
+	void operator=(const HUD& aHud);
+
+private:
+	Font* mpFont;
+	Color mColor;
+	const string POINTS_TEXT = "Points: ";
+	const string FRAMES_TEXT = "FPS: ";
+	const string TIMER_TEXT = "Timer: ";
+	const Vector2D POINTS_LOCATION = Vector2D(0, 0);
+	const Vector2D TIMER_LOCATION = Vector2D(300, 0);
+	const Vector2D FRAMES_LOCATION = Vector2D(500, 0);
+};

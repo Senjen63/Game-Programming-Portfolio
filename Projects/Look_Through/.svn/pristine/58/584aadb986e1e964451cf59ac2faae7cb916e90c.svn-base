@@ -1,0 +1,23 @@
+#pragma once
+
+#include "LevelEvent.h"
+
+enum ScoreOperation
+{
+	ADD_SCORE,
+	SET_SCORE
+};
+
+class ScoreEvent : public LevelEvent
+{
+public:
+	ScoreEvent(int score, ScoreOperation operation);
+	~ScoreEvent();
+
+	const int getScore() const { return mScore; };
+	const ScoreOperation getOperation() const { return mOperation; }
+
+private:
+	int mScore;
+	ScoreOperation mOperation;
+};

@@ -1,0 +1,14 @@
+//BP
+#include "Sprite.h"
+
+Sprite::Sprite( GraphicsBuffer* pBitmap, Vector2D sourcePos, Vector2D widthHeight )
+{
+    mpBmp = pBitmap;
+    mSourcePosition = sourcePos;
+    mHeightAndWidth = widthHeight;
+}
+
+Sprite::~Sprite()
+{
+    //Unused Destructor
+}

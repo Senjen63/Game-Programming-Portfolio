@@ -1,0 +1,25 @@
+#pragma once
+#include <vector>
+
+#include "Unit.h"
+
+class UnitManager
+{
+public:
+	UnitManager();
+	~UnitManager();
+
+	void addUnit(std::pair<float, float>location, Animation* currentAnimation);
+	void removeUnit(int unitIndex); // Removes unit based on given index
+	void UnitManager::removeUnit(Unit* targetUnit); // Removes unit based on given pointer
+	void removeAllUnits();
+	Unit* getUnit(int unitIndex); // Gets unit based on given index
+	Unit* getUnit(std::pair<float, float>location); // Gets unit based on given position
+	int getTotalUnits() { return unitVector.size(); }
+
+	void updateAll(float deltaTime);
+	void drawAll(GraphicsSystem* currentGraphicsSystem);
+
+private:
+	std::vector<Unit*> unitVector; // Should I be using a vector of pointers?
+};

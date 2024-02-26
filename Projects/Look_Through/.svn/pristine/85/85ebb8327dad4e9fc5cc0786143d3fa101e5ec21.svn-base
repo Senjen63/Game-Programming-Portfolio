@@ -1,0 +1,9 @@
+#include "MoveEvent.h"
+
+MoveEvent::MoveEvent(const int &key):GameEvent(MOVE_EVENT), mKey(key)
+{
+}
+
+MoveEvent::~MoveEvent()
+{
+}

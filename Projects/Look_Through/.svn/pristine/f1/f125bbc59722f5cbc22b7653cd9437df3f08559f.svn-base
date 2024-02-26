@@ -1,0 +1,23 @@
+#pragma once
+
+#include <unordered_map>
+#include "GraphicsBuffer.h"
+
+typedef std::string GBKey;
+
+class GraphicsBufferManager : public Trackable
+{
+public:
+	GraphicsBufferManager() {};
+	~GraphicsBufferManager();
+
+	void cleanup();
+
+	void createAndAddGraphicsBuffer(const GBKey& key, const char* picture);
+	void destroyGraphicsBuffer(const GBKey& key);
+
+	GraphicsBuffer* getGraphicsBuffer(const GBKey& key) const;
+
+private:
+	std::unordered_map <GBKey, GraphicsBuffer*> mMap;
+};

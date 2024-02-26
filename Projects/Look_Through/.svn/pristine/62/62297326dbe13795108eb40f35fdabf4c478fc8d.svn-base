@@ -1,0 +1,39 @@
+#pragma once
+
+#include <allegro5/allegro_image.h>
+#include <allegro5/allegro_primitives.h>
+#include "Color.h"
+#include <Trackable.h>
+#include <string>
+#include <Vector2D.h>
+
+using namespace std;
+
+class GraphicsBuffer : public Trackable
+{
+    friend class GraphicsSystem;
+
+    public:
+        GraphicsBuffer( string, Vector2D);
+        GraphicsBuffer( GraphicsBuffer*);
+        GraphicsBuffer( Color, int, int);
+        ~GraphicsBuffer();
+
+        int getWidth();
+        int getHeight();
+        Vector2D getSections();
+
+        void setSections(Vector2D);
+
+        bool isBitmapNull();
+
+        void clearToColor(Color);
+private:
+    bool mOwnsBuffer = false;
+
+    ALLEGRO_BITMAP* mpBuffer;
+
+    Vector2D mSections = Vector2D(1, 1);
+
+    GraphicsBuffer(ALLEGRO_BITMAP*);
+};

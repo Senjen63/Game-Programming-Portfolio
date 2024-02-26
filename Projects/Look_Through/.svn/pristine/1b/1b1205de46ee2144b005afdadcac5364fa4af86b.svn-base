@@ -1,0 +1,37 @@
+#pragma once
+#include <queue>
+
+#include <Vector2D.h>
+
+#include "Unit.h"
+
+class SnakeUnit : public Unit
+{
+    private:
+        Vector2D mDirection;
+
+        vector<pair<Vector2D, int>*> mTurnList; //stores direction and how many frames until segment executes action
+
+        float mStartTimer = 0;
+        float mTurnTimer = 0;
+
+    public:
+        SnakeUnit();
+        SnakeUnit(Vector2D direction, Vector2D postion, int fps);
+        SnakeUnit(Vector2D direction, Vector2D pos, GraphicsBuffer* newBuffer, int fps, float startTime, float turnTime, bool loopAnimation, int type);
+        ~SnakeUnit();
+
+        Vector2D getDirection();
+        float getStartTimer() { return mStartTimer; }
+        int getTurnListSize() { return mTurnList.size(); }
+
+        void setDirection(Vector2D direction);
+        void setTurnTimer(float turnTimer) { mTurnTimer = turnTimer; }
+
+        void updateUnit(float timeElapsed) override;
+        void updateTurns();
+        void addTurn(Vector2D direction, int index);
+        void syncTurnList(SnakeUnit* tail, int offset);
+        void speedChange(float newSpeed, float oldSpeed, float newTurnTimer);
+
+};

@@ -1,0 +1,20 @@
+#pragma once
+
+#include <SFML/Audio/SoundBuffer.hpp>
+#include <SFML/Audio/Sound.hpp>
+#include "SoundBufferManager.h"
+#include <Trackable.h>
+
+class SoundBufferManager;
+class Sound;
+
+class SoundBuffer : public Trackable
+{
+	friend class SoundBufferManager;
+	friend class Sound;
+
+	sf::SoundBuffer mSoundBuffer;
+
+	SoundBuffer(std::string fullPath) { mSoundBuffer.loadFromFile(fullPath); }
+	~SoundBuffer() {}
+};

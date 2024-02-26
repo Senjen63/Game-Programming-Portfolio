@@ -1,0 +1,227 @@
+#include "FoodManager.h"
+#include <string>
+#include <cassert>
+#include "Game.h"
+#include "Level.h"
+
+using namespace std;
+
+const float FOOD_SCALE = 2;
+
+unordered_map<FoodType, Animation> FoodManager::smFoodAnimations;
+
+std::istream& operator>>(std::istream& is, FoodManager& fm)
+{
+    is.ignore(1000, ':');
+    is >> fm.mPowerupTime;
+    is.ignore(1000, ':');
+    is >> fm.mFoodTime;
+
+    std::string line;
+    while (true)
+    {
+        is >> line;
+        if (line == "=====")
+            break;
+
+        is.ignore(1000, ':');
+        is >> line;
+        FoodType type = Food::strToEnum(line);
+        assert(type != FoodType::INVALID);
+
+        float weight = 0;
+        int pointsAmount = 0;
+        is.ignore(1000, ':');
+        is >> weight;
+        is.ignore(1000, ':');
+        is >> pointsAmount;
+
+        switch (type)
+        {
+        case FoodType::GROW:
+        {
+            if (fm.mpFood)
+                delete fm.mpFood;
+
+            int growAmount = 0;
+            is.ignore(1000, ':');
+            is >> growAmount;
+            fm.mpFood = new GrowFood(weight, pointsAmount, growAmount);
+            break;
+        }
+        case FoodType::POINTS:
+        {
+            fm.mPowerups.push_back(new PointsFood(weight, pointsAmount));
+            break;
+        }
+        case FoodType::SPEED_UP:
+        case FoodType::SLOW_DOWN:
+        {
+            float deltaTime = 0;
+            is.ignore(1000, ':');
+            is >> deltaTime;
+
+            if (type == FoodType::SPEED_UP)
+                deltaTime *= -1;
+
+            fm.mPowerups.push_back(new SpeedFood(weight, deltaTime, pointsAmount));
+            break;
+        }
+        }
+    }
+
+    Food::normalizeWieghts(fm.mPowerups);
+
+    return is;
+}
+
+FoodManager::FoodManager(const Level* pParentLevel) : 
+    mpParentLevel(pParentLevel)
+{}
+
+FoodManager::~FoodManager()
+{
+    if (mpFood)
+        delete mpFood;
+
+    for (Food* pPowerup : mPowerups)
+    {
+        delete pPowerup;
+    }
+    mPowerups.clear();
+}
+
+void FoodManager::handleEvent(const Event& theEvent)
+{
+    switch (theEvent.getType())
+    {
+    case EVENT_SNAKE_MOVE:
+    {
+        const MoveEvent& subEvent = static_cast<const MoveEvent&>(theEvent);
+
+        for (unsigned int i = 0; i < mFoodEntities.size(); i++)
+        {
+            auto entityFoodPair = mFoodEntities[i];
+
+            assert(entityFoodPair.first->hasCollider());
+            // if the new point collides with the current powerup entity 
+            if (entityFoodPair.first->getCollider()->getBounds().pointInBounds(subEvent.getNewPos()))
+            {
+                // Collide with powerup! 
+                // Fire event based on which food the entity represents 
+                fireFoodEvent(*entityFoodPair.second);
+
+                // Remove the entity 
+                Game::getInstance()->getEntityManager()->deleteEntity(entityFoodPair.first);
+                mFoodEntities.erase(mFoodEntities.begin() + i);
+                i--;
+            }
+        }
+        break;
+    }
+
+    case EVENT_SNAKE_GROW:
+    {
+        // When the snake eats, spawn another grow food 
+        placeFood();
+        break;
+    }
+    }
+}
+
+void FoodManager::init()
+{
+    EventSystem::getInstance()->addListener((EventType)EVENT_SNAKE_MOVE, static_cast<EventListener*>(this));
+    EventSystem::getInstance()->addListener((EventType)EVENT_SNAKE_GROW, static_cast<EventListener*>(this));
+
+    placeFood();
+}
+
+void FoodManager::cleanUp()
+{
+    EventSystem::getInstance()->removeListener((EventType)EVENT_SNAKE_MOVE, static_cast<EventListener*>(this));
+    EventSystem::getInstance()->removeListener((EventType)EVENT_SNAKE_GROW, static_cast<EventListener*>(this));
+
+    clearPowerUps();
+}
+
+void FoodManager::clearPowerUps()
+{
+    for (unsigned int i = 0; i < mFoodEntities.size(); i++)
+    {
+        Game::getInstance()->getEntityManager()->deleteEntity(mFoodEntities[i].first);
+    }
+
+    mFoodEntities.clear();
+}
+
+void FoodManager::update(double deltaTime)
+{
+    mTimePast += deltaTime;
+
+    if (mTimePast > mPowerupTime)
+    {
+        placePowerup();
+        mTimePast -= mPowerupTime;
+    }
+}
+
+void FoodManager::fireFoodEvent(const Food& food)
+{
+    // All foods have a point value 
+    if (food.getPointsAmount() != 0)
+    {
+        EventSystem::getInstance()->fireEvent(PointsEvent(food.getPointsAmount()));
+    }
+
+    switch (food.getType())
+    {
+    case FoodType::GROW:
+    {
+        const GrowFood& subFood = static_cast<const GrowFood&>(food);
+        EventSystem::getInstance()->fireEvent(GrowEvent(subFood.getGrowAmount()));
+        break;
+    }
+    case FoodType::SPEED_UP:
+    case FoodType::SLOW_DOWN:
+    {
+        const SpeedFood& subFood = static_cast<const SpeedFood&>(food);
+        EventSystem::getInstance()->fireEvent(SpeedEvent(subFood.getDeltaTime()));
+        break;
+    }
+    }
+}
+
+void FoodManager::placeFood()
+{
+    Vector2D randPos = mpParentLevel->getRandEmptyPos();
+    const Food* food = Food::pickRandomFood({ mpFood });
+    placeAny(randPos, food);
+}
+
+void FoodManager::placePowerup()
+{
+    Vector2D randPos = mpParentLevel->getRandEmptyPos();
+    const Food* food = Food::pickRandomFood(mPowerups);
+    placeAny(randPos, food);
+}
+
+void FoodManager::setParentLevel(const Level* pParentLevel)
+{
+    mpParentLevel = pParentLevel;
+}
+
+void FoodManager::placeAny(const Vector2D& randPos, const Food* food)
+{
+    if (food == nullptr || food->getType() == FoodType::EMPTY)
+        return;
+
+    Entity* e = Game::getInstance()->getEntityManager()->addEntity(randPos, smFoodAnimations.at(food->getType()), FOOD_SCALE);
+    e->addCollider(CollisionType::POWERUP);
+    mFoodEntities.push_back({ e, food });
+}
+
+void FoodManager::addAnimation(FoodType type, const Animation& anim)
+{
+    smFoodAnimations.insert({ type, anim });
+}

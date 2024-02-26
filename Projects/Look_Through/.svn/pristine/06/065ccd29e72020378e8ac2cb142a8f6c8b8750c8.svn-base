@@ -1,0 +1,11 @@
+#include "TurnEvent.h"
+
+TurnEvent::TurnEvent(string turn)
+	: HudEvent((HudEventType) TURN_EVENT)
+{
+	mTurn = turn;
+}
+
+TurnEvent::~TurnEvent()
+{
+}

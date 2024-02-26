@@ -1,0 +1,39 @@
+#pragma once
+
+#include <string>
+#include <vector>
+#include <EventSystem.h>
+#include <EventListener.h>
+#include "GraphicsSystem.h"
+#include "IButtonListener.h"
+#include "Unit.h"
+#include "Component.h"
+#include "GameEvent.h"
+#include "Game.h"
+
+class ButtonComponent : public Component
+{
+	std::vector<IButtonListener*> mListeners;
+
+	std::string mButtonID;
+	std::string mText;
+
+public:
+	ButtonComponent(std::string buttonID, std::string text);
+	~ButtonComponent();
+
+	void update(float dt) override {};
+	void draw(GraphicsSystem* gSys) override;
+
+	void subscribeListener(IButtonListener* listener);
+	void unsubscribeListener(IButtonListener* listener);
+
+	std::string getIdentifier() override { return "ButtonComponent"; }
+
+	void handleEvent(const Event& theEvent) override;
+	void notifyListeners();
+
+	void setID(std::string buttonID) { mButtonID = buttonID; }
+	std::string getID() const { return mButtonID; }
+	std::string getText() const { return mText; };
+};

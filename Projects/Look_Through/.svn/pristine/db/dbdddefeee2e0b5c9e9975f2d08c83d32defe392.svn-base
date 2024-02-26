@@ -1,0 +1,665 @@
+#include "Game.h"
+#include "GraphicsSystem.h"
+#include "PerformanceTracker.h"
+#include <fstream>
+#include "GraphicsBufferManager.h"
+#include "Sprite.h"
+#include "Font.h"
+#include "Vector2D.h"
+#include "Color.h"
+#include "InputSystem.h"
+#include "UnitManager.h"
+#include "ShipManager.h"
+#include "ShotManager.h"
+#include "AsteroidManager.h"
+#include "GameEvent.h"
+#include <EventSystem.h>
+#include "InputEvent.h"
+#include "LoseEvent.h"
+#include "PowerEvent.h"
+#include "StartScreen.h"
+#include "EndScreen.h"
+#include "HUD.h"
+#include "Asteroid.h"
+#include "SpriteCreator.h"
+#include "LanguageManager.h"
+#include "DifficultyLoader.h"
+#include "DataLoader.h"
+#include "OptionsManager.h"
+#include "SoundEffectManager.h"
+#include "SoundEffect.h"
+
+using namespace std;
+
+Game* Game::mpGameInstance = nullptr;
+
+Game::Game()
+{
+	this->mpGraphicsSystem = nullptr;
+	this->mpGraphicsBufferManager = nullptr;
+	this->mpPerformanceTracker = nullptr;
+	this->mpGameTimer = nullptr;
+	this->mpInputSystem = nullptr;
+	this->mpUnitManager = nullptr;
+
+	this->mpStartScreen = nullptr;
+	this->mpAsteroidManger = nullptr;
+	this->mpOptionsManager = nullptr;
+
+	this->mpFont = nullptr;
+	this->mpColor = nullptr;
+
+	this->mIsStarted = false;
+
+	this->mGameContinue = true;
+
+	this->mSound = "On";
+	this->mLanguage = "English";
+	this->mDifficulty = "Easy";
+
+	EventSystem::getInstance()->addListener((EventType)INPUT_EVENT, this);
+	EventSystem::getInstance()->addListener((EventType)LOSE_EVENT, this);
+	EventSystem::getInstance()->addListener((EventType)POWER_EVENT, this);
+}
+
+Game::~Game()
+{
+	cleanUp();
+}
+
+void Game::init()
+{
+	int x;
+	int y;
+
+	ifstream input("../GalahadAssets/data/game_data.txt");
+	if (input.good())
+	{
+		string key;
+
+		while (!input.eof())
+		{
+			input >> key;
+			if (key == "display_size")
+			{
+				input >> x >> y;
+				this->mDisplaySize = Vector2D(x, y);
+			}
+			else if (key == "window_title")
+			{
+				input >> mWindowTitle;
+				
+			}
+			else if (key == "amount")
+			{
+				input >> mAmount;
+
+			}
+			else if (key == "size")
+			{
+				input >> mSize;
+
+			}
+			else if (key == "sole")
+			{
+				input >> mSole;
+			}
+			else if (key == "max")
+			{
+				input >> mMax;
+			}
+			else if (key == "speed")
+			{
+				input >> mSpeed;
+			}
+		}
+	}
+	input.close();
+
+	mpDataLoader = new DataLoader();
+	mpDataLoader->init();
+	initializeMemberValues();
+
+	mpGraphicsSystem = new GraphicsSystem();
+	mpGraphicsSystem->init(int(mDisplaySize.getX()), int(mDisplaySize.getY()), mWindowTitle);
+
+	mpGraphicsBufferManager = new GraphicsBufferManager();
+	mpUnitManager = new UnitManager();
+	mpInputSystem = new InputSystem();
+
+	mpSpriteCreator = new SpriteCreator();
+
+	mpShipAni = new Animation(true);
+
+	mpShipAni->addSprite(*mpSpriteCreator->mpShip());
+	
+	mpShipManager = new ShipManager(mSole);
+
+	mpShipManager->createAndAddUnit(mShipOrigin, *mpShipAni);
+
+	mpShipManager->activeShip(true);
+	
+	mpShipManager->setSpeed(mShipSpeed);
+
+	mpFont = new Font(mSize, "cour.ttf");
+
+	mpColor = new Color(mMax, mMax, mMax, mMax);
+
+	mpOptionsManager = new OptionsManager();
+
+	mpStartScreen = new StartScreen();
+
+	mpEndScreen = new EndScreen();
+
+	mpSoundEffectManager = new SoundEffectManager();
+	mpSoundEffectManager->init();
+
+	mpSoundEffectManager->createAndAddSoundEffect("shot", "shot_sound.wav");
+	mpSoundEffectManager->createAndAddSoundEffect("explosion", "explosion.wav");
+	mpSoundEffectManager->createAndAddSoundEffect("death", "shipdeath.wav");
+
+	mpAsteroidAni = new Animation(true);
+	mpAsteroidAni->addSprite(*Asteroid().getAsteroid());
+
+	mpFastAni = new Animation(true);
+	mpFastAni->addSprite(*Asteroid().getFast1());
+	mpFastAni->addSprite(*Asteroid().getFast2());
+
+	mpSlowAni = new Animation(true);
+	mpSlowAni->addSprite(*Asteroid().getSlow1());
+	mpSlowAni->addSprite(*Asteroid().getSlow2());
+
+	mpPointsAni = new Animation(true);
+	mpPointsAni->addSprite(*Asteroid().getPoints1());
+	mpPointsAni->addSprite(*Asteroid().getPoints2());
+	
+	mpAsteroidManger = new AsteroidManager(mAmount);
+	mpAsteroidManger->addUnits(mFiller, mOrigin, *mpAsteroidAni);
+	mpAsteroidManger->setAnimations(mpAsteroidAni, mpFastAni, mpSlowAni, mpPointsAni);
+
+
+	mpShotAni = new Animation(true);
+	mpShotAni->addSprite(*mpSpriteCreator->mpShot());
+
+	mpShotManager = new ShotManager(mAmount);
+	mpShotManager->addUnits(mFiller, mOrigin, *mpShotAni);
+	mpShotManager->setSpeed(mSpeed);
+
+	mpDifficultyLoader = new DifficultyLoader();
+
+	difficSettings();
+
+	mpLanguageManager = new LanguageManager();
+	mpLanguageManager->init(mpOptionsManager->getLanguage());
+
+	mpHud = new HUD();
+
+	mpHud->setFont(mpFont);
+
+	mpHud->setSprite(mpSpriteCreator->mpShip());
+
+	mpHud->setColor(mpColor);
+
+	mpGameTimer = new Timer();
+
+	mpPerformanceTracker = new PerformanceTracker();
+}
+
+void Game::cleanUp()
+{
+	delete mpSpriteCreator;
+	delete mpGraphicsBufferManager;
+	delete mpInputSystem;
+	delete mpUnitManager;
+	delete mpDifficultyLoader;
+	delete mpDataLoader;
+	mpShipManager->clearUnits();
+	mpShotManager->clearUnits();
+	mpAsteroidManger->clearUnits();
+
+	delete mpStartScreen;
+	delete mpEndScreen;
+	delete mpOptionsManager;
+	delete mpHud;
+	delete mpLanguageManager;
+
+	delete mpSoundEffectManager;
+	delete mpFont;
+
+	delete mpShotSprite;
+
+	delete mpShipAni;
+	delete mpShotAni;
+	delete mpAsteroidAni;
+	delete mpFastAni;
+	delete mpSlowAni;
+	delete mpPointsAni;
+
+	delete mpColor;
+	delete mpShotManager;
+	delete mpShipManager;
+	delete mpAsteroidManger;
+
+	delete mpGraphicsSystem;
+	delete mpGameTimer;
+	delete mpPerformanceTracker;
+}
+
+void Game::doLoop()
+{
+	while (mGameContinue)
+	{
+		mpPerformanceTracker->clearTracker("loop");
+		mpPerformanceTracker->startTracking("loop");
+		mpGameTimer->start();
+
+		mpInputSystem->update();
+
+		mpGraphicsSystem->clearScreen();
+
+		if (!mIsStarted)
+		{
+			mpStartScreen->draw();
+		}
+		else if (mIsEnded)
+		{
+			mpEndScreen->draw();
+		}
+		else
+		{
+			mpShipManager->drawAll();
+
+			mpHud->drawHUD(mLives, mScore);
+
+			mpAsteroidManger->updateAll(mGamePauseTime);
+			mpAsteroidManger->detectCollisions(mpShotManager->getUnits());
+			mpAsteroidManger->deallocate();
+
+			mpShotManager->updateAll(mGamePauseTime);
+			mpShotManager->deallocate();
+
+			mpShipManager->detectCollisions(mpAsteroidManger->getUnits());
+			if (mIsLeft)
+			{
+				mpShipManager->shipMovement(mLeft);
+			}
+
+			if (mIsRight)
+			{
+				mpShipManager->shipMovement(mRight);
+			}
+		}
+
+		mpGraphicsSystem->flip();
+
+		mpGameTimer->sleepUntilElapsed(mGamePauseTime);
+
+		mpPerformanceTracker->stopTracking("loop");
+	}
+}
+
+void Game::handleEvent(const Event& theEvent)
+{
+	if (theEvent.getType() == INPUT_EVENT)
+	{
+		const InputEvent& inputEvent = static_cast<const InputEvent&>(theEvent);
+
+
+		if (inputEvent.getKey() == mpInputSystem->ESCAPE_KEY && inputEvent.getReleaseState() == "up")
+		{
+			mpOptionsManager->saveOptions();
+			mGameContinue = false;
+			if (mIsStarted)
+			{
+				saveGame();
+			}
+		}
+		else if (inputEvent.getKey() == mpInputSystem->QUIT)
+		{
+			mpOptionsManager->saveOptions();
+			mGameContinue = false;
+			if (mIsStarted)
+			{
+				saveGame();
+			}
+		}
+		else if (inputEvent.getKey() == mpInputSystem->LEFT_KEY && inputEvent.getReleaseState() == "down")
+		{
+			mIsLeft = true;
+		}
+		else if (inputEvent.getKey() == mpInputSystem->LEFT_KEY && inputEvent.getReleaseState() == "up")
+		{
+			mIsLeft = false;
+		}
+		else if (inputEvent.getKey() == mpInputSystem->RIGHT_KEY && inputEvent.getReleaseState() == "down")
+		{
+			mIsRight = true;
+		}
+		else if (inputEvent.getKey() == mpInputSystem->RIGHT_KEY && inputEvent.getReleaseState() == "up")
+		{
+			mIsRight = false;
+		}
+		else if (inputEvent.getKey() == mpInputSystem->UP_KEY && inputEvent.getReleaseState() == "up")
+		{
+			if (!mIsStarted)
+			{
+				mpStartScreen->nextMenuOption("up");
+			}
+			else if (mIsEnded)
+			{
+				mpEndScreen->nextMenuOption("up");
+			}
+		}
+		else if (inputEvent.getKey() == mpInputSystem->DOWN_KEY && inputEvent.getReleaseState() == "up")
+		{
+			if (!mIsStarted)
+			{
+				mpStartScreen->nextMenuOption("down");
+			}
+			else if (mIsEnded)
+			{
+				mpEndScreen->nextMenuOption("down");
+			}
+		}
+		else if (inputEvent.getKey() == mpInputSystem->SPACE_KEY && inputEvent.getReleaseState() == "up")
+		{
+			if (mpShotManager->getCanShoot())
+			{
+				mpShotManager->activateUnit(mpShipManager->getBlasterPos());
+				mpSoundEffectManager->playSound("shot", mMinLives);
+			}
+		}
+		else if (inputEvent.getKey() == mpInputSystem->ENTER_KEY && inputEvent.getReleaseState() == "up")
+		{
+			if (!mIsStarted)
+			{
+				if (!mpStartScreen->getInOptions())
+				{
+					if (mpStartScreen->getSelectedMenuOption() == mpStartScreen->PLAY)
+					{
+						mIsStarted = true;
+					}
+					else if (mpStartScreen->getSelectedMenuOption() == mpStartScreen->QUIT)
+					{
+						mpOptionsManager->saveOptions();
+						mGameContinue = false;
+					}
+					else if (mpStartScreen->getSelectedMenuOption() == mpStartScreen->LOAD_SAVED_GAME)
+					{
+						loadGame();
+						mIsStarted = true;
+					}
+					else if (mpStartScreen->getSelectedMenuOption() == mpStartScreen->OPTIONS)
+					{
+						mpStartScreen->setInOptions(true);
+						mpStartScreen->setSelectedMenuOption(mpStartScreen->SOUND_OPTION);
+					}
+				}
+				else
+				{
+					if (mpStartScreen->getSelectedMenuOption() == mpStartScreen->SOUND_OPTION)
+					{
+						nextSound();
+					}
+					else if (mpStartScreen->getSelectedMenuOption() == mpStartScreen->LANGUAGE_OPTION)
+					{
+						nextLanguage();
+					}
+					else if (mpStartScreen->getSelectedMenuOption() == mpStartScreen->DIFFICULTY_OPTION)
+					{
+						nextDifficulty();
+					}
+					else if (mpStartScreen->getSelectedMenuOption() == mpStartScreen->BACK)
+					{
+						mpStartScreen->setInOptions(false);
+						mpStartScreen->setSelectedMenuOption(mpStartScreen->PLAY);
+					}
+				}
+			}
+			else if (mIsEnded)
+			{
+				if (mpEndScreen->getSelectedMenuOption() == mpEndScreen->RESTART)
+				{
+					reInit();
+				}
+				else if (mpEndScreen->getSelectedMenuOption() == mpEndScreen->RETURN)
+				{
+					reInit();
+					mIsStarted = false;
+				}
+				else if (mpEndScreen->getSelectedMenuOption() == mpEndScreen->QUIT)
+				{
+					mpOptionsManager->saveOptions();
+					mGameContinue = false;
+				}
+			}
+		}
+	}
+
+	if (theEvent.getType() == LOSE_EVENT)
+	{
+		const LoseEvent& loseEvent = static_cast<const LoseEvent&>(theEvent);
+
+		switch (loseEvent.getStatus())
+		{
+		case 0:
+			mIsEnded = true;
+			break;
+		}
+	}
+
+	if (theEvent.getType() == POWER_EVENT)
+	{
+		const PowerEvent& powerEvent = static_cast<const PowerEvent&>(theEvent);
+
+		switch (powerEvent.getType())
+		{
+		case ASTEROID:
+			addScore();
+			break;
+		case SLOW:
+			mpAsteroidManger->changeGravity(false);
+			break;
+		case FAST:
+			mpAsteroidManger->changeGravity(true);
+			break;
+		case POINS:
+			addBoon();
+			break;
+		}
+	}
+}
+
+
+void Game::nextSound()
+{
+	if (mpOptionsManager->getSound() == mpOptionsManager->ON)
+	{
+		mpOptionsManager->setSound(mpOptionsManager->OFF);
+	}
+	else if (mpOptionsManager->getSound() == mpOptionsManager->OFF)
+	{
+		mpOptionsManager->setSound(mpOptionsManager->ON);
+	}
+}
+
+void Game::nextLanguage()
+{
+	if (mpOptionsManager->getLanguage() == mpOptionsManager->ENGLISH)
+	{
+		mpOptionsManager->setLanguage(mpOptionsManager->SPANISH);
+		mpLanguageManager->init(mpOptionsManager->SPANISH);
+	}
+	else if (mpOptionsManager->getLanguage() == mpOptionsManager->SPANISH)
+	{
+		mpOptionsManager->setLanguage(mpOptionsManager->FRENCH);
+		mpLanguageManager->init(mpOptionsManager->FRENCH);
+	}
+	else if (mpOptionsManager->getLanguage() == mpOptionsManager->FRENCH)
+	{
+		mpOptionsManager->setLanguage(mpOptionsManager->ENGLISH);
+		mpLanguageManager->init(mpOptionsManager->ENGLISH);
+	}
+}
+
+void Game::nextDifficulty()
+{
+	if (mpOptionsManager->getDifficulty() == mpOptionsManager->EASY)
+	{
+		mpOptionsManager->setDifficulty(mpOptionsManager->NORMAL);
+	}
+	else if (mpOptionsManager->getDifficulty() == mpOptionsManager->NORMAL)
+	{
+		mpOptionsManager->setDifficulty(mpOptionsManager->HARD);
+	}
+	else if (mpOptionsManager->getDifficulty() == mpOptionsManager->HARD)
+	{
+		mpOptionsManager->setDifficulty(mpOptionsManager->EASY);
+	}
+
+	difficSettings();
+}
+
+void Game::addLife(int add)
+{
+	mLives += add;
+
+	if (mLives > mMaxLives)
+		mLives = mMaxLives;
+
+	if (mLives < mMinLives)
+		mLives = mMinLives;
+}
+
+void Game::difficSettings() 
+{
+	mpDifficultyLoader->init(mpOptionsManager->getDifficulty());
+
+	if (mpOptionsManager->getDifficulty() == mpOptionsManager->EASY)
+	{
+		mpAsteroidManger->setSpawn(mpDifficultyLoader->getInt("low_spawn"));
+	}
+	else
+	{
+		mSpawn2 = mpDifficultyLoader->getInt("over_spawn");
+
+		mpAsteroidManger->setSpawn(mpDifficultyLoader->getInt("low_spawn"), mpDifficultyLoader->getInt("over_spawn"));
+	}
+
+	mpAsteroidManger->setPowerUp(mpDifficultyLoader->getInt("power_numerator"), mpDifficultyLoader->getInt("power_denominator"));
+	setShot(mpDifficultyLoader->getFloat("normal_asteroid"));
+	setBoon(mpDifficultyLoader->getFloat("special_asteroid"));
+	mpAsteroidManger->makeGrid(mpDifficultyLoader->getFloat("drop_point"), mpDifficultyLoader->getInt("positions"));
+	mpAsteroidManger->setReload(mpDifficultyLoader->getDouble("falling"));
+	mpAsteroidManger->setMoveT(mpDifficultyLoader->getDouble("power_time"));
+	mpAsteroidManger->setLowGravity(mpDifficultyLoader->getFloat("low_gravity"));
+	mpAsteroidManger->setGravity(mpDifficultyLoader->getFloat("medium_gravity"));
+	mpAsteroidManger->setHighGravity(mpDifficultyLoader->getFloat("high_gravity"));
+
+	mpShotManager->setReload(mpDifficultyLoader->getDouble("reload"));
+}
+
+void Game::reInit()
+{
+	mpAsteroidManger->cleanScreen();
+	mpShotManager->cleanScreen();
+	mpAsteroidManger->resetGame();
+	mpShipManager->setPos(mShipOrigin);
+	addLife(3);
+	mIsEnded = false;
+	mScore = mMinLives;
+}
+
+void Game::saveGame()
+{
+	ofstream savedGameFile;
+	savedGameFile.open("../GalahadAssets/saved/savedGame.txt");
+
+	for (auto ship : mpShipManager->getUnits())
+	{
+		if (ship->getInUse())
+		{
+			savedGameFile << "ship " + to_string(int(ship->getLocation().getX())) + " " + to_string(int(ship->getLocation().getY())) + "\n";
+		}
+	}
+
+	savedGameFile << "ship_lives " + to_string(mLives) + "\n";
+	savedGameFile << "score " + to_string(int(mScore)) + "\n";
+
+	for (auto asteroid : mpAsteroidManger->getUnits()) 
+	{
+		if (asteroid->getInUse())
+		{
+			savedGameFile << "asteroid " + to_string(int(asteroid->getLocation().getX())) + " " + to_string(int(asteroid->getLocation().getY())) + " " + to_string(asteroid->getType()) + "\n";
+		}
+	}
+
+	for (auto shot : mpShotManager->getUnits())
+	{
+		if (shot->getInUse())
+		{
+			savedGameFile << "shot " + to_string(int(shot->getLocation().getX())) + " " + to_string(int(shot->getLocation().getY())) + "\n";
+		}
+	}
+	
+
+	savedGameFile.close();
+}
+
+void Game::loadGame()
+{
+	int x, y, type;
+
+	ifstream input("../GalahadAssets/saved/savedGame.txt");
+	if (input.good())
+	{
+		string key;
+
+		while (!input.eof())
+		{
+			input >> key;
+			if (key == "ship")
+			{
+				input >> x >> y;
+				mpShipManager->activateUnit(Vector2D(x, y));
+			}
+			else if (key == "asteroid")
+			{
+				input >> x >> y >> type;
+				mpAsteroidManger->activateUnit(Vector2D(x, y), type);
+			}
+			else if (key == "shot")
+			{
+				input >> x >> y;
+				mpShotManager->activateUnit(Vector2D(x, y));
+			}
+			else if (key == "score")
+			{
+				input >> mScore;
+			}
+			else if (key == "ship_lives")
+			{
+				input >> mLives;
+			}
+		}
+	}
+	input.close();
+}
+
+void Game::initializeMemberValues()
+{
+	mLeft = mpDataLoader->getInt("left");
+	mRight = mpDataLoader->getInt("right");
+	mUp = mpDataLoader->getInt("up");
+	mDown = mpDataLoader->getInt("down");
+	mMinLives = mpDataLoader->getInt("min_lives");
+	mMaxLives = mpDataLoader->getInt("max_lives");
+	mFiller = mpDataLoader->getInt("filler");
+	mShipOrigin = mpDataLoader->getVector("start");
+	mOrigin = mpDataLoader->getVector("origin");
+	mGamePauseTime = mpDataLoader->getDouble("speed");
+	mShipSpeed = mpDataLoader->getFloat("player_speed");
+
+	mLives = mMaxLives;
+	mScore = mMinLives;
+}

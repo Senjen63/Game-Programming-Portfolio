@@ -1,0 +1,53 @@
+#include "Unit.h"
+#include "Sprite.h"
+#include "Animation.h"
+#include "GraphicsBuffer.h"
+
+Unit::Unit(GraphicsBuffer* bufferOne, int locX, int locY)
+{
+	Animation* anim = new Animation(bufferOne);
+	animOne = anim;
+	animTwo = NULL;
+	this->locX = locX;
+	this->locY = locY;
+	setCurrentAnimation(0);
+}
+
+Unit::Unit(GraphicsBuffer* bufferOne, GraphicsBuffer* bufferTwo, int locX, int locY)
+{
+	Animation* animOne = new Animation(bufferOne);
+	Animation* animTwo = new Animation(bufferTwo);
+	this->animOne = animOne;
+	this->animTwo = animTwo;
+	this->locX = locX;
+	this->locY = locY;
+	setCurrentAnimation(0);
+}
+
+void Unit::Update()
+{
+	currentAnim->Update(getX(), getY());
+}
+
+void Unit::setCurrentAnimation(int animation)
+{
+	if (animation == 0)
+		currentAnim = animOne;
+	if (animation == 1)
+		currentAnim = animTwo;
+}
+
+Animation* Unit::getCurrentAnimation()
+{
+	return currentAnim;
+}
+
+int Unit::getX()
+{
+	return locX;
+}
+
+int Unit::getY()
+{
+	return locY;
+}

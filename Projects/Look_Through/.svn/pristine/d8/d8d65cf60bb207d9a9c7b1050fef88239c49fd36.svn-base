@@ -1,0 +1,10 @@
+#include "MessageEvent.h"
+
+MessageEvent::MessageEvent(const string& string) : HudEvent(TEXT_EVENT)
+{
+	message = string;
+}
+
+MessageEvent::~MessageEvent()
+{
+}

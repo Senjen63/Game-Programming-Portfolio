@@ -1,0 +1,41 @@
+#pragma once
+
+#include <allegro5/allegro.h>
+#include <allegro5/allegro_font.h>
+#include <allegro5/allegro_ttf.h>
+#include <allegro5/allegro_audio.h>
+#include <allegro5/allegro_acodec.h>
+#include <allegro5/allegro_image.h>
+#include <allegro5/allegro_primitives.h>
+
+#include <Trackable.h>
+#include <Vector2D.h>
+
+#include <iostream>
+#include <cassert>
+#include <string>
+#include <unordered_map>
+
+#include <PerformanceTracker.h>
+#include <Timer.h>
+
+#include "GraphicsBuffer.h"
+
+typedef string BufferKey;
+
+class GraphicsBufferManager : public Trackable
+{
+public:
+	GraphicsBufferManager();
+	~GraphicsBufferManager();
+
+	GraphicsBuffer* addBuffer(const BufferKey& key, string contents);
+	void deleteBuffer(const BufferKey& key);
+	void deleteBuffer(GraphicsBuffer* pBuffer);
+	GraphicsBuffer* getBuffer(const BufferKey& key);
+
+	void clear();
+
+private:
+	unordered_map<BufferKey, GraphicsBuffer*> mMap;
+};

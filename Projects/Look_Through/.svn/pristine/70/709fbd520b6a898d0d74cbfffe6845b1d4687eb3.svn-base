@@ -1,0 +1,19 @@
+/*
+Author: David Silverman
+Class: GPR-250-01
+Assignment: Assignment 3
+Certification of Authenticity:
+I certify that this assignment is entirely my own work.
+ */
+
+#include "escape.h"
+
+Escap::Escap() : GameEvent(ESCAPE)
+{
+
+}
+
+Escap::~Escap()
+{
+
+}

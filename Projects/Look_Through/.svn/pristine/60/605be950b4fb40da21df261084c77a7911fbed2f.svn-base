@@ -1,0 +1,24 @@
+
+#include <PerformanceTracker.h>
+#include <MemoryTracker.h>
+#include <iostream>
+#include <string>
+#include <Vector2D.h>
+#include <Timer.h>
+#include "Game.h"
+
+using namespace std;
+
+int main()
+{
+	PerformanceTracker* pPerformTracker = new PerformanceTracker;
+	const int DISP_WIDTH = 800;
+	const int DISP_HEIGHT = 600;	
+	gpGame->Init(DISP_HEIGHT, DISP_WIDTH);
+	gpGame->DoLoop();
+
+	delete gpGame;
+	delete pPerformTracker;
+	MemoryTracker::getInstance()->reportAllocations(cout);
+	return 0;
+}

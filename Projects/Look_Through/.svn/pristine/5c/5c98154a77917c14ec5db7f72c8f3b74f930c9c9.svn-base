@@ -1,0 +1,198 @@
+#include "GraphicsSystem.h"
+#include "Color.h"
+#include "Font.h"
+#include "GraphicsBuffer.h"
+#include "Sprite.h"
+#include "Vector2D.h"
+#include "Game.h"
+#include "GraphicsBufferManager.h"
+#include <fstream>
+
+
+using namespace std;
+
+GraphicsSystem::GraphicsSystem()
+{
+	this->mpWindow = nullptr;
+	this->mpRenderer = nullptr;
+
+	this->mHeight = NULL;
+	this->mWidth = NULL;
+
+	ifstream inputDiff("../GalahadAssets/data/" + FILE_PATH);
+	if (inputDiff.good())
+	{
+		string key;
+
+		while (!inputDiff.eof())
+		{
+			inputDiff >> key;
+
+			if (key == "max")
+			{
+				inputDiff >> mMax;
+			}
+			else if (key == "min")
+			{
+				inputDiff >> mMin;
+			}
+			else if (key == "rend")
+			{
+				inputDiff >> mRend;
+			}
+			else if (key == "half")
+			{
+				inputDiff >> mHalf;
+			}
+		}
+	}
+}
+
+GraphicsSystem::~GraphicsSystem() 
+{
+	cleanUp();
+}
+
+void GraphicsSystem::init(int displayWidth, int displayHeight, string title)
+{
+	if (SDL_Init(SDL_INIT_EVERYTHING) < mMin)
+	{
+		cout << "Init Error" << SDL_GetError() << endl;
+	}
+	else if (TTF_Init() < mMin) {
+		cout << "Error initializing SDL_ttf: " << TTF_GetError() << endl;
+	}
+	else
+	{
+		this->mWidth = displayWidth;
+		this->mHeight = displayHeight;
+		this->mpWindow = SDL_CreateWindow(title.c_str(), SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, mWidth, mHeight, mMin);
+		if (mpWindow == NULL)
+		{
+			cout << "Window Creation Error: " << SDL_GetError() << endl;
+		}
+		else
+		{
+			this->mpRenderer = SDL_CreateRenderer(mpWindow, mRend, mMin);
+			if (mpRenderer == NULL)
+			{
+				cout << "Renderer Creation Error: " << SDL_GetError() << endl;
+			}
+			else
+			{
+				SDL_SetRenderDrawColor(mpRenderer, mMin, mMin, mMin, mMax);
+			}
+		}
+	}
+}
+
+void GraphicsSystem::cleanUp() 
+{
+	SDL_DestroyWindow(mpWindow);
+	SDL_DestroyRenderer(mpRenderer);
+	SDL_Quit();
+	TTF_Quit();
+}
+
+void GraphicsSystem::flip() 
+{
+	SDL_RenderPresent(mpRenderer);
+}
+
+void GraphicsSystem::draw(Vector2D* pLoc, Sprite* pSprite, float scale)
+{
+	SDL_Texture* pTexture = SDL_CreateTextureFromSurface(mpRenderer, pSprite->getBuffer()->getSurface());
+	if (pTexture == NULL)
+	{
+		cout << "CreateTextureFromSurface Error: " << SDL_GetError() << endl;
+	}
+	else
+	{
+		SDL_Rect transform = { int(pLoc->getX()), int(pLoc->getY()), int(pSprite->getSpriteWidth() * scale), int(pSprite->getSpriteHeight() * scale )};
+		if (SDL_RenderCopy(mpRenderer, pTexture, NULL, &transform) < mMin)
+		{
+			cout << "RenderCopy error: " << SDL_GetError() << endl;
+		}
+		else
+		{
+			SDL_DestroyTexture(pTexture);
+		}
+	}
+}
+
+void GraphicsSystem::writeText(Vector2D* loc, Font* font, Color* color, string text, bool isCentered, bool isUnderlined)
+{
+	int textW;
+	int textH;
+	SDL_Surface* pMessage = TTF_RenderUTF8_Solid(font->getFont(), text.c_str(), color->getColor());
+	if (pMessage == NULL)
+	{
+		cout << "RenderText_Solid error: " << SDL_GetError() << endl;
+	}
+	else
+	{
+		SDL_Texture* pWriting = SDL_CreateTextureFromSurface(mpRenderer, pMessage);
+		if (pWriting == NULL)
+		{
+			cout << "CreateTextureFromSurface Text Error: " << SDL_GetError() << endl;
+		}
+		else
+		{
+			SDL_Rect box;
+			TTF_SizeText(font->getFont(), text.c_str(), &textW, &textH);
+			if (isCentered)
+			{
+				box = { mWidth / mHalf - textW / mHalf, int(loc->getY()), textW, textH };
+			}
+			else
+			{
+				box = { int(loc->getX()), int(loc->getY()), textW, textH };
+			}
+			if (SDL_RenderCopy(mpRenderer, pWriting, NULL, &box) < mMin)
+			{
+				cout << "RenderCopy error: " << SDL_GetError() << endl;
+			}
+			else
+			{
+				SDL_DestroyTexture(pWriting);
+				SDL_FreeSurface(pMessage);
+
+				if (isUnderlined)
+				{
+					const string UNDERLINE_KEY = "underline";
+					const int UNDERLINE_HEIGHT = mHalf;
+
+					Game* pGame = Game::getInstance();
+
+					pGame->getGraphicsBufferManager()->createAndAddGraphicsBuffer(UNDERLINE_KEY, textW, UNDERLINE_HEIGHT);
+
+					setColor(pGame->getGraphicsBufferManager()->getGraphicsBuffer(UNDERLINE_KEY), color);
+
+					Sprite underlineSprite = Sprite(textW, UNDERLINE_HEIGHT, &Vector2D(loc->getX(), loc->getY() + textH), pGame->getGraphicsBufferManager()->getGraphicsBuffer(UNDERLINE_KEY));
+
+					draw(&Vector2D(mWidth / mHalf - textW / mHalf, int(loc->getY() + textH)), &underlineSprite);
+				}
+			}
+		}
+	}
+}
+
+void GraphicsSystem::setColor(GraphicsBuffer* buffer,  Color* color)
+{
+	SDL_FillRect(buffer->getSurface(), NULL, SDL_MapRGBA(buffer->getSurface()->format, color->getRed(), color->getGreen(), color->getBlue(), color->getAlpha()));
+}
+
+void GraphicsSystem::clearScreen()
+{
+	SDL_RenderClear(mpRenderer);
+}
+
+Vector2D GraphicsSystem::getTextSize(Font* font, string text)
+{
+	int textW;
+	int textH;
+
+	TTF_SizeText(font->getFont(), text.c_str(), &textW, &textH);
+
+	return Vector2D(textW, textH);
+}

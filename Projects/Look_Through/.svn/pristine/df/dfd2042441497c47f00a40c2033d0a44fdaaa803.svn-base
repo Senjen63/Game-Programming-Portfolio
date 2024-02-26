@@ -1,0 +1,137 @@
+/*
+
+Author: Merle-Roji
+Class: GPR-250
+Assignment 1
+Certification of Authenticity:
+I certify that this assignment is entirely my own work.
+
+*/
+
+#include "GraphicsSystem.h"
+#include "GraphicsBuffer.h"
+#include "Sprite.h"
+#include "Font.h"
+#include "Color.h"
+
+#include <iostream>
+#include <cassert>
+#include <string>
+#include <cstdlib>
+
+#include <PerformanceTracker.h>
+#include <MemoryTracker.h>
+#include <Vector2D.h>
+#include <Timer.h>
+
+using namespace std;
+
+int main()
+{
+	PerformanceTracker* pPerformanceTracker = new PerformanceTracker;
+	srand(time(NULL));
+
+	const string INIT_TRACKER_NAME = "init";
+	const string DRAW_TRACKER_NAME = "draw";
+	const string WAIT_TRACKER_NAME = "wait";
+
+	const int DISP_WIDTH = 800;
+	const int DISP_HEIGHT = 600;
+	const int FONT_SIZE = 24;
+	const int SMURF_ROW = 4;
+	const int SMURF_COLUMN = 4;
+	const int SMURF_POS_MULTIPLIER = 32;
+
+	const double SLEEP_TIME = 5.0;
+
+	const float RED_SCALE = 0.66;
+
+	const string BACKGROUND_FILENAME = "axamer-lizum.png";
+	const string QUIMBY_FILENAME = "mayor_quimby.png";
+	const string FONT_FILENAME = "cour.ttf";
+	const string SAMPLE_FILENAME = "clapping.wav";
+	const string STEPS_PNG = "steps.png";
+	const string SMURFS_PNG = "smurf_sprites.png";
+	const string QUIMBY_LINE = "Curse you Papa Smurf!!!";
+	const string BACKBUFFER_JPG = "backbuffer.jpg";
+	const string REDBUFFER_JPG = "redbuffer.jpg";
+
+	Timer timer;
+
+	Vector2D* pOriginLocation = new Vector2D(0, 0);
+
+	GraphicsSystem* pDisplay = new GraphicsSystem();
+	pDisplay->init(DISP_WIDTH, DISP_HEIGHT);
+
+	Color red = Color(255, 0, 0, 1);
+	Color black = Color(0, 0, 0, 1);
+
+	GraphicsBuffer* pStepsBuffer = new GraphicsBuffer(STEPS_PNG);
+	GraphicsBuffer* pSmurfBuffer = new GraphicsBuffer(SMURFS_PNG);
+	GraphicsBuffer* pQuimbyBuffer = new GraphicsBuffer(QUIMBY_FILENAME);
+	GraphicsBuffer* pRedBuffer = new GraphicsBuffer(DISP_WIDTH, DISP_HEIGHT, red);
+	GraphicsBuffer* pBackBuffer = new GraphicsBuffer(pDisplay->getBackBuffer());
+
+	Sprite* pRedSprite = new Sprite(pOriginLocation, pRedBuffer, pRedBuffer->getBitmapWidth(), pRedBuffer->getBitmapHeight());
+	Sprite* pStepsSprite = new Sprite(pOriginLocation, pStepsBuffer, pStepsBuffer->getBitmapWidth(), pStepsBuffer->getBitmapHeight());
+	Sprite* pQuimbySprite = new Sprite(pOriginLocation, pQuimbyBuffer, pQuimbyBuffer->getBitmapWidth(), pQuimbyBuffer->getBitmapHeight());
+
+	Font* pFont = new Font(FONT_FILENAME, FONT_SIZE);
+
+	Vector2D* pRedLocation = new Vector2D((DISP_WIDTH - (RED_SCALE * pRedSprite->getSpriteWidth())) / 2, 
+										  (DISP_HEIGHT - (RED_SCALE * pRedSprite->getSpriteHeight())) / 2);
+
+	int xRand = 0;
+	int yRand = 0;
+
+	pDisplay->writeText(pRedLocation, pFont, black, QUIMBY_LINE);
+	pDisplay->draw(pOriginLocation, pStepsSprite);
+	pDisplay->draw(pRedBuffer, pOriginLocation, pQuimbySprite);
+
+	for (int r = 0; r < SMURF_ROW; r++)
+	{
+		for (int c = 0; c < SMURF_COLUMN; c++)
+		{
+			xRand = rand() % DISP_WIDTH;
+			yRand = rand() % DISP_HEIGHT;
+	
+			Vector2D* pRandLocation = new Vector2D(xRand, yRand);
+			Sprite* pSmurfSprite = new Sprite(pOriginLocation, pSmurfBuffer, (pSmurfBuffer->getBitmapWidth() / SMURF_ROW), (pSmurfBuffer->getBitmapHeight() / SMURF_COLUMN));
+			pDisplay->draw(pRandLocation, pSmurfSprite);
+	
+			delete pRandLocation;
+			delete pSmurfSprite;
+		}
+	}
+
+	pDisplay->draw(pRedLocation, pRedSprite, RED_SCALE);
+
+	pDisplay->saveBuffer(pRedBuffer, REDBUFFER_JPG);
+	pDisplay->saveBuffer(pBackBuffer, BACKBUFFER_JPG);
+
+	pDisplay->flip();
+
+	timer.sleep(5000.0);
+
+	pPerformanceTracker->stopTracking("loop");
+	pPerformanceTracker->clearTracker("loop");
+
+	delete pOriginLocation;
+	delete pDisplay;
+	delete pStepsBuffer;
+	delete pSmurfBuffer;
+	delete pQuimbyBuffer;
+	delete pRedBuffer;
+	delete pBackBuffer;
+	delete pRedSprite;
+	delete pQuimbySprite;
+	delete pStepsSprite;
+	delete pFont;
+	delete pRedLocation;
+	delete pPerformanceTracker;
+
+	MemoryTracker::getInstance()->reportAllocations(cout);
+
+	system("pause");
+	return 0;
+}

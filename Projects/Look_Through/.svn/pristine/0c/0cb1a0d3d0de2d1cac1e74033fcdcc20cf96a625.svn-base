@@ -1,0 +1,16 @@
+#pragma once
+#include "GameEvent.h"
+
+#include <Vector2D.h>
+
+class CursorEvent : public GameEvent
+{
+    private:
+        Vector2D mPos;
+
+    public:
+        CursorEvent(Vector2D cursorPos);
+        ~CursorEvent();
+
+        Vector2D getCursorPos() const { return mPos; }
+};

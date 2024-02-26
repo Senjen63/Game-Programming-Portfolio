@@ -1,0 +1,68 @@
+#include "BabbManager.h"
+
+BabbManager::BabbManager() {}
+BabbManager::~BabbManager() {}
+
+void BabbManager::moveBabb(float dt)
+{
+	mTimeLeft -= dt;
+	if (mTimeLeft <= 0)
+	{
+		if (mRight)
+		{
+			int newX = getLocation().getX() + 64;
+			Vector2D newLoc = Vector2D(newX, (int)getLocation().getY());
+
+			setLocation(newLoc);
+
+			if (getLocation().getX() == 640)
+			{
+				mLeft = true;
+				mRight = false;
+			}
+		}
+
+		if (mLeft)
+		{
+			int newX = getLocation().getX() - 64;
+			Vector2D newLoc = Vector2D(newX, (int)getLocation().getY());
+
+			setLocation(newLoc);
+
+			if (getLocation().getX() == 0)
+			{
+				mLeft = false;
+				mRight = true;
+			}
+		}
+
+		mTimeLeft = mBabbTimePerFrame + mTimeLeft;
+	}
+
+	update(dt);
+	
+}
+
+void BabbManager::setDirection(int dir)
+{
+	if (dir == 0)
+	{
+		mRight = true;
+		mLeft = false;
+	}
+	else
+	{
+		mRight = false;
+		mLeft = true;
+	}
+}
+
+bool BabbManager::attackTobb(Vector2D pos)
+{
+	if (pos.getX() == mLocation.getX())
+	{
+		return true;
+	}
+
+	return false;
+}

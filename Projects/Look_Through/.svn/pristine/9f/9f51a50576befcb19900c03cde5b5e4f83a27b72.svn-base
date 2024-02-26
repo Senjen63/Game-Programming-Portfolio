@@ -1,0 +1,43 @@
+#include "Powerup.h"
+#include "Game.h"
+#include <random>
+
+using namespace std;
+
+Powerup::Powerup()
+{
+	mCurrentType = FRUIT;
+	mAnimation = nullptr;
+
+	setNewPosition();
+}
+
+Powerup::Powerup(PowerupType type, Animation* anim, int id)
+{
+	mCurrentType = type;
+	mAnimation = anim;
+	mID = id;
+
+	setNewPosition();
+}
+
+Powerup::~Powerup()
+{
+	delete mAnimation;
+}
+
+void Powerup::update(float elapsedTime)
+{
+	mAnimation->update(elapsedTime);
+}
+
+void Powerup::draw()
+{
+	Game::instance()->getGraphics()->draw(mX, mY, mAnimation->getCurrentSprite());
+}
+
+void Powerup::setNewPosition()
+{
+	mX = (rand() % (Game::LEVEL_WIDTH - 1) + 1) * Game::TILE_SIZE;
+	mY = (rand() % (Game::LEVEL_HEIGHT - 1) + 1) * Game::TILE_SIZE;
+}

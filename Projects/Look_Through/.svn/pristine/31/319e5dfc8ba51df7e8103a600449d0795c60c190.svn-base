@@ -1,0 +1,79 @@
+#include "InputSystem.h"
+#include "InputEvent.h"
+#include "Vector2D.h"
+#include "EventSystem.h"
+
+InputSystem::InputSystem()
+{
+	this->mpEventQueue = nullptr;
+}
+
+InputSystem::~InputSystem()
+{
+	cleanup();
+}
+
+void InputSystem::init()
+{
+	mpEventQueue = al_create_event_queue();
+
+	al_install_keyboard();
+	al_install_mouse();
+	al_register_event_source(mpEventQueue, al_get_keyboard_event_source());
+	al_register_event_source(mpEventQueue, al_get_mouse_event_source());
+}
+
+void InputSystem::cleanup()
+{
+	al_uninstall_keyboard();
+	al_uninstall_mouse();
+
+	al_destroy_event_queue(mpEventQueue);
+}
+
+bool InputSystem::getCurrentInput(KeyInputs currentKeyInput)
+{
+	ALLEGRO_KEYBOARD_STATE currentKeyState;
+	al_get_keyboard_state(&currentKeyState);
+	return al_key_down(&currentKeyState, currentKeyInput);
+}
+
+bool InputSystem::getCurrentInput(MouseInputs currentMouseInput)
+{
+	ALLEGRO_MOUSE_STATE currentMouseState;
+	al_get_mouse_state(&currentMouseState);
+
+	if (currentMouseState.buttons & currentMouseInput)
+	{
+		return true;
+	}
+
+	return false;
+}
+
+Vector2D InputSystem::getMousePosition()
+{
+	ALLEGRO_MOUSE_STATE currentMouseState;
+	al_get_mouse_state(&currentMouseState);
+	return Vector2D(currentMouseState.x, currentMouseState.y);
+}
+
+void InputSystem::update()
+{
+	while (!al_is_event_queue_empty(mpEventQueue))
+	{
+		ALLEGRO_EVENT currentEvent;
+		al_get_next_event(mpEventQueue, &currentEvent);
+
+		if (currentEvent.type == ALLEGRO_EVENT_KEY_DOWN)
+		{
+			std::string releaseState = "down";
+			EventSystem::getInstance()->fireEvent(InputEvent(releaseState, currentEvent.keyboard.keycode));
+		}
+		else if (currentEvent.type == ALLEGRO_EVENT_KEY_UP)
+		{
+			std::string releaseState = "up";
+			EventSystem::getInstance()->fireEvent(InputEvent(releaseState, currentEvent.keyboard.keycode));
+		}
+	}
+}

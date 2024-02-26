@@ -1,0 +1,106 @@
+#include "Unit.h"
+
+Sprite* Unit::draw()
+{
+	if (mCurrentAnimation == 1)
+	{
+		return mAnimation1->getCurrentSprite();
+	}
+	else
+	{
+		return mAnimation2->getCurrentSprite();
+	}
+}
+
+string Unit::getKeyCode()
+{
+	return keyCode;
+}
+
+float Unit::getLocationX()
+{
+	return mLocation.getX();
+}
+
+float Unit::getLocationY()
+{
+	return mLocation.getY();;
+}
+
+Vector2D Unit::getLocation()
+{
+	return mLocation;
+}
+
+void Unit::setAnimation()
+{
+	if (mCurrentAnimation == 1)
+	{
+		mCurrentAnimation = 2;
+	}
+	else
+	{
+		mCurrentAnimation = 1;
+	}
+}
+
+void Unit::setLocation(Vector2D loc)
+{
+	mLocation = loc;
+}
+
+void Unit::setShouldUpdate()
+{
+	if (mShouldUpdate)
+	{
+		mShouldUpdate = false;
+	}
+	else
+	{
+		mShouldUpdate = true;
+	}
+}
+
+void Unit::setTimeMod(float timeMod)
+{
+	mAnimation1->setTimePerFrame(timeMod);
+	mAnimation2->setTimePerFrame(timeMod);
+}
+
+Unit::Unit()
+{
+	mLocation = Vector2D();
+	mCurrentAnimation = 1;
+	mAnimation1 = nullptr;
+	mAnimation2 = nullptr;
+	mShouldUpdate = true;
+	keyCode = " ";
+}
+
+Unit::Unit(Animation* anim1, Animation* anim2, Vector2D location, string code)
+{
+	mLocation = location;
+	mCurrentAnimation = 1;
+	mAnimation1 = new Animation(anim1);
+	mAnimation2 = new Animation(anim2);
+	mShouldUpdate = true;
+	keyCode = code;
+}
+
+Unit::~Unit()
+{
+	delete mAnimation1;
+	delete mAnimation2;
+
+	mAnimation1 = nullptr;
+	mAnimation2 = nullptr;
+}
+
+void Unit::Update(double dt)
+{
+	if (mShouldUpdate)
+	{
+		mAnimation1->Update(dt);
+		mAnimation2->Update(dt);
+	}
+}

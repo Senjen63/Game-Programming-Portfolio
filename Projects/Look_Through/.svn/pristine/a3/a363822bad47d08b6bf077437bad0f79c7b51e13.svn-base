@@ -1,0 +1,171 @@
+/*
+Author: David Silverman
+Class: GPR-250-01
+Assignment: Assignment 1
+Certification of Authenticity:
+I certify that this assignment is entirely my own work.
+ */
+
+
+#pragma once
+#include <allegro5/allegro.h>
+#include <allegro5/allegro_font.h>
+#include <allegro5/allegro_ttf.h>
+#include <allegro5/allegro_audio.h>
+#include <allegro5/allegro_acodec.h>
+#include <allegro5/allegro_image.h>
+#include <allegro5/allegro_primitives.h>
+#include <MemoryTracker.h>
+
+#include <iostream>
+#include <cassert>
+#include <string>
+#include <cstdlib>
+#include <ctime>
+
+#include <PerformanceTracker.h>
+#include <MemoryTracker.h>
+#include <Vector2D.h>
+#include <Timer.h>
+
+#include "font.h"
+#include "color.h"
+#include "graphicsbuffer.h"
+#include "sprite.h"
+#include "graphicssystem.h"
+
+using namespace std;
+
+int main()
+{
+	PerformanceTracker* pPerformanceTracker = new PerformanceTracker;
+
+	const string INIT_TRACKER_NAME = "init";
+	const string DRAW_TRACKER_NAME = "draw";
+	const string WAIT_TRACKER_NAME = "wait";
+
+
+	if (!al_init())
+	{
+		cout << "error initting Allegro\n";
+		system("pause");
+		return 1;
+	}
+	if (!al_init_image_addon())
+	{
+		cout << "error - Image Add-on not initted\n";
+		system("pause");
+		return 1;
+	}
+	if (!al_init_font_addon())
+	{
+		cout << "error - Font Add-on not initted\n";
+		system("pause");
+		return 1;
+	}
+	if (!al_init_ttf_addon())
+	{
+		cout << "error - TTF Add-on not initted\n";
+		system("pause");
+		return 1;
+	}
+	if (!al_init_primitives_addon())
+	{
+		cout << "error - primitives Add-on not initted\n";
+		system("pause");
+		return 1;
+	}
+	if (!al_install_audio())
+	{
+		cout << "error - Audio Add-on not initted\n";
+		system("pause");
+		//return 1;
+	}
+	if (!al_init_acodec_addon())
+	{
+		cout << "error - Audio Codec Add-on not initted\n";
+		system("pause");
+		//return 1;
+	}
+	if (!al_reserve_samples(1))
+	{
+		cout << "error - samples not reserved\n";
+		system("pause");
+		//return 1;
+	}
+	
+	const string BACKGROUND_FILENAME = "steps.png";
+	const string QUIMBY_FILENAME = "mayor_quimby.png";
+	const string SMURF_FILENAME = "smurf_sprites.png";
+	const string FONT_FILENAME = "cour.ttf";
+	const string FIRST_FILE = "backbuffer.jpg";
+	const string SECOND_FILE = "redbuffer.jpg";
+	const string CURSING = "Curse you Papa Smurf!!!";
+	const int TIME = 5000;
+	const int ARRAY_SIZE = 4;
+	const int FONT_SIZE = 48;
+	const int STAIRS_WIDTH = 1600;
+	const int STAIRS_HEIGHT = 1200;
+	const int DISPLAY_WIDTH = 800;
+	const int DISPLAY_HEIGHT = 600;
+	const int QUIMBY_WIDTH = 264;
+	const int QUIMBY_HEIGHT = 399;
+	const int SMURF = 240;
+	const int SMARF = 60;
+	const float HALF = 0.5f;
+	const float QUART = 0.25f;
+	const float TWO_THIRDS = 0.666667f;
+	const float SIXTH = 0.166667f;
+	const Vector2D TOP_LEFT = Vector2D(0, 0);
+
+	GraphicsSystem gSystem;
+	gSystem.Init();
+
+	srand((unsigned int)time(NULL));
+	Timer timer;
+	Color r(255, 0, 0);
+	Color black(0, 0, 0);
+
+	GraphicsBuffer redColor(r, gSystem.getWidth(), gSystem.getHeight());
+	GraphicsBuffer backGround(BACKGROUND_FILENAME, STAIRS_WIDTH, STAIRS_HEIGHT);
+	GraphicsBuffer quimby(QUIMBY_FILENAME, QUIMBY_WIDTH, QUIMBY_HEIGHT);
+	GraphicsBuffer smurfs(SMURF_FILENAME, SMURF, SMURF);
+
+	Sprite rouge(TOP_LEFT, DISPLAY_HEIGHT, DISPLAY_WIDTH, &redColor);
+	Sprite back(TOP_LEFT, STAIRS_HEIGHT, STAIRS_WIDTH, &backGround);
+	Sprite quimbis(TOP_LEFT, QUIMBY_WIDTH, QUIMBY_HEIGHT, &quimby);
+	Sprite smurf[4][4];
+
+	Font curse(FONT_FILENAME, FONT_SIZE);
+	
+	gSystem.Draw(&redColor, TOP_LEFT, quimbis);
+	gSystem.WriteText(&redColor, TOP_LEFT, curse, black, CURSING);
+	gSystem.Draw(TOP_LEFT, back, 0.5f);
+	gSystem.Draw(Vector2D(DISPLAY_WIDTH * SIXTH, DISPLAY_HEIGHT * SIXTH), rouge, TWO_THIRDS);
+	
+	for (int i = 0; i < ARRAY_SIZE; i++)
+	{
+		for (int j = 0; j < ARRAY_SIZE; j++)
+		{
+			smurf[i][j].setWidth(SMARF);
+			smurf[i][j].setHeight(SMARF);
+			smurf[i][j].setSprite(&smurfs);
+			smurf[i][j].setLoc(Vector2D(i*SMARF, j*SMARF));
+			gSystem.Draw(Vector2D(rand() % DISPLAY_WIDTH, rand() % DISPLAY_HEIGHT), smurf[i][j], QUART);
+		}
+	}
+
+	
+
+	gSystem.SaveBuffer(FIRST_FILE);
+	gSystem.SaveBuffer(&redColor, SECOND_FILE);
+
+	gSystem.Flip();
+
+	timer.sleep(5000);
+
+	gSystem.Cleanup();
+
+	MemoryTracker::getInstance()->reportAllocations(std::cout);
+	system("pause");
+}

@@ -1,0 +1,15 @@
+#pragma once
+
+#include "GameEvent.h"
+
+class MoveEvent : public GameEvent
+{
+public:
+	MoveEvent(const string& dir);
+	~MoveEvent();
+
+	string getDirection() const { return mDirection; };
+
+private:
+	string mDirection;
+};

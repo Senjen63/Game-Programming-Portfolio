@@ -1,0 +1,13 @@
+#include "MyMouseEvent.h"
+
+MyMouseEvent::MyMouseEvent(int mouseCode, Vector2D mousePos)
+	:GameEvent(MY_MOUSE_EVENT)
+{
+	mMouseCode = mouseCode;
+	mMousePos = mousePos;
+}
+
+MyMouseEvent::~MyMouseEvent()
+{
+
+}

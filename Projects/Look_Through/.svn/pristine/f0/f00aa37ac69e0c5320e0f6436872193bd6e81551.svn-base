@@ -1,0 +1,21 @@
+#pragma once
+
+#include "GraphicsBuffer.h"
+
+#include <Trackable.h>
+
+class Sprite : public Trackable
+{
+    private:
+        GraphicsBuffer* mpBitmap;
+        Vector2D mSourcePos;
+        Vector2D mWidthHeight;
+
+    public:
+        Sprite( GraphicsBuffer* pBitmap, Vector2D sourcePos, Vector2D widthHeight );
+        ~Sprite();
+
+        Vector2D getSourcePos();
+        Vector2D getWidthHeight();
+        GraphicsBuffer getSpriteGraphicsBuffer();
+};

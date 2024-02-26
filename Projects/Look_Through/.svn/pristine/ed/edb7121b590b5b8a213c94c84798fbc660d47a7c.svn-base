@@ -1,0 +1,69 @@
+//BP
+#include "GraphicsBuffer.h"
+
+GraphicsBuffer::GraphicsBuffer(string path, Vector2D pieces)
+{
+    mOwnsBitmap = false;
+    if (al_filename_exists(path.c_str()))
+    {
+
+        mpBitmap = al_load_bitmap(path.c_str());
+
+    }
+    else
+    {
+
+        cout << endl <<
+            "File Does Not Exist: " 
+            << path << endl << endl;
+        mpBitmap = nullptr;
+
+    }
+    mPieces = pieces;
+}
+
+GraphicsBuffer::GraphicsBuffer(ALLEGRO_BITMAP* pBitmap)
+{
+    mpBitmap = pBitmap;
+    mOwnsBitmap = false;
+}
+
+GraphicsBuffer::GraphicsBuffer(GraphicsBuffer* pBuff)
+{
+    mpBitmap = pBuff->mpBitmap;
+    mPieces = pBuff->getSections();
+    mOwnsBitmap = false;
+}
+
+GraphicsBuffer::GraphicsBuffer(Color color, int xLength, int yLength)
+{
+    mOwnsBitmap = false;
+    mpBitmap = al_create_bitmap(xLength, yLength);
+    ALLEGRO_BITMAP* previousBtimap = al_get_target_bitmap();
+    al_set_target_bitmap(mpBitmap);
+    al_clear_to_color(al_map_rgba(color.getR(),
+        color.getG(),
+        color.getB(),
+        color.getA()));
+    al_set_target_bitmap(previousBtimap);
+}
+
+GraphicsBuffer::~GraphicsBuffer()
+{
+    if (mOwnsBitmap)
+    {
+
+        al_destroy_bitmap(mpBitmap);
+
+    }
+}
+
+void GraphicsBuffer::resetColors(Color color)
+{
+    ALLEGRO_BITMAP* previousBitmap = al_get_target_bitmap();
+    al_set_target_bitmap(mpBitmap);
+    al_clear_to_color(al_map_rgb(color.getR(),
+        color.getG(),
+        color.getB()));
+    al_set_target_bitmap(previousBitmap);
+}

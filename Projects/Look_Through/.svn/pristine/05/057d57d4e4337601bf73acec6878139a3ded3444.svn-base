@@ -1,0 +1,15 @@
+#pragma once
+#include <Trackable.h>
+#include "EventListener.h"
+#include "GameEvent.h"
+#include "MoveEvent.h"
+
+class EventSystem;
+class Listener : public EventListener
+{
+public:
+	Listener();
+	~Listener();
+	void handleEvent(const Event& theEvent);
+private:
+};

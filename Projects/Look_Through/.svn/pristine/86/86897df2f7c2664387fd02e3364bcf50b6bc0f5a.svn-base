@@ -1,0 +1,14 @@
+#pragma once
+#include "HUDEvent.h"
+
+class AddScoreEvent : public HUDEvent
+{
+private:
+    int mScore = 0;
+
+public:
+    AddScoreEvent(int score);
+    ~AddScoreEvent();
+
+    int getScore() const { return mScore; }
+};

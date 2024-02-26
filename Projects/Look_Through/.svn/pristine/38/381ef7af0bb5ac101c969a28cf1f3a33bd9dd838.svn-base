@@ -1,0 +1,107 @@
+#include "Unit.h"
+#include "Game.h"
+
+Unit::Unit()
+{
+	mPosition = Vector2D();
+	mCurrentAnim = 1;
+	mpAnim1 = new Animation(Game::GetInstance()->GetBuffer(SMURF_FILENAME), FRAMES, STARTING_TIMING, true);
+	mpAnim2 = new Animation(Game::GetInstance()->GetBuffer(DEAN_FILENAME), FRAMES, STARTING_TIMING, true);
+}
+
+
+Unit::Unit(Animation* pAnim1, Animation* pAnim2, Vector2D position)
+{
+	mPosition = position;
+	mCurrentAnim = 1;
+	mpAnim1 = pAnim1;
+	mpAnim2 = pAnim2;
+}
+
+
+Unit::~Unit()
+{
+	mCurrentAnim = 1;
+	delete mpAnim1;
+	delete mpAnim2;
+
+	mpAnim1 = nullptr;
+	mpAnim2 = nullptr;
+}
+
+
+float Unit::GetTime()
+{
+	//since both animations are getting updated at the same time, we can grab the one that isn't drawing and we're still gucci
+	return mpAnim1->GetTime();
+}
+
+Vector2D Unit::GetPosition()
+{
+	return mPosition;
+}
+
+
+void Unit::SetPosition(Vector2D position)
+{
+	mPosition = position;
+}
+
+
+Sprite* Unit::CurrentSprite()
+{
+	if (mCurrentAnim == 1)
+		return mpAnim1->GetCurrentSprite();
+	else
+		return mpAnim2->GetCurrentSprite();
+}
+
+
+void Unit::Update(float t)
+{
+	mTime += t;
+	if (mTime > GetTime() && !mIsPaused) 
+	{
+		mpAnim1->Update();
+		mpAnim2->Update();
+	}
+
+}
+
+
+void Unit::Draw(GraphicsSystem* pGraphicsSystem)
+{
+	if (mCurrentAnim == 1)
+		pGraphicsSystem->draw(CurrentSprite()->getLocation(), CurrentSprite(), GetPosition().getX(), GetPosition().getY());
+	else
+		pGraphicsSystem->draw(CurrentSprite()->getLocation(), CurrentSprite(), GetPosition().getX(), GetPosition().getY());
+}
+
+
+void Unit::SwitchAnimation()
+{
+	if (mCurrentAnim == 1)
+	{
+		mCurrentAnim = 0;
+	}
+	else
+	{
+		mCurrentAnim = 1;
+	}
+}
+
+
+void Unit::TogglePause()
+{
+	if (mIsPaused)
+		mIsPaused = false;
+	else
+		mIsPaused = true;
+}
+
+
+void Unit::SetTime(float timing)
+{
+	mpAnim1->AdjustTime(timing);
+	mpAnim2->AdjustTime(timing);
+}

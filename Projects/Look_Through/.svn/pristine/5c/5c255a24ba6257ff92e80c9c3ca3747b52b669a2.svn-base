@@ -1,0 +1,24 @@
+//BP
+#pragma once
+#include <Event.h>
+
+enum GameEventVariations
+{
+    MESSAGE = NUM_BASE_EVENT_TYPES,
+    MOVE,
+    TURN,
+    GAME_INPUT,
+    ACTION,
+    SPAWN,
+    COLLISION,
+    END_LEVEL,
+    NUM_GAME_EVENT_TYPES
+};
+
+class GameEvents : public Event
+{
+public: 
+    GameEvents(GameEventVariations type);
+    ~GameEvents();
+private:
+};

@@ -1,0 +1,107 @@
+#include "Game.h"
+
+Game* gpGame = nullptr;
+
+void Game::cleanUp()
+{
+	mpDisplay->cleanUp();
+	delete mpWoodsBackground;
+	delete mpSmurfs;
+	delete mpDeans;
+	delete mpSmurfsAnimation;
+	delete mpDeansAnimation;
+	delete mpUnit;
+	delete mpDisplay;
+}
+
+void Game::doLoop()
+{
+	bool keepGoing = false;
+	double targetTime = 16.7;
+	float timeMod = 1.0;
+
+	PerformanceTracker* pPerformanceTracker = new PerformanceTracker;
+
+	Vector2D mousePos = Vector2D(400, 300);
+
+	while (!keepGoing)
+	{
+		//Set up timers and trackers
+		pPerformanceTracker->clearTracker("loop");
+		pPerformanceTracker->startTracking("loop");
+		Timer loopTimer;
+		loopTimer.start();
+
+		//Render
+		mpDisplay->drawCurrent(Vector2D(), Sprite(mpWoodsBackground), 1.0);
+		mpDisplay->drawPart(mpUnit->draw()->getLocation(), mpUnit->draw(), mousePos.getX() - 30, mousePos.getY() - 30);
+
+		mpDisplay->flipDisplay();
+
+		//Takes in player input
+		if (mInput.getMouseState())
+		{
+			mousePos = mInput.getMousePos();
+		}
+
+		keepGoing = mInput.getKeyState(ESCAPE_KEY);
+
+		if (mInput.getKeyState(S_KEY))
+		{
+			mpUnit->setTimeMod(timeMod);
+		}
+
+		if (mInput.getKeyState(F_KEY))
+		{
+			mpUnit->setTimeMod(-timeMod);
+		}
+
+		if (mInput.getKeyState(ENTER_KEY))
+		{
+			mpUnit->setAnimation();
+		}
+
+		//Updates the units
+		mpUnit->Update(targetTime);
+
+		//Use and siplay timers and trackers
+		loopTimer.sleepUntilElapsed(targetTime);
+		pPerformanceTracker->stopTracking("loop");
+
+		cout << "Frame Took:" << pPerformanceTracker->getElapsedTime("loop") << " ms" << endl;
+	}
+
+	delete pPerformanceTracker;
+}
+
+void Game::Init()
+{
+	mpDisplay->init();
+
+	mpWoodsBackground = new GraphicsBuffer(ASSET_PATH + BACKGROUND_FILENAME);
+	mpSmurfs = new GraphicsBuffer(ASSET_PATH + SMURF_FILENAME);
+	mpDeans = new GraphicsBuffer(ASSET_PATH + DEAN_FILENAME);
+	mpSmurfsAnimation = new Animation(mpSmurfs, TIME_PER_FRAME, true, NUM_FRAMES);
+	mpDeansAnimation = new Animation(mpDeans, TIME_PER_FRAME, true, NUM_FRAMES);
+	mpUnit = new Unit(mpSmurfsAnimation, mpDeansAnimation, Vector2D());
+}
+
+Game::Game()
+{
+	mpDisplay = new GraphicsSystem(DISP_HEIGHT, DISP_WIDTH);
+
+	mpUnit = nullptr;
+
+	mpWoodsBackground = nullptr;
+	mpSmurfs = nullptr;
+	mpDeans = nullptr;
+	mpSmurfsAnimation = nullptr;
+	mpDeansAnimation = nullptr;
+
+	mInput.Init();
+}
+
+Game::~Game()
+{
+	cleanUp();
+}

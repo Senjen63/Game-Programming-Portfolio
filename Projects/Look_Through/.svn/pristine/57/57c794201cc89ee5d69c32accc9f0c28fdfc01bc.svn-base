@@ -1,0 +1,31 @@
+/*******************************************************
+* Author: Aven Presseisen
+* Class: GPR-250-02
+* Assignment: Assignment 3
+* Certification of Authenticity:
+* I certify that this assignment is entirely my own work.
+************/
+
+#pragma once
+
+#include "GraphicsBuffer.h"
+
+class Sprite : public Trackable
+{
+	GraphicsBuffer * mpGraphicsBuffer;
+	int mLOCX;
+	int mLOCY;
+	int mHeight;
+	int mWidth;
+
+public:
+	Sprite( GraphicsBuffer & graphicsBuffer, int locX, int locY, int width, int height );
+	Sprite( Sprite && src ) noexcept;
+	~Sprite();
+
+	const GraphicsBuffer & getGraphicsBuffer() const;
+	int getHeight() const;
+	int getLOCX() const;
+	int getLOCY() const;
+	int getWidth() const;
+};

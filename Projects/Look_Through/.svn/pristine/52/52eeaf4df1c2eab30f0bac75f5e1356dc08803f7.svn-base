@@ -1,0 +1,10 @@
+#include "ScoreEvent.h"
+
+ScoreEvent::ScoreEvent(int score) : HudEvent((HudEventTypes)SCORE_EVENT)
+{
+	mScore = score;
+}
+
+ScoreEvent::~ScoreEvent()
+{
+}

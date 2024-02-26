@@ -1,0 +1,21 @@
+#pragma once
+
+#include <string>
+#include <allegro5/allegro.h>
+#include "EventSystem.h"
+#include "InputEvent.h"
+
+class InputSystem
+{
+public:
+	InputSystem() {};
+	~InputSystem() { clean(); }
+
+	void init();
+	void clean();
+
+	void update();
+
+private:
+	EventSystem* mpEventSystem;
+};

@@ -1,0 +1,18 @@
+#include "Sprite.h"
+
+using namespace std;
+
+Sprite::Sprite( GraphicsBuffer* buff, int locX, int lotY, int width, int height )
+{
+	mpBitmap = buff;
+	mLocX = locX;
+	mLocY = lotY;
+	mWidth = width;
+	mHeight = height;
+}
+
+Sprite::~Sprite()
+{
+	//delete mpBitmap;
+	mpBitmap = nullptr;
+}

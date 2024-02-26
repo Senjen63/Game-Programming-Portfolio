@@ -1,0 +1,143 @@
+#pragma once
+#include "GraphicsSystem.h"
+#include "InputSystem.h"
+#include "Timer.h"
+#include "UnitManager.h"
+#include "GraphicsBufferManager.h"
+#include "PerformanceTracker.h"
+#include "EventListener.h"
+#include "Level.h"
+#include "Snake.h"
+#include "EventSystem.h"
+#include "GameEvent.h"
+#include "InputEvents.h"
+#include "GameplayEvents.h"
+#include <iomanip>
+#include <sstream>
+
+//Thanks to Joey Romanowski for writing out all these enums and sharing them
+const enum KeyCode
+{
+	A = ALLEGRO_KEY_A, B = ALLEGRO_KEY_B, C = ALLEGRO_KEY_C, D = ALLEGRO_KEY_D, E = ALLEGRO_KEY_E, F = ALLEGRO_KEY_F, G = ALLEGRO_KEY_G, H = ALLEGRO_KEY_H, I = ALLEGRO_KEY_I, J = ALLEGRO_KEY_J, K = ALLEGRO_KEY_K, L = ALLEGRO_KEY_L, M = ALLEGRO_KEY_M, N = ALLEGRO_KEY_N, O = ALLEGRO_KEY_O, P = ALLEGRO_KEY_P, Q = ALLEGRO_KEY_Q, R = ALLEGRO_KEY_R, S = ALLEGRO_KEY_S, T = ALLEGRO_KEY_T, U = ALLEGRO_KEY_U, V = ALLEGRO_KEY_V, W = ALLEGRO_KEY_W, X = ALLEGRO_KEY_X, Y = ALLEGRO_KEY_Y, Z = ALLEGRO_KEY_Z,
+	ONE = ALLEGRO_KEY_1, TWO = ALLEGRO_KEY_2, THREE = ALLEGRO_KEY_3, FOUR = ALLEGRO_KEY_4, FIVE = ALLEGRO_KEY_5, SIX = ALLEGRO_KEY_6, SEVEN = ALLEGRO_KEY_7, EIGHT = ALLEGRO_KEY_8, NINE = ALLEGRO_KEY_9, ZERO = ALLEGRO_KEY_0,
+	PAD_ONE = ALLEGRO_KEY_PAD_1, PAD_TWO = ALLEGRO_KEY_PAD_2, PAD_THREE = ALLEGRO_KEY_PAD_3, PAD_FOUR = ALLEGRO_KEY_PAD_4, PAD_FIVE = ALLEGRO_KEY_PAD_5, PAD_SIX = ALLEGRO_KEY_PAD_6, PAD_SEVEN = ALLEGRO_KEY_PAD_7, PAD_EIGHT = ALLEGRO_KEY_PAD_8, PAD_NINE = ALLEGRO_KEY_PAD_9, PAD_ZERO = ALLEGRO_KEY_PAD_0,
+	F1 = ALLEGRO_KEY_F1, F2 = ALLEGRO_KEY_F2, F3 = ALLEGRO_KEY_F3, F4 = ALLEGRO_KEY_F4, F5 = ALLEGRO_KEY_F5, F6 = ALLEGRO_KEY_F6, F7 = ALLEGRO_KEY_F7, F8 = ALLEGRO_KEY_F8, F9 = ALLEGRO_KEY_F9, F10 = ALLEGRO_KEY_F10, F11 = ALLEGRO_KEY_F11, F12 = ALLEGRO_KEY_F12,
+	ESCAPE = ALLEGRO_KEY_ESCAPE,
+	TAB = ALLEGRO_KEY_TAB,
+	ENTER = ALLEGRO_KEY_ENTER,
+	SPACE = ALLEGRO_KEY_SPACE,
+};
+
+class Game : public EventListener
+{
+private:
+	static Game* mpsGame;
+
+	const string mFontFile = "cour.ttf";
+	const string mASSET_PATH = "..\\..\\tucker.ryan\\Assignment4_Midterm\\Assets\\";
+	const string mMAIN_FILENAME = "main.txt";
+	string mSTART_FILENAME;
+	string mWIN_FILENAME;
+	string mEND_FILENAME;
+	string mLVL1_FILENAME;
+	string mLVL2_FILENAME;
+	string mLVL3_FILENAME;
+	string mBackgroundFilename;
+	string mBuffFilename;
+	string mDebuffFilename;
+	string mFoodFilename;
+	string mScoreFilename;
+	string mSnakeSpriteFilename;
+	string mWallSpriteFilename;
+	
+	EventSystem* mpEventSystem;
+
+	GraphicsSystem* mpSystem;
+	InputSystem mInput;
+	Snake mSnake;
+	UnitManager mCollect;
+	UnitManager mWalls;
+	Font* mpFont;
+
+	Unit mFoodObj;
+	UnitManager mSpeedUp;
+	UnitManager mSlowDown;
+	UnitManager mPointsObj;
+	int mPoints = 0;
+
+	GraphicsBuffer* mpBackground;
+	GraphicsBuffer* mpWall;
+	GraphicsBuffer* mpSnake;
+	GraphicsBuffer* mpGameOver;
+	GraphicsBuffer* mpGameWin;
+	GraphicsBuffer* mpGameStart;
+	GraphicsBuffer* mpFood;
+	GraphicsBuffer* mpBuff;
+	GraphicsBuffer* mpDebuff;
+	GraphicsBuffer* mpScore;
+
+	GraphicsBufferManager mBuffers;
+
+	bool mShouldContinue = true;
+	bool mFoodCreated = false;
+	bool mCollide = true;
+
+	const double mScreenFps = 60.0;
+	double mTimeOnLevel = 0.0;
+
+	int DISP_WIDTH = 1200;
+	int DISP_HEIGHT = 800;
+	double mFps = 60.0;
+	double mSpeedChange = 1;
+	const int mScale = 1;
+	float mMAX_FPS = 120;
+	float mMIN_FPS = 1;
+	const Vector2D mVecZero = Vector2D(0, 0);
+
+	vector<Vector2D> mGridSpaces;
+	vector<Vector2D> mGridSpacesOpen;
+
+	vector<Level> mLevels;
+	unsigned int mCurrentLevel;
+
+	int mSnakeHeadX;
+	int mSnakeHeadY;
+
+	int mScreenCenterX;
+	int mScreenCenterY;
+
+	int mWidth;
+	int mHeight;
+
+	Game();
+
+	~Game();
+public:
+	static Game* getInstance();
+	static void destroyInstance();
+	static void createInstance();
+
+	void init();
+
+	void cleanup();
+
+	void eventCheck();
+
+	void doLoop();
+
+	void handleEvent(const Event &event);
+
+	void startGame();
+
+	void winGame();
+
+	void endGame();
+
+	void nextLevel();
+
+	void spawnObjects();
+
+	void loadLevel();
+
+	void drawUI();
+};

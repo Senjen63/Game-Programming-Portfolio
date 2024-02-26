@@ -1,0 +1,167 @@
+
+#include "Unit.h"
+#include "Game.h"
+
+Unit::Unit()
+{
+	mPosition = Vector2D();
+	mCurrentAnim = 1;
+	mTime = 0;
+	mTiming = Game::getInstance()->getDefaultTiming();
+	mpAnimation1 = NULL;// new Animation(Game::getInstance()->getGraphicsBuffer(SPEED_UP_FILENAME), 4, STARTING_TIMING, true);
+	mpAnimation2 = NULL;// new Animation(Game::getInstance()->getGraphicsBuffer(FOOD_FILENAME), 4, STARTING_TIMING, true);
+	mSprite = new Sprite(Game::getInstance()->getGraphicsBuffer(Game::getInstance()->getSnakeFile()), Vector2D(), 50, 50);
+	mPaused = false;
+}
+
+Unit::Unit(GraphicsBuffer* pBuffer, int numFrames)
+{
+	mPosition = Vector2D();
+	mCurrentAnim = 1;
+	mTime = 0;
+	mTiming = Game::getInstance()->getDefaultTiming();
+	mpAnimation1 = new Animation(pBuffer, numFrames, Game::getInstance()->getDefaultTiming(), true);
+	mpAnimation2 = NULL;// new Animation(Game::getInstance()->getGraphicsBuffer(FOOD_FILENAME), 4, STARTING_TIMING, true);
+	mSprite = NULL;// new Sprite(Game::getInstance()->getGraphicsBuffer(SNAKE_FILENAME), Vector2D(), 50, 50);
+	mPaused = false;
+}
+
+Unit::Unit(GraphicsBuffer* pBuffer)
+{
+	mPosition = Vector2D();
+	mCurrentAnim = 1;
+	mTime = 0;
+	mTiming = Game::getInstance()->getDefaultTiming();
+	mpAnimation1 = NULL;
+	mpAnimation2 = NULL;
+	mSprite = new Sprite(pBuffer, Vector2D(), Game::getInstance()->getSpriteWidth(), Game::getInstance()->getSpriteHeight());
+	mPaused = false;
+}
+
+Unit::Unit(GraphicsBuffer* pBuffer, Vector2D location)
+{
+	mPosition = location;
+	mCurrentAnim = 1;
+	mTime = 0;
+	mTiming = Game::getInstance()->getDefaultTiming();
+	mpAnimation1 = NULL;
+	mpAnimation2 = NULL;
+	mSprite = new Sprite(pBuffer, Vector2D(), Game::getInstance()->getSpriteWidth(), Game::getInstance()->getSpriteHeight());
+	mPaused = false;
+}
+
+Unit::Unit(Animation* pAnim1, Animation* pAnim2, Vector2D position)
+{
+	mPosition = position;
+	mCurrentAnim = 1;
+	mTime = 0;
+	mTiming = Game::getInstance()->getDefaultTiming();
+	mpAnimation1 = pAnim1;
+	mpAnimation2 = pAnim2;
+
+	mPaused = false;
+}
+
+Unit::~Unit()
+{
+	mCurrentAnim = 1;
+	mTime = 0;
+
+	delete mpAnimation1;
+	delete mpAnimation2;
+	delete mSprite;
+
+	mpAnimation1 = nullptr;
+	mpAnimation2 = nullptr;
+}
+
+float Unit::getTiming()
+{
+	return mTiming;
+}
+
+void Unit::update(float elapsedTime)
+{
+	mTime += elapsedTime;
+	
+	if (getTiming() != 0 && mTime > getTiming() && !mPaused)
+	{
+		mTime = 0;
+		if (mpAnimation1 != NULL)
+			mpAnimation1->update();
+
+		if (mpAnimation2 != NULL)
+			mpAnimation2->update();
+	}
+}
+
+void Unit::update(float elapsedTime, Vector2D newPos)
+{
+	mTime += elapsedTime;
+	
+	if (mTime > mTiming)
+	{
+		mTime = 0;
+		mPosition = newPos;
+	}
+}
+
+void Unit::draw(GraphicsSystem* pGraphicsSystem)
+{
+	if (mSprite == NULL)
+	{
+		if (mCurrentAnim == 1)
+			pGraphicsSystem->draw(currentSprite()->getLocation(), currentSprite(), getPosition().getX(), getPosition().getY());
+		else
+			pGraphicsSystem->draw(currentSprite()->getLocation(), currentSprite(), getPosition().getX(), getPosition().getY());
+	}
+	else
+	{
+		pGraphicsSystem->draw(Vector2D(getPosition().getX() - mSprite->getWidth(), getPosition().getY() - mSprite->getHeight()), mSprite);
+	}
+}
+
+Sprite* Unit::currentSprite()
+{
+	if (mCurrentAnim == 1)
+		return mpAnimation1->getCurrentSprite();
+	else
+		return mpAnimation2->getCurrentSprite();
+}
+
+void Unit::setAnimation()
+{
+	if (mCurrentAnim == 1)
+		mCurrentAnim = 0;
+	else
+		mCurrentAnim = 1;
+}
+
+void Unit::setTiming(float timing)
+{
+	mTiming = timing;
+	
+	if (mpAnimation1 != NULL)
+		mpAnimation1->adjustTiming(timing);
+
+	if (mpAnimation2 != NULL)
+		mpAnimation2->adjustTiming(timing);
+}
+
+void Unit::setPosition(Vector2D position)
+{
+	mPosition = position;
+}
+
+void Unit::setPaused()
+{
+	if (mPaused)
+		mPaused = false;
+	else
+		mPaused = true;
+}
+
+Vector2D Unit::getPosition()
+{
+	return mPosition;
+}

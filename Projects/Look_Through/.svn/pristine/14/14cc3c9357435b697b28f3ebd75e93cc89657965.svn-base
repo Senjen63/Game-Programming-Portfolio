@@ -1,0 +1,56 @@
+#pragma once
+
+#include <vector>
+#include <Trackable.h>
+#include <Vector2D.h>
+#include "GraphicsBuffer.h"
+
+class Sprite : public Trackable
+{
+public:
+    /* Statics */
+    /// <summary>
+    /// Slices a buffer into an array of sprites 
+    /// </summary>
+    /// <param name="pBuffer"></param>
+    /// <param name="spriteWidth"></param>
+    /// <param name="spriteHeight"></param>
+    /// <param name="numSprites"></param>
+    /// <returns>vector with all the sprites </returns>
+    static std::vector<Sprite> Sprite::slice(const GraphicsBuffer* pBuffer, int spriteWidth, int spriteHeight, 
+        int sheetWidth = -1, int sheetHeight = -1, Vector2D sheetStart = Vector2D());
+
+    /* Constuctors */
+    /// <summary>
+    /// References one section of a buffer 
+    /// </summary>
+    /// <param name="pBuffer"> - The entire bitmap</param>
+    /// <param name="loc"> - Top left of section</param>
+    /// <param name="width"> - Width of section</param>
+    /// <param name="height"> - Height of sections</param>
+    Sprite(const GraphicsBuffer* pBuffer, const Vector2D& loc, int width, int height);
+    /// <summary>
+    /// Creates a sprite of the entire bitmap 
+    /// </summary>
+    Sprite(const GraphicsBuffer* pBuffer);
+
+    Sprite() = default;
+    Sprite(const Sprite& other) = default;
+    Sprite& operator=(const Sprite&) = default;
+    ~Sprite();
+
+    /* Accessors */
+    const GraphicsBuffer* getBuffer() const { return mpBuffer; } // Doesn't ensure that the buffer actaully exist :/
+    Vector2D getLoc() const { return mLoc; }
+    int getWidth() const { return mWidth; }
+    int getHeight() const { return mHeight; }
+
+    Vector2D getOffsetToCenter() const { return Vector2D(mWidth * 0.5f, mHeight * 0.5f); }
+
+private:
+    const GraphicsBuffer* mpBuffer = nullptr;
+    Vector2D mLoc = Vector2D();
+    int mWidth = 0;
+    int mHeight = 0;
+};
+

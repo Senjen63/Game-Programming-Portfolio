@@ -1,0 +1,23 @@
+#pragma once
+#include "allegro5/allegro.h"
+
+class InputSystem
+{
+
+	friend class Game;
+
+private:
+
+	void init();
+
+	bool getKeyState(int keyID);
+
+	bool getMouseState(int mouseID);
+public:
+
+	InputSystem();
+
+	~InputSystem();
+
+	void cleanup();
+};

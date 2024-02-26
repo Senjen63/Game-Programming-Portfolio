@@ -1,0 +1,12 @@
+#pragma once
+
+#include <string>
+#include "GameEvent.h"
+
+class DeathEvent : public GameEvent
+{
+public:
+
+	DeathEvent():GameEvent(DEATH_EVENT) {};
+	~DeathEvent() {};
+};

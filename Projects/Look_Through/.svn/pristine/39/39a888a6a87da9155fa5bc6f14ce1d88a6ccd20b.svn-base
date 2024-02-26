@@ -1,0 +1,43 @@
+#pragma once
+#include <cassert>
+#include <string>
+
+#include <PerformanceTracker.h>
+#include <MemoryTracker.h>
+#include <Vector2D.h>
+#include <Timer.h>
+
+#include "Color.h"
+#include "GraphicsBuffer.h"
+
+using namespace std;
+
+const Vector2D DEFAULT_SPRITE_LOC = Vector2D(0, 0);
+const int DEFAULT_SPRITE_HEIGHT = 0;
+const int DEFAULT_SPRITE_WIDTH = 0;
+
+class Sprite : public Trackable
+{
+private:
+	GraphicsBuffer* mpBuffer;
+	Vector2D mAnchor;
+	int mHeight;
+	int mWidth;
+	bool mOwnsBuffer;
+
+public:
+	Sprite();
+	Sprite(GraphicsBuffer* pBuffer, Vector2D anchor = DEFAULT_SPRITE_LOC, int height = DEFAULT_SPRITE_HEIGHT, int width = DEFAULT_SPRITE_WIDTH);
+	Sprite(const string& filename, Vector2D anchor = DEFAULT_SPRITE_LOC, int height = DEFAULT_SPRITE_HEIGHT, int width = DEFAULT_SPRITE_WIDTH);
+	~Sprite();
+
+	Vector2D getAnchor() const;
+	int getHeight() const;
+	int getWidth() const;
+	GraphicsBuffer* getBuffer() const;
+
+	void setAnchor(Vector2D anchor);
+	void setHeight(int height);
+	void setWidth(int width);
+	void setBuffer(GraphicsBuffer* pBuffer);
+};

@@ -1,0 +1,17 @@
+=== Player Info === 
+Tank Speeds: <SPEED 1> <SPEED 2> <SPEED 3> 
+Bullet Speeds: <SPEED 1> <SPEED 2> <SPEED 3> 
+Turn Speed: <SPEED>
+
+=== Animation Info === 
+Wall Path: assets\Sprites\<WALL NAME>
+Tank Path: assets\Sprites\<TANK NAME>
+Tank Framerate: 10 
+Tank Size: 128 
+
+Save Data Path: assets\<SAVE DATA NAME>
+
+=== Level Names === 
+Level 1: assets\Levels\<LEVEL 1 NAME> 
+Level 2: assets\Levels\<LEVEL 2 NAME> 
+Level 3: assets\Levels\<LEVEL 3 NAME> 

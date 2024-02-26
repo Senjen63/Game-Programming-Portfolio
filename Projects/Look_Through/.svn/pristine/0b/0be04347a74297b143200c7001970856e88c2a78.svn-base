@@ -1,0 +1,31 @@
+#pragma once
+
+#include "Trackable.h"
+#include "Animation.h"
+#include "Vector2D.h"
+
+class Unit : public Trackable
+{
+private:
+	string mTag;
+	Vector2D mScale;
+	Vector2D mLocation;
+	Animation* mpAnimations;
+public:
+	//add mutators for scale and location, and put their instantiation in the constructor
+	Unit(float posX, float posY, float scaleX, float scaleY);
+	Unit(float posX, float posY, float scaleX, float scaleY, string tag);
+	~Unit();
+	void update(double dt);
+	//dt is how much time has passed
+	void draw();
+	void setAnimation(Animation* animation);
+	Animation* getAnimation() { return mpAnimations; };
+
+	bool doesPointIntersect(Vector2D vec);
+	string getTag() { return mTag; };
+	Vector2D getScale() { return mScale; };
+	Vector2D getLocation() { return mLocation; };
+	void setScale(Vector2D vec) { mScale = vec; };
+	void setLocation(Vector2D vec) { mLocation = vec; };
+};

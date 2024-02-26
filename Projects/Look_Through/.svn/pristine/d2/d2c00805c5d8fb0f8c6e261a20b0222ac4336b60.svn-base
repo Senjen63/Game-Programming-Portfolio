@@ -1,0 +1,187 @@
+#include "Game.h"
+#include <PerformanceTracker.h>
+
+using namespace std;
+
+Game* Game::smpInst = nullptr;
+
+// Game Specific Constants 
+const string ASSET_PATH = "..\\..\\common\\assets\\";
+const string SMURF_SPRITES_FILENAME = "smurf_sprites.png";
+const string DEAN_SPRITES_FILENAME = "dean_sprites.png";
+const string WOODS_FILENAME = "Woods.png";
+const int NUM_SMURFS = 16;
+const int SMURF_SIZE = 60;
+const float ANIM_FRAME_RATE = 10;
+const float ANIM_DELTA_FRAME_RATE = 2;
+
+const float HALF = 0.5f;
+
+Game::Game(int screenWidth, int screenHeight, float frameRate)
+{
+    mpGraphicsSystem = new GraphicsSystem(screenWidth, screenHeight);
+    mpInputSystem = new InputSystem();
+    mpGraphicsBufferManager = new GraphicsBufferManager();
+    mpEntityManager = new EntityManager();
+
+    mFrameTargetTime = 1.0 / frameRate * 1000; // Frames per second to ms per frame 
+}
+
+Game::~Game()
+{
+    cleanUp();
+
+    delete mpEntityManager;
+    delete mpGraphicsBufferManager;
+    delete mpInputSystem;
+    delete mpGraphicsSystem;
+}
+
+void Game::createInstance(int screenWidth, int screenHeight, float frameRate)
+{
+    // Delete previous inst 
+    if (smpInst)
+    {
+        delete smpInst;
+    }
+
+    smpInst = new Game(screenWidth, screenHeight, frameRate);
+}
+
+void Game::destoryInstance()
+{
+    if (smpInst)
+    {
+        delete smpInst;
+        smpInst = nullptr;
+    }
+}
+
+Game* Game::getInstance()
+{
+#ifdef DEBUG
+    // Sanity check for while I am writting code 
+    if (!smpInst)
+    {
+        throw std::exception("smpInst is nullptr! Make sure to call createInstance() before getInstance()");
+    }
+#endif
+
+    return smpInst;
+}
+
+void Game::init()
+{
+    if (mIsInitted)
+    {
+        return;
+    }
+
+    mpGraphicsSystem->init();
+    mpInputSystem->init();
+
+    gameSpecificCreatation();
+
+    mIsInitted = true;
+}
+
+void Game::cleanUp()
+{
+    // Don't clean up if nothing exists 
+    if (!mIsInitted)
+    {
+        return;
+    }
+
+    mpGraphicsSystem->cleanUp();
+    mpInputSystem->cleanUp();
+
+    mIsInitted = false;
+}
+
+void Game::doLoop()
+{
+    PerformanceTracker* pTracker = new PerformanceTracker();
+    Timer loopTimer;
+
+    while (!mpInputSystem->getKeyState(KeyCode::ESCAPE))
+    {
+        // Timer things 
+        pTracker->clearTracker(LOOP_TRACKER_NAME);
+        pTracker->startTracking(LOOP_TRACKER_NAME);
+        loopTimer.start();
+
+        // Clear background 
+        mpGraphicsSystem->clearToColor(COLOR_BLACK);
+
+        // Draw woods 
+        mpGraphicsSystem->draw(Vector2D(), Sprite(mpGraphicsBufferManager->getBuffer(WOODS_FILENAME)), 0.5f);
+
+        // Update 
+        gameSpecificUpdate();
+        mpEntityManager->updateAll(mFrameTargetTime);
+
+        // Draw 
+        mpEntityManager->drawAll(*mpGraphicsSystem);
+        mpGraphicsSystem->flip();
+
+        loopTimer.sleepUntilElapsed(mFrameTargetTime);
+
+        pTracker->stopTracking(LOOP_TRACKER_NAME);
+        //std::cout << "Time took: " << pTracker->getElapsedTime(LOOP_TRACKER_NAME) << " ms" << std::endl;
+    }
+
+    delete pTracker;
+}
+
+void Game::gameSpecificCreatation()
+{
+    mpGraphicsBufferManager->addBuffer(WOODS_FILENAME, ASSET_PATH + WOODS_FILENAME);
+    mpGraphicsBufferManager->addBuffer(SMURF_SPRITES_FILENAME, ASSET_PATH + SMURF_SPRITES_FILENAME);
+    mpGraphicsBufferManager->addBuffer(DEAN_SPRITES_FILENAME, ASSET_PATH + DEAN_SPRITES_FILENAME);
+
+    mAnims.reserve(2);
+    mAnims.push_back(Animation(mpGraphicsBufferManager->getBuffer(SMURF_SPRITES_FILENAME), SMURF_SIZE, SMURF_SIZE, ANIM_FRAME_RATE));
+    mAnims.push_back(Animation(mpGraphicsBufferManager->getBuffer(DEAN_SPRITES_FILENAME), SMURF_SIZE, SMURF_SIZE, ANIM_FRAME_RATE));
+}
+
+void Game::gameSpecificUpdate()
+{
+    // Create on left mouse down 
+    if (mpInputSystem->getMouseButtonDown(MouseButton::LEFT))
+    {
+        mpEntityManager->addEntity(mpInputSystem->getMousePosition(), mAnims);
+    }
+
+    // Delete on right mouse down 
+    if (mpInputSystem->getMouseButtonDown(MouseButton::RIGHT))
+    {
+        for (int i = 0; i < mpEntityManager->getSize(); i++)
+        {
+            if (mpEntityManager->getEntity(i)->overlapsPosition(mpInputSystem->getMousePosition()))
+            {
+                mpEntityManager->deleteEntity(i);
+                i--; // Don't skip entities 
+            }
+        }
+    }
+
+    // Change animation on enter 
+    if (mpInputSystem->getKeyState(KeyCode::ENTER))
+    {
+        Entity* lastEntity = mpEntityManager->getEntity(mpEntityManager->getSize() - 1);
+        lastEntity->setAnimationIndex(lastEntity->getAnimationIndex() == 0 ? 1 : 0); // Toggle index (between 0 and 1) 
+    }
+
+    // Pause/Play animations on space 
+    if (mpInputSystem->getKeyState(KeyCode::SPACE))
+    {
+        mPauseAnims = !mPauseAnims;
+    }
+
+    for (int i = 0; i < mpEntityManager->getSize(); i++)
+    {
+        int frameRate = mPauseAnims ? 0 : ANIM_FRAME_RATE;
+        mpEntityManager->getEntity(i)->getAnimation().setFrameRate(frameRate);
+    }
+}

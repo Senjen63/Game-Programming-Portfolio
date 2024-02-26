@@ -1,0 +1,40 @@
+#include "Sprite.h"
+
+Sprite::Sprite()
+{
+	mpGraphicsBuff = NULL;
+	mLocation = Vector2D(0, 0);
+	mWidth = 0;
+	mHeight = 0;
+}
+Sprite::Sprite(GraphicsBuffer*& pGraphicsBuff, Vector2D location, int width, int height) 
+{
+	mpGraphicsBuff = pGraphicsBuff;
+	mLocation = location;
+	mWidth = width;
+	mHeight = height;
+}
+Sprite::~Sprite()
+{
+	mpGraphicsBuff = NULL;
+	mLocation = Vector2D(0, 0);
+	mWidth = 0;
+	mHeight = 0;
+}
+
+GraphicsBuffer* Sprite::getBuff()
+{
+	return mpGraphicsBuff;
+}
+Vector2D Sprite::getLocation()
+{
+	return mLocation;
+}
+int Sprite::getHeight()
+{
+	return mHeight;
+}
+int Sprite::getWidth()
+{
+	return mWidth;
+}

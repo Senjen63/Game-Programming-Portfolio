@@ -1,0 +1,184 @@
+#include "Game.h"
+#include "GraphicsBufferManager.h"
+#include <PerformanceTracker.h>
+#include "GraphicsSystem.h"
+#include "GraphicsBuffer.h"
+#include "InputSystem.h"
+#include "UnitManager.h"
+#include "Animation.h"
+#include "Sprite.h"
+#include "Color.h"
+#include <Timer.h>
+#include "Font.h"
+#include "Unit.h"
+
+Game* Game::mpsGame = nullptr;
+
+Game* Game::getInstance()
+{
+	return mpsGame;
+}
+
+void Game::createInstance()
+{
+	if (mpsGame == nullptr)
+	{
+		mpsGame = new Game;
+	}	
+}
+
+void Game::destroyInstance()
+{
+	if (mpsGame != nullptr)
+	{
+		delete mpsGame;
+		mpsGame = nullptr;
+	}
+}
+
+GraphicsSystem* Game::getGraphicsSystem()
+{
+	return mpGraphicsSystem;
+}
+
+Game::~Game()
+{
+	cleanup();
+}
+
+void Game::init(int width, int height)
+{
+	GraphicsSystem::createInstance();
+	mpGraphicsSystem = GraphicsSystem::getInstance();
+	mpGraphicsSystem->init(width, height);
+
+	mpInputSystem = new InputSystem;
+	mpInputSystem->init();
+
+	mpGraphicsBufferManager = new GraphicsBufferManager;
+
+	mpGraphicsBufferManager->addGraphicsBuffer(ASSET_PATH + BACKGROUND_FILENAME, BACKGROUND_FILENAME);
+	mpGraphicsBufferManager->addGraphicsBuffer(ASSET_PATH + SMURF_FILENAME, SMURF_FILENAME);
+	mpGraphicsBufferManager->addGraphicsBuffer(ASSET_PATH + DEAN_FILENAME, DEAN_FILENAME);	
+
+	mpSmurfAnim = new Animation(mpGraphicsBufferManager->getGraphicsBuffer(SMURF_FILENAME), SPRITE_SHEET_WIDTH, SPRITE_SHEET_HEIGHT, SPRITE_WIDTH, SPRITE_HEIGHT);
+	mpDeanAnim = new Animation(mpGraphicsBufferManager->getGraphicsBuffer(DEAN_FILENAME), SPRITE_SHEET_WIDTH, SPRITE_SHEET_HEIGHT, SPRITE_WIDTH, SPRITE_HEIGHT);
+
+	mpUnitManager = new UnitManager;
+}
+
+void Game::cleanup()
+{
+	// Clean up game objects
+	delete mpUnitManager;
+	delete mpSmurfAnim;
+	delete mpDeanAnim;	
+
+	// Clean up game system things
+	delete mpGraphicsBufferManager;
+
+	// Clean up game systems
+	delete mpInputSystem;
+	GraphicsSystem::destroyInstance();	
+	mpGraphicsSystem = nullptr;
+}
+
+void Game::doLoop()
+{
+	bool keepGoing = true;
+
+	bool playAnim = true;
+	bool unitIsSmurf = true;
+
+	double timeToSwap = ANIM_SWAP_DELAY_IN_MS;
+	double timeToPause = ANIM_PAUSE_DELAY_IN_MS;
+
+	PerformanceTracker performanceTracker;
+	string trackerName = "loop";
+	
+
+	while (keepGoing)
+	{
+		performanceTracker.clearTracker(trackerName);
+		performanceTracker.startTracking(trackerName);
+		Timer loopTimer;
+		loopTimer.start();
+		
+		// get input
+
+		keepGoing = !mpInputSystem->getKeyState(KeyCode::ESCAPE_KEY);
+		//bool doSpeedUp = mpInputSystem->getKeyState(KeyCode::F_KEY);
+		//bool doSlowDown = mpInputSystem->getKeyState(KeyCode::S_KEY);
+		bool didPressEnter = mpInputSystem->getKeyState(KeyCode::ENTER_KEY);
+		bool didPressSpace = mpInputSystem->getKeyState(KeyCode::SPACE_KEY);
+		
+		bool didLeftClick = mpInputSystem->getMouseState(MouseCode::LEFT_CLICK);
+		bool didRightClick = mpInputSystem->getMouseState(MouseCode::RIGHT_CLICK);
+		Vector2D mousePos = mpInputSystem->getMousePosition();
+
+		// do updates
+		
+		//if (doSpeedUp && !doSlowDown)
+		//{
+		//	mpSmurfAnim->speedUp();
+		//	mpDeanAnim->speedUp();
+		//}
+		//
+		//if (doSlowDown && !doSpeedUp)
+		//{
+		//	mpSmurfAnim->slowDown();
+		//	mpDeanAnim->slowDown();
+		//}
+
+		timeToSwap -= FRAME_INTERVAL_IN_MS;			
+	    timeToPause -= FRAME_INTERVAL_IN_MS;		
+
+		if (didPressEnter && timeToSwap < 0)
+		{
+			if (unitIsSmurf)
+			{
+				mpUnitManager->getLastUnit()->toggleAnimation();				
+			}
+			else
+			{
+				mpUnitManager->getLastUnit()->toggleAnimation();				
+			}
+			unitIsSmurf = !unitIsSmurf;
+			timeToSwap = ANIM_SWAP_DELAY_IN_MS;
+		}
+
+		if (didPressSpace && timeToPause < 0)
+		{
+			playAnim = !playAnim;
+			timeToPause = ANIM_PAUSE_DELAY_IN_MS;
+		}
+
+		if (didLeftClick && !didRightClick)
+		{
+			mpUnitManager->addUnitAt(mousePos, *mpSmurfAnim, *mpDeanAnim);
+		}
+
+		if (didRightClick && !didLeftClick)
+		{
+			mpUnitManager->deleteUnitAt(mousePos);
+		}
+
+		if (playAnim)
+		{
+			mpUnitManager->updateAll(FRAME_INTERVAL_IN_MS);
+		}
+
+		// draw game
+		
+		mpGraphicsSystem->draw(ORIGIN, mpGraphicsBufferManager->getGraphicsBuffer(BACKGROUND_FILENAME), .5f);
+		mpUnitManager->drawAll();
+
+		mpGraphicsSystem->flip();
+
+		
+		loopTimer.sleepUntilElapsed(FRAME_INTERVAL_IN_MS);
+		performanceTracker.stopTracking(trackerName);
+
+		//cout << "Frame took: " << pPerformanceTracker->getElapsedTime(trackerName) << "\n";
+	}	
+}

@@ -1,0 +1,15 @@
+#pragma once
+
+#include "HudEvent.h"
+
+class TurnEvent : public HudEvent
+{
+private:
+	string mTurn = "";
+
+public:
+	TurnEvent(string turn);
+	~TurnEvent();
+
+	string getTurn() const { return mTurn; };
+};

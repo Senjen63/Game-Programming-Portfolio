@@ -1,0 +1,29 @@
+#pragma once
+#include "SFML/Audio.hpp"
+#include <SFML/Audio/Sound.hpp>
+#include <Trackable.h>
+#include <string>
+
+using namespace std;
+
+class Sound : public Trackable
+{
+public:
+	Sound( string filename, float volume);
+	~Sound();
+
+	float getVolume(); 
+	void setVolume(float volume);
+
+	void play();
+	bool getStatusPlaying();
+	bool getStatusPaused();
+	bool getStatusStopped();
+private:
+
+
+	sf::SoundBuffer* mpSoundBuffer;
+	sf::Sound* mpSound;
+	float mVolume;
+
+};

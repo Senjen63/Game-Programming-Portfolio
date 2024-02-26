@@ -1,0 +1,58 @@
+#pragma once
+
+#include <Trackable.h>
+#include <Vector2D.h>
+
+class Font;
+class Color;
+class Game;
+
+using namespace std;
+
+class EndScreen : public Trackable
+{
+	Font* mpFontTitle;
+	Font* mpFontOther;
+	Color* mpTextColor;
+	Color* mpBackgroundColor;
+
+	const string DATA_FILENAME = "end_data.txt";
+	const string TEXT_FILENAME = "end_text_data.txt";
+
+	int mSelectedMenuOption;
+
+	int mX;
+	int mY;
+
+	int mCor;
+	int mCor1;
+	int mCor2;
+	int mCor3;
+	int mCor4;
+	int mCor5;
+
+	bool mInOptions;
+public:
+	EndScreen();
+	~EndScreen();
+
+	void draw();
+
+	void drawOptions(Game* pGame, bool rstart, bool retu, bool ex);
+
+	void nextMenuOption(string);
+
+	int getSelectedMenuOption() { return mSelectedMenuOption; }
+	bool getInOptions() { return mInOptions; }
+
+	void setSelectedMenuOption(int newSelectedOption) { mSelectedMenuOption = newSelectedOption; }
+
+	void setInOptions(bool);
+
+	enum MenuOptions
+	{
+		RESTART,
+		RETURN,
+		QUIT
+	};
+};

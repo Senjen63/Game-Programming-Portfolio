@@ -1,0 +1,41 @@
+﻿#include "include/SoundSystem.hpp"
+
+SoundSystem::SoundSystem()
+{
+    Mix_Init( 0 );
+    Mix_OpenAudio( 44100, MIX_DEFAULT_FORMAT, 2, 1024 );
+    Mix_AllocateChannels( 5 );
+}
+
+SoundSystem::~SoundSystem()
+{
+    Mix_HaltChannel( -1 );
+    for ( auto [ key, value ] : mSounds )
+    {
+        Mix_FreeChunk( value );
+    }
+    Mix_CloseAudio();
+    Mix_Quit();
+}
+
+void SoundSystem::addSound( const std::string & filename, const std::string & name )
+{
+    if ( mSounds.contains( name ) ) return;
+
+    Mix_Chunk * pChunk = Mix_LoadWAV( filename.c_str() );
+    mSounds[ name ] = pChunk;
+}
+
+void SoundSystem::deleteSound( const std::string & name )
+{
+    if ( !mSounds.contains( name ) ) return;
+
+    Mix_FreeChunk( mSounds[ name ] );
+
+    mSounds.erase( name );
+}
+
+void SoundSystem::playSound( const std::string & name )
+{
+    Mix_PlayChannel( -1, mSounds[name], 1 );
+}

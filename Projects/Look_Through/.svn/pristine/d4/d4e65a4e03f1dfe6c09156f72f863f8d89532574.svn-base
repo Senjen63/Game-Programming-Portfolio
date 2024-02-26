@@ -1,0 +1,25 @@
+#pragma once
+
+#include "Animation.h"
+#include <Trackable.h>
+#include <list>
+
+class Unit : public Trackable
+{
+public:
+	Unit(int fps, Vector2D location);
+	~Unit();
+	void update(float timePassed);
+	void setFramerate(int fps);
+	void setAnimation(int frame);
+	void addNewAnimation(int xSize, int ySize, GraphicsBuffer* buff);
+	void moveLocation(Vector2D location);
+	void draw(GraphicsSystem* gameGraphics);
+	int getIndex();
+	int getAnimations();
+private:
+	int mFps;
+	vector<Animation> mAnimations;
+	int mAnimationIndex;
+	Vector2D mLocation;
+};

@@ -1,0 +1,38 @@
+#include <iostream>
+#include <string>
+#include <cassert>
+#include <PerformanceTracker.h>
+#include <MemoryTracker.h>
+#include <Timer.h>
+#include <time.h>
+#include <stdlib.h>
+#include "GraphicsSystem.h"
+#include "Game.h"
+
+using namespace std;
+
+int main()
+{
+	//gpGame->doSomething();
+
+
+	const int DISP_WIDTH = 800;
+	const int DISP_HEIGHT = 600;
+
+	gpGame = new Game(DISP_WIDTH, DISP_HEIGHT);
+
+	if (gpGame->init())
+	{
+
+		gpGame->doLoop();
+
+		//Delete everything
+	}
+
+	delete gpGame;
+	gpGame = nullptr;
+	MemoryTracker::getInstance()->reportAllocations(cout);
+
+	system("pause");
+	return 0;
+}

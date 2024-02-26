@@ -1,0 +1,98 @@
+#pragma once
+#include "color.h";
+
+int Color::normalize(int raw)
+{
+	if (raw > 255)
+	{
+		raw = 255;
+	}
+	else if(raw < 0)
+	{
+		raw = 0;
+	}
+
+	return raw;
+}
+
+ALLEGRO_COLOR Color::getColor()
+{
+	return al_map_rgba(red, green, blue, alpha);
+}
+
+Color::Color()
+{
+	red = 0;
+	green = 0;
+	blue = 0;
+	alpha = 255;
+}
+
+Color::~Color()
+{
+
+}
+
+Color::Color(ALLEGRO_COLOR colo)
+{
+	red = colo.r;
+	green = colo.g;
+	blue = colo.b;
+	alpha = colo.a;
+}
+
+Color::Color(int re, int gree, int blu)
+{
+	red = normalize(re);
+	green = normalize(gree);
+	blue = normalize(blu);
+	alpha = 255;
+}
+
+Color::Color(int re, int gree, int blu, int alph) 
+{
+	red = normalize(re);
+	green = normalize(gree);
+	blue = normalize(blu);
+	alpha = normalize(alph);
+}
+
+void Color::setRed(int re)
+{
+	red = normalize(re);
+}
+
+void Color::setGreen(int gree)
+{
+	green = normalize(gree);
+}
+
+void Color::setBlue(int blu)
+{
+	blue = normalize(blu);
+}
+
+void Color::setAlpha(int alph)
+{
+	alpha = normalize(alph);
+}
+
+int Color::getRed()
+{
+	return red;
+}
+
+int Color::getGreen()
+{
+	return green;
+}
+
+int Color::getBlue()
+{
+	return blue;
+}
+
+int Color::getAlpha()
+{
+	return alpha;
+}

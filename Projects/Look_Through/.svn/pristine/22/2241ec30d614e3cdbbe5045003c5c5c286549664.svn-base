@@ -1,0 +1,14 @@
+#pragma once
+
+#include "SpawnEvent.h"
+
+class SpawnItemEvent : public SpawnEvent
+{
+public:
+    SpawnItemEvent(int);
+    ~SpawnItemEvent();
+
+    int getItemType() const { return mItemType; }
+private:
+    int mItemType;
+};

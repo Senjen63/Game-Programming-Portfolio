@@ -1,0 +1,826 @@
+#include "Game.h"
+#include <windows.h>
+#include <fstream>
+#include <stdlib.h>
+#include <time.h>
+
+Game* Game::mpsGame = nullptr;
+
+Game* Game::getInstance()
+{
+	if (mpsGame == nullptr)
+	{
+		mpsGame = new Game;
+	}
+	return mpsGame;
+}
+
+void Game::destroyInstance()
+{
+	if (mpsGame != nullptr)
+	{
+		delete mpsGame;
+		mpsGame = nullptr;
+	}
+}
+
+Game::Game()
+{
+	mpGraphicsSystem = new GraphicsSystem(DISP_HEIGHT, DISP_WIDTH);
+	mpBufferManager = new GraphicsBufferManager();
+	mpInputSystem = new InputSystem();
+	mpPlayerManager = new UnitManager();
+	mpBulletManager = new UnitManager(1);
+	mFrameTime = 16.7;
+	mLeft = false;
+	mRight = false;
+	mExit = false;
+	mNumKey = 0;
+	mpEnemyAnimation = nullptr;
+	mpLev1 = new Level();
+	mpLev2 = new Level();
+	mpLev3 = new Level();
+	mpSaveLevel = new Level();
+	mLevelManager = LevelManager();
+	mMenuManager = LevelManager();
+	mSound = true;
+}
+
+Game::~Game()
+{
+	cleanup();
+}
+
+void Game::cleanup()
+{
+	delete mpGraphicsSystem;
+	delete mpBufferManager;
+	delete mpInputSystem;
+	delete mpPlayerManager;
+	delete mpBulletManager;
+	delete mpEnemyManager;
+	delete mpEnemyManager2;
+	delete mpFont;
+	delete mpHUD;
+	mLevelManager.cleanup();
+	mMenuManager.cleanup();
+}
+
+void Game::init()
+{
+	srand(time(NULL));
+	mpGraphicsSystem->init();
+	mpInputSystem->init();
+	mpBufferManager->addBuffer(BACKGROUND_FILENAME, ASSET_PATH + BACKGROUND_FILENAME);
+	mpBufferManager->addBuffer(SNAKE_FILENAME, ASSET_PATH + SNAKE_FILENAME);
+	mpBufferManager->addBuffer(BULLET_FILENAME, ASSET_PATH + BULLET_FILENAME);
+	mpBufferManager->addBuffer(ENEMY_FILENAME, ASSET_PATH + ENEMY_FILENAME);
+	mpEnemyAnimation = new Animation(mpBufferManager->getBuffer(ENEMY_FILENAME), 3, 0.01, true);
+	mpEnemyManager = new UnitManager(mpEnemyAnimation);
+	mpEnemyManager2 = new UnitManager(mpEnemyAnimation);
+	mpSystem = EventSystem::getInstance();
+	mpSystem->init();
+	mpSystem->getInstance()->addListener((EventType)MOVE_EVENT, this);
+	mpFont = new Font(FONT_PATH + FONT_FILENAME, FONT_SIZE);
+	mpHUD = new HUD(mpGraphicsSystem, mpFont);
+	mpHomeScreen = new Menu(mpGraphicsSystem, mpFont);
+	mpOptionsScreen = new Menu(mpGraphicsSystem, mpFont);
+	mpLoseScreen = new Menu(mpGraphicsSystem, mpFont);
+	mpWinScreen = new Menu(mpGraphicsSystem, mpFont);
+	mpHUD->init();
+	mLevelManager.addLevel(mpLev1);
+	mLevelManager.addLevel(mpLev2);
+	mLevelManager.addLevel(mpLev3);
+	mLevelManager.addLevel(mpSaveLevel);
+	mMenuManager.addMenu(mpHomeScreen);
+	mMenuManager.addMenu(mpOptionsScreen);
+	mMenuManager.addMenu(mpLoseScreen);
+	mMenuManager.addMenu(mpWinScreen);
+	ifstream fin("data.txt");
+	string holder;
+	if (fin.good())
+	{
+		while (!fin.eof())
+		{
+			fin >> mKey;
+			if (mKey == "Frame1")
+			{
+				fin >> mNumKey;
+				mpLev1->setSnakeFrames(mNumKey);
+			}
+
+			if (mKey == "Frame2")
+			{
+				fin >> mNumKey;
+				mpLev2->setSnakeFrames(mNumKey);
+			}
+
+			if (mKey == "Frame3")
+			{
+				fin >> mNumKey;
+				mpLev3->setSnakeFrames(mNumKey);
+			}
+
+			if (mKey == "Distance1")
+			{
+				fin >> mNumKey;
+				mpLev1->setEnemyMoveDistance(mNumKey);
+			}
+
+			if (mKey == "Distance2")
+			{
+				fin >> mNumKey;
+				mpLev2->setEnemyMoveDistance(mNumKey);
+			}
+
+			if (mKey == "Distance3")
+			{
+				fin >> mNumKey;
+				mpLev3->setEnemyMoveDistance(mNumKey);
+			}
+
+			if (mKey == "FireOdds1")
+			{
+				fin >> mNumKey;
+				mpLev1->setEnemyFireOdds(mNumKey);
+			}
+
+			if (mKey == "FireOdds2")
+			{
+				fin >> mNumKey;
+				mpLev2->setEnemyFireOdds(mNumKey);
+			}
+
+			if (mKey == "FireOdds3")
+			{
+				fin >> mNumKey;
+				mpLev3->setEnemyFireOdds(mNumKey);
+			}
+
+			if (mKey == "enemy")
+			{
+				int i, j;
+				for (i = 0; i < 13; i++)
+				{
+					for (j = 0; j < 20; j++)
+					{
+						fin >> mpEnemyArray[i][j];
+					}
+				}
+			}
+			if (mKey == "enemyDeath")
+				fin >> mpEnemyDeath;
+			if (mKey == "high")
+				fin >> mpHighScore;
+			if (mKey == "death")
+				fin >> mpPlayerDeath;
+			if (mKey == "shoot")
+				fin >> mpPlayerShoot;
+			if (mKey == "MainEnglish1")
+			{
+				getline(fin, holder);
+				mMenuManager.getMenu(0)->addLine(Vector2D(180, 420), holder);
+			}
+			if (mKey == "MainEnglish2")
+			{
+				getline(fin, holder);
+				mMenuManager.getMenu(0)->addLine(Vector2D(180, 480), holder);
+			}
+			if (mKey == "MainEnglish3")
+			{
+				getline(fin, holder);
+				mMenuManager.getMenu(0)->addLine(Vector2D(180, 540), holder);
+			}
+			if (mKey == "MainSpanish1")
+			{
+				getline(fin, holder);
+				mMenuManager.getMenu(0)->addLine(Vector2D(0, 420), holder);
+			}
+			if (mKey == "MainSpanish2")
+			{
+				getline(fin, holder);
+				mMenuManager.getMenu(0)->addLine(Vector2D(60, 480), holder);
+			}
+			if (mKey == "MainSpanish3")
+			{
+				getline(fin, holder);
+				mMenuManager.getMenu(0)->addLine(Vector2D(60, 540), holder);
+			}
+			if (mKey == "MainGerman1")
+			{
+				getline(fin, holder);
+				mMenuManager.getMenu(0)->addLine(Vector2D(0, 420), holder);
+			}
+			if (mKey == "MainGerman2")
+			{
+				getline(fin, holder);
+				mMenuManager.getMenu(0)->addLine(Vector2D(0, 480), holder);
+			}
+			if (mKey == "MainGerman3")
+			{
+				getline(fin, holder);
+				mMenuManager.getMenu(0)->addLine(Vector2D(0, 540), holder);
+			}
+			if (mKey == "OptionEnglish1")
+			{
+				getline(fin, holder);
+				mMenuManager.getMenu(1)->addLine(Vector2D(240, 120), holder);
+			}
+			if (mKey == "OptionEnglish2")
+			{
+				getline(fin, holder);
+				mMenuManager.getMenu(1)->addLine(Vector2D(240, 180), holder);
+			}
+			if (mKey == "OptionEnglish3")
+			{
+				getline(fin, holder);
+				mMenuManager.getMenu(1)->addLine(Vector2D(240, 240), holder);
+			}
+			if (mKey == "OptionEnglish4")
+			{
+				getline(fin, holder);
+				mMenuManager.getMenu(1)->addLine(Vector2D(240, 300), holder);
+			}
+			if (mKey == "OptionEnglish5")
+			{
+				getline(fin, holder);
+				mMenuManager.getMenu(1)->addLine(Vector2D(240, 360), holder);
+			}
+			if (mKey == "OptionEnglish6")
+			{
+				getline(fin, holder);
+				mMenuManager.getMenu(1)->addLine(Vector2D(240, 420), holder);
+			}
+			if (mKey == "OptionEnglish7")
+			{
+				getline(fin, holder);
+				mMenuManager.getMenu(1)->addLine(Vector2D(240, 480), holder);
+			}
+			if (mKey == "OptionEnglish8")
+			{
+				getline(fin, holder);
+				mMenuManager.getMenu(1)->addLine(Vector2D(240, 540), holder);
+			}
+			if (mKey == "OptionSpanish1")
+			{
+				getline(fin, holder);
+				mMenuManager.getMenu(1)->addLine(Vector2D(120, 120), holder);
+			}
+			if (mKey == "OptionSpanish2")
+			{
+				getline(fin, holder);
+				mMenuManager.getMenu(1)->addLine(Vector2D(240, 180), holder);
+			}
+			if (mKey == "OptionSpanish3")
+			{
+				getline(fin, holder);
+				mMenuManager.getMenu(1)->addLine(Vector2D(240, 240), holder);
+			}
+			if (mKey == "OptionSpanish4")
+			{
+				getline(fin, holder);
+				mMenuManager.getMenu(1)->addLine(Vector2D(240, 300), holder);
+			}
+			if (mKey == "OptionSpanish5")
+			{
+				getline(fin, holder);
+				mMenuManager.getMenu(1)->addLine(Vector2D(240, 360), holder);
+			}
+			if (mKey == "OptionSpanish6")
+			{
+				getline(fin, holder);
+				mMenuManager.getMenu(1)->addLine(Vector2D(240, 420), holder);
+			}
+			if (mKey == "OptionSpanish7")
+			{
+				getline(fin, holder);
+				mMenuManager.getMenu(1)->addLine(Vector2D(240, 480), holder);
+			}
+			if (mKey == "OptionSpanish8")
+			{
+				getline(fin, holder);
+				mMenuManager.getMenu(1)->addLine(Vector2D(240, 540), holder);
+			}
+			if (mKey == "OptionGerman1")
+			{
+				getline(fin, holder);
+				mMenuManager.getMenu(1)->addLine(Vector2D(0, 120), holder);
+			}
+			if (mKey == "OptionGerman2")
+			{
+				getline(fin, holder);
+				mMenuManager.getMenu(1)->addLine(Vector2D(240, 180), holder);
+			}
+			if (mKey == "OptionGerman3")
+			{
+				getline(fin, holder);
+				mMenuManager.getMenu(1)->addLine(Vector2D(240, 240), holder);
+			}
+			if (mKey == "OptionGerman4")
+			{
+				getline(fin, holder);
+				mMenuManager.getMenu(1)->addLine(Vector2D(240, 300), holder);
+			}
+			if (mKey == "OptionGerman5")
+			{
+				getline(fin, holder);
+				mMenuManager.getMenu(1)->addLine(Vector2D(240, 360), holder);
+			}
+			if (mKey == "OptionGerman6")
+			{
+				getline(fin, holder);
+				mMenuManager.getMenu(1)->addLine(Vector2D(240, 420), holder);
+			}
+			if (mKey == "OptionGerman7")
+			{
+				getline(fin, holder);
+				mMenuManager.getMenu(1)->addLine(Vector2D(240, 480), holder);
+			}
+			if (mKey == "OptionGerman8")
+			{
+				getline(fin, holder);
+				mMenuManager.getMenu(1)->addLine(Vector2D(240, 540), holder);
+			}
+			if (mKey == "EndEnglish1")
+			{
+				getline(fin, holder);
+				mMenuManager.getMenu(2)->addLine(Vector2D(240, 420), holder);
+			}
+			if (mKey == "EndEnglish2")
+			{
+				getline(fin, holder);
+				mMenuManager.getMenu(2)->addLine(Vector2D(60, 480), holder);
+			}
+			if (mKey == "EndSpanish1")
+			{
+				getline(fin, holder);
+				mMenuManager.getMenu(2)->addLine(Vector2D(240, 420), holder);
+			}
+			if (mKey == "EndSpanish2")
+			{
+				getline(fin, holder);
+				mMenuManager.getMenu(2)->addLine(Vector2D(0, 480), holder);
+			}
+			if (mKey == "EndGerman1")
+			{
+				getline(fin, holder);
+				mMenuManager.getMenu(2)->addLine(Vector2D(240, 420), holder);
+			}
+			if (mKey == "EndGerman2")
+			{
+				getline(fin, holder);
+				mMenuManager.getMenu(2)->addLine(Vector2D(0, 480), holder);
+			}
+			if (mKey == "WinEnglish1")
+			{
+				getline(fin, holder);
+				mMenuManager.getMenu(3)->addLine(Vector2D(240, 420), holder);
+			}
+			if (mKey == "WinEnglish2")
+			{
+				getline(fin, holder);
+				mMenuManager.getMenu(3)->addLine(Vector2D(60, 480), holder);
+			}
+			if (mKey == "WinEnglish3")
+			{
+				getline(fin, holder);
+				mMenuManager.getMenu(3)->addLine(Vector2D(60, 540), holder);
+			}
+			if (mKey == "WinSpanish1")
+			{
+				getline(fin, holder);
+				mMenuManager.getMenu(3)->addLine(Vector2D(240, 420), holder);
+			}
+			if (mKey == "WinSpanish2")
+			{
+				getline(fin, holder);
+				mMenuManager.getMenu(3)->addLine(Vector2D(60, 480), holder);
+			}
+			if (mKey == "WinSpanish3")
+			{
+				getline(fin, holder);
+				mMenuManager.getMenu(3)->addLine(Vector2D(60, 540), holder);
+			}
+			if (mKey == "WinGerman1")
+			{
+				getline(fin, holder);
+				mMenuManager.getMenu(3)->addLine(Vector2D(240, 420), holder);
+			}
+			if (mKey == "WinGerman2")
+			{
+				getline(fin, holder);
+				mMenuManager.getMenu(3)->addLine(Vector2D(60, 480), holder);
+			}
+			if (mKey == "WinGerman3")
+			{
+				getline(fin, holder);
+				mMenuManager.getMenu(3)->addLine(Vector2D(60, 540), holder);
+			}
+
+		}
+	}
+	fin.close();
+
+	int num1 = 0, num2 = 0;
+	ifstream fin2("saveFile.txt");
+	if (fin2.good())
+	{
+		while (!fin2.eof())
+		{
+			fin2 >> mKey;
+			if (mKey == "enemy")
+			{
+				int i, j;
+				for (i = 0; i < 13; i++)
+				{
+					for (j = 0; j < 20; j++)
+					{
+						fin2 >> mpEnemyArray2[i][j];
+					}
+				}
+			}
+			if (mKey == "Frame")
+			{
+				fin2 >> mNumKey;
+				mpSaveLevel->setSnakeFrames(mNumKey);
+			}
+			if (mKey == "Distance")
+			{
+				fin2 >> mNumKey;
+				mpSaveLevel->setEnemyMoveDistance(mNumKey);
+			}
+			if (mKey == "FireOdds")
+			{
+				fin2 >> mNumKey;
+				mpSaveLevel->setEnemyFireOdds(mNumKey);
+			}
+			if (mKey == "EnemyBulletLocationX")
+			{
+				fin2 >> num1;
+			}
+			if (mKey == "EnemyBulletLocationY")
+			{
+				fin2 >> num2;
+			}
+		}
+		mpSaveLevel->setEnemyBulletLocation(Vector2D(num1, num2));
+	}
+	fin2.close();
+
+
+
+	mpSounds.addSound((SOUND_PATH + mpEnemyDeath).c_str());
+	mpSounds.addSound((SOUND_PATH + mpHighScore).c_str());
+	mpSounds.addSound((SOUND_PATH + mpPlayerDeath).c_str());
+	mpSounds.addSound((SOUND_PATH + mpPlayerShoot).c_str());
+
+}
+
+void Game::doLoop()
+{
+	int frames = 0, count = 1, temp = 1, enemy = 0;
+	bool food = false, snake = false, points = false, fast = false,
+		slow = false, fresh = true, newPUP = false, animTime = 0;
+	Vector2D random;
+	Unit* enemyBullet = new Unit();
+	PerformanceTracker* pTracker = new PerformanceTracker();
+	Timer time;
+	mpPlayerManager->addUnit(mpBufferManager->getBuffer(SNAKE_FILENAME), currPos);
+
+	mMenuManager.setCurrentLevel(0);
+
+	while (!mExit)
+	{
+		pTracker->clearTracker("loop");
+		pTracker->startTracking("loop");
+		time.start();
+		animTime += time.getElapsedTime();
+		mpGraphicsSystem->draw(mpBufferManager->getBuffer(BACKGROUND_FILENAME), Vector2D(), 1.0f);
+		if (mMenuManager.getCurrentLevel() != -1)
+		{
+			if (mpGraphicsSystem->getLanguage() == 0)
+				mMenuManager.getMenu(mMenuManager.getCurrentLevel())->writeLines(0, mMenuManager.getMenu(mMenuManager.getCurrentLevel())->getLineCount() / 3);
+			if (mpGraphicsSystem->getLanguage() == 1)
+				mMenuManager.getMenu(mMenuManager.getCurrentLevel())->writeLines(mMenuManager.getMenu(mMenuManager.getCurrentLevel())->getLineCount() / 3, 2 * mMenuManager.getMenu(mMenuManager.getCurrentLevel())->getLineCount() / 3);
+			if (mpGraphicsSystem->getLanguage() == 2)
+				mMenuManager.getMenu(mMenuManager.getCurrentLevel())->writeLines(2 * mMenuManager.getMenu(mMenuManager.getCurrentLevel())->getLineCount() / 3, mMenuManager.getMenu(mMenuManager.getCurrentLevel())->getLineCount());
+			mLevelManager.getLevel(0)->setScore(0);
+			mLevelManager.getLevel(1)->setScore(0);
+			mLevelManager.getLevel(2)->setScore(0);
+			frames = 0;
+			mpHUD->setTime(-mpHUD->getTime());
+			enemyBullet->setPosition(Vector2D(0,DISP_HEIGHT-40));
+			mEnemyHitCount = 0;
+			if (!fresh)
+				mpEnemyManager->resetAllPositions();
+		}
+		if (mLevelManager.getCurrentLevel() != -1)
+		{
+			if (fresh)
+			{
+				if (mLevelManager.getCurrentLevel() == 3)
+				{
+					mpEnemyManager2->drawAll(mpEnemyArray2, mpGraphicsSystem);
+					enemyBullet = new Unit(mpBufferManager->getBuffer(BULLET_FILENAME), mLevelManager.getLevel(3)->getEnemyBulletLocation(), 10, 20);
+				}
+				else
+				{
+					mpEnemyManager->drawAll(mpEnemyArray, mpGraphicsSystem);
+					enemy = rand() % mpEnemyManager->getUnitCount();
+					enemyBullet = new Unit(mpBufferManager->getBuffer(BULLET_FILENAME), mpEnemyManager->getUnit(enemy)->getPosition(), 10, 20);
+				}
+				fresh = false;
+			}
+			mpHUD->setScore(mLevelManager.getLevel(mLevelManager.getCurrentLevel())->getScore());
+			if (frames % mLevelManager.getLevel(mLevelManager.getCurrentLevel())->getSnakeFrames() == 0)
+			{
+				if (mLeft)
+				{
+					if (currPos.getX() > 80)
+					{
+						currPos.setX(currPos.getX() - 60);
+					}
+				}
+				if (mRight)
+				{
+					if (currPos.getX() < DISP_WIDTH - 120)
+					{
+						currPos.setX(currPos.getX() + 60);
+					}
+				}
+				mLeft = false;
+				mRight = false;
+				mpPlayerManager->updateSnake(animTime, currPos);
+				mpBulletManager->updateBullet(40);
+				enemyBullet->updateEnemyBullet(animTime, 40);
+				if (mLevelManager.getCurrentLevel() == 3)
+					mpEnemyManager2->updateEnemies(animTime, mLevelManager.getLevel(mLevelManager.getCurrentLevel())->getEnemyMoveDistance());
+				else
+					mpEnemyManager->updateEnemies(animTime, mLevelManager.getLevel(mLevelManager.getCurrentLevel())->getEnemyMoveDistance());
+
+				if (mpPlayerManager->collidingWith(mpEnemyManager) || mpPlayerManager->collidingWith(enemyBullet) || mpPlayerManager->collidingWith(mpEnemyManager2))
+				{
+					if(mSound)
+						mpSounds.playSound(2);
+					mLevelManager.setCurrentLevel(-1);
+					mMenuManager.setCurrentLevel(2);
+				}
+			}
+			mpPlayerManager->drawSnake(mpGraphicsSystem);
+			enemyBullet->drawEnemyBullet(mpGraphicsSystem);
+			if(mLevelManager.getCurrentLevel() == 3)
+				mpEnemyManager2->drawAnimated(mpGraphicsSystem, 100, 100);
+			else
+				mpEnemyManager->drawAnimated(mpGraphicsSystem, 100, 100);
+			mpBulletManager->drawNoAnimated(mpGraphicsSystem);
+			if (mpBulletManager->bulletCollision(mpEnemyManager) || mpBulletManager->bulletCollision(mpEnemyManager2))
+			{
+				if(mSound)
+					mpSounds.playSound(0);
+				mLevelManager.getLevel(mLevelManager.getCurrentLevel())->setScore(mpHUD->getScore() + 10);
+				mEnemyHitCount++;
+			}
+			if (enemyBullet->getPosition().getY() > DISP_HEIGHT)
+			{
+				if (mLevelManager.getCurrentLevel() == 3)
+				{
+					do
+					{
+						enemy = rand() % mpEnemyManager2->getUnitCount();
+						enemyBullet->setPosition(mpEnemyManager2->getUnit(enemy)->getPosition());
+					} while (enemyBullet->getPosition().getY() < 0);
+				}
+				else
+				{
+					do
+					{
+						enemy = rand() % mpEnemyManager->getUnitCount();
+						enemyBullet->setPosition(mpEnemyManager->getUnit(enemy)->getPosition());
+					} while (enemyBullet->getPosition().getY() < 0 && mEnemyHitCount < mpEnemyManager->getUnitCount());
+				}
+				if ((mEnemyHitCount >= mpEnemyManager->getUnitCount() && mLevelManager.getCurrentLevel() != 3) || mEnemyHitCount >= mpEnemyManager2->getUnitCount())
+				{
+					mLevelManager.setCurrentLevel(-1);
+					mMenuManager.setCurrentLevel(3);
+					mMenuManager.getMenu(3)->extendLine(1, " ");
+					mMenuManager.getMenu(3)->extendLine(1, to_string(mpHUD->getTime()));
+				}
+
+
+			}
+			mpHUD->setFPS(frames / mpHUD->getTime());
+			mpHUD->display();
+		}
+		mpInputSystem->getKeyEvent();
+		mpGraphicsSystem->flipDisplay();
+		time.sleepUntilElapsed(mFrameTime);
+		if (mLevelManager.getCurrentLevel() != -1)
+			mpHUD->setTime(time.getElapsedTime() / 1000);
+		pTracker->stopTracking("loop");
+		mpGraphicsSystem->clearRenderer();
+		frames++;
+		mpBulletManager->deleteBullets();
+		mLevelManager.getLevel(3)->setEnemyBulletLocation(enemyBullet->getPosition());
+	}
+	delete enemyBullet;
+	enemyBullet = nullptr;
+	delete pTracker;
+}
+
+GraphicsSystem* Game::getGraphicsSystem()
+{
+	return mpGraphicsSystem;
+}
+
+UnitManager* Game::getSnakeManager()
+{
+	return mpPlayerManager;
+}
+
+GraphicsBufferManager* Game::getGraphicsBufferManager()
+{
+	return mpBufferManager;
+}
+
+float Game::getFrameTime()
+{
+	return mFrameTime;
+}
+
+void Game::saveToFile()
+{
+	ofstream fout("saveFile.txt");
+	bool located = false;
+	Vector2D currPos;
+	int saveX, saveY;
+	fout << "enemy" << endl;
+	for (int i = 0; i < 13; i++)
+	{
+		saveY = i * 60;
+		for (int j = 0; j < 20; j++)
+		{
+			saveX = j * 60;
+			if (mLevelManager.getCurrentLevel() == 3)
+			{
+				for (int k = 0; k < mpEnemyManager2->getUnitCount(); k++)
+				{
+					currPos = mpEnemyManager2->getUnit(k)->getPosition();
+					if (currPos.getX() >= saveX && currPos.getX() < saveX + 60 && currPos.getY() >= saveY && currPos.getY() < saveY + 60)
+					{
+						fout << 1 << " ";
+						located = true;
+						break;
+					}
+				}
+			}
+			else
+			{
+				for (int k = 0; k < mpEnemyManager->getUnitCount(); k++)
+				{
+					currPos = mpEnemyManager->getUnit(k)->getPosition();
+					if (currPos.getX() >= saveX && currPos.getX() < saveX + 60 && currPos.getY() >= saveY && currPos.getY() < saveY + 60)
+					{
+						fout << 1 << " ";
+						located = true;
+						break;
+					}
+				}
+			}
+			if (!located)
+			{
+				fout << 0 << " ";
+			}
+			located = false;
+		}
+		fout << "\n";
+	}
+
+
+	if (mLevelManager.getCurrentLevel() != -1)
+	{
+		fout << "Frame ";
+		fout << mLevelManager.getLevel(mLevelManager.getCurrentLevel())->getSnakeFrames() << endl;
+		fout << "Distance ";
+		fout << mLevelManager.getLevel(mLevelManager.getCurrentLevel())->getEnemyMoveDistance() << endl;
+		fout << "FireOdds ";
+		fout << mLevelManager.getLevel(mLevelManager.getCurrentLevel())->getEnemyFireOdds() << endl;
+		fout << "EnemyBulletLocationX ";
+		fout << mLevelManager.getLevel(3)->getEnemyBulletLocation().getX() << endl;
+		fout << "EnemyBulletLocationY ";
+		fout << mLevelManager.getLevel(3)->getEnemyBulletLocation().getY() << endl;
+	}
+	fout.close();
+}
+
+void Game::handleEvent(const Event& event)
+{
+	if (event.getType() == MOVE_EVENT)
+	{
+		const MoveEvent& moveEvent = static_cast<const MoveEvent&>(event);
+		if (moveEvent.getKey() == (int)Key::A)
+		{
+			mLeft = true;
+		}
+		if (moveEvent.getKey() == (int)Key::D)
+		{
+			mRight = true;
+		}
+		if (moveEvent.getKey() == (int)Key::ESCAPE)
+		{
+			saveToFile();
+			mExit = true;
+		}
+		if (moveEvent.getKey() == (int)Key::SPACE)
+		{
+			if (mMenuManager.getCurrentLevel() == 0)
+			{
+				mLevelManager.setCurrentLevel(mLevelManager.getNextLevel());
+				mMenuManager.setCurrentLevel(-1);
+			}
+			else if(mLevelManager.getCurrentLevel() != -1)
+			{
+				if(mSound && mpBulletManager->getUnitCount() == 0)
+					mpSounds.playSound(3);
+				mpBulletManager->addUnit(mpBufferManager->getBuffer(BULLET_FILENAME), Vector2D(currPos.getX() + 25, currPos.getY() - 20), 10, 20);
+			}
+		}
+		if (moveEvent.getKey() == (int)Key::ONE)
+		{
+			if (mMenuManager.getCurrentLevel() == 0)
+			{
+				mMenuManager.setCurrentLevel(1);
+			}
+		}
+		if (moveEvent.getKey() == (int)Key::TWO)
+		{
+			if (mMenuManager.getCurrentLevel() == 1)
+			{
+				mpGraphicsSystem->setLanguage(0);
+			}
+		}
+		if (moveEvent.getKey() == (int)Key::THREE)
+		{
+			if (mMenuManager.getCurrentLevel() == 1)
+			{
+				mpGraphicsSystem->setLanguage(1);
+			}
+		}
+		if (moveEvent.getKey() == (int)Key::FOUR)
+		{
+			if (mMenuManager.getCurrentLevel() == 1)
+			{
+				mpGraphicsSystem->setLanguage(2);
+			}
+		}
+		if (moveEvent.getKey() == (int)Key::FIVE)
+		{
+			if (mMenuManager.getCurrentLevel() == 1)
+			{
+				mLevelManager.setNextLevel(0);
+			}
+		}
+		if (moveEvent.getKey() == (int)Key::SIX)
+		{
+			if (mMenuManager.getCurrentLevel() == 1)
+			{
+				mLevelManager.setNextLevel(1);
+			}
+		}
+		if (moveEvent.getKey() == (int)Key::SEVEN)
+		{
+			if (mMenuManager.getCurrentLevel() == 1)
+			{
+				mLevelManager.setNextLevel(2);
+			}
+		}
+		if (moveEvent.getKey() == (int)Key::EIGHT)
+		{
+			if (mMenuManager.getCurrentLevel() == 1)
+			{
+				mSound = !mSound;
+			}
+		}
+		if (moveEvent.getKey() == (int)Key::ZERO)
+		{
+			if (mMenuManager.getCurrentLevel() == 1)
+			{
+				mMenuManager.setCurrentLevel(0);
+			}
+		}
+		if (moveEvent.getKey() == (int)Key::ENTER)
+		{
+			if (mMenuManager.getCurrentLevel() == 0)
+			{
+				mLevelManager.setCurrentLevel(3);
+				mMenuManager.setCurrentLevel(-1);
+			}
+		}
+		if (moveEvent.getKey() == (int)Key::M)
+		{
+			if (mMenuManager.getCurrentLevel() == 2 || mMenuManager.getCurrentLevel() == 3)
+			{
+				mMenuManager.setCurrentLevel(0);
+			}
+		}
+	}
+}

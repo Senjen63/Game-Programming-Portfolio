@@ -1,0 +1,189 @@
+#include "GraphicsSystem.h"
+
+GraphicsSystem::GraphicsSystem()
+{
+	init();
+	mpDisplay = NULL;
+}
+
+GraphicsSystem::GraphicsSystem(int width, int height)
+{
+	init();
+	mpDisplay = al_create_display(width, height);
+	assert(mpDisplay);
+}
+
+GraphicsSystem::~GraphicsSystem()
+{
+	cleanup();
+}
+
+bool GraphicsSystem::init()
+{
+	if (!al_init())
+	{
+		cout << "error initting Allegro\n";
+		system("pause");
+		return 1;
+	}
+	if (!al_init_image_addon())
+	{
+		cout << "error - Image Add-on not initted\n";
+		system("pause");
+		return 1;
+	}
+	if (!al_init_font_addon())
+	{
+		cout << "error - Font Add-on not initted\n";
+		system("pause");
+		return 1;
+	}
+	if (!al_init_ttf_addon())
+	{
+		cout << "error - TTF Add-on not initted\n";
+		system("pause");
+		return 1;
+	}
+	if (!al_init_primitives_addon())
+	{
+		cout << "error - primitives Add-on not initted\n";
+		system("pause");
+		return 1;
+	}
+	if (!al_install_audio())
+	{
+		cout << "error - Audio Add-on not initted\n";
+		system("pause");
+		//return 1;
+	}
+	if (!al_init_acodec_addon())
+	{
+		cout << "error - Audio Codec Add-on not initted\n";
+		system("pause");
+		//return 1;
+	}
+	if (!al_reserve_samples(1))
+	{
+		cout << "error - samples not reserved\n";
+		system("pause");
+		//return 1;
+	}
+
+	return 0;
+}
+
+void GraphicsSystem::cleanup()
+{
+	if (mpDisplay)
+	{
+		al_destroy_display(mpDisplay);
+		mpDisplay = nullptr;
+	}
+		
+}
+
+//Accessors
+int GraphicsSystem::getHeight()
+{
+	return al_get_display_height(mpDisplay);
+}
+
+int GraphicsSystem::getWidth()
+{
+	return al_get_display_width(mpDisplay);
+}
+
+ALLEGRO_DISPLAY* GraphicsSystem::getBackBuffer()
+{
+	return mpDisplay;
+}
+
+ALLEGRO_BITMAP* GraphicsSystem::getBitMap()
+{
+	return al_get_backbuffer(mpDisplay);
+}
+
+
+void GraphicsSystem::flip()
+{
+	al_flip_display();
+}
+
+//Draw
+
+void GraphicsSystem::draw(GraphicsBuffer* pBuffer)
+{
+	al_draw_bitmap(pBuffer->getBitmap(), 0, 0, 0);
+}
+
+void GraphicsSystem::draw(int x, int y, Sprite* pSprite, float scale)
+{
+	al_draw_scaled_bitmap(pSprite->getBuffer()->getBitmap(), pSprite->getX(), pSprite->getY(), pSprite->getWidth(), pSprite->getHeight(), x, y,
+		pSprite->getWidth() * scale, pSprite->getHeight() * scale, 0);
+}
+
+void GraphicsSystem::draw(int x, int y, Sprite* pSprite, int displayWidth, int displayHeight)
+{
+	al_draw_bitmap_region(pSprite->getBuffer()->getBitmap(), x, y, pSprite->getWidth(), pSprite->getHeight(), 
+		displayWidth - pSprite->getWidth(), displayHeight - pSprite->getHeight(), 0);
+}
+
+void GraphicsSystem::draw(GraphicsBuffer* pTarget, GraphicsBuffer* pBuffer, int x, int y, float scale)
+{
+	ALLEGRO_BITMAP* oldBitmap = al_get_target_bitmap();
+
+	al_set_target_bitmap(pTarget->getBitmap());
+	al_draw_scaled_bitmap(pBuffer->getBitmap(), 0, 0, pBuffer->getWidth(), pBuffer->getHeight(), x, y, 
+		pBuffer->getWidth() * scale, pBuffer->getHeight() * scale, 0);
+}
+
+void GraphicsSystem::draw(GraphicsBuffer* pBuffer, int x, int y, float scale)
+{
+	al_set_target_bitmap(al_get_backbuffer(getBackBuffer()));
+	al_draw_scaled_bitmap(pBuffer->getBitmap(), 0, 0, pBuffer->getWidth(), pBuffer->getHeight(), x, y, 
+		pBuffer->getWidth() * scale, pBuffer->getHeight() * scale, 0);
+}
+
+void GraphicsSystem::draw(GraphicsBuffer* pTarget, int x, int y, Sprite* pSprite, float scale)
+{
+	ALLEGRO_BITMAP* oldBitmap = al_get_target_bitmap();
+	al_set_target_bitmap(pTarget->getBitmap());
+
+	al_draw_scaled_bitmap(pSprite->getBuffer()->getBitmap(), pSprite->getX(), pSprite->getY(), pSprite->getWidth(), pSprite->getHeight(), x, y,
+		pSprite->getWidth() * scale, pSprite->getHeight() * scale, 0);
+
+	al_set_target_bitmap(oldBitmap);
+}
+
+//Write text
+void GraphicsSystem::writeText(float x, float y, Font* pFont, Color color, string text)
+{
+	al_draw_text(pFont->getFont(), color.getColor(), x, y, ALLEGRO_ALIGN_CENTER, text.c_str());
+}
+void GraphicsSystem::writeText(GraphicsBuffer* pTarget, float x, float y, Font* pFont, Color color, string text)
+{
+	//Save old bitmap
+	ALLEGRO_BITMAP* oldBitmap = al_get_target_bitmap();
+	//switch to new
+	al_set_target_bitmap(pTarget->getBitmap());
+
+	al_draw_text(pFont->getFont(), color.getColor(), x, y, ALLEGRO_ALIGN_LEFT, text.c_str());
+
+	//go back to old
+	al_set_target_bitmap(oldBitmap);
+}
+
+void GraphicsSystem::saveBuffer(GraphicsBuffer* pSaveBuffer, string fileName)
+{
+	al_save_bitmap(fileName.c_str(), pSaveBuffer->getBitmap());
+}
+
+void GraphicsSystem::clearToBlack()
+{
+	al_clear_to_color(al_map_rgb(0, 0, 0));
+}
+
+void GraphicsSystem::clearToWhite()
+{
+	al_clear_to_color(al_map_rgb(255, 255, 255));
+}

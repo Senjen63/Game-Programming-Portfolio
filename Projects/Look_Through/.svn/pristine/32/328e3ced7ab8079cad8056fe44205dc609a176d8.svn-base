@@ -1,0 +1,27 @@
+#include "Audio.h"
+
+Audio::Audio(bool isMusic, std::string path)
+{
+	if (isMusic)
+	{
+		mpMusicClip = Mix_LoadMUS(path.c_str());
+	}
+	else
+	{
+		mpAudioClip = Mix_LoadWAV(path.c_str());
+	}
+}
+
+Audio::~Audio()
+{
+	if (mpMusicClip != nullptr)
+	{
+		Mix_FreeMusic(mpMusicClip);
+		mpMusicClip = nullptr;
+	}
+	else
+	{
+		Mix_FreeChunk(mpAudioClip);
+		mpAudioClip = nullptr;
+	}
+}

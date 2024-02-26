@@ -1,0 +1,49 @@
+#pragma once
+
+#include <EventListener.h>
+#include <EventSystem.h>
+
+#include "GraphicsBuffer.h"
+#include "GraphicsSystem.h"
+#include "Font.h"
+#include "Color.h"
+
+#include "HudEvent.h"
+#include "FpsEvent.h"
+#include "ScoreEvent.h"
+#include "TimeEvent.h"
+
+const int HUD_BUFFER_WIDTH = 200;
+const int HUD_BUFFER_HEIGHT = 25;
+
+class Hud : public EventListener
+{
+private:
+	GraphicsSystem* mpGraphicsSystem = nullptr;
+
+	EventSystem* mpEventSystem = nullptr;
+
+	Font* mpFont = nullptr;
+
+	GraphicsBuffer* mpScoreBuffer = nullptr;
+	GraphicsBuffer* mpFPSBuffer = nullptr;
+	GraphicsBuffer* mpTimeBuffer = nullptr;
+
+	float mFPS = 0.0;
+	float mTime = 0.0;
+	int mScore = 0;
+
+	Color mBlack = Color(0, 0, 0);
+	Color mWhite = Color(255, 255, 255);
+
+public:
+	Hud();
+	Hud(GraphicsSystem* pSystem, Font* pFont);
+	~Hud();
+
+	void init();
+	void cleanup();
+
+	virtual void handleEvent(const Event& currentEvent);
+	void display();
+};

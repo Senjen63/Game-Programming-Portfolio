@@ -1,0 +1,48 @@
+#pragma once
+
+enum KeyBindings{
+	LMB = 1,
+	RMB = 2,
+	keyF = ALLEGRO_KEY_F,
+	keyS = ALLEGRO_KEY_S,
+	keyEnter = ALLEGRO_KEY_ENTER,
+	keyESC = ALLEGRO_KEY_ESCAPE,
+};
+
+class Unit;
+
+//InputSystem Class:
+
+class InputSystem
+{
+	friend class Game;
+
+public:
+	//Constructor/Destructor
+	InputSystem();
+	~InputSystem();
+
+	//accessors
+	bool getKeyState(KeyBindings keyPressed); //pass in desired key, return bool if pressed. -- use enum for keys
+	bool getMouseState(KeyBindings mouseButton); //same as above, but using LMB
+	int getMouseX();
+	int getMouseY();
+
+	//Member functions
+	void init();
+	void cleanup();
+
+private:
+	Unit* mpUnit;
+
+	bool leftClick;
+	bool rightClick;
+	/*
+	- User controls
+		- Lmb places unit at cursor location (centered)
+		- F key speeds up animation
+		- S key slows down animation
+		- Enter key changes animation
+		- Esc key closes application
+	*/
+};

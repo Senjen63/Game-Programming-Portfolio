@@ -1,0 +1,34 @@
+Level Grid Size (pixels): <int>
+
+Snake Move Time (ms): <float>
+Snake Start Length: <int>
+Snake End Length: <int>
+=====
+Powerup Time (ms): <float>
+Food Time (ms): <float>
+--- Food 1 ---
+Type: <TYPE>
+Weight: <float>
+Point Value: <int>
+[Extra Values (i.e. grow amount): <val>]
+--- Food 2 ---
+Type: <TYPE>
+Weight: <float>
+Point Value: <int>
+[Extra Values (i.e. grow amount): <val>]
+--- Food ... ---
+ETC.
+=====
+Wall Color (0-1): R G B
+Walls:
+1 1 1 1 1 1 1 1 1 1 1 1
+1 0 0 0 0 0 0 0 0 0 0 1
+1 0 0 0 0 0 0 0 0 0 0 1
+1 0 0 0 0 0 0 0 0 0 0 1
+1 0 0 0 0 0 0 0 0 0 0 1
+1 0 0 0 0 0 0 0 0 0 0 1
+1 0 0 0 0 0 0 0 0 0 0 1
+1 0 0 0 0 0 0 0 0 0 0 1
+1 0 0 0 0 0 0 0 0 0 0 1
+1 0 0 0 0 0 0 0 0 0 0 1
+1 1 1 1 1 1 1 1 1 1 1 1

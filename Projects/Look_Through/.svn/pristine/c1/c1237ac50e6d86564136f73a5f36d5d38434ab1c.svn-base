@@ -1,0 +1,74 @@
+#include "Snake.h"
+
+Snake::Snake(int def)
+{
+	mDefSpeed = def;
+}
+
+Snake::~Snake()
+{
+	clearAll();
+	mDirectionalSpeed = Vector2D(0, 0);
+	mDefSpeed = 0;
+}
+
+void Snake::move(int dir, GraphicsSystem* display)
+{
+
+	Vector2D oldPos, newPos;
+	oldPos = mUnitList[0]->getPos();
+	
+	for (int i = mSize - 1; i > 0; i--)
+	{
+		newPos = oldPos;
+		oldPos = mUnitList[i]->getPos();
+		mUnitList[i]->drawSprite(display, newPos);
+	}
+
+	if (dir == 0)
+	{
+		mDirectionalSpeed = Vector2D(mUnitList[0]->getPos().getX(), mUnitList[0]->getPos().getY() - mDefSpeed);
+		mUnitList[0]->drawSprite(display, mDirectionalSpeed);
+	}
+	else if (dir == 1)
+	{
+		mDirectionalSpeed = Vector2D(mUnitList[0]->getPos().getX() + mDefSpeed, mUnitList[0]->getPos().getY());
+		mUnitList[0]->drawSprite(display, mDirectionalSpeed);
+	}
+	else if (dir == 2)
+	{
+		mDirectionalSpeed = Vector2D(mUnitList[0]->getPos().getX(), mUnitList[0]->getPos().getY() + mDefSpeed);
+		mUnitList[0]->drawSprite(display, mDirectionalSpeed);
+	}
+	else if (dir == 3)
+	{
+		mDirectionalSpeed = Vector2D(mUnitList[0]->getPos().getX() - mDefSpeed, mUnitList[0]->getPos().getY());
+		mUnitList[0]->drawSprite(display, mDirectionalSpeed);
+	}
+	
+}
+bool Snake::isColliding()
+{
+	for (int i = 1; i < mSize; i++)
+	{
+		if (mUnitList[i]->getPos() == mUnitList[0]->getPos())
+		{
+			return true;
+		}
+	}
+	return false;
+
+}
+bool Snake::isColliding(Unit* unit)
+{
+	Vector2D distance;
+
+	//cout << distance.getDistanceBetween(mUnitList[0]->getPos(), unit->getPos()) << "   " << unit->getAnim()->getCurrentSprite().getSize().getX() << endl;
+
+	if (distance.getDistanceBetween(mUnitList[0]->getPos(), unit->getPos()) <= unit->getAnim()->getCurrentSprite().getSize().getX())
+	{
+		cout << "work" << endl;
+		return true;
+	}
+	return false;
+}

@@ -1,0 +1,33 @@
+#include "Sprite.h"
+
+Sprite::Sprite()
+{
+	mpBuffer = NULL;
+}
+
+Sprite::Sprite(GraphicsBuffer* buffer, Vector2D spriteSource, Vector2D spriteSize)
+{
+	mpBuffer = buffer;
+	mSpriteSource = spriteSource;
+	mSpriteSize = spriteSize;
+}
+
+Sprite::~Sprite()
+{
+	mpBuffer = NULL;
+}
+
+GraphicsBuffer Sprite::getBuffer()
+{
+	return *mpBuffer;
+}
+
+Vector2D Sprite::getSpriteSource()
+{
+	return mSpriteSource;
+}
+
+Vector2D Sprite::getSpriteSize()
+{
+	return mSpriteSize;
+}

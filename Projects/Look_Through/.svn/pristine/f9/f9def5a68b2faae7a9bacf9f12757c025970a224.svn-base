@@ -1,0 +1,189 @@
+#include "GraphicsSystem.h"
+
+/// <summary>
+/// Creates a GraphicsSystem instance using a width and height which initializes Allegro.
+/// </summary>
+/// <param name="width">: Width of display.</param>
+/// <param name="height">: Height of display.</param>
+GraphicsSystem::GraphicsSystem( int width, int height )
+{
+	init();
+	mpDisplay = al_create_display( width, height );
+	assert( mpDisplay );
+}
+
+/// <summary>
+/// Clears the display from memory.
+/// </summary>
+GraphicsSystem::~GraphicsSystem()
+{
+	if( mpDisplay )
+	{
+		cleanup();
+	}
+}
+
+
+// Public Methods
+
+/// <summary>
+/// Required call at end of program to clear display from memory.
+/// </summary>
+void GraphicsSystem::cleanup()
+{
+	al_destroy_display( mpDisplay );
+	mpDisplay = nullptr;
+}
+
+/// <summary>
+/// Clears the backbuffer to a color.
+/// </summary>
+/// <param name="color">: Color to set buffer to.</param>
+void GraphicsSystem::clear( const ALLEGRO_COLOR & color )
+{
+	al_clear_to_color( color );
+}
+
+/// <summary>
+/// Clears a target buffer to a color.
+/// </summary>
+/// <param name="targetBuffer">: Buffer to be cleared.</param>
+/// <param name="color">: Color to set buffer to.</param>
+void GraphicsSystem::clear( const GraphicsBuffer & targetBuffer, const ALLEGRO_COLOR & color )
+{
+	ALLEGRO_BITMAP * oldBitmap = getBackBuffer();
+	al_set_target_bitmap( targetBuffer.getBitmap() );
+	al_clear_to_color( color );
+	al_set_target_bitmap( oldBitmap );
+}
+
+/// <summary>
+/// Draws a sprite onto the backbuffer at a position with a scale.
+/// </summary>
+/// <param name="locX">: X position of sprite.</param>
+/// <param name="locY">: Y position of sprite.</param>
+/// <param name="sprite">: Sprite to be drawn.</param>
+/// <param name="scale">(optional, default = 1.0f): Scale of sprite.</param>
+void GraphicsSystem::draw( int locX, int locY, const Sprite & sprite, float scale )
+{
+	// draw to current bitmap
+	al_draw_scaled_bitmap( sprite.getGraphicsBuffer().getBitmap(), sprite.getLOCX(), sprite.getLOCY(), sprite.getWidth(), sprite.getHeight(), locX, locY, sprite.getWidth() * scale, sprite.getHeight() * scale, 0 );
+}
+
+/// <summary>
+/// Draws a sprite onto a buffer at a position with a scale.
+/// </summary>
+/// <param name="targetBuffer">: Buffer to be drawn to.</param>
+/// <param name="locX">: X position of sprite.</param>
+/// <param name="locY">: Y position of sprite.</param>
+/// <param name="sprite">: Sprite to be drawn.</param>
+/// <param name="scale">(optional, default = 1.0f): Scale of sprite.</param>
+void GraphicsSystem::draw( const GraphicsBuffer & targetBuffer, int locX, int locY, const Sprite & sprite, float scale )
+{
+	// draw to target buffer
+	ALLEGRO_BITMAP * oldBitmap = getBackBuffer();
+	al_set_target_bitmap( targetBuffer.getBitmap() );
+	al_draw_scaled_bitmap( sprite.getGraphicsBuffer().getBitmap(), sprite.getLOCX(), sprite.getLOCY(), sprite.getWidth(), sprite.getHeight(), locX, locY, sprite.getWidth() * scale, sprite.getHeight() * scale, 0 );
+	al_set_target_bitmap( oldBitmap );
+}
+
+/// <summary>
+/// Flips the backbuffer to the front.
+/// </summary>
+void GraphicsSystem::flip()
+{
+	al_flip_display();
+}
+
+/// <summary>
+/// Saves a buffer bitmap to a file.
+/// </summary>
+/// <param name="graphicsBuffer">: Buffer to be saved.</param>
+/// <param name="pFilename">: Path of file to be made.</param>
+void GraphicsSystem::saveBuffer( const GraphicsBuffer & graphicsBuffer, const char * pFilename )
+{
+	al_save_bitmap( pFilename, graphicsBuffer.getBitmap() );
+}
+
+/// <summary>
+/// Saves a bitmap to a file.
+/// </summary>
+/// <param name="bitmap">: Bitmap to be saved.</param>
+/// <param name="pFilename">: Path of file to be made.</param>
+void GraphicsSystem::saveBuffer( ALLEGRO_BITMAP * bitmap, const char * pFilename )
+{
+	al_save_bitmap( pFilename, bitmap );
+}
+
+/// <summary>
+/// Writes text to the backbuffer at a position using a font, color, and text.
+/// </summary>
+/// <param name="locX">: X position of text.</param>
+/// <param name="locY">: Y position of text.</param>
+/// <param name="font">: Font of text.</param>
+/// <param name="color">: Color of text.</param>
+/// <param name="pText">: Text to write.</param>
+void GraphicsSystem::writeText( int locX, int locY, const Font & font, const ALLEGRO_COLOR & color, const char * pText )
+{
+	al_draw_text( font.getFont(), color, locX, locY, ALLEGRO_ALIGN_CENTER, pText );
+}
+
+/// <summary>
+/// Writes text to a target buffer at a position using a font, color, and text.
+/// </summary>
+/// <param name="targetBuffer">: Buffer to be written on.</param>
+/// <param name="locX">: X position of text.</param>
+/// <param name="locY">: Y position of text.</param>
+/// <param name="font">: Font of text.</param>
+/// <param name="color">: Color of text.</param>
+/// <param name="pText">: Text to write.</param>
+void GraphicsSystem::writeText( const GraphicsBuffer & targetBuffer, int locX, int locY, const Font & font, const ALLEGRO_COLOR & color, const char * pText )
+{
+	ALLEGRO_BITMAP * oldBitmap = getBackBuffer();
+	al_set_target_bitmap( targetBuffer.getBitmap() );
+	al_draw_text( font.getFont(), color, locX, locY, ALLEGRO_ALIGN_CENTER, pText );
+	al_set_target_bitmap( oldBitmap );
+}
+
+// Private Methods
+/// <summary>
+///	Initializes all graphical Allegro requirements.
+/// </summary>
+/// <exception cref="AllegroInitFail"></exception>
+void GraphicsSystem::init()
+{
+	assert( al_init() );
+	assert( al_init_image_addon() );
+	assert( al_init_font_addon() );
+	assert( al_init_ttf_addon() );
+}
+
+/***
+*
+* ACCESSORS
+*
+**/
+
+/// <returns>
+/// ALLEGRO_BITMAP pointer of the display's backbuffer promising no changes.
+/// </returns>
+ALLEGRO_BITMAP * GraphicsSystem::getBackBuffer() const
+{
+	return al_get_backbuffer( mpDisplay );
+}
+
+/// <returns>
+/// int of height of the display promising no changes.
+/// </returns>
+int GraphicsSystem::getHeight() const
+{
+	return al_get_display_height( mpDisplay );
+}
+
+/// <returns>
+/// int of width of the display promising no changes.
+/// </returns>
+int GraphicsSystem::getWidth() const
+{
+	return al_get_display_width( mpDisplay );
+}

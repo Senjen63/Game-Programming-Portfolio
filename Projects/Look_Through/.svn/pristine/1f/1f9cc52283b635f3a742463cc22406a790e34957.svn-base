@@ -1,0 +1,94 @@
+// Merle Roji & Max Cohen
+
+//#include <SFML/Graphics.hpp> 
+//#include <SFML/Audio.hpp>
+
+#include <iostream>
+#include <cassert>
+#include <string>
+#include <random>
+
+#include <PerformanceTracker.h>
+#include <MemoryTracker.h>
+#include <Vector2D.h>
+#include <Timer.h>
+#include <EventSystem.h>
+
+#include "Game.h"
+
+using namespace std;
+
+int main()
+{
+	/*
+	EXAMPLES OF HOW TO USE TEXTURES AND SPRITES:
+	
+		Texture* techDemoTexture = new Texture("assets/spr_placeholder_guy.png");
+		Sprite* techDemoSpr = new Sprite(techDemoTexture);
+		techDemoSpr->setPosition(60, 100);
+		techDemoSpr->setScale(10, 10);
+
+		Texture* bg = new Texture("assets/Woods.png");
+		Sprite* bgspr = new Sprite(bg);
+
+		mGraphics->draw(bgspr);
+		mGraphics->draw(techDemoSpr);
+
+	EXAMPLES OF HOW TO MAKE AN ANIMATION:
+
+		Texture* dean = new Texture("assets/dean_sprites.png");
+		Sprite* deanSpr[16];
+		Animation* deanAnim = new Animation(0.03, true);
+
+		int sprNum = 0;
+
+		for (int i = 0; i < 4; i++)
+		{
+			for (int j = 0; j < 4; j++)
+			{
+				deanSpr[sprNum] = new Sprite(dean, j * 60, i * 60, 60, 60);
+				deanAnim->addSprite(deanSpr[sprNum]);
+				sprNum++;
+			}
+		}
+
+		deanAnim->setPosition(250, 250);
+		deanAnim->setScale(4, 4);
+
+		mGraphics->draw(deanAnim);
+
+	EXAMPLES OF HOW TO USE FONTS AND TEXT:
+
+		Font* techDemoFont = new Font("assets/cour.ttf");
+		Text* techDemoText = new Text(40, techDemoFont, "Club Penguin is the best!!", RED);
+
+		mGraphics->draw(techDemoText);
+	*/
+
+
+	const string INIT_TRACKER_NAME = "init";
+	const string DRAW_TRACKER_NAME = "draw";
+	const string WAIT_TRACKER_NAME = "wait";
+
+	//initialize random number generator
+	srand(unsigned int(time(NULL)));
+
+	EventSystem::initInstance();
+	EventSystem::getInstance()->init();
+
+	Game::createGame();
+
+	Game::getInstance()->init();
+
+	//main game loop is in here
+	Game::getInstance()->doLoop();
+
+	Game::getInstance()->deleteGame();
+
+	EventSystem::cleanupInstance();
+
+	MemoryTracker::getInstance()->reportAllocations(cout);
+
+	system("pause");
+	return 0;
+}

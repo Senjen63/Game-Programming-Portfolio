@@ -1,0 +1,39 @@
+#pragma once
+
+#include <allegro5/allegro.h>
+#include <allegro5/allegro_font.h>
+#include <allegro5/allegro_ttf.h>
+#include <allegro5/allegro_audio.h>
+#include <allegro5/allegro_acodec.h>
+#include <allegro5/allegro_image.h>
+#include <allegro5/allegro_primitives.h>
+
+#include <iostream>
+#include <cassert>
+#include <string>
+#include <Vector2D.h>
+
+#include "GraphicsBuffer.h"
+
+class Unit
+{
+private: 
+	int x, y;
+	Animation* pFirstAnimation,* pSecondAnimation;
+	int mCurrentAnimation;
+	Vector2D mPos;
+
+public:
+	Unit();
+	Unit(Animation* pFirstAnimationH, Animation* pSecondAnimationH, Vector2D pos);
+	~Unit();
+
+
+	void update(double dt);
+	float getTime();
+	Sprite* draw();
+
+	Animation setAnimation();
+	void adjustTime(float time);
+
+};

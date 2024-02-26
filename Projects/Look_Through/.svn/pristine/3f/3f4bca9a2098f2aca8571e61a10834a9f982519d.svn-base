@@ -1,0 +1,98 @@
+#include "ArrowTrapUnit.h"
+#include "UnitManager.h"
+#include "Game.h"
+
+
+ArrowTrapUnit::ArrowTrapUnit(Vector2D pos, AnimationFrames* anim, int fps, bool loopAnimation, int type, bool physicsActive, 
+    bool gravityActive, bool physicsColliderActive, float frequency, Vector2D arrowDimensions) : Unit(pos, anim, fps, loopAnimation, 
+        type, physicsActive, gravityActive, physicsColliderActive)
+{
+    mFrequency = frequency;
+    mTimeUntilFire = frequency;
+    mArrowDimensions = arrowDimensions;
+}
+
+
+ArrowTrapUnit::~ArrowTrapUnit()
+{
+    cleanup();
+}
+
+
+void ArrowTrapUnit::init()
+{
+    Unit::init();
+    mpUnitManager = Game::getGame()->getUnitManager();
+}
+
+
+void ArrowTrapUnit::cleanup()
+{
+    
+}
+
+
+void ArrowTrapUnit::update(float timeElapsed)
+{
+    Unit::update(timeElapsed);
+
+    mTimeUntilFire -= timeElapsed / 1000;
+
+    if (mTimeUntilFire <= 0)
+    {
+        //resets time until
+        mTimeUntilFire = mFrequency;
+
+        //possible new arrow position to the right
+        Vector2D newArrowPos = getPosition() + (RIGHT_DIRECTION * ((getDimensions().getX() / 2) + (mArrowDimensions.getX() / 2)));
+        //check directly right for physics collider
+        vector<Unit*> collided = mpUnitManager->checkCollisionInArea(newArrowPos, mArrowDimensions.getX(), mArrowDimensions.getY(), this, true);
+
+        if (collided.size() == 0)
+        {
+            //fire spawn arrow right
+            mpEventSystem->fireEvent(SpawnArrowEvent(newArrowPos, RIGHT_DIRECTION * ARROW_SPEED, ARROW_LIFE, RIGHT_ANGLE));
+        }
+
+        collided.clear();
+
+        //possible new arrow position to the left
+        newArrowPos = getPosition() + (LEFT_DIRECTION * ((getDimensions().getX() / 2) + (mArrowDimensions.getX() / 2)));
+        //check directly left for physics collider
+        collided = mpUnitManager->checkCollisionInArea(newArrowPos, mArrowDimensions.getX(), mArrowDimensions.getY(), this, true);
+
+        if (collided.size() == 0)
+        {
+            //fire spawn arrow left
+            mpEventSystem->fireEvent(SpawnArrowEvent(newArrowPos, LEFT_DIRECTION * ARROW_SPEED, ARROW_LIFE, LEFT_ANGLE));
+        }
+
+        collided.clear();
+
+        //possible new arrow position down
+        newArrowPos = getPosition() + (DOWN_DIRECTION * ((getDimensions().getY()) + (mArrowDimensions.getY() / 2)));
+        //check directly down for physics collider
+        collided = mpUnitManager->checkCollisionInArea(newArrowPos, mArrowDimensions.getY(), mArrowDimensions.getX(), this, true);
+
+        if (collided.size() == 0)
+        {
+            //fire spawn arrow down
+            mpEventSystem->fireEvent(SpawnArrowEvent(newArrowPos, DOWN_DIRECTION * ARROW_SPEED, ARROW_LIFE, DOWN_ANGLE));
+        }
+
+        collided.clear();
+
+        //possible new arrow position up
+        newArrowPos = getPosition() + (UP_DIRECTION * ((getDimensions().getY()) + (mArrowDimensions.getY() / 2)));
+        //check directly up for physics collider
+        collided = mpUnitManager->checkCollisionInArea(newArrowPos, mArrowDimensions.getY(), mArrowDimensions.getX(), this, true);
+
+        if (collided.size() == 0)
+        {
+            //fire spawn arrow up
+            mpEventSystem->fireEvent(SpawnArrowEvent(newArrowPos, UP_DIRECTION * ARROW_SPEED, ARROW_LIFE, UP_ANGLE));
+        }
+
+        collided.clear();
+    }
+}

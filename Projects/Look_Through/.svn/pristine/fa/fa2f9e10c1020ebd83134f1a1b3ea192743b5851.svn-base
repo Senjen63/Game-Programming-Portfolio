@@ -1,0 +1,79 @@
+#include "Animation.h"
+#include "Game.h"
+
+Animation::Animation(int fps, bool loop)
+{
+	mCurrent = 0;
+	mFps = fps;
+	mLoop = loop;
+	mTimePerSprite = Game::getGame()->getTimeScale() / mFps;
+	mTimeLeft = mTimePerSprite;
+}
+Animation::Animation(GraphicsBuffer* frames, int fps, bool loop)
+{
+	int xSections = frames->getSections().getX();
+	int ySections = frames->getSections().getY();
+
+	for (int j = 0; j < ySections; j++)
+	{
+		for (int i = 0; i < xSections; i++)
+		{
+			Sprite frameSprite = Sprite(frames, Vector2D((frames->getWidth() / xSections) * i,
+				(frames->getHeight() / ySections) * j),
+				Vector2D(frames->getWidth() / xSections, frames->getHeight() / ySections));
+			addSprite(frameSprite);
+		}
+	}
+    mCurrent = 0;
+    mFps = fps;
+    mTimePerSprite = Game::getGame()->getTimeScale() / mFps;
+    mTimeLeft = mTimePerSprite;
+    mLoop = loop;
+}
+Animation::~Animation()
+{
+
+}
+int Animation::getCurrentFrame() const
+{
+	return mCurrent;
+}
+int Animation::getFrameTotal() const
+{
+	return mFrames.size();
+}
+Sprite Animation::getCurrentSprite()
+{
+	return mFrames[mCurrent];
+}
+void Animation::addSprite(Sprite newSprite)
+{
+	mFrames.push_back(newSprite);
+}
+void Animation::update(float timeElapsed)
+{
+	mTimeLeft -= timeElapsed;
+
+	if (mTimeLeft <= 0)
+	{
+		mCurrent++;
+		mTimeLeft = mTimePerSprite;
+
+		if (mCurrent >= mFrames.size() && mLoop)
+		{
+			mCurrent = 0;
+		}
+	}
+}
+void Animation::changeSpeed(int newFps)
+{
+	mFps = newFps;
+	mTimePerSprite = 1000.0 / newFps;
+}
+void Animation::sync(const Animation& lastAnim)
+{
+	if (mFrames.size() == lastAnim.getFrameTotal())
+	{
+		mCurrent = lastAnim.getCurrentFrame();
+	}
+}

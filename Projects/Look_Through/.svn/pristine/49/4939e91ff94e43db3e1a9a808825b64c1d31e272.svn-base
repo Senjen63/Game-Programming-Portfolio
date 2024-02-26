@@ -1,0 +1,47 @@
+#include "Animation.h"
+
+const int SMURFS_LENGTH = 4;
+const float SLOWEST_ANIM_SPEED = .1f;
+
+
+Animation::Animation( GraphicsBuffer* gbuff, float targetTime )
+{
+	for (int i = 0; i < SMURFS_LENGTH; i++)
+	{
+		for (int j = 0; j < SMURFS_LENGTH; j++)
+		{
+			Sprite pSmurfSprite = Sprite( gbuff, ( gbuff->getWidth() / SMURFS_LENGTH ) * j, (gbuff->getHeight() / SMURFS_LENGTH) * i,
+			gbuff->getWidth() / SMURFS_LENGTH, gbuff->getHeight() / SMURFS_LENGTH );
+			mSprites.push_back(pSmurfSprite);
+		}
+	}
+	mCurSprite = 0;
+	mElapTime = 0;
+	mTargetTime = 1000/targetTime;
+}
+
+Animation::~Animation()
+{
+
+}
+
+void Animation::update(float deltaTime)
+{
+	mElapTime += deltaTime;
+	if ( mElapTime >= mTargetTime )
+	{
+		if ( mCurSprite >= mSprites.size() - 1 )
+			mCurSprite = 0;
+		else
+			mCurSprite++;
+		mElapTime -= mTargetTime;
+	}
+}
+
+void Animation::changeSpeed( int time )
+{
+	if ( mTargetTime - time > 0 )
+		mTargetTime -= time;
+	else
+		mTargetTime = SLOWEST_ANIM_SPEED;
+}

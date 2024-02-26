@@ -1,0 +1,53 @@
+#include "AnimationFrames.h"
+
+AnimationFrames::AnimationFrames(GraphicsBuffer* frames)
+{
+	/*
+	Load in frames from grid (which is specified by x and y sections) in a graphics buffer
+	It basically cuts a sprite sheet up and turns it into a vector of animation frames
+	*/
+	int xSections = frames->getSections().getX();
+	int ySections = frames->getSections().getY();
+
+	for (int j = 0; j < ySections; j++)
+	{
+		for (int i = 0; i < xSections; i++)
+		{
+			Sprite frameSprite = Sprite(frames,
+				Vector2D((frames->getWidth() / xSections) * i, (frames->getHeight() / ySections) * j),
+				Vector2D(frames->getWidth() / xSections, frames->getHeight() / ySections));
+			addSprite(frameSprite);
+		}
+	}
+}
+
+
+AnimationFrames::~AnimationFrames()
+{
+
+}
+
+
+unsigned int AnimationFrames::getFrameTotal() const
+{
+    return mFrameSprites.size();
+}
+
+
+Sprite AnimationFrames::getSprite(unsigned int index)
+{
+    assert(getFrameTotal() > 0);
+
+    if (index >= getFrameTotal()) //return last frame if index is greater than length
+    {
+        return mFrameSprites[getFrameTotal() - 1];
+    }
+
+    return mFrameSprites[index];
+}
+
+
+void AnimationFrames::addSprite(Sprite newSprite)
+{
+    mFrameSprites.push_back(newSprite);
+}

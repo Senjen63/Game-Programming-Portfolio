@@ -1,0 +1,75 @@
+#include "InputSystem.h"
+
+void InputSystem::init()
+{
+	al_install_keyboard();
+	al_install_mouse();
+	mpEventSystem = EventSystem::getInstance();
+}
+
+void InputSystem::clean()
+{
+	al_uninstall_keyboard();
+	al_uninstall_mouse();
+}
+
+// Im confused as to how this shouldn't include any game code.
+// Wouldn't it be a bit redundant to fire an event from elsewhere, have this process that input event, and then have this fire another input related event?
+// Am I misunderstanding what is meant by game code?
+void InputSystem::update()
+{
+	// Get current keyboard state
+	ALLEGRO_KEYBOARD_STATE keyboardState;
+	al_get_keyboard_state(&keyboardState);
+
+	// Check for each key involved in this program
+	// and update their respective bools in the key struct
+
+	// Check for F
+	if (al_key_down(&keyboardState, ALLEGRO_KEY_F))
+	{
+
+	}
+
+	// Check for S
+	if (al_key_down(&keyboardState, ALLEGRO_KEY_S))
+	{
+		mpEventSystem->fireEvent(InputEvent(S_PRESSED));
+	}
+
+	// Check for W
+	if (al_key_down(&keyboardState, ALLEGRO_KEY_W))
+	{
+		mpEventSystem->fireEvent(InputEvent(W_PRESSED));
+	}
+
+	// Check for A
+	if (al_key_down(&keyboardState, ALLEGRO_KEY_A))
+	{
+		mpEventSystem->fireEvent(InputEvent(A_PRESSED));
+	}
+
+	// Check for D
+	if (al_key_down(&keyboardState, ALLEGRO_KEY_D))
+	{
+		mpEventSystem->fireEvent(InputEvent(D_PRESSED));
+	}
+
+	// Check for Space
+	if (al_key_down(&keyboardState, ALLEGRO_KEY_SPACE))
+	{
+		mpEventSystem->fireEvent(InputEvent(SPACE_PRESSED));
+	}
+
+	// Check for Enter
+	if (al_key_down(&keyboardState, ALLEGRO_KEY_ENTER))
+	{
+
+	}
+
+	// Check for Escape
+	if (al_key_down(&keyboardState, ALLEGRO_KEY_ESCAPE))
+	{
+		mpEventSystem->fireEvent(InputEvent(ESCAPE_PRESSED));
+	}
+}

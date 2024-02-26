@@ -1,0 +1,103 @@
+#include "UnitManager.h"
+#include "Unit.h"
+#include "Animation.h"
+#include "Sprite.h"
+
+UnitManager::UnitManager() 
+{
+
+}
+
+UnitManager::~UnitManager() 
+{
+	clearUnits();
+}
+
+void UnitManager::createAndAddUnit(Vector2D location, Animation mainAnimation, Animation altAnimation) 
+{
+	Unit* pUnit = new Unit(location);
+
+	pUnit->setMainAnimation(mainAnimation);
+	pUnit->setAltAnimation(altAnimation);
+	
+	mpUnits.push_back(pUnit);
+}
+
+void UnitManager::createAndAddUnit(Vector2D location, Animation mainAnimation)
+{
+
+	Unit* pUnit = new Unit(location);
+
+	pUnit->setMainAnimation(mainAnimation);
+
+	mpUnits.push_back(pUnit);
+}
+
+void UnitManager::deleteUnit(Unit* pUnitToDelete) 
+{
+	for (unsigned int i = 0; i < mpUnits.size(); i++)
+	{
+		Unit* pUnit = mpUnits[i];
+		if (pUnit == pUnitToDelete)
+		{
+			delete pUnit;
+			mpUnits.erase(mpUnits.begin() + i);
+			break;
+		}
+	}
+}
+
+void UnitManager::deleteUnit(Vector2D clickedLocation)
+{
+	int smurfHeight;
+	int smurfWidth;
+
+	Vector2D bottomRightLocation;
+	Vector2D topLeftLocation;
+
+	for (unsigned int i = 0; i < mpUnits.size(); i++)
+	{
+		Unit* pUnit = mpUnits[i];
+		smurfHeight = pUnit->getCurrentAnimation().getCurrentSprite().getSpriteHeight();
+		smurfWidth = pUnit->getCurrentAnimation().getCurrentSprite().getSpriteWidth();
+		topLeftLocation = pUnit->getLocation();
+		bottomRightLocation = Vector2D(pUnit->getLocation().getX() + smurfWidth, pUnit->getLocation().getY() + smurfHeight);
+		if (clickedLocation.getX() >= topLeftLocation.getX() && clickedLocation.getX() <= bottomRightLocation.getX())
+		{
+			if (clickedLocation.getY() >= topLeftLocation.getY() && clickedLocation.getY() <= bottomRightLocation.getY())
+			{
+				delete pUnit;
+				mpUnits.erase(mpUnits.begin() + i);
+				break;
+			}
+		}
+	}
+}
+
+void UnitManager::clearUnits() 
+{
+	for (auto unit : mpUnits)
+	{
+		delete unit;
+	}
+
+	mpUnits.clear();
+}
+
+void UnitManager::updateAll(double dt) 
+{
+	for (auto unit : mpUnits) 
+	{
+		Unit* pUnit = unit;
+		pUnit->update(dt);
+	}
+}
+
+void UnitManager::drawAll() 
+{
+	for (auto unit : mpUnits) 
+	{
+		Unit* pUnit = unit;
+		pUnit->draw();
+	}
+}

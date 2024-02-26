@@ -1,0 +1,48 @@
+#pragma once
+#include <PerformanceTracker.h>
+#include <Timer.h>
+#include <Trackable.h>
+#include "UnitManager.h"
+
+#include <iostream>
+#include <fstream>
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <ctime>
+
+using namespace std;
+
+const int GRID_WIDTH = 25;
+const int GRID_HEIGHT = 19; 
+
+const string LEVEL = "Level1.txt";
+const string LEVEL2 = "Level2.txt";
+const string LEVEL3 = "Level3.txt";
+
+class LevelManager : public Trackable
+{
+private:
+	int score;
+
+public:
+	LevelManager();
+	~LevelManager();
+
+	void createLevel1(GraphicsSystem* mpGraphics, GraphicsBufferManager& mpgBufferManager, string bufferKey, 
+						UnitManager& mLevelUnitManager, Animation& mWallAnimation, int originX, int originY);
+	void createLevel2(GraphicsSystem* mpGraphics, GraphicsBufferManager& mpgBufferManager, string bufferKey,
+						UnitManager& mLevelUnitManager, Animation& mWallAnimation, int originX, int originY);
+	void createLevel3(GraphicsSystem* mpGraphics, GraphicsBufferManager& mpgBufferManager, string bufferKey,
+						UnitManager& mLevelUnitManager, Animation& mWallAnimation, int originX, int originY);
+
+	void RandomPlacement(GraphicsSystem* mpGraphics, GraphicsBufferManager& mpgBufferManager, string bufferKey, 
+						UnitManager& mUnitManager, int originX, int originY,
+						bool runCode, int currentLevel);
+
+	bool Score(int currentLevel);
+
+	int getScore();
+	void setScore(int newScore);
+
+};

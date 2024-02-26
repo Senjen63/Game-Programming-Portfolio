@@ -1,0 +1,80 @@
+//BP
+#include "Game.h"
+#include "InputTranslator.h"
+
+InputTranslator::InputTranslator()
+{
+    mpEventSystem = nullptr;
+}
+
+InputTranslator::~InputTranslator()
+{
+    //Unused Destructor
+}
+
+void InputTranslator::init()
+{
+    mpEventSystem = EventSystem::getInstance();
+
+    mpEventSystem->getInstance()->
+        addListener((EventType)MESSAGE, this);
+    mpEventSystem->getInstance()->
+        addListener((EventType)GAME_INPUT, this);
+}
+
+void InputTranslator::handleEvent(const Event& currentEvent)
+{
+    if (currentEvent.getType() == GAME_INPUT)
+    {
+        bool sentAction = false;
+        cout << endl << "Translator:";
+        const InputEvents& gameInput = static_cast<const InputEvents&>(currentEvent);
+
+        if (gameInput.getKeyIndex() == ESC)
+        {
+            mpEventSystem->fireEvent(GameActions(GAME_QUIT));
+            sentAction = true;
+        }
+
+        if (gameInput.getKeyIndex() == SPACE)
+        {
+            mpEventSystem->fireEvent(GameActions(GAME_START));
+            sentAction = true;
+        }
+
+        if (gameInput.getKeyIndex() == A || gameInput.getKeyIndex() == LEFT)
+        {
+            mpEventSystem->fireEvent(GameActions(LEFT_TURN));
+            sentAction = true;
+        }
+
+        if (gameInput.getKeyIndex() == D || gameInput.getKeyIndex() == RIGHT)
+        {
+            mpEventSystem->fireEvent(GameActions(RIGHT_TURN));
+            sentAction = true;
+        }
+
+        if (gameInput.getKeyIndex() == S || gameInput.getKeyIndex() == DOWN)
+        {
+            mpEventSystem->fireEvent(GameActions(DOWN_TURN));
+            sentAction = true;
+        }
+
+        if (gameInput.getKeyIndex() == W || gameInput.getKeyIndex() == UP)
+        {
+            mpEventSystem->fireEvent(GameActions(UP_TURN));
+            sentAction = true;
+        }
+
+        if (!sentAction)
+        {
+            cout << "An action has not happened." << endl;
+        }
+    }
+
+    if (currentEvent.getType() == MESSAGE)
+    {
+        const GameMessages& translatorMessages = static_cast<const GameMessages&>(currentEvent);
+        cout << "Translator Message:" << translatorMessages.getGameMessage() << endl;
+    }
+}

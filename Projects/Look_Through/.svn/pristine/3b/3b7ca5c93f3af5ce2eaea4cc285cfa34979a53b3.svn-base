@@ -1,0 +1,48 @@
+#include "SaveData.h"
+
+SaveData::SaveData()
+{
+	
+}
+SaveData::~SaveData()
+{
+
+}
+
+void SaveData::SaveTheData(int Player1Score, int Player2Score)
+{
+	mPlayerOneScore = Player1Score;
+	mPlayerTwoScore = Player2Score;
+
+	ofstream fout;
+	fout.open(fileName);
+
+	fout << mPlayerOneScore << endl;
+	fout << mPlayerTwoScore << endl;
+
+	fout.close();
+}
+void SaveData::LoadData()
+{
+	string line;
+	ifstream fin;
+
+	fin.open(fileName);
+
+	if (fin.is_open())
+	{
+		getline(fin, line);
+		mPlayerOneScore = stoi(line);
+		getline(fin, line);
+		mPlayerTwoScore = stoi(line);
+		fin.close();
+	}
+}
+int SaveData::GetPlayerOneScore()
+{
+	return mPlayerOneScore;
+}
+int SaveData::GetPlayerTwoScore()
+{
+	return mPlayerTwoScore;
+}

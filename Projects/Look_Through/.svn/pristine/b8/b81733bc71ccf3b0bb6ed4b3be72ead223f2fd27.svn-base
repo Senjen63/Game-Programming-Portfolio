@@ -1,0 +1,47 @@
+#pragma once
+#include <list>
+#include "PowerUp.h"
+#include "SnakeManager.h"
+#include "EventListener.h"
+#include "MoveEvent.h"
+#include "PowerUpEvent.h"
+#include "UpdateScoreEvent.h"
+#include "EventSystem.h"
+
+class PowerUpManager : public EventListener
+{
+public:
+	PowerUpManager(float cellSize, std::pair<int, int> displaySize, float timePerUpdate, int scorePerPowerUp);
+	~PowerUpManager();
+
+	void clear();
+	void addPowerUp();
+	void draw(GraphicsSystem* currentGraphicsSystem);
+	void update(float deltaTime);
+
+	virtual void handleEvent(const Event& theEvent);
+
+private:
+	const static int POWER_UP_TYPES = 4;
+	Animation* mpPointsAnimation;
+	GraphicsBuffer* mpPointsBuffer;
+
+	Animation* mpSpeedUpAnimation;
+	GraphicsBuffer* mpSpeedUpBuffer;
+
+	Animation* mpSpeedDownAnimation;
+	GraphicsBuffer* mpSpeedDownBuffer;
+
+	Animation* mpAddSegmentAnimation;
+	GraphicsBuffer* mpAddSegmentBuffer;
+
+	float mCellSize;
+	std::pair<int, int> mDisplaySize;
+
+	float mTimePerUpdate;
+	float mTimeRemaining;
+
+	int mScorePerPowerUp;
+
+	std::list<PowerUp*> mPowerUpList;
+};

@@ -1,0 +1,92 @@
+#include "HUD.h"
+HUD::HUD(Font* font)
+{
+	mpFont = font; //passed by reference
+	mpWhite = Color(255, 255, 255, 255);
+	mOver = "Game over!";
+	mAgain = "Press space to play again";
+	mWin = "You won the game!";
+}
+
+HUD::~HUD() 
+{}
+
+
+void HUD::friendState(std::string counter, int state, bool changeCurrentState)
+{
+	mSadF = stoi(counter);
+	int zero = 0;
+	mChange = changeCurrentState;
+	
+	switch (state)
+	{
+	//original state
+	case 1:
+		break;
+	//Meh Friend state
+	case 2:
+		if (mChange)
+		{
+			mMehF++;
+			mSadF -= mMehF;
+		}
+		break;
+	//Happy Friend state 
+	case 3:
+		if (mChange)
+		{
+			mHappyF++;
+			mMehF -= mHappyF;
+		}
+		break;
+	default:
+		std::cout << "invalid friend State (HUD.cpp)\n";
+		break;
+	}
+
+}
+
+void HUD::writeFriendState(GraphicsSystem* mpGraphics, std::string sadWords, std::string mehWords, std::string happyWords, int happyFriends, int sadFriends)
+{
+	mpGraphics->writeText(400, 35, mpFont, mpWhite, (sadWords + ": " + std::to_string(sadFriends)).c_str());
+	//mpGraphics->writeText(250, 30, mpFont, mpWhite, (mehWords + ": " + std::to_string(mMehF)).c_str());
+	mpGraphics->writeText(400, 5, mpFont, mpWhite, (happyWords + ": " + std::to_string(happyFriends)).c_str());
+}
+
+//void HUD::endText(GraphicsSystem* mpGraphics)
+//{
+//	mpGraphics->writeText(320, 20, mpFont, mpWhite, mOver.c_str());
+//	mpGraphics->writeText(320, 40, mpFont, mpWhite, mAgain.c_str());
+//}
+
+void HUD::winText(GraphicsSystem* mpGraphics)
+{
+	mpGraphics->writeText(250, 20, mpFont, mpWhite, mWin.c_str());
+}
+
+void HUD::elapsedTime(GraphicsSystem* graphics, float time, std::string words)
+{
+	std::string timeString = std::to_string(time);
+	graphics->writeText(5, 5, mpFont, mpWhite, (words + ": " + timeString).c_str());
+	
+}
+
+void HUD::displayLevel(GraphicsSystem* graphics, std::string difficulty, std::string level)
+{
+	graphics->writeText(5, 35, mpFont, mpWhite, (difficulty + ": " + level).c_str());
+}
+
+int HUD::getMehFriends()
+{
+	return mMehF;
+}
+
+int HUD::getSadFriends()
+{
+	return mSadF;
+}
+
+int HUD::getHappyFriends()
+{
+	return mHappyF;
+}

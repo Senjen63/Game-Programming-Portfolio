@@ -1,0 +1,55 @@
+#include "GraphicsBufferManager.h"
+
+GraphicsBufferManager::GraphicsBufferManager()
+{
+
+}
+
+GraphicsBufferManager::~GraphicsBufferManager()
+{
+	clearAll();
+}
+
+void GraphicsBufferManager::addBuffer(std::string imageFilePath, std::string key)
+{
+	if (graphicsBufferMap.find(key) != graphicsBufferMap.end())
+	{
+		delete(graphicsBufferMap[key]);
+	}
+
+	GraphicsBuffer* newBuffer = new GraphicsBuffer(imageFilePath);
+	graphicsBufferMap.insert(std::pair<std::string, GraphicsBuffer*>(key, newBuffer));
+}
+
+void GraphicsBufferManager::addBuffer(float bitmapScaleX, float bitmapScaleY, float leftBound, float topBound, float rightBound, float bottomBound, Color color, std::string key)
+{
+	if (graphicsBufferMap.find(key) != graphicsBufferMap.end())
+	{
+		delete(graphicsBufferMap[key]);
+	}
+
+	GraphicsBuffer* newBuffer = new GraphicsBuffer(bitmapScaleX, bitmapScaleY, leftBound, topBound, rightBound, bottomBound, color);
+	graphicsBufferMap.insert(std::pair<std::string, GraphicsBuffer*>(key, newBuffer));
+}
+
+void GraphicsBufferManager::deleteBuffer(std::string key)
+{
+	delete(graphicsBufferMap[key]);
+	graphicsBufferMap.erase(key);
+}
+
+GraphicsBuffer* GraphicsBufferManager::getBuffer(std::string key)
+{
+	return graphicsBufferMap[key];
+}
+
+void GraphicsBufferManager::clearAll()
+{
+	for (std::map<std::string, GraphicsBuffer*>::iterator i = graphicsBufferMap.begin(); i != graphicsBufferMap.end(); i++)
+	{
+		delete(i->second);
+		i->second = nullptr;
+	}
+
+	graphicsBufferMap.clear();
+}

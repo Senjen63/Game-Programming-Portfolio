@@ -1,0 +1,95 @@
+#pragma once
+#include <iostream>
+#include <cassert>
+#include <string>
+#include <fstream>
+#include <Vector2D.h>
+#include <Timer.h>
+#include "GraphicsSystem.h"
+#include "GraphicsBuffer.h"
+#include "InputSystem.h"
+#include "Color.h"
+#include "Sprite.h"
+#include "Font.h"
+#include "Animation.h"
+#include "Unit.h"
+#include "UnitManager.h"
+#include "BufferManager.h"
+#include "HUD.h"
+
+const string ASSET_PATH = "Assets\\";
+const string SNAKE_FILENAME = "SnakeBody.png";
+const string WALL_FILENAME = "Wall.png";
+const string FLOOR_FILENAME = "Floor.png";
+const string FOOD_FILENAME = "Apple.png";
+const string SPEED_FILENAME = "SpeedUp.png";
+const string SLOW_FILENAME = "SlowDown.png";
+const string DEATH_MENU = "DeathMenu";
+const string BACKGROUND = "Background";
+const string FONT_FILENAME = "font.ttf";
+
+const int SPRITE_WIDTH = 32;
+const int SPRITE_HEIGHT = 32;
+const float SLEEP_MS = 16.7f;
+const float TIME_INCREMENT = 0.01f;
+const int DISP_WIDTH = 512;
+const int DISP_HEIGHT = 512;
+const int DEATH_MENU_WIDTH = 400;
+const int DEATH_MENU_HEIGHT = 340;
+const int FONT_SIZE = 40;
+const int FONT_SIZE_SMALL = 20;
+const float TIME_SCALE = 1000;
+
+const float ANIM_TIME = 0.005f;
+const int GRID_WIDTH = 16;
+const int GRID_HEIGHT = 16;
+
+class Game : public EventListener
+{
+private:
+	static Game* mpsGameInstance;
+	GraphicsSystem* mpGraphSystem;
+	InputSystem mInputSystem;
+	BufferManager mBufferManager;
+	UnitManager mUnitManager;
+	EventSystem* mpEventSystem;
+	HUD* mHUD;
+	string mLevelNames[3] = {"Level1.txt", "Level2.txt", "Level3.txt"};
+	Font* mpFont;
+	Font* mpFontSmall;
+	bool leave = false;
+	int mSnakeSpeed = 0;
+	int mSnakeSegments = 0;
+	int mSnakeRequiredLength = 0;
+	int mPointsPerFood = 0;
+	int mItemFrequency = 0;
+	int mLevelOn = -1;
+	bool mSnakeIsDead = false;
+	int mScore = 0;
+	int mSegments = 0;
+	float mGameTime = 0;
+	enum class GameState
+	{
+		MAIN_MENU = 0,
+		IN_GAME = 1,
+		DEATH_SCREEN = 2,
+		GAME_COMPLETE = 3
+	};
+	GameState mCurrentState;
+public:
+	void Init();
+	void CleanUp();
+	static Game* GetInstance();
+	Game();
+	~Game();
+	void DoLoop();
+	void PauseGame();
+	void LoadLevel(int levelToLoad);
+	void SnakeHasDied();
+	GraphicsBuffer* GetBuffer(string index);
+	GraphicsSystem* GetGraphicsSystem();
+	void ReloadGame();
+	void AddScore();
+	virtual void handleEvent(const Event& event);
+};
+

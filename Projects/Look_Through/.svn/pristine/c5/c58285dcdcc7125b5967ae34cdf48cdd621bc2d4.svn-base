@@ -1,0 +1,12 @@
+Files Changed:
+Game.cpp - doLoop & handleEvent
+Game.h - Game class - private
+InputSystem.cpp - update
+
+Added a new background with many variations for the menus and settings in the three languages. However, something is wrong with the settings.
+When I run the code and press P to enter the settings, I see the english settings page, but then the entire program freezes.
+I would assume that it has to do with something in handleEvent or the while loops I have within doLoop in Game.cpp.
+I also haven't added the load feature or difficulty change feature completely yet, but I have it listening for the inputs to do those things. 
+If you are able to, feel free to get the loading working (ONLY if it can be done easily). We can still demo it in other ways.
+Even if you can get the settings working properly, I'll still need to get the difficulties to change. I can do that later though, just need to show
+Dean that we can navigate the menus and that the language can be changed

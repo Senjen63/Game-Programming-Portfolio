@@ -1,0 +1,39 @@
+#pragma once
+
+
+#include <PerformanceTracker.h>
+#include <MemoryTracker.h>
+#include <Vector2D.h>
+#include <Timer.h>
+#include "InputSystem.h"
+#include "EventSystem.h"
+#include "EventListener.h"
+
+
+enum class Direction
+{
+    UP, DOWN, LEFT, RIGHT
+};
+
+class InputTranslator : public EventListener
+{
+public:
+
+    InputTranslator();
+    ~InputTranslator();
+
+    void init();
+    void cleanUp();
+
+    void handleEvent(const Event & theEvent);
+
+
+
+private:
+
+
+
+
+
+};
+

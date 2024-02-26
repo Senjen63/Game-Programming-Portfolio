@@ -1,0 +1,48 @@
+#pragma once
+
+#include <allegro5/allegro.h>
+#include <allegro5/allegro_image.h>
+#include <allegro5/allegro_primitives.h>
+
+#include <Trackable.h>
+
+#include "Sprite.h"
+#include "Font.h"
+
+#include <Trackable.h>
+using namespace std;
+
+class GraphicsSystem: public Trackable
+{
+
+private:
+	ALLEGRO_DISPLAY* mpDisplay;
+	GraphicsBuffer* mpBuffer;
+
+public:
+	GraphicsSystem();
+	~GraphicsSystem();
+
+	bool initialize(int width, int height);
+	void cleanUp();
+
+	int getHeight();
+	int getWidth();
+	
+	GraphicsBuffer* getBackBuffer();
+
+	static void GraphicsSystem::flip()
+	{
+		return al_flip_display();//flips back buffers with front buffer
+	}
+
+	void drawBackground(GraphicsBuffer* pBuffer);
+	void draw(int locX, int locY, Sprite sprite, int scale = 1);
+	void draw(GraphicsBuffer* gBuffer, int locX, int locY, Sprite sprite, int scale);
+	void draw(GraphicsBuffer* gBuffer, int locX, int locY, float scale);
+	
+	void writeText(int locX, int locY, Font* font, Color color, string text);
+	void writeText(GraphicsBuffer* gBuffer, int locX, int locY, Font* font, Color color, string text);
+	
+	void saveBuffer(GraphicsBuffer* gBuffer, string filename);
+};

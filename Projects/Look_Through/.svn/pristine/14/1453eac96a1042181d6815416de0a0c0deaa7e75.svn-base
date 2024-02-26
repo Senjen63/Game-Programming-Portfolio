@@ -1,0 +1,62 @@
+#include "InputSystem.h"
+
+InputSystem* InputSystem::inst = nullptr;
+
+void InputSystem::init()
+{
+    if (!al_init())
+    {
+        throw new std::exception("error initting Allegro\n");
+    }
+    if (!al_install_keyboard())
+    {
+        throw new std::exception("error - keyboard not installed\n");
+    }
+    if (!al_install_mouse())
+    {
+        throw new std::exception("error - mouse not installed\n");
+    }
+
+    InputSystem::inst = new InputSystem();
+}
+
+void InputSystem::cleanUp()
+{
+    delete InputSystem::inst;
+}
+
+bool InputSystem::getKeyState(KeyCode keycode)
+{
+    al_get_keyboard_state(&InputSystem::inst->mKeyBoardState);
+    return al_key_down(&InputSystem::inst->mKeyBoardState, (int)keycode);
+}
+
+MouseState InputSystem::getMouseState()
+{
+    al_get_mouse_state(&InputSystem::inst->mMouseState);
+    return MouseState(&InputSystem::inst->mMouseState);
+}
+
+bool InputSystem::getMouseButtonDown(int mouseButton)
+{
+    al_get_mouse_state(&InputSystem::inst->mMouseState);
+    return al_mouse_button_down(&InputSystem::inst->mMouseState, mouseButton);
+}
+
+bool InputSystem::getMouseButtonDown(MouseButton mouseButton)
+{
+    return getMouseButtonDown((int) mouseButton);
+}
+
+Vector2D InputSystem::getMousePosition()
+{
+    al_get_mouse_state(&InputSystem::inst->mMouseState);
+    return Vector2D(InputSystem::inst->mMouseState.x, InputSystem::inst->mMouseState.y);
+}
+
+MouseState::MouseState(ALLEGRO_MOUSE_STATE* pMouseState)
+{
+    mPosition = Vector2D(pMouseState->x, pMouseState->y);
+    mScrollPosition = pMouseState->z;
+    mButtonsBitfield = pMouseState->buttons;
+}

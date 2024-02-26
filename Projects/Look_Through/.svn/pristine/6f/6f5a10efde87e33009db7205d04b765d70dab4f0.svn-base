@@ -1,0 +1,234 @@
+
+#include "GraphicsSystem.h"
+
+GraphicsSystem::GraphicsSystem()
+{
+	init(DISP_HEIGHT, DISP_WIDTH);
+}
+
+GraphicsSystem::~GraphicsSystem()
+{
+	cleanUp();
+	SDL_Quit();
+}
+
+GraphicsSystem::GraphicsSystem(int height, int width)
+{
+	init(DISP_HEIGHT, DISP_WIDTH);
+	//mpDisplay = SDL_CreateWindow("Bepis", 0, 0, width, height, 0);
+	//assert(mpDisplay);
+}
+
+int GraphicsSystem::init(int height, int width)
+{
+	if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
+	{
+		cout << "error initting SDL\n";
+		system("pause");
+		return 1;
+	}
+	
+	SDL_DisplayMode display;
+	SDL_GetCurrentDisplayMode(0, &display);
+
+	mpDisplay = SDL_CreateWindow("Bepis", (display.w - width) / 2, (display.h - height) / 2, width, height, 0);
+	SDL_SetWindowBordered(mpDisplay, SDL_TRUE);
+
+	mpRenderer = SDL_CreateRenderer(mpDisplay, -1, 0);
+
+	if (!mpRenderer)
+	{
+		cout << "Error creating renderer: " << SDL_GetError() << endl;
+		return false;
+	}
+	if (TTF_Init() < 0)
+	{
+		cout << "Error intializing SDL_ttf: " << TTF_GetError() << endl;
+		return false;
+	}
+
+	SDL_RenderClear(mpRenderer);
+
+	return 0;
+}
+
+void GraphicsSystem::cleanUp()
+{
+	if (mpDisplay)
+	{
+		SDL_DestroyWindow(mpDisplay);
+		SDL_DestroyRenderer(mpRenderer);
+		mpDisplay = nullptr;
+	}
+}
+
+int GraphicsSystem::getHeight()
+{
+	int width = 0, height = 0;
+
+	SDL_GetWindowSize(mpDisplay, &width, &height);
+	return height;
+}
+
+int GraphicsSystem::getWidth()
+{
+	int width = 0, height = 0;
+	
+	SDL_GetWindowSize(mpDisplay, &width, &height);
+	return width;
+}
+
+SDL_Window* GraphicsSystem::getBackBuffer()
+{
+	return mpDisplay;
+}
+
+SDL_Surface* GraphicsSystem::getBitmap()
+{
+	return SDL_GetWindowSurface(mpDisplay);
+}
+
+void GraphicsSystem::flip()
+{
+	SDL_RenderPresent(mpRenderer);
+}
+
+void GraphicsSystem::clearFrame()
+{
+	SDL_RenderClear(mpRenderer);
+}
+
+void GraphicsSystem::draw(GraphicsBuffer* pBuffer)
+{
+	SDL_Texture* texture = SDL_CreateTextureFromSurface(mpRenderer, pBuffer->getBitmap());
+	SDL_Rect rectangle;
+
+	rectangle.x = 0;
+	rectangle.y = 0;
+	rectangle.w = DISP_WIDTH;
+	rectangle.h = DISP_HEIGHT;
+
+	SDL_RenderCopy(mpRenderer, texture , NULL, &rectangle);
+	SDL_DestroyTexture(texture);
+}
+
+void GraphicsSystem::draw(Vector2D location, Sprite* pSprite)
+{
+	SDL_Texture* texture = SDL_CreateTextureFromSurface(mpRenderer, pSprite->getBuffer()->getBitmap());
+	SDL_Rect rectangle;
+
+	rectangle.x = (int)location.getX();
+	rectangle.y = (int)location.getY();
+	rectangle.w = pSprite->getWidth();
+	rectangle.h = pSprite->getHeight();
+
+	SDL_RenderCopy(mpRenderer, texture, NULL, &rectangle);
+	SDL_DestroyTexture(texture);
+}
+
+void GraphicsSystem::draw(Vector2D location, Sprite* pSprite, int xLoc, int yLoc) // sprite location, sprite, location of unit x and y
+{
+	SDL_Rect locationRect;
+	SDL_Rect spriteRect;
+
+	spriteRect.x = (int)location.getX();
+	spriteRect.y = (int)location.getY();
+	spriteRect.w = pSprite->getWidth();
+	spriteRect.h = pSprite->getHeight();
+
+	locationRect.x = xLoc - pSprite->getWidth();
+	locationRect.y = yLoc - pSprite->getHeight();
+	locationRect.w = pSprite->getWidth();
+	locationRect.h = pSprite->getHeight();
+
+	SDL_Texture* texture = SDL_CreateTextureFromSurface(mpRenderer, pSprite->getBuffer()->getBitmap());
+	
+	if (!texture)
+	{
+		cout << "Failed to render Texture: " << TTF_GetError() << endl;
+	}
+
+	SDL_RenderCopy(mpRenderer, texture, &spriteRect, &locationRect);
+	SDL_DestroyTexture(texture);
+}
+
+//void GraphicsSystem::draw(GraphicsBuffer* pBuffer, Vector2D location, float scale)
+//{
+//
+//	//al_draw_scaled_bitmap(pBuffer->getBitmap(), 0, 0, pBuffer->getWidth(), pBuffer->getHeight(), location.getX(), location.getY(), pBuffer->getWidth() * scale, pBuffer->getHeight() * scale, 0);
+//}
+
+void GraphicsSystem::draw(GraphicsBuffer* pTarget, GraphicsBuffer* pBuffer, Vector2D location, float scale)
+{
+	SDL_Rect rectangle;
+
+	rectangle.x = (int)location.getX();
+	rectangle.y = (int)location.getY();
+	rectangle.w = pBuffer->getWidth();
+	rectangle.h = pBuffer->getHeight();
+
+	SDL_BlitSurface(pBuffer->getBitmap(), NULL, pTarget->getBitmap(), &rectangle);
+}
+
+//void GraphicsSystem::draw(GraphicsBuffer* pGraphicsBuffer, Vector2D location, Sprite* pSprite, float scale)
+//{
+//	//al_draw_scaled_bitmap(pGraphicsBuffer->getBitmap(), 0, 0, pSprite->getWidth(), pSprite->getHeight(), location.getX(), location.getY(), pSprite->getWidth() * scale, pSprite->getHeight() * scale, 0);
+//	SDL_Rect rectangle;
+//
+//	rectangle.x = location.getX();
+//	rectangle.y = location.getY();
+//	rectangle.w = pSprite->getWidth();
+//	rectangle.h = pSprite->getHeight();
+//
+//	SDL_BlitSurface(pSprite->getBuffer()->getBitmap(), NULL, pGraphicsBuffer->getBitmap(), &rectangle);
+//}
+
+void GraphicsSystem::writeText(Vector2D location, Font* pFont, Color color, string text)
+{
+	SDL_Surface* textSurface;
+
+	textSurface = TTF_RenderText_Solid(pFont->getFont(), text.c_str(), color.getColor());
+
+	if (!textSurface)
+	{
+		cout << "Failed to render text: " << TTF_GetError() << endl;
+		return;
+	}
+	
+	SDL_Texture* textTexture = SDL_CreateTextureFromSurface(mpRenderer, textSurface);
+	SDL_Rect rectangle;
+
+	rectangle.x = (int)location.getX() - (textSurface->w / 2);
+	rectangle.y = (int)location.getY() - (textSurface->h / 2);
+	rectangle.w = textSurface->w;
+	rectangle.h = textSurface->h;
+
+	SDL_RenderCopy(mpRenderer, textTexture, NULL, &rectangle);
+	SDL_FreeSurface(textSurface);
+	SDL_DestroyTexture(textTexture);
+}
+
+//void GraphicsSystem::writeText(GraphicsBuffer* pGraphicsBuffer, Vector2D location, Font* pFont, Color color, string text)
+//{
+//	SDL_Renderer* renderer = SDL_CreateRenderer(getBackBuffer(), -1, 0);
+//	
+//	SDL_Surface* surfaceText = TTF_RenderText_Solid(pFont->getFont(), text.c_str(), color.getColor());
+//	SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surfaceText);
+//
+//	SDL_Rect rectangle;
+//	rectangle.x = location.getX();
+//	rectangle.y = location.getY();
+//	rectangle.w = 100;
+//	rectangle.h = 100;
+//
+//	SDL_RenderCopy(renderer, texture, NULL, &rectangle);
+//
+//	SDL_DestroyRenderer(renderer);
+//	SDL_FreeSurface(surfaceText);
+//	SDL_DestroyTexture(texture);
+//}
+
+//void GraphicsSystem::saveBuffer(GraphicsBuffer* pBuffer, string fileName)
+//{
+//	al_save_bitmap(fileName.c_str(), pBuffer->getBitmap());
+//}

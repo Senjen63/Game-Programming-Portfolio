@@ -1,0 +1,47 @@
+#pragma once
+#include <fstream>
+#include "Trackable.h"
+#include "Vector2D.h"
+#include "UnitManager.h"
+#include "Snake.h"
+
+const string WALL_PATH = "Sprites\\wall.png";
+
+class Level : public Trackable
+{
+	friend class Game;
+	friend class LevelManager;
+public:
+	void init();
+	void cleanup();
+
+	void updateAll( int deltaTime );
+	void addWall( int x, int y );
+	void addFreeSpace( int x, int y );
+	void createFood();
+	void deleteFreeSpace(Vector2D space);
+	void clearAllWalls();
+
+	Snake* getSnake() { return mpSnake; };
+	vector< Unit* > getWalls() { return mpWalls; };
+	vector< Vector2D > getFreeSpaces() { return mFreeSpaces; };
+	Vector2D getLastFreeSpace() { return mFreeSpaces[ mFreeSpaces.size() - 1 ]; };
+	int getRows() { return mRows; };
+	int getCols() { return mCols; };
+	int getTotalElapTime() { return mTotalElapTime; };
+	int getRandFreeSpace();
+
+protected:
+	int mNumSpeedUp, mNumSlowDown, mNumBonus;
+
+private:
+	Level( string fileName );
+	~Level();
+
+	Snake* mpSnake = nullptr;
+	vector< Unit* > mpWalls;
+	vector< Vector2D > mFreeSpaces;
+	string mFileName = "";
+	float mSpeed, mPowerupChance, mElapTime, mTotalElapTime;
+	int mStartNum, mEndNum, mFoodPoints, mRows, mCols;
+};

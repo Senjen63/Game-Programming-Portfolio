@@ -1,0 +1,294 @@
+#include "Game.h"
+#include <PerformanceTracker.h>
+
+using namespace std;
+
+Game* Game::smpInst = nullptr;
+
+// Snake Specific Constants 
+const string ASSET_PATH = "..\\..\\common\\assets\\";
+const string ORBS_NAME = "glowing-balls.png";
+const int ORBS_SIZE = 32;
+const int ORBS_NUM_X = 6;
+const int ORBS_NUM_Y = 4;
+const Vector2D GROW_START = Vector2D(0, 0);
+const Vector2D POINTS_START = Vector2D(ORBS_NUM_X * ORBS_SIZE, 0);
+const Vector2D SPEED_START = Vector2D(0, ORBS_NUM_Y * ORBS_SIZE);
+const Vector2D SLOW_START = Vector2D(ORBS_NUM_X * ORBS_SIZE, ORBS_NUM_Y * ORBS_SIZE);
+const float ORBS_FRAMERATE = 10;
+const float ORBS_SCALE = 3;
+const string LEVEL_PATH = "Levels\\";
+const string LEVEL_1 = "Level1.level";
+const string LEVEL_2 = "Level2.level";
+const string LEVEL_3 = "Level3.level";
+const string FONT_NAME = "cour.ttf";
+const int HUD_FONT_SIZE = 30;
+const int MENU_FONT_SIZE = 50;
+const string SEGMENT_KEY = "segment";
+const Color SEGMENT_COLOR = Color(1.0f, 0.5f, 0.5f);
+const string START_MESSAGE = "Press space to start! ";
+const string LOST_MESSAGE = "Game Over! Space to restart ";
+const string WON_MESSAGE = "Winner! Space to start! ";
+const int WIDTH = 1000;
+const int HEIGHT = 600;
+
+const float HALF = 0.5f;
+
+Game::Game(int screenWidth, int screenHeight, float frameRate)
+{
+    mpGraphicsSystem = new GraphicsSystem(screenWidth, screenHeight);
+    mpInputSystem = new InputSystem();
+    mpGraphicsBufferManager = new GraphicsBufferManager();
+    mpEntityManager = new EntityManager();
+
+    mFrameTargetTime = 1.0 / frameRate * 1000; // Frames per second to ms per frame 
+}
+
+Game::~Game()
+{
+    cleanUp();
+
+    delete mpEntityManager;
+    delete mpGraphicsBufferManager;
+    delete mpInputSystem;
+    delete mpGraphicsSystem;
+}
+
+void Game::createInstance(int screenWidth, int screenHeight, float frameRate)
+{
+    // Delete previous inst 
+    if (smpInst)
+    {
+        delete smpInst;
+    }
+
+    smpInst = new Game(screenWidth, screenHeight, frameRate);
+
+    EventSystem::initInstance();
+}
+
+void Game::destoryInstance()
+{
+    if (smpInst)
+    {
+        delete smpInst;
+        smpInst = nullptr;
+    }
+
+    EventSystem::cleanupInstance();
+}
+
+Game* Game::getInstance()
+{
+#ifdef DEBUG
+    // Sanity check for while I am writting code 
+    if (!smpInst)
+    {
+        throw std::exception("smpInst is nullptr! Make sure to call createInstance() before getInstance()");
+    }
+#endif
+
+    return smpInst;
+}
+
+void Game::init()
+{
+    if (mIsInitted)
+    {
+        return;
+    }
+
+    mpGraphicsSystem->init();
+    mpInputSystem->init();
+    EventSystem::getInstance()->init();
+    mInputTranslator.init();
+
+    EventSystem::getInstance()->addListener((EventType)EVENT_GAME_CLOSE, static_cast<EventListener*>(this));
+    EventSystem::getInstance()->addListener((EventType)EVENT_GAME_START, static_cast<EventListener*>(this));
+    EventSystem::getInstance()->addListener((EventType)EVENT_GAME_WON, static_cast<EventListener*>(this));
+    EventSystem::getInstance()->addListener((EventType)EVENT_GAME_OVER, static_cast<EventListener*>(this));
+
+    gameSpecificCreatation();
+
+    mIsInitted = true;
+}
+
+void Game::cleanUp()
+{
+    // Don't clean up if nothing exists 
+    if (!mIsInitted)
+    {
+        return;
+    }
+
+    gameSpecificDestruction();
+
+    EventSystem::getInstance()->removeListener((EventType)EVENT_GAME_CLOSE, static_cast<EventListener*>(this));
+    EventSystem::getInstance()->removeListener((EventType)EVENT_GAME_START, static_cast<EventListener*>(this));
+    EventSystem::getInstance()->removeListener((EventType)EVENT_GAME_WON, static_cast<EventListener*>(this));
+    EventSystem::getInstance()->removeListener((EventType)EVENT_GAME_OVER, static_cast<EventListener*>(this));
+
+    mHud.cleanUp();
+    mInputTranslator.cleanUp();
+    EventSystem::getInstance()->cleanup();
+    mpInputSystem->cleanUp();
+    mpGraphicsSystem->cleanUp();
+
+    mIsInitted = false;
+}
+
+void Game::doLoop()
+{
+    PerformanceTracker* pTracker = new PerformanceTracker();
+    Timer loopTimer;
+
+    while (mShouldRun)
+    {
+        // Timer things 
+        pTracker->clearTracker(LOOP_TRACKER_NAME);
+        pTracker->startTracking(LOOP_TRACKER_NAME);
+        loopTimer.start();
+
+        // Clear background 
+        mpGraphicsSystem->clearToColor(COLOR_BLACK);
+
+        // Update 
+        if (mShouldUnload)
+        {
+            mLevelManager.unloadActiveLevel();
+            mShouldUnload = false;
+        }
+
+        gameSpecificUpdate(mFrameTargetTime);
+        mpInputSystem->update();
+        mpEntityManager->updateAll(mFrameTargetTime);
+
+        // Draw 
+        mpEntityManager->drawAll(*mpGraphicsSystem);
+        gameSpecificDraw(*mpGraphicsSystem);
+        mpGraphicsSystem->flip();
+
+        loopTimer.sleepUntilElapsed(mFrameTargetTime);
+
+        pTracker->stopTracking(LOOP_TRACKER_NAME);
+        mHud.setFPS(1.0f / pTracker->getElapsedTime(LOOP_TRACKER_NAME));
+        //std::cout << "Time took: " << pTracker->getElapsedTime(LOOP_TRACKER_NAME) << " ms" << std::endl;
+    }
+
+    delete pTracker;
+}
+
+void Game::handleEvent(const Event& theEvent)
+{
+    switch (theEvent.getType())
+    {
+    case GameEventType::EVENT_GAME_CLOSE:
+        mShouldRun = false;
+        break;
+    case GameEventType::EVENT_GAME_WON:
+        mpGraphicsSystem->resizeDisplay(WIDTH, HEIGHT);
+        mShouldUnload = true;
+        mState = GameState::WON;
+        break;
+    case GameEventType::EVENT_GAME_OVER:
+        mpGraphicsSystem->resizeDisplay(WIDTH, HEIGHT);
+        mShouldUnload = true;
+        mState = GameState::LOST;
+        break;
+    case GameEventType::EVENT_GAME_START:
+        startGame();
+        break;
+    }
+}
+
+void Game::gameSpecificCreatation()
+{
+    // Set seed 
+    srand(time(nullptr));
+
+    // Init Statics 
+    //Snake Anim 
+    auto snakeBuff = mpGraphicsBufferManager->addBuffer(SEGMENT_KEY, 1, 1, SEGMENT_COLOR);
+    Snake::sSegmentAnimation = Animation(Sprite(snakeBuff));
+
+    // Food Anims 
+    auto orbBuff = mpGraphicsBufferManager->addBuffer(ORBS_NAME, ASSET_PATH + ORBS_NAME);
+    std::vector<Sprite> tempSprites;
+    // Grow 
+    tempSprites = Sprite::slice(orbBuff, ORBS_SIZE, ORBS_SIZE, ORBS_NUM_X * ORBS_SIZE, ORBS_NUM_Y * ORBS_SIZE, GROW_START);
+    FoodManager::addAnimation(FoodType::GROW, Animation(tempSprites, ORBS_FRAMERATE));
+    // Points 
+    tempSprites = Sprite::slice(orbBuff, ORBS_SIZE, ORBS_SIZE, ORBS_NUM_X * ORBS_SIZE, ORBS_NUM_Y * ORBS_SIZE, POINTS_START);
+    FoodManager::addAnimation(FoodType::POINTS, Animation(tempSprites, ORBS_FRAMERATE));
+    // Speed 
+    tempSprites = Sprite::slice(orbBuff, ORBS_SIZE, ORBS_SIZE, ORBS_NUM_X * ORBS_SIZE, ORBS_NUM_Y * ORBS_SIZE, SPEED_START);
+    FoodManager::addAnimation(FoodType::SPEED_UP, Animation(tempSprites, ORBS_FRAMERATE));
+    //Slow 
+    tempSprites = Sprite::slice(orbBuff, ORBS_SIZE, ORBS_SIZE, ORBS_NUM_X * ORBS_SIZE, ORBS_NUM_Y * ORBS_SIZE, SLOW_START);
+    FoodManager::addAnimation(FoodType::SLOW_DOWN, Animation(tempSprites, ORBS_FRAMERATE));
+
+    // Create Levels 
+    mLevelManager.reserveLevels(3); // This is NEEDED otherwise wild errors happen :) 
+    mLevelManager.addLevel(LEVEL_PATH + LEVEL_1);
+    mLevelManager.addLevel(LEVEL_PATH + LEVEL_2);
+    mLevelManager.addLevel(LEVEL_PATH + LEVEL_3);
+
+    // HUD and Fonts 
+    mHud.init();
+    mHud.setFont(ASSET_PATH + FONT_NAME, HUD_FONT_SIZE);
+
+    mMenuFont = new Font(ASSET_PATH + FONT_NAME, MENU_FONT_SIZE);
+}
+
+void Game::gameSpecificDestruction()
+{
+    delete mMenuFont;
+    mMenuFont = nullptr;
+
+    mLevelManager.unloadActiveLevel();
+}
+
+void Game::gameSpecificUpdate(double deltaTime)
+{
+    mLevelManager.update(deltaTime);
+    mHud.update(deltaTime);
+}
+
+void Game::gameSpecificDraw(GraphicsSystem& sys)
+{
+    switch (mState)
+    {
+    case GameState::START:
+    {
+        Vector2D screenCenter = Vector2D(sys.getWidth() * 0.5f, sys.getHeight() * 0.5f);
+        sys.drawText(screenCenter, *mMenuFont, COLOR_WHITE, TextAlignment::CENTER, START_MESSAGE);
+        break;
+    }
+    case GameState::PLAY:
+    {
+        mHud.draw(sys);
+        break;
+    }
+    case GameState::LOST:
+    {
+        Vector2D screenCenter = Vector2D(sys.getWidth() * 0.5f, sys.getHeight() * 0.5f);
+        sys.drawText(screenCenter, *mMenuFont, COLOR_WHITE, TextAlignment::CENTER, LOST_MESSAGE);
+        break;
+    }
+    case GameState::WON:
+    {
+        Vector2D screenCenter = Vector2D(sys.getWidth() * 0.5f, sys.getHeight() * 0.5f);
+        sys.drawText(screenCenter, *mMenuFont, COLOR_WHITE, TextAlignment::CENTER, WON_MESSAGE);
+        break;
+    }
+    }
+}
+
+void Game::startGame()
+{
+    if (mState == GameState::PLAY)
+        return;
+
+    mLevelManager.loadLevel(0);
+    mState = GameState::PLAY;
+}

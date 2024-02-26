@@ -1,0 +1,111 @@
+#pragma once
+
+#include <allegro5/allegro.h>
+#include <allegro5/allegro_font.h>
+#include <allegro5/allegro_ttf.h>
+#include <allegro5/allegro_audio.h>
+#include <allegro5/allegro_acodec.h>
+#include <allegro5/allegro_image.h>
+#include <allegro5/allegro_primitives.h>
+
+#include <iostream>
+#include <cassert>
+#include <string>
+#include <vector>
+#include <Vector2D.h>
+
+#include "EventSystem.h"
+#include "EventListener.h"
+
+#include "MoveEvent.h"
+#include "MessageEvent.h"
+
+#include "UnitManager.h"
+#include "GraphicsBufferManager.h"
+#include "Graphics.h"
+#include "EventSystem.h"
+#include "Animation.h"
+#include "SceneManager.h"
+#include "Gui.h"
+
+//for creating hud, make small black graphics buffers at top or bottom of screen, and clear to color each frame and redraw text
+/*
+void display()
+{
+Buffer->clearToColor(mBlack);
+mpGraphicsSystem->writeText(Buffer, Vector2D(bufferwidth/2,0), font, text);
+mpGraphicsSystem->draw(x,y,buffer);
+}
+*/
+
+class InputSystem;
+
+class Game : public EventListener
+{
+public:
+	//accessors
+	GraphicsSystem* getGraphicsSystem() { return mpGSystem; };
+	InputSystem* getInputSystem() { return mpISystem; };
+	GraphicsBufferManager* getGraphicsBufferManager() { return mpGBManager; };
+	void setWidth(int w) { gameWidth = w; };
+	void setHeight(int h) { gameHeight = h; };
+	void setFPS(float f) { gameFPS = f; };
+	bool getPlay() { return mPlay; };
+
+	//Member functions
+	bool init(unsigned int width, unsigned int height, float fps);
+	void cleanup();
+	void doLoop();
+
+	virtual void handleEvent(const Event& theEvent);
+	void guiEvents(float elapsedTime);
+	void collision();
+	void grow(Animation* anim);
+	void shrink(int size);
+	void moveSnake(float time);
+
+	static Game* getInstance() { return msGame; };
+	static void createInstance();
+	static void destroyInstance();
+	
+private:
+	//Constructor/Destructor
+	Game();
+	~Game();
+
+	const std::string mFONT_FILENAME = "..\\..\\common\\assets\\cour.ttf";
+
+	bool mStartGame = false;
+	bool mChangeLevel = false;
+	bool mContinueChoice = false;
+	bool mContinueWait = false;
+	bool mPlay = false;
+	int mActiveLevel = 1;
+	int mWaitPwr = 0;
+	const int mSPRITE_WIDTH = 64;
+	const int mSPRITE_HEIGHT = 64;
+	static Game* msGame;
+	int numUnits;
+	int numFood;
+	int numPwrUps;
+	int gameWidth;
+	int gameHeight;
+	float gameFPS;
+	float mTimeScale = 1000.0;
+	float mElapsedTime = 0.0;
+	float mElapsedMoveTime = 0.0;
+	float mFps = 0.0;
+	int mScore = 0;
+	bool mLoop = true;
+	Vector2D mMovePos;
+
+	Gui* mpGui;
+	Animation* mpSnakeAnim;
+	Font* mpFont;
+	EventSystem* mpEventSystem;
+	GraphicsSystem* mpGSystem;
+	InputSystem* mpISystem;
+	GraphicsBufferManager* mpGBManager;
+	SceneManager* mpSceneManager;
+};
+//extern Game* game;

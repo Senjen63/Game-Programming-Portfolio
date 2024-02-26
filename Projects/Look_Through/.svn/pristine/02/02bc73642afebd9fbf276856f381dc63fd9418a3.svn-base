@@ -1,0 +1,11 @@
+﻿#pragma once
+#include "EventSystems/EventListenerAven.h"
+
+class InputTranslator final : public EventListenerAven
+{
+public:
+    InputTranslator() = default;
+
+    void init();
+    void handleEvent(const EventAven & event) override;
+};

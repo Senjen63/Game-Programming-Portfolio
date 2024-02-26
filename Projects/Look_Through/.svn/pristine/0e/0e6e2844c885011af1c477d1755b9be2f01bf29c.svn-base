@@ -1,0 +1,42 @@
+#pragma once
+
+#include "Trackable.h"
+#include "Vector2D.h"
+#include "Animation.h"
+#include <vector>
+
+class Vector2D;
+
+class Unit : public Trackable
+{
+private:
+
+	Vector2D mLocation;
+	Animation* mpAnim = nullptr;
+
+	Animation mPrimaryAnim;
+	Animation mSecondaryAnim;
+
+	bool mIsAnimated;
+	bool mAnimSwapped;
+
+public:
+
+	Unit(Vector2D location);
+	~Unit();
+
+	void update(double animTick);
+	void draw();
+	void setAnim(Animation* newAnim);
+	void setPrimaryAnim(Animation newAnim);
+	void setSecondaryAnim(Animation newAnim);
+	void pauseAnim();
+	void resumeAnim();
+	void swapAnim();
+	void setLocation(Vector2D newLocation);
+
+	Vector2D getLocation() { return mLocation; }
+
+	Animation getCurrentAnim();
+	Animation* getCurrentAnimPointer();
+};

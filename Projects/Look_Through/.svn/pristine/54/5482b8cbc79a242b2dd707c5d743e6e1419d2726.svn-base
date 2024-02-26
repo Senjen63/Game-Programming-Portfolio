@@ -1,0 +1,12 @@
+#include "HudEvent.h"
+
+HudEvent::HudEvent(HudEventType event) 
+	: GameEvent((GameEventType) event)
+{
+
+}
+
+HudEvent::~HudEvent()
+{
+
+}

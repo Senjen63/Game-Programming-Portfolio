@@ -1,0 +1,17 @@
+#pragma once
+#include "Trackable.h"
+#include <EventListener.h>
+
+class InputTranslator : public EventListener
+{
+public:
+	
+	InputTranslator();
+	~InputTranslator();
+	void handleEvent(const Event& theEvent);
+
+	bool isAnyKeyPressed();
+
+private:
+
+};

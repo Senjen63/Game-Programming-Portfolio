@@ -1,0 +1,139 @@
+#include "BulletPool.h"
+
+#include <cassert>
+#include "Game.h"
+
+#include "CircleCollider.h"
+
+const std::string BULLET_MOVE_NAME = "BulletMove";
+const std::string COLLIDER_NAME = "Collider";
+
+BulletPool::BulletPool() : mSize(0)
+{}
+
+BulletPool::~BulletPool()
+{
+    cleanUp();
+}
+
+void BulletPool::createBulletEntities(unsigned int numBullets, Animation* anim)
+{
+    mBullets.reserve(numBullets);
+    for (unsigned int i = 0; i < numBullets; i++)
+    {
+        Entity* temp = new Entity(anim, Vector2D(), 1.0, false);
+        temp->addComponent(new BulletMove(Vector2D(), 0));
+        temp->addComponent(new CircleCollider(CollisionTag::BULLET, temp->getMaxSize().getX() * 0.5f));
+
+        mBullets.emplace_back(temp);
+    }
+}
+
+void BulletPool::init()
+{
+    assert(mBullets.size() > 0);
+
+    for (Bullet& b : mBullets)
+    {
+        b.init();
+    }
+}
+
+void BulletPool::cleanUp()
+{
+    for (Bullet& b : mBullets)
+    {
+        b.cleanUp();
+    }
+}
+
+void BulletPool::update(double deltaTime)
+{
+    for (Bullet& b : mBullets)
+    {
+        b.update(deltaTime);
+    }
+}
+
+void BulletPool::draw(GraphicsSystem* pDisplay)
+{
+    for (Bullet& b : mBullets)
+    {
+        b.getEntity()->Draw(pDisplay);
+    }
+}
+
+Entity* BulletPool::makeBullet(Vector2D pos, float angle, float speed, PlayerNumber owningPlayer)
+{
+    Bullet* b = getNextAvailable();
+    assert(b && b->getEntity());
+
+    b->setInUse(true);
+    b->getEntity()->setIsEnabled(true);
+    b->getEntity()->setPosition(pos);
+    b->getEntity()->setAngle(angle);
+
+    BulletMove* bMove = static_cast<BulletMove*>(b->getEntity()->getComponent(BULLET_MOVE_NAME));
+    Vector2D dir = Vector2D((float)cos(angle * degToRad), (float)sin(angle * degToRad));
+    dir.normalize();
+    bMove->setDirection(dir);
+    bMove->setSpeed(speed);
+    bMove->setPlayer(owningPlayer);
+
+    Collider* bCollider = static_cast<Collider*>(b->getEntity()->getComponent(COLLIDER_NAME));
+    bCollider->resetPosition();
+
+    return b->getEntity();
+}
+
+void BulletPool::freeBullet(Entity* bullet)
+{
+    Bullet* theBullet = nullptr;
+
+    // Find the bullet in the vector 
+    for (unsigned int i = 0; i < mBullets.size(); i++)
+    {
+        if (mBullets[i].getEntity() == bullet)
+        {
+            theBullet = &mBullets[i];
+            break;
+        }
+    }
+
+    if (theBullet == nullptr)
+    {
+        return; // Bullet not found and shouldn't be freed 
+    }
+
+    theBullet->setInUse(false);
+    theBullet->mTimer.stop();
+
+    theBullet->getEntity()->setIsEnabled(false);
+}
+
+Bullet* BulletPool::getNextAvailable()
+{
+    for (unsigned int i = 0; i < mBullets.size(); i++)
+    {
+        if (!mBullets[i].getInUse())
+        {
+            return &mBullets[i];
+        }
+    }
+
+    // No free bullet found 
+    // Write over oldest bullet 
+    Bullet* oldestBullet = nullptr;
+    double oldestTime = 0;
+
+    for (unsigned int i = 0; i < mBullets.size(); i++)
+    {
+        if (mBullets[i].getTimeSinceMade() > oldestTime)
+        {
+            oldestBullet = &mBullets[i];
+            oldestTime = mBullets[i].getTimeSinceMade();
+        }
+    }
+
+    return oldestBullet;
+}

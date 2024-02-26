@@ -1,0 +1,54 @@
+#pragma once
+#include "Vector2D.h"
+#include "Trackable.h"
+#include "EntityManager.h"
+#include "Component.h"
+#include <fstream>
+#include <vector>
+
+enum class Tile
+{
+	INVALID = -1,
+	NONE = 0,
+	WALL = 1,
+	PLAYER = 2
+};
+
+class Level : public Trackable
+{
+private:
+	Animation* mpWallAnimation = nullptr;
+	std::shared_ptr<EntityManager> mpEntityManager = nullptr;
+
+	std::vector<Vector2D> mWallPositions;
+	std::vector<Vector2D> mTankStartPositions;
+
+	std::vector<Animation*> mAnimationsToDelete;
+
+	int mLevelGridSize = 0;
+	int mLevelWidth = 0;
+	int mLevelHeight = 0;
+
+	bool mIsLoaded = false;
+
+public:
+	Level() = delete; // Delete mostly for debugging bc I don't want to create empty levels by mistake 
+	Level(const std::string& filePath);
+	~Level() {};
+
+	void init();
+	void load(std::vector<Vector2D> tankPos);
+	void load() { load(mTankStartPositions); }
+	void cleanUp();
+
+	void update(double deltaTime);
+	void draw(GraphicsSystem* display);
+
+	int getLevelGridSize() const { return mLevelGridSize; }
+	int getLevelWidth() const { return mLevelWidth; }
+	int getLevelHeight() const { return mLevelHeight; }
+	Vector2D getGridPos(int x, int y) const;
+	Entity* getEntity(int index);
+
+	friend std::istream& operator>>(std::istream& istream, Level& level);
+};

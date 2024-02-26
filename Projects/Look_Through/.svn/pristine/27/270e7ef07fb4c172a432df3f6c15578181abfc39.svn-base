@@ -1,0 +1,39 @@
+#pragma once
+#include <Trackable.h>
+#include "GraphicsSystem.h"
+#include <unordered_map>
+
+using namespace std;
+
+class GraphicsBuffer;
+
+typedef string BufferKey;//give names for buffers
+
+//hold all graphics buffers except for backbuffer
+class GraphicsBufferManager : public Trackable
+{
+private:
+	
+	//stl Map key value pair
+	//key: string name
+	//value: graphics buffer pointer 
+	unordered_map<BufferKey, GraphicsBuffer*> mMap; //hashmap implementation
+	
+public:
+
+	GraphicsBufferManager() {};
+	~GraphicsBufferManager();
+
+	//adding
+	void createAndManageGraphicsBuffers(const BufferKey& key, const char* filename);
+
+	//deleting
+	void cleanup();
+
+	//getting graphics buffer
+	GraphicsBuffer* getBuffer(const BufferKey& key) const;
+
+	//clear all except backBuffer
+	void deleteBufferKey(const BufferKey& key);//deletes a key and to allow change of key name
+	void deleteBuffer(GraphicsBuffer* pBuffer);//deletes the whole buffer from existence
+};

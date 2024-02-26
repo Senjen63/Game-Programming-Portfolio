@@ -1,0 +1,14 @@
+#pragma once
+
+#include "GameEvent.h"
+
+class MessageEvent : public GameEvent
+{
+    public:
+        MessageEvent(string);
+        ~MessageEvent();
+
+        string getMessage() const { return mText; }
+private:
+    string mText;
+};

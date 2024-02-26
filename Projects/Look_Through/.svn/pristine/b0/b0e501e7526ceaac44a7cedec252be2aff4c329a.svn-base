@@ -1,0 +1,227 @@
+#include "Player.h"
+#include "SceneManager.h"
+#include "MenuManager.h"
+#include "AudioManager.h"
+
+Player::Player(std::pair<float, float>location, std::pair<float, float>scale, float startingSpeed, std::string animationDataFilePath) : Unit(location, scale, animationDataFilePath)
+{
+	mMovementSpeed = startingSpeed;
+	mReloadTime = 500;
+	mCurrentReloadTime = 0;
+	mpHealthBar = new Unit(make_pair(130, 600), make_pair(HEALTH_BAR_SCALE_X, HEALTH_BAR_SCALE_Y), "Assets/HealthBarAnimationData.txt");
+	mHealthBarLeftPos = 130 - (mpHealthBar->getSize().first / 2);
+	Game::getGame()->getMenuManager()->addUnit(mpHealthBar);
+
+	mpScoreHUD = new HUDText(make_pair(490, 600), make_pair(15, 2.75f), "Score: 0", "Assets/ButtonAnimationData.txt");
+	Game::getGame()->getMenuManager()->addUnit(mpScoreHUD);
+
+	EventSystem* pEventSystem = EventSystem::getInstance();
+	pEventSystem->addListener((EventType)INPUT_EVENT, this);
+	pEventSystem->addListener((EventType)GAME_MOUSE_EVENT, this);
+	pEventSystem->addListener((EventType)ENEMY_DEATH_EVENT, this);
+
+	getAnimationManager()->changeAnimation("IdleLeftForward");
+}
+
+Player::~Player()
+{
+	EventSystem* pEventSystem = EventSystem::getInstance();
+	pEventSystem->removeListener((EventType)INPUT_EVENT, this);
+
+	Game::getGame()->getMenuManager()->removeUnit(mpHealthBar);
+	Game::getGame()->getMenuManager()->removeUnit(mpScoreHUD);
+	//delete(mpHealthBar);
+}
+
+void Player::handleEvent(const Event& theEvent)
+{
+	if (theEvent.getType() == INPUT_EVENT)
+	{
+		const InputEvent& inputEvent = static_cast<const InputEvent&>(theEvent);
+
+		float directionVertical = mCurrentInput.second;
+		float directionHorizontal = mCurrentInput.first;
+
+		if (inputEvent.getInputType() == W_PRESSED)
+		{
+			directionVertical = -1;
+		}
+
+		if (inputEvent.getInputType() == S_PRESSED)
+		{
+			directionVertical = 1;
+		}
+
+		if (inputEvent.getInputType() == D_PRESSED)
+		{
+			directionHorizontal = 1;
+		}
+
+		if (inputEvent.getInputType() == A_PRESSED)
+		{
+			directionHorizontal = -1;
+		}
+
+		mCurrentInput = make_pair(directionHorizontal, directionVertical);
+	}
+
+	if (theEvent.getType() == GAME_MOUSE_EVENT)
+	{
+		const MouseEvent& mouseEvent = static_cast<const MouseEvent&>(theEvent);
+
+		std::pair<int, int>mousePosition = mouseEvent.getMousePos();
+		MouseType mouseInputType = mouseEvent.getMouseType();
+
+		if (mouseInputType == LEFT_PRESSED && mCanFire)
+		{
+			Projectile* newProjectile = new Projectile(mousePosition, getLocation(), make_pair(3, 3), mDamage, "Player", "Assets/ProjectileAnimationData.txt");
+			Game::getGame()->getSceneManager()->addUnit(newProjectile);
+			Game::getGame()->getAudioManager()->playSound("Fire");
+			mCanFire = false;
+		}
+	}
+
+	if (theEvent.getType() == ENEMY_DEATH_EVENT)
+	{
+		const EnemyDeathEvent& enemyDeathEvent = static_cast<const EnemyDeathEvent&>(theEvent);
+
+		updateScore(enemyDeathEvent.getScoreGiven());
+	}
+}
+
+void Player::update(float deltaTime)
+{
+	if (!mCanFire)
+	{
+		mCurrentReloadTime += deltaTime;
+	}
+
+	if (mCurrentReloadTime >= mReloadTime)
+	{
+		mCurrentReloadTime = 0;
+		mCanFire = true;
+	}
+
+	if (mInvulnerable)
+	{
+		mCurrentIFrames += deltaTime;
+	}
+
+	if (mCurrentIFrames >= mIFrames)
+	{
+		mCurrentIFrames = 0;
+		mInvulnerable = false;
+	}
+
+	mCurrentVelocity = make_pair(mCurrentInput.first * mMovementSpeed, mCurrentInput.second * mMovementSpeed);
+
+	pair<float, float> currentLocation = getLocation();
+	pair<float, float> newLocation = make_pair(currentLocation.first + (mCurrentVelocity.first * (0.01 * deltaTime)), currentLocation.second + (mCurrentVelocity.second * (0.01 * deltaTime))); // more math might need to be done here
+
+	std::vector<Unit*> collidedObjectsX = collision(make_pair(newLocation.first, currentLocation.second));
+	std::vector<Unit*> collidedObjectsY = collision(make_pair(currentLocation.first, newLocation.second));
+
+	// Check new X position
+	for (int i = 0; i < collidedObjectsX.size(); i++)
+	{
+		// This check could probably be done better, specifically with a dedicated collision object
+		if (dynamic_cast<Projectile*>(collidedObjectsX[i]) == nullptr &&
+			dynamic_cast<Enemy*>(collidedObjectsX[i]) == nullptr)
+		{
+			newLocation.first = currentLocation.first;
+		}
+	}
+
+	// Check new Y position
+	for (int i = 0; i < collidedObjectsY.size(); i++)
+	{
+		if (dynamic_cast<Projectile*>(collidedObjectsY[i]) == nullptr &&
+			dynamic_cast<Enemy*>(collidedObjectsY[i]) == nullptr)
+		{
+			newLocation.second = currentLocation.second;
+		}
+	}
+
+	updateLocation(newLocation);
+
+	std::vector<Unit*> collidedObjects = collision(make_pair(newLocation.first, currentLocation.second));
+
+	// Check current location for anything thats not collision and needs to be acted upon
+	for (int i = 0; i < collidedObjects.size(); i++)
+	{
+		if (dynamic_cast<Enemy*>(collidedObjects[i]) != nullptr && !mInvulnerable)
+		{
+			Enemy* collidedEnemy = dynamic_cast<Enemy*>(collidedObjects[i]);
+			int damageTaken = collidedEnemy->getDamage();
+
+			bool playerDead = updateHealth(damageTaken);
+
+			if (playerDead)
+			{
+				return;
+			}
+		}
+	}
+
+	// This breaks upon the player being deleted
+	if (mCurrentVelocity.first < 0)
+	{
+		getAnimationManager()->changeAnimation("WalkLeftForward");
+	}
+
+	else if (mCurrentVelocity.first > 0)
+	{
+		getAnimationManager()->changeAnimation("WalkRightForward");
+	}
+
+	else if (mCurrentVelocity.second != 0)
+	{
+		getAnimationManager()->changeAnimation("WalkLeftForward");
+	}
+
+	else
+	{
+		getAnimationManager()->changeAnimation("IdleLeftForward");
+	}
+
+	getAnimationManager()->update(deltaTime);
+
+	mCurrentInput = make_pair(0, 0);
+}
+
+bool Player::updateHealth(int healthChange)
+{
+	mCurrentHealth += healthChange;
+	mInvulnerable = true;
+
+	if (mCurrentHealth > mMaxHealth)
+	{
+		mCurrentHealth = mMaxHealth;
+	}
+
+	else if (mCurrentHealth <= 0)
+	{
+		Game::getGame()->getSceneManager()->unloadScene();
+		Game::getGame()->getMenuManager()->unloadMenu();
+		Game::getGame()->getMenuManager()->loadMenu("Main Menu");
+		std::ofstream saveData;
+		saveData.open("Assets/SaveData.txt");
+		saveData << "";
+		saveData.close();
+		return true;
+	}
+
+	float newHealthBarXScale = HEALTH_BAR_SCALE_X * ((float)mCurrentHealth / (float)mMaxHealth);
+	mpHealthBar->updateScale(make_pair(newHealthBarXScale, HEALTH_BAR_SCALE_Y));
+
+	float healthBarOffset = mHealthBarLeftPos + (mpHealthBar->getSize().first / 2);
+	mpHealthBar->updateLocation(make_pair(healthBarOffset, mpHealthBar->getLocation().second));
+
+	return false;
+}
+
+void Player::updateScore(int scoreChange)
+{
+	mScore += scoreChange;
+	mpScoreHUD->updateText("Score: " + std::to_string(mScore));
+}

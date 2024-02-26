@@ -1,0 +1,18 @@
+#include "SoundEffect.h"
+#include <SDL.h>
+#include <SDL_mixer.h>
+
+
+SoundEffect::SoundEffect(string fileName)
+{
+	this->mpSoundEffect = Mix_LoadWAV((PATH + fileName).c_str());
+
+	if (!mpSoundEffect) {
+		cout << "Failed to load music or sound: " << Mix_GetError() << endl;
+	}
+}
+
+SoundEffect::~SoundEffect()
+{
+	Mix_FreeChunk(mpSoundEffect);
+}

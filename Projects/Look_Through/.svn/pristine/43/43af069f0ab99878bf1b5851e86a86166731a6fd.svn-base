@@ -1,0 +1,28 @@
+#pragma once
+
+#include <vector>
+
+#include <PerformanceTracker.h>
+#include <MemoryTracker.h>
+
+#include "Unit.h"
+
+using namespace std;
+
+class UnitManager : public Trackable
+{
+	friend class Game;
+public:
+	UnitManager();
+	~UnitManager();
+
+	void addUnit(Unit unit);
+	void clearList();
+	void deleteUnit(Vector2D deleteLocation, int unitSize);
+	void drawAll(GraphicsSystem* system);
+	void updateAll(float timePassed);
+
+private:
+	Unit getUnit(int num);
+	vector<Unit> mUnitList;
+};

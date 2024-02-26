@@ -1,0 +1,38 @@
+#pragma once
+
+#include <Vector2D.h>
+#include "Animation.h"
+#include "GraphicsSystem.h"
+#include "Square.h"
+
+using namespace std;
+
+const float	DEFAULT_SCALE = 1;
+
+class Unit : public Trackable
+{
+	friend class UnitManager;
+public:
+	Unit();
+	Unit(Vector2D location, Animation  animationPrime, Animation  animationSecondary);
+	Unit(Sprite aSprite, Square* aSquare);
+	~Unit();
+
+	void update(float timePassed);
+	void setSquare(Square* newSquare);
+	void draw(GraphicsSystem* system);
+	void changeAnimation();
+	void setLocation(Vector2D position);
+	Sprite getSprite();
+	Square* getSquare();
+
+private:
+	Square* mpCurrentSquare;
+	Vector2D mLocation;
+	Sprite mSprite;
+	Animation mPrimaryAnimation;
+	Animation mAlternateAnimation;
+	Animation mCurrentAnimation;
+	bool prime;
+};
+

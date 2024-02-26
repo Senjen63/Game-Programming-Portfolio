@@ -1,0 +1,783 @@
+#include "..\Pieces\Queen.h"
+#include "../Game.h"
+
+Queen::Queen()
+{
+
+}
+
+Queen::Queen(GraphicsBuffer* pBuffer, Vector2D location)
+{
+	setPosition(location);
+	setSprite(new Sprite(pBuffer, Vector2D(), Game::getInstance()->getSpriteWidth(), Game::getInstance()->getSpriteHeight()));
+
+	createMovePts();
+}
+
+Queen::~Queen()
+{
+	cleanUp();
+}
+
+void Queen::cleanUp()
+{
+	for (unsigned int i = 0; i < mpMovePts.size(); i++)
+	{
+		Unit* pUnit = mpMovePts[i];
+		delete pUnit;
+	}
+
+	for (unsigned int i = 0; i < mpAttackPts.size(); i++)
+	{
+		Unit* pUnit = mpAttackPts[i];
+		delete pUnit;
+	}
+
+	mpMovePts.clear();
+	mpAttackPts.clear();
+}
+
+void Queen::createMovePts()
+{
+	Unit* moveUnit;
+	int i;
+
+	//Diagonal Movement
+	for (i = 1; i <= 7; i++)
+	{
+		moveUnit = new Unit(Game::getInstance()->getAnimation(Game::getInstance()->getMoveString()), Vector2D(80 * i, 80 * i) + getPosition());
+		mpMovePts.push_back(moveUnit);
+		moveUnit = new Unit(Game::getInstance()->getAnimation(Game::getInstance()->getAttackString()), Vector2D(80 * i, 80 * i) + getPosition());
+		mpAttackPts.push_back(moveUnit);
+	}
+	for (i = 1; i <= 7; i++)
+	{
+		moveUnit = new Unit(Game::getInstance()->getAnimation(Game::getInstance()->getMoveString()), Vector2D(-80 * i, 80 * i) + getPosition());
+		mpMovePts.push_back(moveUnit);
+		moveUnit = new Unit(Game::getInstance()->getAnimation(Game::getInstance()->getAttackString()), Vector2D(-80 * i, 80 * i) + getPosition());
+		mpAttackPts.push_back(moveUnit);
+	}
+	for (i = 1; i <= 7; i++)
+	{
+		moveUnit = new Unit(Game::getInstance()->getAnimation(Game::getInstance()->getMoveString()), Vector2D(80 * i, -80 * i) + getPosition());
+		mpMovePts.push_back(moveUnit);
+		moveUnit = new Unit(Game::getInstance()->getAnimation(Game::getInstance()->getAttackString()), Vector2D(80 * i, -80 * i) + getPosition());
+		mpAttackPts.push_back(moveUnit);
+	}
+	for (i = 1; i <= 7; i++)
+	{
+		moveUnit = new Unit(Game::getInstance()->getAnimation(Game::getInstance()->getMoveString()), Vector2D(-80 * i, -80 * i) + getPosition());
+		mpMovePts.push_back(moveUnit);
+		moveUnit = new Unit(Game::getInstance()->getAnimation(Game::getInstance()->getAttackString()), Vector2D(-80 * i, -80 * i) + getPosition());
+		mpAttackPts.push_back(moveUnit);
+	}
+
+	//Straight line
+	for (i = 1; i <= 7; i++)
+	{
+		moveUnit = new Unit(Game::getInstance()->getAnimation(Game::getInstance()->getMoveString()), Vector2D(0, 80 * i) + getPosition());
+		mpMovePts.push_back(moveUnit);
+		moveUnit = new Unit(Game::getInstance()->getAnimation(Game::getInstance()->getAttackString()), Vector2D(0, 80 * i) + getPosition());
+		mpAttackPts.push_back(moveUnit);
+	}
+
+	for (i = 1; i <= 7; i++)
+	{
+		moveUnit = new Unit(Game::getInstance()->getAnimation(Game::getInstance()->getMoveString()), Vector2D(0, -80 * i) + getPosition());
+		mpMovePts.push_back(moveUnit);
+		moveUnit = new Unit(Game::getInstance()->getAnimation(Game::getInstance()->getAttackString()), Vector2D(0, -80 * i) + getPosition());
+		mpAttackPts.push_back(moveUnit);
+	}
+
+	for (i = 1; i <= 7; i++)
+	{
+		moveUnit = new Unit(Game::getInstance()->getAnimation(Game::getInstance()->getMoveString()), Vector2D(80 * i, 0) + getPosition());
+		mpMovePts.push_back(moveUnit);
+		moveUnit = new Unit(Game::getInstance()->getAnimation(Game::getInstance()->getAttackString()), Vector2D(80 * i, 0) + getPosition());
+		mpAttackPts.push_back(moveUnit);
+	}
+
+	for (i = 1; i <= 7; i++)
+	{
+		moveUnit = new Unit(Game::getInstance()->getAnimation(Game::getInstance()->getMoveString()), Vector2D(-80 * i, 0) + getPosition());
+		mpMovePts.push_back(moveUnit);
+		moveUnit = new Unit(Game::getInstance()->getAnimation(Game::getInstance()->getAttackString()), Vector2D(-80 * i, 0) + getPosition());
+		mpAttackPts.push_back(moveUnit);
+	}
+}
+
+void Queen::draw(GraphicsSystem* pGraphicsSystem, PieceManager& team, PieceManager& otherTeam)
+{
+	int j = 0;
+	Unit::draw(pGraphicsSystem);
+
+	if (mSelected)
+	{
+		for (unsigned int i = 0; i < mpMovePts.size(); i++)
+		{
+			// make for loops to loop for each direction and break them if they hit something
+			//Diagonals
+			for (j = 0; j < 7; j++)
+			{
+				if (!otherTeam.checkPosition(mpMovePts[j]->getPosition()) && otherTeam.inBounds(mpMovePts[j]->getPosition())
+					&& !team.checkPosition(mpMovePts[j]->getPosition()))
+				{
+					mpMovePts[j]->draw(pGraphicsSystem);
+				}
+				else if (otherTeam.checkPosition(mpMovePts[j]->getPosition()))
+				{
+					break;
+				}
+				else if (!otherTeam.checkPosition(mpMovePts[j]->getPosition()) && otherTeam.inBounds(mpMovePts[j]->getPosition())
+					&& team.checkPosition(mpMovePts[j]->getPosition()))
+				{
+					break;
+				}
+			}
+			for (j = 7; j < 14; j++)
+			{
+				if (!otherTeam.checkPosition(mpMovePts[j]->getPosition()) && otherTeam.inBounds(mpMovePts[j]->getPosition())
+					&& !team.checkPosition(mpMovePts[j]->getPosition()))
+				{
+					mpMovePts[j]->draw(pGraphicsSystem);
+				}
+				else if (otherTeam.checkPosition(mpMovePts[j]->getPosition()))
+				{
+					break;
+				}
+				else if (!otherTeam.checkPosition(mpMovePts[j]->getPosition()) && otherTeam.inBounds(mpMovePts[j]->getPosition())
+					&& team.checkPosition(mpMovePts[j]->getPosition()))
+				{
+					break;
+				}
+			}
+			for (j = 14; j < 21; j++)
+			{
+				if (!otherTeam.checkPosition(mpMovePts[j]->getPosition()) && otherTeam.inBounds(mpMovePts[j]->getPosition())
+					&& !team.checkPosition(mpMovePts[j]->getPosition()))
+				{
+					mpMovePts[j]->draw(pGraphicsSystem);
+				}
+				else if (otherTeam.checkPosition(mpMovePts[j]->getPosition()))
+				{
+					break;
+				}
+				else if (!otherTeam.checkPosition(mpMovePts[j]->getPosition()) && otherTeam.inBounds(mpMovePts[j]->getPosition())
+					&& team.checkPosition(mpMovePts[j]->getPosition()))
+				{
+					break;
+				}
+			}
+			for (j = 21; j < 28; j++)
+			{
+				if (!otherTeam.checkPosition(mpMovePts[j]->getPosition()) && otherTeam.inBounds(mpMovePts[j]->getPosition())
+					&& !team.checkPosition(mpMovePts[j]->getPosition()))
+				{
+					mpMovePts[j]->draw(pGraphicsSystem);
+				}
+				else if (otherTeam.checkPosition(mpMovePts[j]->getPosition()))
+				{
+					break;
+				}
+				else if (!otherTeam.checkPosition(mpMovePts[j]->getPosition()) && otherTeam.inBounds(mpMovePts[j]->getPosition())
+					&& team.checkPosition(mpMovePts[j]->getPosition()))
+				{
+					break;
+				}
+			}
+			//Straight lines
+			for (j = 28; j < 35; j++)
+			{
+				if (!otherTeam.checkPosition(mpMovePts[j]->getPosition()) && otherTeam.inBounds(mpMovePts[j]->getPosition())
+					&& !team.checkPosition(mpMovePts[j]->getPosition()))
+				{
+					mpMovePts[j]->draw(pGraphicsSystem);
+				}
+				else if (otherTeam.checkPosition(mpMovePts[j]->getPosition()))
+				{
+					break;
+				}
+				else if (!otherTeam.checkPosition(mpMovePts[j]->getPosition()) && otherTeam.inBounds(mpMovePts[j]->getPosition())
+					&& team.checkPosition(mpMovePts[j]->getPosition()))
+				{
+					break;
+				}
+			}
+			for (j = 35; j < 42; j++)
+			{
+				if (!otherTeam.checkPosition(mpMovePts[j]->getPosition()) && otherTeam.inBounds(mpMovePts[j]->getPosition())
+					&& !team.checkPosition(mpMovePts[j]->getPosition()))
+				{
+					mpMovePts[j]->draw(pGraphicsSystem);
+				}
+				else if (otherTeam.checkPosition(mpMovePts[j]->getPosition()))
+				{
+					break;
+				}
+				else if (!otherTeam.checkPosition(mpMovePts[j]->getPosition()) && otherTeam.inBounds(mpMovePts[j]->getPosition())
+					&& team.checkPosition(mpMovePts[j]->getPosition()))
+				{
+					break;
+				}
+			}
+			for (j = 42; j < 49; j++)
+			{
+				if (!otherTeam.checkPosition(mpMovePts[j]->getPosition()) && otherTeam.inBounds(mpMovePts[j]->getPosition())
+					&& !team.checkPosition(mpMovePts[j]->getPosition()))
+				{
+					mpMovePts[j]->draw(pGraphicsSystem);
+				}
+				else if (otherTeam.checkPosition(mpMovePts[j]->getPosition()))
+				{
+					break;
+				}
+				else if (!otherTeam.checkPosition(mpMovePts[j]->getPosition()) && otherTeam.inBounds(mpMovePts[j]->getPosition())
+					&& team.checkPosition(mpMovePts[j]->getPosition()))
+				{
+					break;
+				}
+			}
+			for (j = 49; j < 56; j++)
+			{
+				if (!otherTeam.checkPosition(mpMovePts[j]->getPosition()) && otherTeam.inBounds(mpMovePts[j]->getPosition())
+					&& !team.checkPosition(mpMovePts[j]->getPosition()))
+				{
+					mpMovePts[j]->draw(pGraphicsSystem);
+				}
+				else if (otherTeam.checkPosition(mpMovePts[j]->getPosition()))
+				{
+					break;
+				}
+				else if (!otherTeam.checkPosition(mpMovePts[j]->getPosition()) && otherTeam.inBounds(mpMovePts[j]->getPosition())
+					&& team.checkPosition(mpMovePts[j]->getPosition()))
+				{
+					break;
+				}
+			}
+
+			//Attack detecting
+			for (j = 0; j < 7; j++)
+			{
+				if (otherTeam.checkPosition(mpAttackPts[j]->getPosition()) && otherTeam.inBounds(mpAttackPts[j]->getPosition())
+					&& !team.checkPosition(mpAttackPts[j]->getPosition()))
+				{
+					mpAttackPts[j]->draw(pGraphicsSystem);
+					break;
+				}
+				else if (team.checkPosition(mpAttackPts[j]->getPosition()))
+				{
+					break;
+				}
+			}
+			for (j = 7; j < 14; j++)
+			{
+				if (otherTeam.checkPosition(mpAttackPts[j]->getPosition()) && otherTeam.inBounds(mpAttackPts[j]->getPosition())
+					&& !team.checkPosition(mpAttackPts[j]->getPosition()))
+				{
+					mpAttackPts[j]->draw(pGraphicsSystem);
+					break;
+				}
+				else if (team.checkPosition(mpAttackPts[j]->getPosition()))
+				{
+					break;
+				}
+			}
+			for (j = 14; j < 21; j++)
+			{
+				if (otherTeam.checkPosition(mpAttackPts[j]->getPosition()) && otherTeam.inBounds(mpAttackPts[j]->getPosition())
+					&& !team.checkPosition(mpAttackPts[j]->getPosition()))
+				{
+					mpAttackPts[j]->draw(pGraphicsSystem);
+					break;
+				}
+				else if (team.checkPosition(mpAttackPts[j]->getPosition()))
+				{
+					break;
+				}
+			}
+			for (j = 21; j < 28; j++)
+			{
+				if (otherTeam.checkPosition(mpAttackPts[j]->getPosition()) && otherTeam.inBounds(mpAttackPts[j]->getPosition())
+					&& !team.checkPosition(mpAttackPts[j]->getPosition()))
+				{
+					mpAttackPts[j]->draw(pGraphicsSystem);
+					break;
+				}
+				else if (team.checkPosition(mpAttackPts[j]->getPosition()))
+				{
+					break;
+				}
+			}
+			//Diagonals
+			for (j = 28; j < 35; j++)
+			{
+				if (otherTeam.checkPosition(mpAttackPts[j]->getPosition()) && otherTeam.inBounds(mpAttackPts[j]->getPosition())
+					&& !team.checkPosition(mpAttackPts[j]->getPosition()))
+				{
+					mpAttackPts[j]->draw(pGraphicsSystem);
+					break;
+				}
+				else if (team.checkPosition(mpAttackPts[j]->getPosition()))
+				{
+					break;
+				}
+			}
+			for (j = 35; j < 42; j++)
+			{
+				if (otherTeam.checkPosition(mpAttackPts[j]->getPosition()) && otherTeam.inBounds(mpAttackPts[j]->getPosition())
+					&& !team.checkPosition(mpAttackPts[j]->getPosition()))
+				{
+					mpAttackPts[j]->draw(pGraphicsSystem);
+					break;
+				}
+				else if (team.checkPosition(mpAttackPts[j]->getPosition()))
+				{
+					break;
+				}
+			}
+			for (j = 42; j < 49; j++)
+			{
+				if (otherTeam.checkPosition(mpAttackPts[j]->getPosition()) && otherTeam.inBounds(mpAttackPts[j]->getPosition())
+					&& !team.checkPosition(mpAttackPts[j]->getPosition()))
+				{
+					mpAttackPts[j]->draw(pGraphicsSystem);
+					break;
+				}
+				else if (team.checkPosition(mpAttackPts[j]->getPosition()))
+				{
+					break;
+				}
+			}
+			for (j = 49; j < 56; j++)
+			{
+				if (otherTeam.checkPosition(mpAttackPts[j]->getPosition()) && otherTeam.inBounds(mpAttackPts[j]->getPosition())
+					&& !team.checkPosition(mpAttackPts[j]->getPosition()))
+				{
+					mpAttackPts[j]->draw(pGraphicsSystem);
+					break;
+				}
+				else if (team.checkPosition(mpAttackPts[j]->getPosition()))
+				{
+					break;
+				}
+			}
+
+		}
+	}
+}
+
+void Queen::checkMovePts(Vector2D mousePos, PieceManager& team, PieceManager& otherTeam)
+{
+	bool inTheWay = false;
+	Vector2D tmp1, tmp2, tmp3;
+	int index = 0, k;
+
+	for (unsigned int i = 0; i < mpMovePts.size(); i++)
+	{
+		if (mpMovePts[i]->checkMouseCollision(mousePos) && !otherTeam.checkPosition(mpMovePts[i]->getPosition()) && team.inBounds(mpMovePts[i]->getPosition()))
+		{
+			tmp1 = mpMovePts[i]->getPosition();
+
+			for (unsigned int j = 0; j < mpMovePts.size(); j++)
+			{
+				if (mpMovePts[j]->getPosition() == tmp1)
+				{
+					if (index < 7)
+					{
+						//Down + Right
+						for (k = index; k >= 0; k--)
+						{
+							if (otherTeam.checkPosition(mpMovePts[k]->getPosition()) || team.checkPosition(mpMovePts[k]->getPosition()))
+							{
+								inTheWay = true;
+								break;
+							}
+						}
+					}
+					else if (index > 6 && index < 14)
+					{
+						//Down + Left
+						for (k = index; k >= 6; k--)
+						{
+							if (otherTeam.checkPosition(mpMovePts[k]->getPosition()) || team.checkPosition(mpMovePts[k]->getPosition()))
+							{
+								inTheWay = true;
+								break;
+							}
+						}
+					}
+					else if (index > 13 && index < 21)
+					{
+						//Up + Left
+						for (k = index; k >= 13; k--)
+						{
+							if (otherTeam.checkPosition(mpMovePts[k]->getPosition()) || team.checkPosition(mpMovePts[k]->getPosition()))
+							{
+								inTheWay = true;
+								break;
+							}
+						}
+					}
+					else if (index > 20 && index < 28)
+					{
+						//Up + Right
+						for (k = index; k >= 20; k--)
+						{
+							if (otherTeam.checkPosition(mpMovePts[k]->getPosition()) || team.checkPosition(mpMovePts[k]->getPosition()))
+							{
+								inTheWay = true;
+								break;
+							}
+						}
+					}
+					//Diagonals
+					else if (index > 27 && index < 35)
+					{
+						//Up + Right
+						for (k = index; k >= 27; k--)
+						{
+							if (otherTeam.checkPosition(mpMovePts[k]->getPosition()) || team.checkPosition(mpMovePts[k]->getPosition()))
+							{
+								inTheWay = true;
+								break;
+							}
+						}
+					}
+					else if (index > 34 && index < 42)
+					{
+						//Up + Right
+						for (k = index; k >= 34; k--)
+						{
+							if (otherTeam.checkPosition(mpMovePts[k]->getPosition()) || team.checkPosition(mpMovePts[k]->getPosition()))
+							{
+								inTheWay = true;
+								break;
+							}
+						}
+					}
+					else if (index > 41 && index < 49)
+					{
+						//Up + Right
+						for (k = index; k >= 41; k--)
+						{
+							if (otherTeam.checkPosition(mpMovePts[k]->getPosition()) || team.checkPosition(mpMovePts[k]->getPosition()))
+							{
+								inTheWay = true;
+								break;
+							}
+						}
+					}
+					else if (index > 48 && index < 56)
+					{
+						//Up + Right
+						for (k = index; k >= 48; k--)
+						{
+							if (otherTeam.checkPosition(mpMovePts[k]->getPosition()) || team.checkPosition(mpMovePts[k]->getPosition()))
+							{
+								inTheWay = true;
+								break;
+							}
+						}
+					}
+				}
+				index++;
+			}
+
+			if (!inTheWay)
+			{
+				tmp2 = getPosition();
+
+				setPosition(mpMovePts[i]->getPosition());
+				team.checkCheck(team, otherTeam);
+
+				if (!team.inCheck())
+				{
+					//setPosition(mpMovePts[i]->getPosition());
+					Game::getInstance()->endCurrentTurn();
+
+					cleanUp();
+					createMovePts();
+				}
+				else
+				{
+					setPosition(tmp2);
+				}
+			}
+		}
+
+		index = 0;
+
+		//see if attack pt is clicked
+		if (mpAttackPts[i]->checkMouseCollision(mousePos) && team.inBounds(mpAttackPts[i]->getPosition()))
+		{
+			tmp1 = mpAttackPts[i]->getPosition();
+
+			for (unsigned int j = 0; j < mpAttackPts.size(); j++)
+			{
+				if (mpAttackPts[j]->getPosition() == tmp1)
+				{
+					if (index < 7)
+					{
+						//Down + Right
+						for (k = index - 1; k >= 0; k--)
+						{
+							if (otherTeam.checkPosition(mpAttackPts[k]->getPosition()) || team.checkPosition(mpAttackPts[k]->getPosition()))
+							{
+								inTheWay = true;
+								break;
+							}
+						}
+					}
+					else if (index > 6 && index < 14)
+					{
+						//Down + Left
+						for (k = index - 1; k >= 6; k--)
+						{
+							if (otherTeam.checkPosition(mpAttackPts[k]->getPosition()) || team.checkPosition(mpAttackPts[k]->getPosition()))
+							{
+								inTheWay = true;
+								break;
+							}
+						}
+					}
+					else if (index > 13 && index < 21)
+					{
+						//Up + Left
+						for (k = index - 1; k >= 13; k--)
+						{
+							if (otherTeam.checkPosition(mpAttackPts[k]->getPosition()) || team.checkPosition(mpAttackPts[k]->getPosition()))
+							{
+								inTheWay = true;
+								break;
+							}
+						}
+					}
+					else if (index > 20 && index < 28)
+					{
+						//Up + Right
+						for (k = index - 1; k >= 20; k--)
+						{
+							if (otherTeam.checkPosition(mpAttackPts[k]->getPosition()) || team.checkPosition(mpAttackPts[k]->getPosition()))
+							{
+								inTheWay = true;
+								break;
+							}
+						}
+					}
+					//Diagonals
+					else if (index > 27 && index < 35)
+					{
+						//Up + Right
+						for (k = index - 1; k >= 27; k--)
+						{
+							if (otherTeam.checkPosition(mpAttackPts[k]->getPosition()) || team.checkPosition(mpAttackPts[k]->getPosition()))
+							{
+								inTheWay = true;
+								break;
+							}
+						}
+					}
+					else if (index > 34 && index < 42)
+					{
+						//Up + Right
+						for (k = index - 1; k >= 34; k--)
+						{
+							if (otherTeam.checkPosition(mpAttackPts[k]->getPosition()) || team.checkPosition(mpAttackPts[k]->getPosition()))
+							{
+								inTheWay = true;
+								break;
+							}
+						}
+					}
+					else if (index > 41 && index < 49)
+					{
+						//Up + Right
+						for (k = index - 1; k >= 41; k--)
+						{
+							if (otherTeam.checkPosition(mpAttackPts[k]->getPosition()) || team.checkPosition(mpAttackPts[k]->getPosition()))
+							{
+								inTheWay = true;
+								break;
+							}
+						}
+					}
+					else if (index > 48 && index < 56)
+					{
+						//Up + Right
+						for (k = index - 1; k >= 48; k--)
+						{
+							if (otherTeam.checkPosition(mpAttackPts[k]->getPosition()) || team.checkPosition(mpAttackPts[k]->getPosition()))
+							{
+								inTheWay = true;
+								break;
+							}
+						}
+					}
+				}
+				index++;
+			}
+
+			if (!inTheWay)
+			{
+				tmp2 = getPosition();
+				tmp3 = mpAttackPts[i]->getPosition();
+
+				setPosition(mpAttackPts[i]->getPosition());
+				otherTeam.movePiece(mpAttackPts[i]->getPosition(), Vector2D(10000, 10000));
+				team.checkCheck(team, otherTeam);
+
+				if (!team.inCheck())
+				{
+					otherTeam.deletePiece(Vector2D(10000, 10000)/*mpAttackPts[i]->getPosition()*/);
+
+					//setPosition(mpAttackPts[i]->getPosition());
+					Game::getInstance()->endCurrentTurn();
+
+					cleanUp();
+					createMovePts();
+				}
+				else
+				{
+					setPosition(tmp2);
+					otherTeam.movePiece(Vector2D(10000, 10000), tmp3);
+				}
+			}
+		}
+	}
+}
+
+bool Queen::checkAttackPts(Vector2D position, PieceManager& team, PieceManager& otherTeam, Vector2D& location)
+{
+	unsigned int i;
+	/************************Horizontals************************/
+
+	//Down + Right
+	for (i = 0; i < 7; i++)
+	{
+		if (mpAttackPts[i]->getPosition() == position)
+		{
+			location = getPosition();
+			return true;
+		}
+
+		if (otherTeam.checkPosition(mpAttackPts[i]->getPosition()) || team.checkPosition(mpAttackPts[i]->getPosition()))
+		{
+			break;
+		}
+	}
+
+	//Down + Left
+	for (i = 7; i < 14; i++)
+	{
+		if (mpAttackPts[i]->getPosition() == position)
+		{
+			location = getPosition();
+			return true;
+		}
+
+		if (otherTeam.checkPosition(mpAttackPts[i]->getPosition()) || team.checkPosition(mpAttackPts[i]->getPosition()))
+		{
+			break;
+		}
+	}
+
+	//Up + Left
+	for (i = 14; i < 21; i++)
+	{
+		if (mpAttackPts[i]->getPosition() == position)
+		{
+			location = getPosition();
+			return true;
+		}
+
+		if (otherTeam.checkPosition(mpAttackPts[i]->getPosition()) || team.checkPosition(mpAttackPts[i]->getPosition()))
+		{
+			break;
+		}
+	}
+
+	//Up + Right
+	for (i = 21; i < 28; i++)
+	{
+		if (mpAttackPts[i]->getPosition() == position)
+		{
+			location = getPosition();
+			return true;
+		}
+
+		if (otherTeam.checkPosition(mpAttackPts[i]->getPosition()) || team.checkPosition(mpAttackPts[i]->getPosition()))
+		{
+			break;
+		}
+	}
+
+	/************************Diagonals************************/
+
+	//Up + Right
+	for (i = 28; i < 35; i++)
+	{
+		if (mpAttackPts[i]->getPosition() == position)
+		{
+			location = getPosition();
+			return true;
+		}
+
+		if (otherTeam.checkPosition(mpAttackPts[i]->getPosition()) || team.checkPosition(mpAttackPts[i]->getPosition()))
+		{
+			break;
+		}
+	}
+
+	//Up + Right
+	for (i = 35; i < 42; i++)
+	{
+		if (mpAttackPts[i]->getPosition() == position)
+		{
+			location = getPosition();
+			return true;
+		}
+
+		if (otherTeam.checkPosition(mpAttackPts[i]->getPosition()) || team.checkPosition(mpAttackPts[i]->getPosition()))
+		{
+			break;
+		}
+	}
+
+	//Up + Right
+	for (i = 42; i < 49; i++)
+	{
+		if (mpAttackPts[i]->getPosition() == position)
+		{
+			location = getPosition();
+			return true;
+		}
+
+		if (otherTeam.checkPosition(mpAttackPts[i]->getPosition()) || team.checkPosition(mpAttackPts[i]->getPosition()))
+		{
+			break;
+		}
+	}
+
+	//Up + Right
+	for (i = 49; i < 56; i++)
+	{
+		if (mpAttackPts[i]->getPosition() == position)
+		{
+			location = getPosition();
+			return true;
+		}
+
+		if (otherTeam.checkPosition(mpAttackPts[i]->getPosition()) || team.checkPosition(mpAttackPts[i]->getPosition()))
+		{
+			break;
+		}
+	}
+	
+	return false;
+}
+
+void Queen::resetPosition()
+{
+	cleanUp();
+	createMovePts();
+}

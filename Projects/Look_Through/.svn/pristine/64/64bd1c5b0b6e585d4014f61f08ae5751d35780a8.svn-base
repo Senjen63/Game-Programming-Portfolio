@@ -1,0 +1,448 @@
+#include "Game.h"
+#include <PerformanceTracker.h>
+#include <Timer.h>
+#include <fstream>
+
+#include "CollectEvent.h"
+#include "ScoreEvent.h"
+#include "NextLevelEvent.h"
+#include "InputEvent.h"
+
+using namespace std;
+
+Game* Game::mpsInstance = nullptr;
+
+void Game::createGame(int width, int height, double fps)
+{
+	if (mpsInstance == nullptr)
+	{
+		mpsInstance = new Game(width, height, fps);
+	}
+}
+
+void Game::deleteGame()
+{
+	delete mpsInstance;
+	mpsInstance = nullptr;
+}
+
+Game* Game::instance()
+{
+	assert(mpsInstance != nullptr);
+
+	return mpsInstance;
+}
+
+Game::Game(int width, int height, double fps)
+{
+	mGraphics = new GraphicsSystem(width, height);
+	mInputs = new InputSystem();
+	mTranslator = new InputTranslator();
+	mBuffers = new GraphicsBufferManager();
+	mLevels = new LevelManager(3);
+	mFont = nullptr;
+	mHUD = nullptr;
+	mSegments = nullptr;
+
+	mWallAnim = new Animation(0);
+	for (int i = 0; i < DIR_COUNT; i++)
+	{
+		mHeadAnims[i] = new Animation(0.01);
+		mBodyAnims[i] = new Animation(0.01);
+		mPowerupAnims[i] = new Animation(0.005);
+	}
+
+	mFPS = fps;
+	mCurrentScore = 0; 
+	mNextDir = 0;
+	mGameState = "begin";
+	toQuit = false;
+
+	mEvents = EventSystem::getInstance();
+	mEvents->addListener((EventType)COLLECT_EVENT, this);
+	mEvents->addListener((EventType)START_EVENT, this);
+	mEvents->addListener((EventType)DEATH_EVENT, this);
+	mEvents->addListener((EventType)VICTORY_EVENT, this);
+	mEvents->addListener((EventType)SCORE_EVENT, this);
+	mEvents->addListener((EventType)NEXT_LEVEL_EVENT, this);
+	mEvents->addListener((EventType)INPUT_EVENT, this);
+
+	mBackgroundFile = "";
+	mWallFile = "";
+	mFontFile = "";
+}
+
+Game::~Game()
+{
+	if (mInitted) 
+	{
+		cleanup();
+	}
+
+	delete mSegments;
+	for (int i = 0; i < DIR_COUNT; i++)
+	{
+		delete mHeadAnims[i];
+		delete mBodyAnims[i];
+		delete mPowerupAnims[i];
+	}
+	delete mWallAnim;
+
+	delete mGraphics;
+	delete mInputs;
+	delete mTranslator;
+	delete mBuffers;
+	delete mLevels;
+	delete mHUD;
+	delete mFont;
+}
+
+bool Game::init()
+{
+	if (mGraphics->init() == 1) { return 1; }
+	mInputs->init();
+
+	mInitted = true;
+
+	//load files
+	ifstream assetFile;
+
+	int currentLine = 0;
+	string currentVar;
+	assetFile.open(SPRITE_ASSET_PATH + SPRITE_FILENAME);
+	assert(assetFile.is_open());
+
+	assetFile >> currentVar; //skipping the first line
+
+	while (!assetFile.eof())
+	{
+		assetFile >> currentVar;
+		if (currentLine == 0) { mBackgroundFile = currentVar; }
+		else if (currentLine == 1) { mWallFile = currentVar; }
+		else if (currentLine < 6) { mHeadFiles[currentLine - 2] = currentVar; }
+		else if (currentLine < 10) { mBodyFiles[currentLine - 6] = currentVar; }
+		else if (currentLine < 14) { mPowerupFiles[currentLine - 10] = currentVar; }
+		else if (currentLine  == 14) { mFontFile = currentVar; }
+
+		currentLine++;
+	}
+
+	assetFile.close();
+
+	//game needs to exist to setup HUD
+	mHUD = new HUD(mBuffers);
+
+	return 0;
+}
+
+void Game::cleanup()
+{
+	mGraphics->cleanup();
+	mInputs->cleanup();
+	mBuffers->cleanup();
+	mEvents->cleanup();
+}
+
+void Game::doLoop() 
+{
+	//setup for main game loop
+	const float SCALE_FACTOR = 0.67f;
+
+	const int SMURF_ROWS = 4;
+	const int SMURF_COLS = 4;
+	const int SMURF_SPRITE_COUNT = 16;
+	const double SEGMENT_SPEED_VALUE = 0.017;
+	const int POWERUP_ANIM_LENGTH = 2;
+
+	const Color RED = Color(255, 0, 0);
+	const Color BLACK = Color(0, 0, 0);
+
+	mBuffers->createBuffer(SPRITE_ASSET_PATH + mBackgroundFile, "background");
+	mBuffers->createBuffer(SPRITE_ASSET_PATH + mWallFile, "wall");
+	for (int i = 0; i < DIR_COUNT; i++)
+	{
+		mBuffers->createBuffer(SPRITE_ASSET_PATH + mHeadFiles[i], "heads" + to_string(i));
+		mBuffers->createBuffer(SPRITE_ASSET_PATH + mBodyFiles[i], "bodies" + to_string(i));
+		mBuffers->createBuffer(SPRITE_ASSET_PATH + mPowerupFiles[i], "powerups" + to_string(i));
+	}
+	mBuffers->createBuffer(600, 200, "prompter");
+	mBuffers->getBuffer("prompter")->setColor(RED);
+
+	Sprite bgroundSpr = Sprite(mBuffers->getBuffer("background"), 0, 0);
+	Sprite wallSpr = Sprite(mBuffers->getBuffer("wall"), 0, 0);
+	Sprite promptSpr = Sprite(mBuffers->getBuffer("prompter"), 0, 0);
+	Sprite headSpr[SMURF_SPRITE_COUNT][DIR_COUNT];
+	Sprite bodySpr[SMURF_SPRITE_COUNT][DIR_COUNT];
+	Sprite powerupSpr[POWERUP_ANIM_LENGTH][DIR_COUNT];
+
+	mFont = new Font(FONT_ASSET_PATH + mFontFile, FONT_SIZE);
+	mGraphics->writeText(mBuffers->getBuffer("prompter"), promptSpr.getWidth() / 2, (promptSpr.getHeight() / 2) - (FONT_SIZE / 2), mFont, BLACK, "Press SPACE to begin", 1);
+
+	for (int i = 0; i < DIR_COUNT; i++)
+	{
+		int spotInSpriteArray = 0;
+
+		//snake animations
+		for (int j = 0; j < SMURF_ROWS; j++)
+		{
+			for (int k = 0; k < SMURF_COLS; k++)
+			{
+				headSpr[spotInSpriteArray][i] = Sprite(mBuffers->getBuffer("heads" + to_string(i)), k * TILE_SIZE, j * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+				bodySpr[spotInSpriteArray][i] = Sprite(mBuffers->getBuffer("bodies" + to_string(i)), k * TILE_SIZE, j * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+				spotInSpriteArray++;
+			}
+		}
+
+		//powerup animations
+		spotInSpriteArray = 0;
+		for (int j = 0; j < POWERUP_ANIM_LENGTH; j++)
+		{
+			powerupSpr[spotInSpriteArray][i] = Sprite(mBuffers->getBuffer("powerups" + to_string(i)), j * TILE_SIZE, 0, TILE_SIZE, TILE_SIZE);
+			spotInSpriteArray++;
+		}
+	}
+
+	mWallAnim->addSprite(wallSpr);
+	for (int i = 0; i < DIR_COUNT; i++)
+	{
+		for (int j = 0; j < SMURF_SPRITE_COUNT; j++)
+		{
+			mHeadAnims[i]->addSprite(headSpr[j][i]);
+			mBodyAnims[i]->addSprite(bodySpr[j][i]);
+		}
+		for (int j = 0; j < POWERUP_ANIM_LENGTH; j++)
+		{
+			mPowerupAnims[i]->addSprite(powerupSpr[j][i]);
+		}
+
+		mLevels->setPowerupAnim(new Animation(*mPowerupAnims[i]),i);
+	}
+
+	mLevels->setWallAnim(new Animation(*mWallAnim));
+
+	mSegments = new SnakeManager();
+	
+	//game loop
+	bool looping = true;
+
+	PerformanceTracker* pPerformanceTracker = new PerformanceTracker;
+
+	bool keepRunning = true;
+	Timer timer;
+
+	//bools to stop inputs from running each frame
+	bool spacePressed = false;
+	bool enterPressed = false;
+
+	double moveTillSwap = TILE_SIZE;
+
+	mLevels->init();
+
+	while (looping) 
+	{
+		if (toQuit) { looping = false; }
+
+		pPerformanceTracker->clearTracker("loop");
+		pPerformanceTracker->startTracking("loop");
+
+		Timer loopTimer;
+		loopTimer.start();
+
+		//USER INPUT HAS BEEN MOVED TO THE EVENT SYSTEM
+
+		//#1 - adjust game state
+		mInputs->update();
+
+		if (mGameState == "play")
+		{
+			if (mSegments->getSegment(0)->collision(mLevels->getFruit()->getX(), mLevels->getFruit()->getY()))
+			{
+				mEvents->fireEvent(CollectEvent(mLevels->getFruit()->getID(), mLevels->getFruit()->getType()));
+			}
+
+			for (int i = 0; i < mLevels->getNumPowerups(); i++)
+			{
+				if (mSegments->getSegment(0)->collision(mLevels->getPowerup(i)->getX(), mLevels->getPowerup(i)->getY()))
+				{
+					mEvents->fireEvent(CollectEvent(mLevels->getPowerup(i)->getID(), mLevels->getPowerup(i)->getType()));
+				}
+			}
+
+			//check snake segment overlap
+			for (int i = 1; i < mSegments->getNumSegments(); i++)
+			{
+				if (mSegments->getSegment(0)->collision(mSegments->getSegment(i)->getX(), mSegments->getSegment(i)->getY()))
+				{
+					mEvents->fireEvent(LevelEvent(DEATH_EVENT));
+					mNextDir = mSegments->BASE_DIR;
+					break;
+				}
+			}
+
+			//check wall overlap
+			for (int i = 0; i < mLevels->getNumWalls(); i++)
+			{
+				if (mSegments->getSegment(0)->collision(mLevels->getWall(i)->getX(), mLevels->getWall(i)->getY()))
+				{
+					mEvents->fireEvent(LevelEvent(DEATH_EVENT));
+					mNextDir = mSegments->BASE_DIR;
+					break;
+				}
+			}
+
+			//check outside of bounds
+			if (mSegments->getSegment(0)->getX() < 0 || mSegments->getSegment(0)->getY() < 0 || mSegments->getSegment(0)->getX() > TILE_SIZE * LEVEL_WIDTH || mSegments->getSegment(0)->getY() > TILE_SIZE * LEVEL_HEIGHT)
+			{
+				mEvents->fireEvent(LevelEvent(DEATH_EVENT));
+				mNextDir = mSegments->BASE_DIR;
+			}
+
+			mSegments->changeDir(mNextDir);
+
+			mSegments->updateAll(mFPS);
+			mLevels->update(mFPS);
+			mHUD->update();
+		}
+
+		//#2 - draw current game state
+		mGraphics->draw(0, 0, bgroundSpr, (mGraphics->getWidth() / float(mBuffers->getBuffer("background")->getWidth())));
+		if (mGameState != "play")
+		{
+			mGraphics->draw(100, 200, promptSpr);
+		}
+		else
+		{
+			mSegments->drawAll();
+			mLevels->draw();
+			mHUD->draw();
+		}
+
+		mGraphics->flip();
+
+		//#3 - wait until target time has elapsed
+		loopTimer.sleepUntilElapsed(mFPS);
+		pPerformanceTracker->stopTracking("loop");
+		cout << "Frame Took:" << pPerformanceTracker->getElapsedTime("loop") << " ms" << endl;
+		mHUD->setFPS(pPerformanceTracker->getElapsedTime("loop")); //change from ms to fps
+	}
+
+	delete pPerformanceTracker;
+}
+
+void Game::handleEvent(const Event& theEvent)
+{
+	//inputs
+	if (theEvent.getType() == INPUT_EVENT)
+	{
+		const InputEvent& inputEvent = static_cast<const InputEvent&>(theEvent);
+
+		if (inputEvent.getInput() == LEFT_EVENT)
+		{
+			mNextDir = 270;
+		}
+
+		else if (inputEvent.getInput() == RIGHT_EVENT)
+		{
+			mNextDir = 90;
+		}
+
+		else if (inputEvent.getInput() == UP_EVENT)
+		{
+			mNextDir = 0;
+		}
+
+		else if (inputEvent.getInput() == DOWN_EVENT)
+		{
+			mNextDir = 180;
+		}
+
+		else if (inputEvent.getInput() == QUIT_EVENT)
+		{
+			toQuit = true;
+		}
+
+		if (inputEvent.getInput() == CONTINUE_EVENT)
+		{
+			if (mGameState != "play") {
+				mGameState = "play";
+				mEvents->fireEvent(LevelEvent(START_EVENT));
+			}
+		}
+	}
+
+	//level events
+	if (theEvent.getType() == COLLECT_EVENT)
+	{
+		const CollectEvent& collectEvent = static_cast<const CollectEvent&>(theEvent);
+
+		if (collectEvent.getType() == FRUIT)
+		{
+			Segment* newSegment = new Segment();
+			for (int i = 0; i < DIR_COUNT; i++) { newSegment->setAnimation(new Animation(*mBodyAnims[i]),i); }
+			
+			mSegments->setSpeed(mSegments->getSpeed() / FRUIT_SPEED_CHANGE);
+
+			mSegments->addSegment(newSegment);
+			mLevels->nextLevelCheck(mSegments->getNumSegments());
+
+			if (mGameState == "play") { EventSystem::getInstance()->fireEvent(ScoreEvent(mLevels->getCurrentLevel()->getFoodPoints(), ADD_SCORE)); }
+		}
+		else if (collectEvent.getType() == SPEED_UP)
+		{
+			mSegments->setSpeed(mSegments->getSpeed() / SPEED_UP_LEVEL);
+		}
+		else if (collectEvent.getType() == SPEED_DOWN)
+		{
+			mSegments->setSpeed(mSegments->getSpeed() * SPEED_DOWN_LEVEL);
+			if (mSegments->getSpeed() < 1) { mSegments->setSpeed(1); }
+		}
+		else if (collectEvent.getType() == BONUS_POINTS)
+		{
+			EventSystem::getInstance()->fireEvent(ScoreEvent(mLevels->getCurrentLevel()->getFoodPoints() * mLevels->BONUS_POINTS_MULT,ADD_SCORE));
+		}
+	}
+	else if (theEvent.getType() == START_EVENT || theEvent.getType() == NEXT_LEVEL_EVENT)
+	{
+		if (theEvent.getType() == START_EVENT) { 
+			mLevels->setLevelNum(-1);
+			mLevels->gotoNextLevel();
+		}
+
+		mNextDir = mSegments->BASE_DIR;
+		if (mLevels->getLevelNum() >= mLevels->getNumLevels()) { 
+			EventSystem::getInstance()->fireEvent(LevelEvent(VICTORY_EVENT));
+		}
+		else { mSegments->setupSnake(mLevels->getCurrentLevel()->getSnakeSpeed(), mLevels->getCurrentLevel()->getStartingSize(), mHeadAnims, mBodyAnims); }
+	}
+	else if (theEvent.getType() == DEATH_EVENT)
+	{
+		const Color RED = Color(255, 0, 0);
+		const Color BLACK = Color(0, 0, 0);
+
+		mGameState = "dead";
+
+		mBuffers->getBuffer("prompter")->setColor(RED);
+		mGraphics->writeText(mBuffers->getBuffer("prompter"), mBuffers->getBuffer("prompter")->getWidth() / 2, (mBuffers->getBuffer("prompter")->getHeight() / 2) - (FONT_SIZE * 1.5), mFont, BLACK, "YOU DIED", 1);
+		mGraphics->writeText(mBuffers->getBuffer("prompter"), mBuffers->getBuffer("prompter")->getWidth() / 2, (mBuffers->getBuffer("prompter")->getHeight() / 2) - (FONT_SIZE / 2), mFont, BLACK, "Press SPACE to retry", 1);
+		mGraphics->writeText(mBuffers->getBuffer("prompter"), mBuffers->getBuffer("prompter")->getWidth() / 2, (mBuffers->getBuffer("prompter")->getHeight() / 2) + (FONT_SIZE / 2), mFont, BLACK, "Or press ESC to quit", 1);
+	}
+	else if (theEvent.getType() == VICTORY_EVENT)
+	{
+		const Color RED = Color(255, 0, 0);
+		const Color BLACK = Color(0, 0, 0);
+
+		mGameState = "winner";
+
+		mBuffers->getBuffer("prompter")->setColor(RED);
+		mGraphics->writeText(mBuffers->getBuffer("prompter"), mBuffers->getBuffer("prompter")->getWidth() / 2, (mBuffers->getBuffer("prompter")->getHeight() / 2) - (FONT_SIZE * 1.5), mFont, BLACK, "YOU WIN!!", 1);
+		mGraphics->writeText(mBuffers->getBuffer("prompter"), mBuffers->getBuffer("prompter")->getWidth() / 2, (mBuffers->getBuffer("prompter")->getHeight() / 2) - (FONT_SIZE / 2), mFont, BLACK, "Press SPACE to retry", 1);
+		mGraphics->writeText(mBuffers->getBuffer("prompter"), mBuffers->getBuffer("prompter")->getWidth() / 2, (mBuffers->getBuffer("prompter")->getHeight() / 2) + (FONT_SIZE / 2), mFont, BLACK, "Or press ESC to quit", 1);
+	}
+	else if (theEvent.getType() == SCORE_EVENT)
+	{
+		const ScoreEvent& scoreEvent = static_cast<const ScoreEvent&>(theEvent);
+
+		if (scoreEvent.getOperation() == ADD_SCORE) { mCurrentScore += scoreEvent.getScore(); }
+		else if (scoreEvent.getOperation() == SET_SCORE) { mCurrentScore = scoreEvent.getScore(); }
+	}
+}

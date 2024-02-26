@@ -1,0 +1,56 @@
+Levels= 3
+
+DefaultSpeed= 200
+FastSpeed= 150
+SlowSpeed= 250
+
+{
+0
+
+Length= 8
+Speed= 20
+Slow= 20
+Score= 10
+ScorePoints= 2
+StartingLength= 2
+}
+
+{
+6
+200 200
+200 400
+400 200
+400 400
+600 200
+600 400
+
+Length= 12
+Speed= 50
+Slow= 20
+Score= 10
+ScorePoints= 4
+StartingLength= 2
+}
+
+{
+12
+100 100
+750 100
+100 550
+750 550
+200 200
+200 400
+400 200
+400 400
+450 200
+450 400
+650 200
+650 400
+
+Length= 16
+Speed= 70
+Slow= 10
+Score= 10
+ScorePoints= 6
+StartingLength= 2
+}

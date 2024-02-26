@@ -1,0 +1,19 @@
+#include "Sprite.h"
+
+Sprite::Sprite(GraphicsBuffer* bufferPointer)
+{
+	pmGraphicsBuffer = bufferPointer;
+	mSourceLocationX = 0;
+	mSourceLocationY = 0;
+	mWidth = pmGraphicsBuffer->getSurfaceWidth();
+	mHeight = pmGraphicsBuffer->getSurfaceHeight();
+}
+
+Sprite::Sprite(GraphicsBuffer* bufferPointer, float sourceLocationX, float sourceLocationY, float width, float height)
+{
+	pmGraphicsBuffer = bufferPointer;
+	mSourceLocationX = sourceLocationX;
+	mSourceLocationY = sourceLocationY;
+	mWidth = width;
+	mHeight = height;
+}

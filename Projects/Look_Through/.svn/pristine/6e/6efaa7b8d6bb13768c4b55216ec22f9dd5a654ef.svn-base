@@ -1,0 +1,35 @@
+#include "Animation.h"
+#include "GameSystem.h"
+#include "Sprite.h"
+#include "GraphicsBuffer.h"
+#include "GraphicsSystem.h"
+
+using namespace std;
+
+Animation::Animation(GraphicsBuffer* buffer)
+{
+	for (int i = 0; i < 4; i++)
+	{
+		for (int j = 0; j < 4; j++)
+		{
+			float sLocX = i * 60;
+			float sLocY = j * 60;
+
+			Sprite* sSmurf = new Sprite(buffer, sLocX, sLocY, 60, 60);
+			animList[animList.size()] = sSmurf;
+
+			delete sSmurf;
+		}
+	}
+	currentSprite = 0;
+}
+
+void Animation::Update(int locX, int locY)
+{
+	game->getGraphics()->Draw(animList[currentSprite]->getLocX(), animList[currentSprite]->getLocY(), animList[currentSprite], game->getGraphics()->getWidth(), game->getGraphics()->getHeight(), locX, locY);
+	currentSprite++;
+	if (currentSprite == animList.size())
+	{
+		currentSprite = 0;
+	}
+}

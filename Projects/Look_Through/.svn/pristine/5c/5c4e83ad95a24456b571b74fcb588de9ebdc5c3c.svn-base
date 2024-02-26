@@ -1,0 +1,15 @@
+#pragma once
+
+#include "HudEvent.h"
+
+class ScoreEvent : public HudEvent
+{
+public:
+	ScoreEvent(int score);
+	~ScoreEvent();
+
+	inline float getScore() const { return mScore; }
+
+private:
+	int mScore = 0;
+};

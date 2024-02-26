@@ -1,0 +1,43 @@
+/*
+Data
+• Allegro font
+• Font size
+
+Functions
+• Constructor/destructor
+• Accessors (size)
+*/
+
+#include "Font.h"
+
+Font::Font(string filePath, int fontSize, int flag)
+{
+    mFontSize = fontSize;
+
+    //interprets int flags to actual flag
+    if (flag == 1)
+    {
+        mFlag = ALLEGRO_ALIGN_RIGHT;
+        mpFont = al_load_ttf_font(filePath.c_str(), fontSize, ALLEGRO_ALIGN_RIGHT);
+    }
+    else if (flag == 2)
+    {
+        mFlag = ALLEGRO_ALIGN_CENTER;
+        mpFont = al_load_ttf_font(filePath.c_str(), fontSize, ALLEGRO_ALIGN_CENTER);
+    }
+    else
+    {
+        mFlag = 0;
+        mpFont = al_load_ttf_font(filePath.c_str(), fontSize, 0);
+    }
+}
+
+Font::~Font()
+{
+    al_destroy_font(mpFont);
+}
+
+float Font::getFSize()
+{
+    return mFontSize;
+}

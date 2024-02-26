@@ -1,0 +1,29 @@
+#pragma once
+
+#include "Trackable.h"
+#include "EnemyBase.h"
+#include "Bullet.h"
+
+class Puffle : public EnemyBase
+{
+public:
+
+	// initialization
+	Puffle(Direction dir, Vector2D location, Animation* anim, AnimationBase* bulletAnim);
+	~Puffle();
+
+	// enemy actions
+	void move();
+
+	const int PUFFLE_SPEED = 0;
+	const int PUFFLE_HEALTH = 1;
+	const int PUFFLE_INV = 60;
+	const int PUFFLE_SHOT_TIMER = 100;
+	const int BULLET_SPEED = 4;
+
+	std::string getType() { return "Puffle"; }
+
+private:
+	int mBulletTime;
+	AnimationBase* mpBulletAnimation;
+};

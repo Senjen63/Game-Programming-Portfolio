@@ -1,0 +1,86 @@
+#include "Game.h"
+#include <windows.h>
+
+Game* gpGameSystem = new Game();
+
+Game::Game()
+{
+	mpSystem = new GraphicsSystem(DISP_HEIGHT, DISP_WIDTH);
+	mInputSystem.init();
+
+	mpWoods = nullptr;
+	mpSmurf = nullptr;
+	mpDean = nullptr;
+	mpSmurfAnimation = nullptr;
+	mpDeanAnimation = nullptr;
+	mpObject = nullptr;
+}
+
+Game::~Game()
+{
+	cleanup();
+}
+
+void Game::init()
+{
+	mpSystem->init();
+	mpWoods = new GraphicsBuffer(ASSET_PATH + BACKGROUND_FILENAME);
+	mpSmurf = new GraphicsBuffer(ASSET_PATH + SMURF_FILENAME);
+	mpDean = new GraphicsBuffer(ASSET_PATH + DEAN_FILENAME);
+	mpSmurfAnimation = new Animation(mpSmurf, NUM_FRAMES, STARTING_TIMING, true);
+	mpDeanAnimation = new Animation(mpDean, NUM_FRAMES, STARTING_TIMING, true);
+	mpObject = new Unit(mpSmurfAnimation, mpDeanAnimation, Vector2D());
+}
+
+void Game::cleanup()
+{
+	mpSystem->cleanUp();
+	delete mpWoods;
+	delete mpSmurf;
+	delete mpDean;
+	delete mpSmurfAnimation;
+	delete mpDeanAnimation;
+	delete mpObject;
+	delete mpSystem;
+}
+
+void Game::doLoop()
+{
+	bool exit = false;
+	float timingAmount = .0005;
+	PerformanceTracker* pTracker = new PerformanceTracker();
+	Timer time;
+	float animTime = 0;
+	Vector2D mousePos = Vector2D((DISP_WIDTH / 2) + (SPRITE_WIDTH / 2), (DISP_HEIGHT / 2) + (SPRITE_HEIGHT / 2));
+
+	while (!exit)
+	{
+		//start timers
+		pTracker->clearTracker("loop");
+		pTracker->startTracking("loop");
+		time.start();
+		animTime += time.getElapsedTime();
+		if (animTime > mpObject->getTiming())
+		{
+			mpObject->update();
+			animTime = 0;
+		}
+		mpSystem->drawCurrent(Vector2D(),Sprite(mpWoods), .5);
+		mpSystem->drawPart(mpObject->draw()->getLocation(), mpObject->draw(), mousePos.getX() + (SPRITE_WIDTH / 2), mousePos.getY() + (SPRITE_HEIGHT / 2));
+		mpSystem->flipDisplay();
+		if (mInputSystem.getMouseDown())
+			mousePos = mInputSystem.getMousePosition();
+		exit = mInputSystem.getKeyState(ALLEGRO_KEY_ESCAPE);
+		if (mInputSystem.getKeyState(ALLEGRO_KEY_S))
+			mpObject->setTiming(timingAmount);
+		else if (mInputSystem.getKeyState(ALLEGRO_KEY_F))
+			mpObject->setTiming(-timingAmount);
+		if (mInputSystem.getKeyState(ALLEGRO_KEY_ENTER))
+			mpObject->setAnimation();
+		//sleep for desired time
+		time.sleepUntilElapsed(SLEEP_MS);
+		pTracker->stopTracking("loop");
+		cout << pTracker->getElapsedTime("loop") << endl;
+	}
+	delete pTracker;
+}

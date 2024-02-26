@@ -1,0 +1,31 @@
+#pragma once
+#include <Vector2D.h>
+#include "Trackable.h"
+#include "Level.h"
+#include "EventListener.h"
+#include "Event.h"
+#include "GameEvents.h"
+
+class Unit;
+
+class LevelManager : public Trackable
+{
+public:
+	LevelManager();
+	~LevelManager();
+
+	void init();
+	void cleanup();
+
+	void createLevel( string fileName );
+	void loadLevel( int levnum );
+	void deleteLevel();
+	void increaseLevel();
+	int getCurLevelNum() { return mCurLevel; };
+	void setCurLevelNum( int levnum );
+	Level* getCurLevel();
+
+private:
+	int mCurLevel;
+	vector<Level*> mLevels;
+};

@@ -1,0 +1,48 @@
+#pragma once
+#include <EventListener.h>
+#include <EventSystem.h>
+
+#include "GraphicsSystem.h"
+#include "GraphicsBuffer.h"
+#include "Font.h"
+#include "HUDEvent.h"
+#include "FpsEvent.h"
+#include "ScoreEvent.h"
+#include "TimeEvent.h"
+#include "Panel.h"
+
+const int DEFAULT_PANEL_WIDTH = 100;
+const int DEFAULT_PANEL_HEIGHT = 75;
+
+class HUD : public EventListener
+{
+    private:
+        EventSystem* mpEventSystem = nullptr;
+
+        GraphicsSystem* mpGraphics = nullptr;
+
+        float mElapsedTime;
+        float mFps;
+        int mScore;
+
+        Font* mpFont = nullptr;
+
+        //vector<Panel*> mPanels;
+
+        GraphicsBuffer* mpTimePanel = nullptr;
+        GraphicsBuffer* mpScorePanel = nullptr;
+        GraphicsBuffer* mpFpsPanel = nullptr;
+        int mPanelWidth;
+        int mPanelHeight;
+
+    public:
+        HUD();
+        HUD(int panelWidth, int panelHeight, GraphicsSystem* graphics, Font* font);
+        ~HUD();
+
+        void init();
+        void cleanup();
+
+        virtual void handleEvent(const Event& currentEvent);
+        void displayHud();
+};

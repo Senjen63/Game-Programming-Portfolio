@@ -1,0 +1,68 @@
+#pragma once
+#include "GraphicsBufferManager.h"
+#include "HUD.h"
+#include "InputSystem.h"
+#include "LevelManager.h"
+#include "Snake.h"
+#include "EventSystems/EventSystemAven.h"
+
+class Game final : public EventListenerAven
+{
+    enum GameState
+    {
+        None,
+        Menu,
+        InGame,
+        Lost,
+        Won,
+    };
+
+    enum MenuOption
+    {
+        Start = 1,
+        ChangeLevel,
+        Quit,
+    };
+    
+    struct CurrentLevelData
+    {
+        Level * mpCurrentLevel;
+        int mCurrentLevelIndex;
+        GraphicsBuffer * mpCurrentLevelBuffer;
+    };
+    
+    GraphicsSystem * mpGraphicsSystem;
+    GraphicsBufferManager * mpGraphicsBufferManager;
+
+    InputSystem * mpInputSystem;
+
+    LevelManager * mpLevelManager;
+    HUD * mpHUD;
+
+    Snake * mpSnake;
+
+    bool mRunning;
+    int mWidth;
+    int mHeight;
+    
+    CurrentLevelData mCurrentLevelData{};
+
+    GameState mGameState = None;
+    MenuOption mMenuOption = Start;
+
+    int mScore = 0;
+
+    Game();
+    ~Game();
+
+    void loadLevels() const;
+
+public:
+    static Game & getInstance();
+
+    
+    void cleanup();
+    void doLoop();
+    void handleEvent(const EventAven & event) override;
+    void init();
+};

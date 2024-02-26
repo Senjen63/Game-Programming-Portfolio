@@ -1,0 +1,16 @@
+#pragma once
+
+#include <string>
+#include "HudEvent.h"
+
+class MessageEvent : public HudEvent
+{
+public:
+	MessageEvent(const string& theMessage);
+	~MessageEvent();
+
+	inline string getString() const { return message; }
+
+private:
+	string message;
+};

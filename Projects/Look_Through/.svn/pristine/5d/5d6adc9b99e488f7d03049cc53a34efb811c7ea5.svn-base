@@ -1,0 +1,30 @@
+#pragma once
+
+#include <vector>
+#include <Trackable.h>
+#include "Vector2D.h"
+
+using namespace std;
+
+class Level;
+
+class LevelManager : public Trackable
+{
+	private:
+		vector<Level*> mpLevels;
+		int mCurrentLevel;
+	public:
+		LevelManager();
+		~LevelManager();
+
+		void createAndAddLevel(string);
+		void deleteLevel(Level*);
+
+		void clearLevels();
+
+		void increaseCurrentLevel();
+		void resetCurrentLevel();
+
+		vector<Level*> getLevels() { return mpLevels; }
+		int getCurrentLevel() { return mCurrentLevel; }
+};

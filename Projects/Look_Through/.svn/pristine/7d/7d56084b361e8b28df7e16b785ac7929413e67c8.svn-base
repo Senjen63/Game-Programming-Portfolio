@@ -1,0 +1,31 @@
+#include "Font.h"
+
+
+Font::Font() 
+{
+	mFontSize = 0;
+	mFontType = NULL;
+}
+
+Font::Font(int fontSize, string fileName)
+{
+	mFontSize = fontSize;
+	mFontType = al_load_ttf_font((fileName).c_str(), mFontSize, 0);
+
+}
+
+Font::~Font()
+{
+	mFontSize = 0;
+	al_destroy_font(mFontType);
+}
+
+int Font::getSize()
+{
+	return mFontSize;
+}
+
+void Font::setSize(int size)
+{
+	mFontSize = size;
+}

@@ -1,0 +1,19 @@
+#pragma once
+#include "Audio.h"
+
+class AudioSystem : public Trackable
+{
+private:
+
+public:
+
+	bool init();
+	void cleanUp();
+
+	AudioSystem() {};
+	~AudioSystem() { cleanUp(); };
+
+	void playLoopingMusic(Audio* audio);
+	void playSound(Audio* audio);
+
+};

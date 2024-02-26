@@ -1,0 +1,11 @@
+#pragma once
+#include <math.h>
+#include <DeanMath.h>
+
+#define degToRad (PI / 180)
+#define radToDeg (180 / PI)
+
+#define max(a, b) (((a) > (b)) ? (a) : (b))
+#define min(a, b) (((a) < (b)) ? (a) : (b))
+
+float wrapAngle(float angle);

@@ -1,0 +1,776 @@
+#include "Game.h"
+#include "MouseEvent.h"
+Game* Game::mpsGameInstance = NULL;
+
+Game::Game()
+{
+	LoadAssetsAndData();
+	mpGraphSystem = new GraphicsSystem(mDispHeight, mDispWidth);
+	mInputSystem.Init();
+	mHUD = new HUD(mpGraphSystem, (mAssetPath + mFontFilename), mHUDFontSize);
+	mCurrentState = Game::GameState::MAIN_MENU;
+	mpFont = new Font((mAssetPath + mFontFilename), mUIFontSize);
+	LoadLanguage(0);
+}
+
+
+Game* Game::GetInstance()
+{
+	if (mpsGameInstance == NULL) 
+	{
+		mpsGameInstance = new Game;
+	}
+	return mpsGameInstance;
+}
+
+
+Game::~Game() 
+{
+	CleanUp();
+}
+
+
+void Game::Init() 
+{
+	mBufferManager.CreateBuffer(mRocketFilename, mAssetPath + mRocketFilename);
+	mBufferManager.CreateBuffer(mWallFilename, Color(140, 80, 0), mObstacleWidth, mObstacleHeight);
+	mBufferManager.CreateBuffer(BUTTON_BUFFER, Color(0, 20, 100), mButtonWidth, mButtonHeight);
+	mBufferManager.CreateBuffer(mBackground1, Color(138, 186, 132), mDispWidth, mDispHeight);
+	mBufferManager.CreateBuffer(mBackground2, Color(195, 201, 135), mDispWidth, mDispHeight);
+	mBufferManager.CreateBuffer(mBackground3, Color(240, 86, 102), mDispWidth, mDispHeight);
+	mpEventSystem = EventSystem::getInstance();
+	mpEventSystem->init();
+	mpEventSystem->getInstance()->addListener((EventType)INPUT_EVENT, this);
+	mpEventSystem->getInstance()->addListener((EventType)MOUSE_CLICK_EVENT, this);
+	mpEventSystem->getInstance()->addListener((EventType)UI_EVENT, this);
+	mUnitManager.SetValues(mDispHeight, mDispWidth, mObstacleWidth, mObstacleHeight, mGateWidth, mGateHeight, mWallFilename);
+	mSoundSystem.AddSound(mSoundPath + mSoundPoint);
+	mSoundSystem.AddSound(mSoundPath + mSoundDeath);
+	mSoundSystem.AddSound(mSoundPath + mMusic);
+	mUnitManager.SetObstacleSpeed(mObstacleSpeed1);
+	if (!LoadSavedData()) 
+	{
+		LoadMainMenu();
+	}
+	else
+	{
+		mCurrentState = Game::GameState::IN_GAME;
+	}
+	mSoundSystem.PlayAudio(2, -1, -1);
+	//TODO: Save/Load Unit Position
+
+}
+
+bool Game::LoadSavedData()
+{
+	ifstream fin;
+	string text;
+	fin.open(mSaveDataName);
+	if (!fin.is_open())
+	{
+		cout << "Failed to load game data files" << endl;
+	}
+	while (!fin.eof())
+	{
+		fin >> text;
+		if (text == "NULL") 
+		{
+			return false;
+		}
+		if (text == "Difficulty:") 
+		{
+			fin >> mDifficulty;
+			switch (mDifficulty)
+			{
+			case 1:
+				mUnitManager.SetObstacleSpeed(mObstacleSpeed1);
+				break;
+			case 2:
+				mUnitManager.SetObstacleSpeed(mObstacleSpeed2);
+				break;
+			case 3:
+				mUnitManager.SetObstacleSpeed(mObstacleSpeed3);
+				break;
+			}
+		}
+		if (text == "Score:")
+		{
+			fin >> mScore;
+		}
+
+		if (text == "Obstacle:")
+		{
+			int x;
+			int y;
+			fin >> x;
+			fin >> y; 
+			mUnitManager.LoadObstacle(Vector2D(x, y));
+		}
+
+		if (text == "PlayerPosition:") 
+		{
+			int y;
+			fin >> y;
+			mUnitManager.CreatePlayer(mBufferManager.GetBuffer(mRocketFilename), y, mAnimTime, mPlayerSpeed, mPlayerWidth, mPlayerHeight);
+			return true;
+		}
+	}
+}
+
+void Game::LoadGame()
+{
+	mScore = 0;
+	switch (mDifficulty)
+	{
+		case 1:
+			mUnitManager.SetObstacleSpeed(mObstacleSpeed1);
+			break;
+		case 2:
+			mUnitManager.SetObstacleSpeed(mObstacleSpeed2);
+			break;
+		case 3:
+			mUnitManager.SetObstacleSpeed(mObstacleSpeed3);
+			break;
+	}
+	mLMBDown = false;
+	mUnitManager.CreatePlayer(mBufferManager.GetBuffer(mRocketFilename), mPlayerPos, mAnimTime, mPlayerSpeed, mPlayerWidth, mPlayerHeight);
+	for (int i = 0; i < 3; i++)
+	{
+		mUnitManager.SpawnObstacle();
+	}
+}
+
+void Game::LoadMainMenu()
+{
+	mScore = 0;
+	mUnitManager.CreateUnit(mBufferManager.GetBuffer(BUTTON_BUFFER), Vector2D((mDispWidth / 2 - mButtonWidth / 2), (100 - mButtonHeight / 2)), mButtonWidth, mButtonHeight, UIEvent::UIEventType::START_GAME);
+	mUnitManager.CreateUnit(mBufferManager.GetBuffer(BUTTON_BUFFER), Vector2D((mDispWidth / 2 - mButtonWidth / 2), (230 - mButtonHeight / 2)), mButtonWidth, mButtonHeight, UIEvent::UIEventType::SETTINGS_MENU);
+	mUnitManager.CreateUnit(mBufferManager.GetBuffer(BUTTON_BUFFER), Vector2D((mDispWidth / 2 - mButtonWidth / 2), (360 - mButtonHeight / 2)), mButtonWidth, mButtonHeight, UIEvent::UIEventType::EXIT_GAME);
+}
+
+void Game::LoadDifficultySelection()
+{
+	mUnitManager.CreateUnit(mBufferManager.GetBuffer(BUTTON_BUFFER), Vector2D((mDispWidth / 2 - mButtonWidth / 2), (100 - mButtonHeight / 2)), mButtonWidth, mButtonHeight, UIEvent::UIEventType::DIFFICULTY_1);
+	mUnitManager.CreateUnit(mBufferManager.GetBuffer(BUTTON_BUFFER), Vector2D((mDispWidth / 2 - mButtonWidth / 2), (230 - mButtonHeight / 2)), mButtonWidth, mButtonHeight, UIEvent::UIEventType::DIFFICULTY_2);
+	mUnitManager.CreateUnit(mBufferManager.GetBuffer(BUTTON_BUFFER), Vector2D((mDispWidth / 2 - mButtonWidth / 2), (360 - mButtonHeight / 2)), mButtonWidth, mButtonHeight, UIEvent::UIEventType::DIFFICULTY_3);
+}
+
+void Game::LoadDeathScreen()
+{
+	mScore = 0;
+	mUnitManager.CreateUnit(mBufferManager.GetBuffer(BUTTON_BUFFER), Vector2D((mDispWidth / 2 - mButtonWidth / 2), (150 - mButtonHeight / 2)), mButtonWidth, mButtonHeight, UIEvent::UIEventType::RESTART_GAME);
+	mUnitManager.CreateUnit(mBufferManager.GetBuffer(BUTTON_BUFFER), Vector2D((mDispWidth / 2 - mButtonWidth / 2), (280 - mButtonHeight / 2)), mButtonWidth, mButtonHeight, UIEvent::UIEventType::BACK_TO_MAIN_MENU);
+}
+
+void Game::LoadSettings() 
+{
+	mUnitManager.CreateUnit(mBufferManager.GetBuffer(BUTTON_BUFFER), Vector2D((mDispWidth / 2 - mButtonWidth / 2), (100 - mButtonHeight / 2)), mButtonWidth, mButtonHeight, UIEvent::UIEventType::LANGUAGE_OPTION);
+	mUnitManager.CreateUnit(mBufferManager.GetBuffer(BUTTON_BUFFER), Vector2D((mDispWidth / 2 - mButtonWidth / 2), (230 - mButtonHeight / 2)), mButtonWidth, mButtonHeight, UIEvent::UIEventType::AUDIO_TOGGLE);
+	mUnitManager.CreateUnit(mBufferManager.GetBuffer(BUTTON_BUFFER), Vector2D((mDispWidth / 2 - mButtonWidth / 2), (360 - mButtonHeight / 2)), mButtonWidth, mButtonHeight, UIEvent::UIEventType::BACK_TO_MAIN_MENU);
+}
+
+void Game::LoadLanguageSettings()
+{
+	mUnitManager.CreateUnit(mBufferManager.GetBuffer(BUTTON_BUFFER), Vector2D((mDispWidth / 2 - mButtonWidth / 2), (100 - mButtonHeight / 2)), mButtonWidth, mButtonHeight, UIEvent::UIEventType::LANG_1);
+	mUnitManager.CreateUnit(mBufferManager.GetBuffer(BUTTON_BUFFER), Vector2D((mDispWidth / 2 - mButtonWidth / 2), (230 - mButtonHeight / 2)), mButtonWidth, mButtonHeight, UIEvent::UIEventType::LANG_2);
+	mUnitManager.CreateUnit(mBufferManager.GetBuffer(BUTTON_BUFFER), Vector2D((mDispWidth / 2 - mButtonWidth / 2), (360 - mButtonHeight / 2)), mButtonWidth, mButtonHeight, UIEvent::UIEventType::LANG_3);
+}
+
+
+void Game::LoadAssetsAndData()
+{
+	ifstream fin; 
+	string text;
+	fin.open(ASSET_DATA_FILENAME);
+	if (!fin.is_open())
+	{
+		cout << "Failed to load game data files" << endl;
+	}
+	while (!fin.eof())
+	{
+		fin >> text;
+		//there is probably a better way to do this. I can't think of it.
+		if (text == "AssetPath:")
+		{
+			fin >> mAssetPath;
+		}
+		if (text == "RocketFile:")
+		{
+			fin >> mRocketFilename;
+		}
+		if (text == "Wall:")
+		{
+			fin >> mWallFilename;
+		}
+		if (text == "FontName:") 
+		{
+			fin >> mFontFilename;
+		}
+		if (text == "Background1:")
+		{
+			fin >> mBackground1;
+		}
+		if (text == "Background2:")
+		{
+			fin >> mBackground2;
+		}
+		if (text == "Background3:")
+		{
+			fin >> mBackground3;
+		}
+		if (text == "PlayerPosition:")
+		{
+			fin >> mPlayerPos;
+		}
+		if (text == "PlayerSpeed:")
+		{
+			fin >> mPlayerSpeed;
+		}
+		if (text == "ObsSpeed1:")
+		{
+			fin >> mObstacleSpeed1;
+		}
+		if (text == "ObsSpeed2:")
+		{
+			fin >> mObstacleSpeed2;
+		}
+		if (text == "ObsSpeed3:")
+		{
+			fin >> mObstacleSpeed3;
+		}
+		if (text == "UIFontSize:")
+		{
+			fin >> mUIFontSize;
+		}
+		if (text == "HudFontSize:")
+		{
+			fin >> mHUDFontSize;
+		}
+		if (text == "AnimTime:")
+		{
+			fin >> mAnimTime;
+		}
+		if (text == "TimeIncrement:")
+		{
+			fin >> mTimeIncrement;
+		}
+		if (text == "PlayerWidth:")
+		{
+			fin >> mPlayerWidth;
+		}
+		if (text == "PlayerHeight:")
+		{
+			fin >> mPlayerHeight;
+		}
+		if (text == "ObsWidth:")
+		{
+			fin >> mObstacleWidth;
+		}
+		if (text == "ObsHeight:")
+		{
+			fin >> mObstacleHeight;
+		}
+		if (text == "GateWidth:")
+		{
+			fin >> mGateWidth;
+		}
+		if (text == "GateHeight:")
+		{
+			fin >> mGateHeight;
+		}
+		if (text == "SpriteWidth:")
+		{
+			fin >> mSpriteWidth;
+		}
+		if (text == "SpriteHeight:")
+		{
+			fin >> mSpriteHeight;
+		}
+		if (text == "SleepTime:")
+		{
+			fin >> mSleep;
+		}
+		if (text == "DisplayWidth:")
+		{
+			fin >> mDispWidth;
+		}
+		if (text == "DisplayHeight:")
+		{
+			fin >> mDispHeight;
+		}
+		if (text == "ButtonWidth:")
+		{
+			fin >> mButtonWidth;
+		}
+		if (text == "ButtonHeight:")
+		{
+			fin >> mButtonHeight;
+		}
+		if (text == "EnglishLanguage:")
+		{
+			fin >> mLangFileNames[0];
+		}
+		if (text == "SpanishLanguage:")
+		{
+			fin >> mLangFileNames[1];
+		}
+		if (text == "PainLanguage:")
+		{
+			fin >> mLangFileNames[2];
+		}
+		if (text == "SavedData:")
+		{
+			fin >> mSaveDataName;
+		}
+		if (text == "PointNoise:")
+		{
+			fin >> mSoundPoint;
+		}
+		if (text == "DeathNoise:")
+		{
+			fin >> mSoundDeath;
+		}
+		if (text == "Music:")
+		{
+			fin >> mMusic;
+		}
+		if (text == "SoundPath:")
+		{
+			fin >> mSoundPath;
+		}
+	}
+	fin.close();
+}
+void Game::LoadLanguage(int lang)
+{
+	ifstream fin;
+	string text;
+	fin.open(mLangFileNames[lang]);
+	if (!fin.is_open())
+	{
+		cout << "Failed to load language" << endl;
+	}
+	while (!fin.eof()) 
+	{
+		fin >> text;
+		if (text == "PlayGame:")
+		{
+			getline(fin, mCurrentLanguage.playGame);
+			mCurrentLanguage.playGame.erase(0, 1);
+		}
+		if (text == "Settings:") 
+		{
+			getline(fin, mCurrentLanguage.settings);
+			mCurrentLanguage.settings.erase(0, 1);
+		}
+		if (text == "Language:")
+		{
+			getline(fin, mCurrentLanguage.language);
+			mCurrentLanguage.language.erase(0, 0);
+
+		}
+		if (text == "YouDied:")
+		{
+			getline(fin, mCurrentLanguage.youDied);
+			mCurrentLanguage.youDied.erase(0, 0);
+
+		}
+		if (text == "MainMenu:")
+		{
+			getline(fin, mCurrentLanguage.mainMenu);
+			mCurrentLanguage.mainMenu.erase(0, 0);
+
+		}
+		if (text == "ExitGame:")
+		{
+			getline(fin, mCurrentLanguage.exitGame);
+			mCurrentLanguage.exitGame.erase(0, 0);
+
+		}
+		if (text == "Restart:")
+		{
+			getline(fin, mCurrentLanguage.restart);
+			mCurrentLanguage.restart.erase(0, 0);
+
+		}
+		if (text == "Easy:")
+		{
+			getline(fin, mCurrentLanguage.easy);
+			mCurrentLanguage.easy.erase(0, 0);
+
+		}
+		if (text == "Normal:")
+		{
+			getline(fin, mCurrentLanguage.normal);
+			mCurrentLanguage.normal.erase(0, 0);
+
+		}
+		if (text == "Hard:")
+		{
+			getline(fin, mCurrentLanguage.hard);
+			mCurrentLanguage.hard.erase(0, 0);
+
+		}
+		if (text == "Sound:")
+		{
+			getline(fin, mCurrentLanguage.sound);
+			mCurrentLanguage.sound.erase(0, 0);
+
+		}
+		if (text == "On:")
+		{
+			getline(fin, mCurrentLanguage.on);
+			mCurrentLanguage.on.erase(0, 0);
+
+		}
+		if (text == "Off:")
+		{
+			getline(fin, mCurrentLanguage.off);
+			mCurrentLanguage.off.erase(0, 0);
+		}
+		if (text == "Resume:")
+		{
+			getline(fin, mCurrentLanguage.resume);
+			mCurrentLanguage.resume.erase(0, 0);
+		}
+	}
+	fin.close();
+}
+void Game::handleEvent(const Event& event)
+{
+	if (event.getType() == INPUT_EVENT)
+	{
+		const InputEvent& inputEvent = static_cast<const InputEvent&>(event);
+	}
+	if (event.getType() == MOUSE_CLICK_EVENT) 
+	{
+		const MouseEvent& mouseEvent = static_cast<const MouseEvent&>(event);
+		if (mCurrentState == Game::GameState::IN_GAME)
+		{
+			switch (mouseEvent.GetKeyCode())
+			{
+			case 0:
+				mLMBDown = true;
+				break;
+			case 1:
+				mLMBDown = false;
+				break;
+			}
+		}
+		else
+		{
+			if (mouseEvent.GetKeyCode() == 0 && mLMBDown == false)
+			{
+				mLMBDown = true;
+				mUnitManager.UpdateUI(mInputSystem.GetMousePosition());
+			}
+			else if(mouseEvent.GetKeyCode() == 1)
+			{
+				mLMBDown = false;
+			}
+		}
+
+	}
+	//man I don't got time to make this prettier
+	if (event.getType() == UI_EVENT) 
+	{
+		const UIEvent& uiEvent = static_cast<const UIEvent&>(event);
+		switch (uiEvent.GetEventType()) 
+		{
+			case static_cast<int>(UIEvent::UIEventType::START_GAME) :
+				mUnitManager.CleanUp();
+				LoadDifficultySelection();
+
+				mCurrentState = Game::GameState::DIFF_SELECT;
+				break;
+			case static_cast<int>(UIEvent::UIEventType::DIFFICULTY_1) :
+				mUnitManager.CleanUp();
+				mDifficulty = 1;
+				LoadGame();
+				mCurrentState = Game::GameState::IN_GAME;
+				break;
+			case static_cast<int>(UIEvent::UIEventType::DIFFICULTY_2) :
+				mUnitManager.CleanUp();
+				mDifficulty = 2;
+				LoadGame();
+				mCurrentState = Game::GameState::IN_GAME;
+				break;
+			case static_cast<int>(UIEvent::UIEventType::DIFFICULTY_3) :
+				mUnitManager.CleanUp();
+				mDifficulty = 3;
+				LoadGame();
+				mCurrentState = Game::GameState::IN_GAME;
+				break;
+			case static_cast<int>(UIEvent::UIEventType::BACK_TO_MAIN_MENU) :
+				mUnitManager.CleanUp();
+				mLMBDown = false;
+				mCurrentState = Game::GameState::MAIN_MENU;
+				LoadMainMenu();
+				break;
+			case static_cast<int>(UIEvent::UIEventType::RESTART_GAME) :
+				mUnitManager.CleanUp();
+				mLMBDown = false;
+				mCurrentState = Game::GameState::IN_GAME;
+				LoadGame();
+				break;
+			case static_cast<int>(UIEvent::UIEventType::SETTINGS_MENU) :
+				mUnitManager.CleanUp();
+				mLMBDown = false;
+				mCurrentState = Game::GameState::SETTINGS;
+				LoadSettings();
+				break;
+			case static_cast<int>(UIEvent::UIEventType::LANGUAGE_OPTION) :
+				mUnitManager.CleanUp();
+				mLMBDown = false;
+				mCurrentState = Game::GameState::LANGUAGE;
+				LoadLanguageSettings();
+				break;
+			case static_cast<int>(UIEvent::UIEventType::LANG_1) :
+				mUnitManager.CleanUp();
+				LoadLanguage(0);
+				mCurrentState = Game::GameState::MAIN_MENU;
+				LoadMainMenu();
+				break;
+			case static_cast<int>(UIEvent::UIEventType::LANG_2) :
+				mUnitManager.CleanUp();
+				LoadLanguage(1);
+				mCurrentState = Game::GameState::MAIN_MENU;
+				LoadMainMenu();
+				break;
+			case static_cast<int>(UIEvent::UIEventType::LANG_3) :
+				mUnitManager.CleanUp();
+				LoadLanguage(2);
+				mCurrentState = Game::GameState::MAIN_MENU;
+				LoadMainMenu();
+				break;
+			case static_cast<int>(UIEvent::UIEventType::EXIT_GAME) :
+				leave = true;
+				break;
+			case static_cast<int>(UIEvent::UIEventType::RESUME_GAME) :
+				PauseGame();
+				break;
+			case static_cast<int>(UIEvent::UIEventType::AUDIO_TOGGLE) :
+				mHasAudio = !mHasAudio;
+				mSoundSystem.ToggleAudio(mHasAudio);
+				break;
+		}
+	}
+}
+
+void Game::AddScore()
+{
+	mScore++;
+	mSoundSystem.PlayAudio(0);
+
+}
+
+void Game::PauseGame()
+{
+	if (mCurrentState == Game::GameState::PAUSE_SCREEN) 
+	{
+		mCurrentState = Game::GameState::IN_GAME;
+		for (int i = 0; i < 3; i++) 
+		{
+			mUnitManager.DestroyUnit(mUnitManager.GetLastUnit());
+		}
+	}
+	else if (mCurrentState == Game::GameState::IN_GAME)
+	{
+		mCurrentState = Game::GameState::PAUSE_SCREEN;
+		mUnitManager.CreateUnit(mBufferManager.GetBuffer(BUTTON_BUFFER), Vector2D((mDispWidth / 2 - mButtonWidth / 2), (100 - mButtonHeight / 2)), mButtonWidth, mButtonHeight, UIEvent::UIEventType::RESUME_GAME);
+		mUnitManager.CreateUnit(mBufferManager.GetBuffer(BUTTON_BUFFER), Vector2D((mDispWidth / 2 - mButtonWidth / 2), (230 - mButtonHeight / 2)), mButtonWidth, mButtonHeight, UIEvent::UIEventType::BACK_TO_MAIN_MENU);
+		mUnitManager.CreateUnit(mBufferManager.GetBuffer(BUTTON_BUFFER), Vector2D((mDispWidth / 2 - mButtonWidth / 2), (360 - mButtonHeight / 2)), mButtonWidth, mButtonHeight, UIEvent::UIEventType::EXIT_GAME);
+	}
+}
+
+void Game::DoLoop() 
+{
+	Timer time;
+	PerformanceTracker* pTracker = new PerformanceTracker();
+	double deltaTime = mSleep;	
+	while (!leave)
+	{
+		pTracker->clearTracker("loop");
+		pTracker->startTracking("loop");
+		time.start();
+		mInputSystem.InputEventLoop();
+		mpGraphSystem->ClearForNextFrame();
+		//cout << mInputSystem.GetMousePosition() << endl;
+		if (mCurrentState == Game::GameState::IN_GAME || mCurrentState == Game::GameState::DEATH_SCREEN || mCurrentState == Game::GameState::PAUSE_SCREEN)
+		{
+			switch (mDifficulty)
+			{
+			case 1:
+				mpGraphSystem->Draw(mBufferManager.GetBuffer(mBackground1), Vector2D(0, 0));
+				break;
+			case 2:
+				mpGraphSystem->Draw(mBufferManager.GetBuffer(mBackground2), Vector2D(0, 0));
+				break;
+			case 3:
+				mpGraphSystem->Draw(mBufferManager.GetBuffer(mBackground3), Vector2D(0, 0));
+				break;
+			}
+			if (mCurrentState == Game::GameState::IN_GAME) 
+			{
+				mUnitManager.GetPlayer()->SetFlying(mLMBDown);
+				mUnitManager.Update((float)deltaTime);
+
+			}
+		}
+		//this is exceptionally messy. Since I want text rendered in front of the units, I need to call unitmanager.draw before I call text drawing.
+		//In a perfect world, I would have a UI Manager handle these updates. 
+		//That would, however, require refrencing about 20 things from Game and I just dont have the energy for that right now.
+		mUnitManager.Draw(mpGraphSystem);
+		if (mCurrentState == Game::GameState::IN_GAME)
+		{
+			Vector2D textSize = mpGraphSystem->GetCenterText(mpFont, to_string(mScore));
+			mpGraphSystem->WriteText(NULL, Vector2D((mDispWidth / 2 - textSize.getX() / 2), (0 + textSize.getY() / 2)), mpFont, Color(0, 0, 0), to_string(mScore));
+		}
+
+		if (mCurrentState == Game::GameState::MAIN_MENU)
+		{
+			Vector2D textSize = mpGraphSystem->GetCenterText(mpFont, mCurrentLanguage.playGame);
+			mpGraphSystem->WriteText(NULL, Vector2D((mDispWidth / 2 - textSize.getX() / 2), (100 - textSize.getY() / 2)), mpFont, Color(0, 0, 0), mCurrentLanguage.playGame);
+			textSize = mpGraphSystem->GetCenterText(mpFont, mCurrentLanguage.settings);
+			mpGraphSystem->WriteText(NULL, Vector2D((mDispWidth / 2 - textSize.getX() / 2), (230 - textSize.getY() / 2)), mpFont, Color(0, 0, 0), mCurrentLanguage.settings);
+			textSize = mpGraphSystem->GetCenterText(mpFont, mCurrentLanguage.exitGame);
+			mpGraphSystem->WriteText(NULL, Vector2D((mDispWidth / 2 - textSize.getX() / 2), (360 - textSize.getY() / 2)), mpFont, Color(0, 0, 0), mCurrentLanguage.exitGame);
+		}
+		if (mCurrentState == Game::GameState::DIFF_SELECT)
+		{
+			Vector2D textSize = mpGraphSystem->GetCenterText(mpFont, mCurrentLanguage.easy);
+			mpGraphSystem->WriteText(NULL, Vector2D((mDispWidth / 2 - textSize.getX() / 2), (100 - textSize.getY() / 2)), mpFont, Color(0, 0, 0), mCurrentLanguage.easy);
+			textSize = mpGraphSystem->GetCenterText(mpFont, mCurrentLanguage.normal);
+			mpGraphSystem->WriteText(NULL, Vector2D((mDispWidth / 2 - textSize.getX() / 2), (230 - textSize.getY() / 2)), mpFont, Color(0, 0, 0), mCurrentLanguage.normal);
+			textSize = mpGraphSystem->GetCenterText(mpFont, mCurrentLanguage.hard);
+			mpGraphSystem->WriteText(NULL, Vector2D((mDispWidth / 2 - textSize.getX() / 2), (360 - textSize.getY() / 2)), mpFont, Color(0, 0, 0), mCurrentLanguage.hard);
+		}
+		if (mCurrentState == Game::GameState::DEATH_SCREEN)
+		{
+			Vector2D textSize = mpGraphSystem->GetCenterText(mpFont, mCurrentLanguage.restart);
+			mpGraphSystem->WriteText(NULL, Vector2D((mDispWidth / 2 - textSize.getX() / 2), (150 - textSize.getY() / 2)), mpFont, Color(0, 0, 0), mCurrentLanguage.restart);
+			textSize = mpGraphSystem->GetCenterText(mpFont, mCurrentLanguage.mainMenu);
+			mpGraphSystem->WriteText(NULL, Vector2D((mDispWidth / 2 - textSize.getX() / 2), (280 - textSize.getY() / 2)), mpFont, Color(0, 0, 0), mCurrentLanguage.mainMenu);
+			textSize = mpGraphSystem->GetCenterText(mpFont, mCurrentLanguage.youDied);
+			mpGraphSystem->WriteText(NULL, Vector2D((mDispWidth / 2 - textSize.getX() / 2), (60 - textSize.getY() / 2)), mpFont, Color(150, 0, 0), mCurrentLanguage.youDied);
+		}
+		if (mCurrentState == Game::GameState::SETTINGS)
+		{
+			Vector2D textSize = mpGraphSystem->GetCenterText(mpFont, mCurrentLanguage.language);
+			mpGraphSystem->WriteText(NULL, Vector2D((mDispWidth / 2 - textSize.getX() / 2), (100 - textSize.getY() / 2)), mpFont, Color(0, 0, 0), mCurrentLanguage.language);
+			if (mHasAudio) 
+			{
+				textSize = mpGraphSystem->GetCenterText(mpFont, mCurrentLanguage.sound + " " + mCurrentLanguage.on);
+				mpGraphSystem->WriteText(NULL, Vector2D((mDispWidth / 2 - textSize.getX() / 2), (230 - textSize.getY() / 2)), mpFont, Color(0, 0, 0), mCurrentLanguage.sound + mCurrentLanguage.on);
+			}
+			else
+			{
+				textSize = mpGraphSystem->GetCenterText(mpFont, mCurrentLanguage.sound + " " + mCurrentLanguage.off);
+				mpGraphSystem->WriteText(NULL, Vector2D((mDispWidth / 2 - textSize.getX() / 2), (230 - textSize.getY() / 2)), mpFont, Color(0, 0, 0), mCurrentLanguage.sound + mCurrentLanguage.off);
+			}
+			
+			textSize = mpGraphSystem->GetCenterText(mpFont, mCurrentLanguage.mainMenu);
+			mpGraphSystem->WriteText(NULL, Vector2D((mDispWidth / 2 - textSize.getX() / 2), (360 - textSize.getY() / 2)), mpFont, Color(0, 0, 0), mCurrentLanguage.mainMenu);
+		}
+		if (mCurrentState == Game::GameState::LANGUAGE)
+		{
+			//TODO: Read Language Names
+			Vector2D textSize = mpGraphSystem->GetCenterText(mpFont, "ENGLISH");
+			mpGraphSystem->WriteText(NULL, Vector2D((mDispWidth / 2 - textSize.getX() / 2), (100 - textSize.getY() / 2)), mpFont, Color(0, 0, 0), "ENGLISH");
+			textSize = mpGraphSystem->GetCenterText(mpFont, "ESPANOL");
+			mpGraphSystem->WriteText(NULL, Vector2D((mDispWidth / 2 - textSize.getX() / 2), (230 - textSize.getY() / 2)), mpFont, Color(0, 0, 0), "ESPANOL");
+			textSize = mpGraphSystem->GetCenterText(mpFont, "PAIN");
+			mpGraphSystem->WriteText(NULL, Vector2D((mDispWidth / 2 - textSize.getX() / 2), (360 - textSize.getY() / 2)), mpFont, Color(0, 0, 0), "PAIN");
+		}
+		if (mCurrentState == Game::GameState::PAUSE_SCREEN)
+		{
+			Vector2D textSize = mpGraphSystem->GetCenterText(mpFont, mCurrentLanguage.resume);
+			mpGraphSystem->WriteText(NULL, Vector2D((mDispWidth / 2 - textSize.getX() / 2), (100 - textSize.getY() / 2)), mpFont, Color(0, 0, 0), mCurrentLanguage.resume);
+			textSize = mpGraphSystem->GetCenterText(mpFont, mCurrentLanguage.mainMenu);
+			mpGraphSystem->WriteText(NULL, Vector2D((mDispWidth / 2 - textSize.getX() / 2), (230 - textSize.getY() / 2)), mpFont, Color(0, 0, 0), mCurrentLanguage.mainMenu);
+			textSize = mpGraphSystem->GetCenterText(mpFont, mCurrentLanguage.exitGame);
+			mpGraphSystem->WriteText(NULL, Vector2D((mDispWidth / 2 - textSize.getX() / 2), (360 - textSize.getY() / 2)), mpFont, Color(0, 0, 0), mCurrentLanguage.exitGame);
+		}
+		time.sleepUntilElapsed(mSleep);
+		mpGraphSystem->Flip();
+		//cout << pTracker->getElapsedTime("loop") << endl;
+		pTracker->stopTracking("loop");
+	}
+	delete pTracker;
+}
+
+void Game::SaveData()
+{
+	ofstream output(mSaveDataName, ios::trunc);
+	if (mCurrentState == Game::GameState::IN_GAME || mCurrentState == Game::GameState::PAUSE_SCREEN)
+	{
+		output << "Difficulty: " << mDifficulty << endl;
+		output << "Score: " << mScore << endl;
+		for (int i = 0; i < 3; i++) 
+		{
+			output << "Obstacle: " << (int)mUnitManager.GetObstaclePosition(i + 1).getX() << " " << (int)mUnitManager.GetObstaclePosition(i + 1).getY() << endl;
+		}
+		output << "PlayerPosition: " << (int)mUnitManager.GetPlayer()->GetPosition().getY();
+	}
+	else
+	{
+		output << "NULL";
+	}
+}
+
+
+GraphicsBuffer* Game::GetBuffer(string index)
+{
+	return mBufferManager.GetBuffer(index);
+}
+
+
+GraphicsSystem* Game::GetGraphicsSystem()
+{
+	return mpGraphSystem;
+}
+
+int Game::GetDisplayHeight()
+{
+	return mDispHeight;
+}
+
+int Game::GetDisplayWidth()
+{
+	return mDispWidth;
+}
+
+int Game::GetSpriteHeight()
+{
+	return mSpriteHeight;
+}
+
+int Game::GetSpriteWidth()
+{
+	return mSpriteWidth;
+}
+
+
+void Game::PlayerDeath()
+{
+	mSoundSystem.PlayAudio(1);
+	mCurrentState = Game::GameState::DEATH_SCREEN;
+	LoadDeathScreen();
+}
+
+
+void Game::CleanUp()
+{
+	SaveData();
+	mpGraphSystem->CleanUp();
+	mBufferManager.CleanUp();
+	mUnitManager.CleanUp();
+	mInputSystem.CleanUp();
+	delete mHUD;
+	mHUD = nullptr;
+	delete mpFont;
+	delete mpFontSmall;
+	delete mpGraphSystem;
+	TTF_Quit();
+	SDL_Quit();
+}

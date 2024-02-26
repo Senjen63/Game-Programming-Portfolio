@@ -1,0 +1,18 @@
+#pragma once
+#include "GameEvent.h"
+
+class InputEvents : public GameEvent
+{
+private:
+
+	int mKeyCode;
+
+public:
+
+	InputEvents(int keyCode);
+
+	~InputEvents();
+
+	int getKeyCode() const { return mKeyCode; }
+
+};

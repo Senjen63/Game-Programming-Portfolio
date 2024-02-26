@@ -1,0 +1,38 @@
+﻿//     -------------------------------------------------------------------------
+//     Final Project
+//         GraphicsBuffer.hpp
+//     
+//             Created:
+//                 06-04-2022
+//             Author(s):
+//                 Aven Presseisen
+//     -------------------------------------------------------------------------
+
+#pragma once
+
+#include <SDL.h>
+
+#include "Color.hpp"
+#include "Font.hpp"
+
+class GraphicsBuffer
+{
+    friend class Sprite;
+    friend class GraphicsSystem;
+
+    SDL_Texture * mpTexture;
+
+    int mWidth;
+    int mHeight;
+
+public:
+    GraphicsBuffer();
+    GraphicsBuffer( const char * pFilename, const GraphicsSystem * pSystem );
+    //GraphicsBuffer( const Font * pFont, const char * pText, const Color & color, const GraphicsSystem * pSystem );
+    ~GraphicsBuffer();
+
+    bool loadImage( const char * pFilename, const GraphicsSystem * pSystem );
+
+    [[nodiscard]] int getWidth() const;
+    [[nodiscard]] int getHeight() const;
+};

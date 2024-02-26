@@ -1,0 +1,507 @@
+#include "DataManager.h"
+
+DataManager::DataManager()
+{
+	/*mLocation = new Vector2D[mCount];
+	mLocationMedium = new Vector2D[mCountMedium];
+	mLocationHard = new Vector2D[mCountHard];*/
+	//mFriendsMoods = new string[mNumOfMoods];
+}
+
+void DataManager::cleanUp()
+{
+	//delete[] mLocation;
+	//delete[] mLocationMedium;
+	//delete[] mLocationHard;
+
+
+	////delete[] mFriendsMoods;
+
+	//mLocation = NULL;
+	//mLocationMedium = NULL;
+	//mLocationHard = NULL;
+	//mFriendsMoods = NULL;
+
+	mCount = 0;
+	mCountMedium = 0;
+	mCountHard = 0;
+	mNumOfMoods = 0;
+}
+
+void DataManager::LoadingSpriteInfo(string textFile)
+{
+	string xLocation;
+	string yLocation;
+	string discard;
+	string friendMood;
+
+	cout << textFile << endl;
+
+	ifstream input;
+	input.open(textFile);
+
+	if (input.good())
+	{
+		while (!input.eof())
+		{
+			getline(input, mFileKeyName);
+
+			//TREE
+			if (mFileKeyName == TREE_DATA)
+			{
+				input >> discard;
+				input >> xLocation;
+				input >> yLocation;
+
+				if (EASY_FILE == textFile)
+				{
+					mLocation[0] = Vector2D(stoi(xLocation), stoi(yLocation));
+					mCount++;
+				}
+				if (MEDIUM_FILE == textFile)
+				{
+					mLocationMedium[0] = Vector2D(stoi(xLocation), stoi(yLocation));
+					mCountMedium++;
+				}
+				if (HARD_FILE == textFile)
+				{
+					mLocationHard[0] = Vector2D(stoi(xLocation), stoi(yLocation));
+					mCountHard++;
+				}
+			}
+
+			//Tobb
+			if (mFileKeyName == TOBB_DATA)
+			{
+				input >> xLocation;
+				input >> yLocation;
+
+				if (EASY_FILE == textFile)
+				{
+					mLocation[mCount] = Vector2D(stoi(xLocation), stoi(yLocation));
+					mCount++;
+				}
+				if (MEDIUM_FILE == textFile)
+				{
+					mLocationMedium[mCountMedium] = Vector2D(stoi(xLocation), stoi(yLocation));
+					mCountMedium++;
+				}
+				if (HARD_FILE == textFile)
+				{
+					mLocationHard[mCountHard] = Vector2D(stoi(xLocation), stoi(yLocation));
+					mCountHard++;
+				}
+			}
+
+			//BABB
+			if (mFileKeyName == BABB_DATA)
+			{
+				input >> mNumOfObjects;
+
+				for (int i = 0; i < stoi(mNumOfObjects); i++)
+				{
+					input >> discard;
+					input >> xLocation;
+					input >> yLocation;
+
+					if (EASY_FILE == textFile)
+					{
+						mLocation[mCount] = Vector2D(stoi(xLocation), stoi(yLocation));
+						cout << "babb index in mLocation: " << (mCount) << endl;
+						mCount++;
+					}
+					if (MEDIUM_FILE == textFile)
+					{
+						mLocationMedium[mCountMedium] = Vector2D(stoi(xLocation), stoi(yLocation));
+						cout << "babb index in mCountMedium: " << (mCountMedium) << endl;
+						mCountMedium++;
+					}
+					if (HARD_FILE == textFile)
+					{
+						mLocationHard[mCountHard] = Vector2D(stoi(xLocation), stoi(yLocation));
+						cout << "babb index in mLocationHard: " << (mCountHard) << endl;
+						mCountHard++;
+					}
+				}
+				cout << endl;
+			}
+
+			//FRIEND POS
+			if (mFileKeyName == FRIEND_POS_DATA)
+			{
+				input >> mNumOfObjects;
+
+				cout << mNumOfObjects << endl;
+				int num = stoi(mNumOfObjects);
+
+				for (int i = 0; i < num; i++)
+				{
+					input >> discard;
+					input >> xLocation;
+					input >> yLocation;
+
+					if (EASY_FILE == textFile)
+					{
+						mLocation[mCount] = Vector2D(stoi(xLocation), stoi(yLocation));
+						cout << "Friend index in mLocation: " << (mCount) << endl;
+						cout << "Friend " << (i + 1) << " Locaiton: (" << mLocation[mCount] << ")" << endl;
+						mCount++;
+					}
+					if (MEDIUM_FILE == textFile)
+					{
+						mLocationMedium[mCountMedium] = Vector2D(stoi(xLocation), stoi(yLocation));
+						cout << "Friend index in mLocationMedium: " << (mCountMedium) << endl;
+						cout << "Friend " << (i + 1) << " Locaiton: (" << mLocationMedium[mCountMedium] << ")" << endl;
+						mCountMedium++;
+					}
+					if (HARD_FILE == textFile)
+					{
+						
+						mLocationHard[mCountHard] = Vector2D(stoi(xLocation), stoi(yLocation));
+						cout << "Friend index in mLocationHard: " << (mCountHard) << endl;
+						cout << "Friend " << (i + 1) << " Locaiton: (" << mLocationHard[mCountHard] << ")" << endl;
+						mCountHard++;
+					}
+				}
+				cout << endl;
+			}
+		}
+	}
+	input.close();
+}
+
+string DataManager::getFile(string textFile, const string KEY_NAME)
+{
+	ifstream input;
+	input.open(textFile);
+
+	if (input.good())
+	{
+		while (!input.eof())
+		{
+			input >> mFileKeyName;
+			
+			if (mFileKeyName == KEY_NAME)
+			{
+				input >> mFilePath;
+				break;
+			}
+		}
+	}
+	else
+	{
+		cout << endl << "Input failed to run text File: getFile()" << endl;
+	}
+	input.close();
+
+	return mFilePath;
+}
+
+string DataManager::getLevelFileValue(string textFile, string key)
+{
+	string value;
+
+	ifstream input;
+	input.open(textFile);
+
+	if (input.good())
+	{
+		while (!input.eof())
+		{
+			input >> mFileKeyName;
+
+			if (mFileKeyName == key)
+			{
+				input >> value;
+				break;
+			}
+
+		}
+	}
+	else
+	{
+		cout << endl << "Input failed to run text File: getLevelFileValue()" << endl;
+	}
+	input.close();
+
+	return value;
+}
+
+Vector2D DataManager::getLocationTree(int num)
+{
+	return mLocationHard[num];
+}
+
+Vector2D DataManager::getLocationFriend(string levelDifficulty, int num)
+{
+	string easy = "easy";
+	string medium = "medium";
+	string hard = "hard";
+
+	if (levelDifficulty == easy)
+	{
+		return mLocation[num];
+	}
+
+	if (levelDifficulty == medium)
+	{
+		return mLocationMedium[num];
+	}
+
+	if (levelDifficulty == hard)
+	{
+		return mLocationHard[num];
+	}
+}
+
+Vector2D DataManager::getLocationTobb(string levelDifficulty, int num)
+{
+	string easy = "easy";
+	string medium = "medium";
+	string hard = "hard";
+
+	if (levelDifficulty == easy)
+	{
+		return mLocation[num];
+	}
+
+	if (levelDifficulty == medium)
+	{
+		return mLocationMedium[num];
+	}
+
+	if (levelDifficulty == hard)
+	{
+		return mLocationHard[num];
+	}
+}
+
+Vector2D DataManager::getLocationBabb(string levelDifficulty, int num)
+{
+	string easy = "easy";
+	string medium = "medium";
+	string hard = "hard";
+
+	if (levelDifficulty == easy)
+	{
+		return mLocation[num];
+	}
+
+	if (levelDifficulty == medium)
+	{
+		return mLocationMedium[num];
+	}
+
+	if (levelDifficulty == hard)
+	{
+		return mLocationHard[num];
+	}
+}
+
+int DataManager::getFriendMood(string levelDifficulty)
+{
+
+	string easy = "easy";
+	string medium = "medium";
+	string hard = "hard";
+
+	int meh = 1;
+	int sad = 2; 
+
+	if (levelDifficulty == easy)
+	{
+		return meh;
+	}
+
+	if (levelDifficulty == medium)
+	{
+		return sad;
+	}
+
+	if (levelDifficulty == hard)
+	{
+		return sad;
+	}
+
+	return 0;
+}
+
+void DataManager::saveGame(string levelDifficulty, int NumOfFriends, FriendManager& friendManager)
+{
+	string easy = "easy";
+	string medium = "medium";
+	string hard = "hard";
+
+	int meh = 1;
+	int sad = 2;
+
+	ofstream output; 
+	output.open(SAVED_DATA);
+
+	//FRIEND STATE NEEDS TO BE ADDED
+	if (output.good())
+	{
+		//Needs to also write friend state
+		if (levelDifficulty == easy)
+		{
+			output << easy << endl;
+
+			output << FRIEND_POS_DATA << endl;
+			output << NumOfFriends << endl;
+
+			for (int i = 0; i < NumOfFriends; i++)
+			{
+				output << mLocation[i + 3].getX() << " " << mLocation[i + 3].getY() << endl;
+			}
+
+			output << FRIEND_STATE_DATA << endl;
+			output << NumOfFriends << endl;
+			for (int i = 0; i < NumOfFriends; i++)
+			{
+				cout << "Friend #" << i << "'s mood is: " << friendManager.getFriendMood(i) << endl;
+				output << friendManager.getFriendMood(i) << endl;
+			}
+		}
+
+		if (levelDifficulty == medium)
+		{
+			output << medium << endl;
+
+			output << FRIEND_POS_DATA << endl;
+			output << NumOfFriends << endl;
+
+			for (int i = 0; i < NumOfFriends; i++)
+			{
+				output << mLocationMedium[i + 3].getX() << " " <<
+					mLocationMedium[i + 3].getY() << endl;
+			}
+
+			output << FRIEND_STATE_DATA << endl;
+			output << NumOfFriends << endl;
+			for (int i = 0; i < NumOfFriends; i++)
+			{
+				cout << "Friend #" << i << "'s mood is: " << friendManager.getFriendMood(i) << endl;
+				output << friendManager.getFriendMood(i) << endl;
+			}
+		}
+
+		if (levelDifficulty == hard)
+		{
+			output << hard << endl;
+
+			output << FRIEND_POS_DATA << endl;
+			output << NumOfFriends << endl;
+
+			for (int i = 0; i < NumOfFriends; i++)
+			{
+				output << mLocationHard[i + 3].getX() << " " <<
+					mLocationHard[i + 3].getY() << endl;
+			}
+
+			output << FRIEND_STATE_DATA << endl;
+			output << NumOfFriends << endl;
+			for (int i = 0; i < NumOfFriends; i++)
+			{
+				cout << "Friend #" << i << "'s mood is: " << friendManager.getFriendMood(i) << endl;
+				output << friendManager.getFriendMood(i) << endl;
+			}
+		}
+	}
+
+	output.close();
+}
+
+Vector2D DataManager::getSavedLocation(int index)
+{
+	string discard;
+	string keyWord; 
+	int amountOfFriends = 0;
+
+	string xLoc;
+	string yLoc;
+	Vector2D savedLoc = Vector2D(0, 0);
+
+	ifstream input;
+	input.open(SAVED_DATA);
+
+	if (input.good())
+	{
+		input >> discard;
+		input >> keyWord;
+
+		if (keyWord == FRIEND_POS_DATA)
+		{
+			input >> keyWord;
+			amountOfFriends = stoi(keyWord);
+
+			while (amountOfFriends > 0)
+			{
+				input >> xLoc;
+				input >> yLoc;
+
+				//index starts at 0
+				if (amountOfFriends - 1 == index)
+				{
+					savedLoc = Vector2D(stoi(xLoc), stoi(yLoc));
+					input.close();
+					return savedLoc;
+				}
+
+				amountOfFriends -= 1;
+			}
+		}
+	}
+	else
+	{
+		cout << "Couldn't open SaveData file: getSavedLocation()" << endl;
+	}
+	
+	input.close();
+	return Vector2D();
+}
+
+int DataManager::getFriendSavedMood(int index)
+{
+	string keyWord;
+	string num;
+	int numOfFriends;
+
+	int mood;
+	string moodState;
+
+	ifstream input;
+	input.open(SAVED_DATA);
+
+	if (input.good())
+	{
+		while (!input.eof())
+		{
+			input >> keyWord;
+
+			if (keyWord == FRIEND_STATE_DATA)
+			{
+				input >> num;
+				numOfFriends = stoi(num);
+
+				while (numOfFriends > 0)
+				{
+					input >> moodState;
+
+					if (numOfFriends - 1 == index)
+					{
+						mood = stoi(moodState);
+						return mood;
+					}
+					numOfFriends -= 1;
+				}
+			}
+		}
+	}
+	else
+	{
+		cout << "Couldnt get saved Mood: getFriendSavedMood()" << endl;
+	}
+
+	input.close();
+	return 0;
+}

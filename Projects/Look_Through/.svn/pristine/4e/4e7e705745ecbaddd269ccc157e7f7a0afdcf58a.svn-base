@@ -1,0 +1,20 @@
+#pragma once
+#include "InputEvent.h"
+
+enum class KeyCode;
+
+class KeyboardInputEvent :  public InputEvent
+{
+public:
+
+	KeyboardInputEvent(const KeyCode& key)
+		: InputEvent(InputEventType::KEYBOARD_INPUT_EVENT), mKey(key) {};
+	~KeyboardInputEvent() {};
+
+	inline KeyCode getKey() const { return mKey; };
+
+private:
+
+	KeyCode mKey;
+};
+

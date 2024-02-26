@@ -1,0 +1,11 @@
+//BP
+#include "GameScore.h"
+
+GameScore::GameScore(int playerScore) : HUDEvents((HUDEventVariations) PLAYER_SCORE)
+{
+    mCurrentScore = playerScore;
+}
+
+GameScore::~GameScore()
+{
+}

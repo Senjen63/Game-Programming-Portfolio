@@ -1,0 +1,53 @@
+#pragma once
+
+#include <vector>
+#include <Trackable.h>
+#include "Vector2D.h"
+#include "Animation.h"
+#include "UnitManager.h"
+#include "SoundEffect.h"
+
+using namespace std;
+
+class Unit;
+class UnitManager;
+
+class ShotManager : public UnitManager
+{
+		const string FILE_PATH = "shot_man_data.txt";
+
+		double mCurrentTime;
+		double mReload;
+		float mBulletSpeed;
+
+		int mOrigin;
+		int mMove;
+
+		bool mCanShoot;
+
+		string mLaunchPath = "shot_sound.wav";
+
+	public:
+		ShotManager();
+		ShotManager(int size);
+		~ShotManager();
+		void activateUnit(Vector2D pos) override;
+
+		void createAndAddUnit(Vector2D location, Animation, Animation altAnimation) override;
+		void createAndAddUnit(Vector2D location, Animation) override;
+		void updateAll(double) override;
+		void deallocate();
+
+		void detectCollisions(vector<Unit*> pUnArr) override;
+
+		double getCurrent() { return mCurrentTime; }
+		double getReload() { return mReload; }
+
+		bool getCanShoot() { return mCanShoot; }
+
+		void setTime(float timeUsed) { mCurrentTime = timeUsed; }
+		void setReload(double reload) { mReload = reload; }
+		void setSpeed(float speed);
+
+		void setCanShoot(bool shoot) { mCanShoot = shoot; }
+};

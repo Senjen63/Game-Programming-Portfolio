@@ -1,0 +1,45 @@
+#pragma once
+#include <allegro5/allegro.h>
+#include <allegro5/allegro_font.h>
+#include <allegro5/allegro_ttf.h>
+#include <allegro5/allegro_audio.h>
+#include <allegro5/allegro_acodec.h>
+#include <allegro5/allegro_image.h>
+#include <allegro5/allegro_primitives.h>
+
+#include <PerformanceTracker.h>
+#include <MemoryTracker.h>
+
+#include "Color.h"
+
+
+using namespace std;
+
+class GraphicsBuffer : public Trackable
+{
+	friend class GraphicsSystem;
+	friend class GraphicsBufferManager;
+	friend class Animation;
+public:
+	
+	//Constructors
+	GraphicsBuffer();
+	GraphicsBuffer(int height, int width);
+	GraphicsBuffer(int height, int width, Color color);
+	GraphicsBuffer(string fileName);
+	GraphicsBuffer(ALLEGRO_BITMAP* pBitmap);
+	//Destructor
+	~GraphicsBuffer();
+
+	//Accessors
+	int getHeight();
+	int getWidth();
+
+private:
+	
+	ALLEGRO_BITMAP* getBitmap();
+	ALLEGRO_BITMAP* mpBitmap;
+	const int DEFAULT_HEIGHT = 600;
+	const int DEFAULT_WIDTH = 600;
+	bool mHasBitmap;
+};

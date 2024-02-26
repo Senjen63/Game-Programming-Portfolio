@@ -1,0 +1,32 @@
+#pragma once
+
+#include <SFML/Graphics.hpp>
+#include <string>
+
+#include "Font.h"
+#include "Color.h"
+
+class Text : public Trackable
+{
+	friend class GraphicsSystem;
+
+public:
+	Text(int size, Font* fnt, std::string text, Color color = Color(0, 0, 0)); //Text object stores font, size, color, position, text contents
+	~Text();
+
+	//accessors
+	std::string getText() { return mTextContents; }
+	int getFontSize() { return mFontSize; }
+
+	//mutators
+	void setText(std::string newText) { mTextContents = newText; mText->setString(mTextContents); }
+	void setPosition(float x, float y) { mText->setPosition(x, y); }
+	void setFontSize(int newSize) { mFontSize = newSize; mText->setCharacterSize(mFontSize); }
+	void setColor(Color newCol) { mColor = newCol; mText->setFillColor(mColor.mColor); }
+private:
+	sf::Text* mText; //position is stored in here
+	Font* mFont;
+	Color mColor;
+	int mFontSize;
+	std::string mTextContents;
+};

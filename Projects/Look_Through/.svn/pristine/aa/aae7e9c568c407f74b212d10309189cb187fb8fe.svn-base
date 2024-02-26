@@ -1,0 +1,52 @@
+#pragma once
+#include <list>
+#include "SnakeSegment.h"
+#include "EventSystem.h"
+#include "MoveEvent.h"
+#include "SnakeCollisionEvent.h"
+
+// Manages a list of objects building a snake.
+// The position for all segments are updated by a set speed.
+// Speed itself only determines how fast the segments have their positions updated.
+// Listens for input.
+// When the head segment collides with a fruit, a segment is added.
+// When the head segment collides with a wall or another segment, all segments are destroyed and the game is lost
+
+// Make sure that movement takes time into account.
+class SnakeManager : public Unit, public EventListener
+{
+public:
+	SnakeManager(float cellSize, float timePerMove, int startingSegments, std::pair<float, float>startPosition);
+	~SnakeManager();
+
+	void init();
+	void init(float timePerMove, int startingSegments, std::pair<float, float>startPosition);
+	void clear();
+	void addSegment(std::pair<float, float>startPosition); // Adding head segment at starting location
+	void addSegment(); // Adding any segments after the head segment
+	void changeHeadDirection(std::pair<int, int> newDirection);
+	virtual void update(float deltaTime);
+	void draw(GraphicsSystem* currentGraphicsSystem); // couldnt this be stored in the unit manager or somewhere more convienient? could this also just be called by the unitmanager directly?
+
+	Animation* getSnakeAnimation() { return pmSnakeAnimation; }
+	void changeMoveSpeed(float changeInSpeed);
+
+	virtual void handleEvent(const Event& theEvent);
+
+private:
+	SnakeSegment* pmHeadSegment;
+	std::list<SnakeSegment*> pmSegments;
+
+	GraphicsBuffer* pmSnakeBuffer;
+	Animation* pmSnakeAnimation;
+	EventSystem* pmEventSystem;
+	float mCellSize;
+	float mTimePerMove;
+	float mTimeRemaining;
+	std::pair<int, int> mNewDirection; // New direction for the snake to move in once it's position is updated.
+
+	int mStartingSegments;
+	std::pair<float, float> mStartingLocation;
+
+	bool mIsActive = false;
+};

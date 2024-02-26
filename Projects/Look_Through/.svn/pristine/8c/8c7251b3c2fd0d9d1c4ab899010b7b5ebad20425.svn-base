@@ -1,0 +1,34 @@
+#pragma once
+#include <cassert>
+#include "SDL.h"
+#include <PerformanceTracker.h>
+#include <MemoryTracker.h>
+#include <iostream>
+#include "Color.h"
+#include "Font.h"
+using namespace std;
+
+class GraphicsBuffer : Trackable
+{
+private:
+	SDL_Surface* mpBitmap = nullptr;
+	bool mOwnsBitmap;
+	GraphicsBuffer(SDL_Surface* pBitmap);
+
+public:
+	GraphicsBuffer();
+	GraphicsBuffer(string& file);
+	GraphicsBuffer(Font* pFont);
+	GraphicsBuffer(Color color, int width, int height);
+
+	~GraphicsBuffer();
+
+	int GetHeight();
+	int GetWidth();
+
+	SDL_Surface* GetBitmap();
+
+	friend class GraphicsSystem;
+	friend class BufferManager;
+
+};

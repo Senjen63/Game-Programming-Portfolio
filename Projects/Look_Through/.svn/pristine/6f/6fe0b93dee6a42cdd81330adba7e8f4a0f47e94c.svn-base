@@ -1,0 +1,64 @@
+#include "Unit.h"
+
+Unit::Unit(Animation* one, Animation* two, Vector2D loc)
+{
+    mCurrentAnim = one;
+    mAltAnim = two;
+    location = loc;
+}
+
+Unit::Unit()
+{
+    mCurrentAnim = nullptr;
+    mAltAnim = nullptr;
+    location = Vector2D();
+}
+
+Unit::~Unit()
+{
+    //delete mCurrentAnim;
+    //delete mAltAnim;
+}
+
+float Unit::getTiming()
+{
+    return mCurrentAnim->getFrameRate();
+}
+
+void Unit::Update(float dt)
+{
+    mCurrentAnim->Update(dt);
+    mAltAnim->Update(dt);
+}
+
+void Unit::Draw(GraphicsSystem* pGSys, Vector2D location)
+{
+    //pGSys->Draw(location.getX(), location.getY(), Draw(), 1, 1);
+    //Draw(Vector2D location, Sprite pSmurf, int width, int height)
+}
+
+int Unit::getCurrentSprite()
+{
+    return mCurrentAnim->getSpriteCount();
+}
+
+Sprite Unit::Draw()
+{
+    return mCurrentAnim->getCurrentSprite();
+}
+
+
+void Unit::swapAnim()
+{
+    Animation* temp = mCurrentAnim;
+    mCurrentAnim = mAltAnim;
+    mAltAnim = temp;
+
+}
+
+void Unit::changeFrameRate(float speed)
+{
+    mCurrentAnim->changeSpeed(speed);
+    mAltAnim->changeSpeed(speed);
+}
+

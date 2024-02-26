@@ -1,0 +1,117 @@
+/*
+Author: David Silverman
+Class: GPR-250-01
+Assignment: Assignment 2
+Certification of Authenticity:
+I certify that this assignment is entirely my own work.
+ */
+
+
+#pragma once
+#include "unit.h"
+#include "game.h"
+
+using namespace std;
+
+/* Pre:  Nothing
+*  Post:  A unit
+*  Purpose:  Create the Unit
+*********************************************************/
+Unit::Unit()
+{
+	this->mpAnimation = nullptr;
+}
+
+/* Pre:  A vector
+*  Post:  A unit
+*  Purpose:  Create the Unit
+*********************************************************/
+Unit::Unit(Vector2D loc)
+{
+	this->mLoc = loc;
+}
+
+/* Pre:  A vector and an animation
+*  Post:  A unit
+*  Purpose:  Create the Unit
+*********************************************************/
+Unit::Unit(Animation* animation, Vector2D loc)
+{
+	this->mpAnimation = animation;
+	this->mLoc = loc;
+}
+
+/* Pre:  Nothing
+*  Post:  Nothing
+*  Purpose:  Destroy the unit
+*********************************************************/
+Unit::~Unit()
+{
+	this->mpAnimation->~Animation();
+}
+
+/* Pre:  Nothing
+*  Post:  A drawn sprite
+*  Purpose:  Draw a sprite
+*********************************************************/
+void Unit::draw()
+{
+	gpGame->mpGraphics->Draw(mLoc, mpAnimation->getCurrentSprite(), QUART, QUART);
+}
+
+/* Pre:  A graphics buffer
+*  Post:  A drawn sprite
+*  Purpose:  Draw a sprite
+*********************************************************/
+void Unit::draw(GraphicsBuffer* buffer)
+{
+	gpGame->mpGraphics->Draw(buffer, mLoc, mpAnimation->getCurrentSprite(), mpAnimation->getWidth(), mpAnimation->getHeight());
+}
+
+/* Pre:  An animation
+*  Post:  Nothing
+*  Purpose:  Set the animation
+*********************************************************/
+void Unit::setAnimation(Animation* animation)
+{
+	this->mpAnimation = animation;
+}
+
+/* Pre:  A boolean and a speed
+*  Post:  Nothing
+*  Purpose:  Set the animation speed
+*********************************************************/
+void Unit::setUnitCurrentSpeed(bool increase, float rate)
+{
+	if (increase)
+		mpAnimation->speedUp(rate);
+	else
+		mpAnimation->slowDown(rate);
+}
+
+/* Pre:  A vector
+*  Post:  Nothing
+*  Purpose:  Set the position
+*********************************************************/
+void Unit::setPosition(Vector2D pos)
+{
+	mLoc = pos;
+}
+
+/* Pre:  Nothing
+*  Post:  A speed
+*  Purpose:  Get the animation speed
+*********************************************************/
+float Unit::getUnitCurrentSpeed()
+{
+	return mpAnimation->getAnimationSpeed();
+}
+
+/* Pre:  A double
+*  Post:  Nothing
+*  Purpose:  Update the animation
+*********************************************************/
+void Unit::update(double dt)
+{
+	mpAnimation->update(dt);
+}

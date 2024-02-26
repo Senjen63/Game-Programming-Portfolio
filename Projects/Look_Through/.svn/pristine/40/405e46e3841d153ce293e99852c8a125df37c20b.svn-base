@@ -1,0 +1,15 @@
+//BP
+#pragma once
+
+enum UnitVariations
+{
+    GENERIC_UNIT = 200,
+    HEAD_UNIT,
+    BODY_UNIT,
+    FOOD_UNIT,
+    BONUS_UNIT,
+    SPEED_UNIT,
+    SLOW_UNIT,
+    WALL_UNIT,
+    NUM_UNIT
+};

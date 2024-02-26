@@ -1,0 +1,12 @@
+#include "InputEvent.h"
+
+InputEvent::InputEvent(int keyCode) : GameEvent((GameEventType) INPUT_GAME_EVENT)
+{
+    mKeyCode = keyCode;
+}
+
+
+InputEvent::~InputEvent()
+{
+
+}

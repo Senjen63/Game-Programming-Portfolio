@@ -1,0 +1,20 @@
+#pragma once
+
+#include "Trackable.h"
+#include "Sprite.h"
+
+class Sprite;
+
+class NextLevelScreen : public Trackable
+{
+private:
+
+	Sprite* mpScreenSprite;
+
+public:
+
+	NextLevelScreen();
+	~NextLevelScreen();
+
+	void drawNextLevelScreen();
+};

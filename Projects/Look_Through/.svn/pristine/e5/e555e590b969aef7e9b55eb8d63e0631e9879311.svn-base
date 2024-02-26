@@ -1,0 +1,87 @@
+//BP
+#include "Game.h"
+#include "GameHUD.h"
+
+GameHUD::GameHUD()
+{
+    mHori = 0;
+    mVert = 0;
+    mFramerate = 0;
+    mTimePassed = 0;
+    mPlayerScore = 0;
+}
+
+GameHUD::GameHUD(int hori, int vert, GraphicsSystem* graphics, Font* font)
+{
+    mHori = hori;
+    mVert = vert;
+    mpFont = font;
+    mFramerate = 0;
+    mTimePassed = 0;
+    mPlayerScore = 0;
+    mpGraphicSystem = graphics;
+}
+
+GameHUD::~GameHUD()
+{
+    cleanup();
+}
+
+void GameHUD::init()
+{
+    mpDisplayTime = new GraphicsBuffer(GREEN, mHori, mVert);
+    mpDisplayScore = new GraphicsBuffer(GREEN, mHori, mVert);
+    mpDisplayFramerate = new GraphicsBuffer(GREEN, mHori, mVert);
+    mpEventSystem = EventSystem::getInstance();
+    mpEventSystem->addListener((EventType)TIME, this);
+    mpEventSystem->addListener((EventType)FRAMERATE, this);
+    mpEventSystem->addListener((EventType)PLAYER_SCORE, this);
+}
+
+void GameHUD::cleanup()
+{
+    mpEventSystem = nullptr;
+    delete mpDisplayTime;
+    delete mpDisplayScore;
+    delete mpDisplayFramerate;
+}
+
+void GameHUD::showHUD()
+{
+    mpDisplayScore->resetColors(GREEN);
+    mpGraphicSystem->displayMessage(mpDisplayScore, mpDisplayScore->getWidth() / 2, 0, mpFont, BLACK, "Score: " + to_string(mPlayerScore));
+    mpGraphicSystem->draw(mpDisplayScore, mpGraphicSystem->getWidth() - mpDisplayScore->getWidth(), 0, 1, 1);
+    mpDisplayFramerate->resetColors(GREEN);
+    mpGraphicSystem->displayMessage(mpDisplayFramerate, mpDisplayFramerate->getWidth() / 2, 0, mpFont, BLACK, "Framerate: " + to_string(mFramerate));
+    mpGraphicSystem->draw(mpDisplayFramerate, 0, 0, 1, 1);
+    mpDisplayTime->resetColors(GREEN);
+    mpGraphicSystem->displayMessage(mpDisplayTime, mpDisplayTime->getWidth() / 2, 0, mpFont, BLACK, "Time: " + to_string(mTimePassed));
+    mpGraphicSystem->draw(mpDisplayTime, (mpGraphicSystem->getWidth() - mpDisplayTime->getWidth()) / 2, 0, 1, 1);
+}
+
+void GameHUD::handleEvent(const Event& currentEvent)
+{
+    if (currentEvent.getType() == PLAYER_SCORE)
+    {
+
+        const GameScore& playerScore = static_cast<const GameScore&>(currentEvent);
+        mPlayerScore = playerScore.getPlayerScore();
+
+    }
+
+    if (currentEvent.getType() == FRAMERATE)
+    {
+
+        const Framerate& framerate = static_cast<const Framerate&>(currentEvent);
+        mFramerate = framerate.getFramerate();
+
+    }
+
+    if (currentEvent.getType() == TIME)
+    {
+
+        const GameTime& gameTime = static_cast<const GameTime&>(currentEvent);
+        mTimePassed = gameTime.getGameTime();
+
+    }
+}

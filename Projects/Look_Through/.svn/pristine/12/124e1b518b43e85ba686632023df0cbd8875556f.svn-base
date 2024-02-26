@@ -1,0 +1,40 @@
+/*
+Author: Ryan-Tucker
+Class: GPR-250 <Section 01>
+Assignment: Assignment 1
+Certification of Authenticity:
+I certify that this assignment is entirely my own work.
+*/
+
+#include <iostream>
+#include <cassert>
+#include <string>
+
+#include <MemoryTracker.h>
+#include <Vector2D.h>
+#include <Timer.h>
+#include "GraphicsSystem.h"
+#include "GraphicsBuffer.h"
+#include "Game.h"
+
+
+using namespace std;
+
+extern Game* gpGame;
+
+int main()
+{
+
+	gpGame = new Game;
+
+	gpGame->init();
+
+	gpGame->doLoop();
+
+	delete gpGame;
+
+	MemoryTracker::getInstance()->reportAllocations(cout);
+
+	system("pause");
+	return 0;
+}

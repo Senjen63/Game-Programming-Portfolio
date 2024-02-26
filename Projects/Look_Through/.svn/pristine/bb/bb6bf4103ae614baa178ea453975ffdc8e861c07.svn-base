@@ -1,0 +1,12 @@
+#include "SpawnItemEvent.h"
+
+SpawnItemEvent::SpawnItemEvent(int itemType) : SpawnEvent((SpawnEventType)SPAWN_ITEM_EVENT)
+{
+    mItemType = itemType;
+}
+
+
+SpawnItemEvent::~SpawnItemEvent()
+{
+
+}

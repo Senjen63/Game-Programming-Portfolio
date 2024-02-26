@@ -1,0 +1,38 @@
+#pragma once
+
+#include <allegro5/allegro.h>
+#include <allegro5/allegro_font.h>
+#include <allegro5/allegro_ttf.h>
+#include <allegro5/allegro_audio.h>
+#include <allegro5/allegro_acodec.h>
+#include <allegro5/allegro_image.h>
+#include <allegro5/allegro_primitives.h>
+
+#include <iostream>
+#include <cassert>
+#include <string>
+#include "GraphicsBuffer.h"
+
+class Animation
+{
+private: 
+	Sprite* mpSprites;
+	float mTime;
+	double mCurrentTime;
+	double dt;
+	int mSpriteNum;
+	int mCurrentSprite;
+	bool mLoop;
+	
+public: 
+	Animation();
+	Animation(GraphicsBuffer* pBuffer, int numSprites, float time, bool loop);
+	~Animation();
+
+
+	Sprite* getSprite();
+	void update(double dt);
+	void adjustTime(float adjust);
+	float getTime();
+
+};

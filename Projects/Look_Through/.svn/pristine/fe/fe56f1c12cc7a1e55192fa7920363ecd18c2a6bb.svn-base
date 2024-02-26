@@ -1,0 +1,234 @@
+#include "GraphicsSystem.h"
+#include "Game.h"
+#include "SDL_FILES.h"
+
+
+void GraphicsSystem::cleanUp()
+{
+	SDL_DestroyWindow(mpDisplay);
+	//SDL_DestroyRenderer(mpRenderer);
+	mpDisplay = nullptr; 
+	delete mpBack;
+	mpBack = nullptr;
+}
+
+void GraphicsSystem::clearToColor(GraphicsBuffer& targetBuffer, Color& color)
+{
+	SDL_FillRect(targetBuffer.getBuffer(), NULL, SDL_MapRGB(targetBuffer.getBuffer()->format, color.getColor().r, color.getColor().g, color.getColor().b));
+}
+
+void GraphicsSystem::border(Sprite* pSprite)
+{
+	
+	int xLoc = 0;
+	int yLoc = 0;
+	while (xLoc < 1260)
+	{
+		draw(Vector2D(), pSprite, xLoc, yLoc);
+		xLoc += 60;
+	}
+	xLoc = 0;
+	yLoc = 60;
+	while (yLoc < 960)
+	{
+		draw(Vector2D(), pSprite, xLoc, yLoc);
+		yLoc += 60;
+	}
+	xLoc = 1200;
+	yLoc = 60;
+	while (yLoc < 960)
+	{
+		draw(Vector2D(), pSprite, xLoc, yLoc);
+		yLoc += 60;
+	}
+	xLoc = 60;
+	yLoc = 900;
+	while (xLoc < 1260)
+	{
+		draw(Vector2D(), pSprite, xLoc, yLoc);
+		xLoc += 60;
+	}
+}
+
+void GraphicsSystem::draw(Vector2D& targetLocation, Sprite sprite, float scale = 1.0)
+{
+	SDL_Rect loc{}, rSprite{};
+
+	loc.x = 0;
+	loc.y = 0;
+	loc.w = sprite.getWidth();
+	loc.h = sprite.getHeight();
+
+	rSprite.x = targetLocation.getX();
+	rSprite.y = targetLocation.getY();
+	rSprite.w = sprite.getWidth();
+	rSprite.h = sprite.getHeight();
+
+	SDL_Texture* texture = SDL_CreateTextureFromSurface(mpRenderer, sprite.getBuffer()->getBuffer());
+
+
+	SDL_RenderCopy(mpRenderer, texture, &rSprite, &loc);
+	SDL_DestroyTexture(texture);
+}
+
+void GraphicsSystem::draw(Vector2D targetLocation, Sprite* pSprite, float randX, float randY)
+{
+	SDL_Rect loc{}, sprite{};
+
+	loc.x = randX;
+	loc.y = randY;
+	loc.w = pSprite->getWidth();
+	loc.h = pSprite->getHeight();
+
+	sprite.x = targetLocation.getX();
+	sprite.y = targetLocation.getY();
+	sprite.w = pSprite->getWidth();
+	sprite.h = pSprite->getHeight();
+
+	SDL_Texture* texture = SDL_CreateTextureFromSurface(mpRenderer, pSprite->getBuffer()->getBuffer());
+	if (!texture)
+	{
+		cout << "Failed to render Texture: " << TTF_GetError() << endl;
+	}
+	SDL_RenderCopy(mpRenderer, texture, &sprite, &loc);
+	SDL_DestroyTexture(texture);
+}
+
+void GraphicsSystem::draw(Vector2D targetLocation, Sprite* pSprite)
+{
+	SDL_Rect loc{}, sprite{};
+
+	loc.x = 0;
+	loc.y = 0;
+	loc.w = pSprite->getWidth();
+	loc.h = pSprite->getHeight();
+
+	sprite.x = targetLocation.getX();
+	sprite.y = targetLocation.getY();
+	sprite.w = pSprite->getWidth();
+	sprite.h = pSprite->getHeight();
+
+	SDL_Texture* texture = SDL_CreateTextureFromSurface(mpRenderer, pSprite->getBuffer()->getBuffer());
+
+
+	SDL_RenderCopy(mpRenderer, texture, &sprite, &loc);
+	SDL_DestroyTexture(texture);
+}
+
+void GraphicsSystem::draw(GraphicsBuffer* pBuffer, Vector2D location, float scale)
+{
+	SDL_Texture* texture = SDL_CreateTextureFromSurface(mpRenderer,pBuffer->getBuffer());
+	SDL_Rect rectangle{};
+	rectangle.x = 0;
+	rectangle.y = 0;
+	rectangle.w = DISP_WIDTH;
+	rectangle.h = DISP_HEIGHT;
+	SDL_RenderCopy(mpRenderer, texture, NULL, &rectangle);
+	SDL_DestroyTexture(texture);
+}
+
+void GraphicsSystem::flipDisplay()
+{
+	SDL_RenderPresent(mpRenderer);
+}
+
+GraphicsBuffer* GraphicsSystem::getBackBuffer()
+{
+	return mpBack;
+}
+
+int GraphicsSystem::getHeight()
+{
+	return mHeight;
+}
+
+int GraphicsSystem::getWidth()
+{
+	return mWidth;
+}
+
+GraphicsSystem::GraphicsSystem()
+{
+	mHeight = 0;
+	mWidth = 0;
+	mpRenderer = nullptr;
+	mpDisplay = nullptr;
+	mpBack = nullptr;
+	mIsInit = false;
+	mLanguage = 0;
+}
+
+GraphicsSystem::GraphicsSystem(int height, int width)
+{
+	this->mHeight = height;
+	this->mWidth = width;
+	mpRenderer = nullptr;
+	mpDisplay = nullptr;
+	mpBack = nullptr;
+	mIsInit = false;
+	mLanguage = 0;
+}
+
+GraphicsSystem::~GraphicsSystem()
+{
+	cleanUp();
+	SDL_Quit();
+}
+
+void GraphicsSystem::init()
+{
+	if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
+	{
+		cout << "error launching SDL\n";
+		system("pause");
+		return;
+	}
+
+	SDL_DisplayMode display;
+	SDL_GetCurrentDisplayMode(0, &display);
+
+	mpDisplay = SDL_CreateWindow("Space Invaders", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, DISP_WIDTH, DISP_HEIGHT, 0);
+	SDL_SetWindowBordered(mpDisplay, SDL_TRUE);
+	mpRenderer = SDL_CreateRenderer(mpDisplay, -1, 0);
+	SDL_RenderClear(mpRenderer);
+
+	mIsInit = true;
+}
+
+bool GraphicsSystem::isInit()
+{
+	return mIsInit;
+}
+
+void GraphicsSystem::writeText(Vector2D targetLocation, Font* font, Color color, string text)
+{
+	SDL_Surface* SDLtext = TTF_RenderText_Solid(font->getFont(), text.c_str(), color.getColor());
+
+	SDL_Texture* text_texture = SDL_CreateTextureFromSurface(mpRenderer, SDLtext);
+	SDL_Rect dest = { 0, 0, SDLtext->w, SDLtext->h };
+	SDL_Rect goTo = { targetLocation.getX(),targetLocation.getY(),SDLtext->w,SDLtext->h };
+	SDL_RenderCopy(mpRenderer, text_texture, &dest, &goTo);
+	
+	SDL_FreeSurface(SDLtext);
+	SDL_DestroyTexture(text_texture);
+}
+
+void GraphicsSystem::clearRenderer()
+{
+	SDL_RenderClear(mpRenderer);
+}
+
+SDL_Surface* GraphicsSystem::getBuffer()
+{
+	return SDL_GetWindowSurface(mpDisplay);
+}
+
+int GraphicsSystem::getLanguage()
+{
+	return mLanguage;
+}
+
+void GraphicsSystem::setLanguage(int language)
+{
+	mLanguage = language;
+}

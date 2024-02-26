@@ -1,0 +1,11 @@
+#pragma once
+#include "Trackable.h"
+
+class Events : public Trackable
+{
+private:
+
+public:
+
+
+};

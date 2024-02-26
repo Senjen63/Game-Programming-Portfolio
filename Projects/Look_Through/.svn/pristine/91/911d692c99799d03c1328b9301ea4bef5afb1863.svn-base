@@ -1,0 +1,19 @@
+#pragma once
+#include "Trackable.h"
+#include "Unit.h"
+
+class PowerUpManager : public Trackable
+{
+public:
+	PowerUpManager();
+	~PowerUpManager() {};
+
+	void addPowerUp( Unit* unit );
+	void removePowerUp(Unit* unit);
+	void removePowerUp( int index );
+
+	void updateAll();
+
+private:
+	vector<Unit*> mpPowerUps;
+};

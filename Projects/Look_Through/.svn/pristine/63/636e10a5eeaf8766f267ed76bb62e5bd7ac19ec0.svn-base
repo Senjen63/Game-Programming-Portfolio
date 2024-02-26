@@ -1,0 +1,53 @@
+#pragma once
+#include "Unit.h"
+#include "Projectile.h"
+#include "Enemy.h"
+#include "HUDText.h"
+#include "EventSystem.h"
+#include "InputEvent.h"
+#include "MouseEvent.h"
+#include "EnemyDeathEvent.h"
+#include "EventListener.h"
+
+class Player : public Unit, public EventListener
+{
+public:
+	Player(std::pair<float, float>location, std::pair<float, float>scale, float startingSpeed, std::string animationFileDataPath);
+	virtual ~Player();
+
+	virtual void update(float deltaTime);
+
+	virtual void handleEvent(const Event& theEvent);
+
+	bool updateHealth(int healthChange);
+	void updateScore(int scoreChange);
+
+	void setHealth(int newHealth) { mCurrentHealth = newHealth; }
+
+	int getHealth() { return mCurrentHealth; }
+	int getScore() { return mScore; }
+
+private:
+	float mMovementSpeed;
+	std::pair<float, float> mCurrentVelocity;
+	std::pair<int, int> mCurrentInput;
+
+	bool mCanFire = true;
+	float mReloadTime;
+	float mCurrentReloadTime;
+
+	Unit* mpHealthBar;
+	const float HEALTH_BAR_SCALE_X = 15;
+	const float HEALTH_BAR_SCALE_Y = 2;
+	float mHealthBarLeftPos = 0;
+	int mMaxHealth = 50;
+	int mCurrentHealth = mMaxHealth;
+	int mDamage = 1;
+
+	bool mInvulnerable = true;
+	float mIFrames = 1000;
+	float mCurrentIFrames = mIFrames;
+
+	int mScore = 0;
+	HUDText* mpScoreHUD;
+};

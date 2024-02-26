@@ -1,0 +1,19 @@
+#pragma once
+
+#include <string>
+#include <trackable.h>
+#include "LevelEvent.h"
+
+using namespace std;
+
+class ReleaseEvent : public LevelEvent
+{
+public:
+	ReleaseEvent(int keyboardInput);
+	~ReleaseEvent();
+
+	int getInput() const { return mInput; }
+
+private:
+	int mInput;
+};

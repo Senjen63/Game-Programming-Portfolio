@@ -1,0 +1,31 @@
+//BP
+#pragma once
+#include <queue>
+
+#include <Vector2D.h>
+
+#include "Unit.h"
+
+class SnakeUnit : public Unit
+{
+private:
+    Vector2D mPath;
+    float mTimer = 0;
+    float mGameStartTimer = 0;
+    vector<pair<Vector2D, int>*> mListMoves;
+public:
+    SnakeUnit();
+    SnakeUnit(Vector2D path, Vector2D location, int fps);
+    SnakeUnit(Vector2D path, Vector2D location, GraphicsBuffer* newBuff, int fps, float beginTime, float moveTime, bool loop, int type);
+    ~SnakeUnit();
+    void updateTurns();
+    Vector2D getDirection();
+    void setDirection(Vector2D path);
+    void addTurn(Vector2D path, int index);
+    void unitUpdate(float timePassed) override;
+    float getStartTimer() { return mGameStartTimer; }
+    void syncTurnList(SnakeUnit* body, int spacer);
+    int getTurnListSize() { return mListMoves.size(); }
+    void setTurnTimer(float moveTimer) { mTimer = moveTimer; }
+    void speedChange(float newSpeed, float currentSpeed, float moveTimer);
+};

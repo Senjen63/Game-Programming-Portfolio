@@ -1,0 +1,49 @@
+/*
+Author: David Silverman
+Class: GPR-250-01
+Assignment: Assignment 2
+Certification of Authenticity:
+I certify that this assignment is entirely my own work.
+ */
+
+
+#pragma once
+#include "unit.h"
+
+using namespace std;
+
+/* Pre:  Nothing
+*  Post:  A drawn sprite
+*  Purpose:  Draw a sprite
+*********************************************************/
+Unit::Unit()
+{
+
+}
+
+Unit::Unit(Vector2D loc)
+{
+	mLoc = loc;
+}
+
+Unit::Unit(Animation animation, Vector2D loc)
+{
+	mAnimation = animation;
+	mLoc = loc;
+}
+
+Unit::~Unit()
+{
+	mAnimation.~Animation();
+}
+
+
+void Unit::draw(GraphicsBuffer* buffer)
+{
+	gpGame->mGraphics.Draw(buffer, mLoc, mAnimation.getCurrentSprite(), mAnimation.mSprWidth, mAnimation.mSprWidth);
+}
+
+void Unit::setAnimation(Animation animation)
+{
+	mAnimation = animation;
+}

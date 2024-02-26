@@ -1,0 +1,40 @@
+﻿#include "EventSystems/EventSystemAven.h"
+
+EventSystemAven & EventSystemAven::getInstance()
+{
+    static EventSystemAven sInstance;
+    return sInstance;
+}
+
+void EventSystemAven::addListener( EventType type, EventListenerAven * pEventListener )
+{
+    mEventListeners.emplace_back( type, pEventListener );
+}
+
+void EventSystemAven::clearListeners()
+{
+    if(!mEventListeners.empty())
+    {
+        for ( auto iter = mEventListeners.front(); iter != mEventListeners.back(); iter = mEventListeners.front() )
+        {
+            mEventListeners.remove( iter );
+        }
+        mEventListeners.remove( mEventListeners.back() );   
+    }
+}
+
+void EventSystemAven::invokeEvent( const EventAven & event )
+{
+    for ( auto & [ type, listener ] : mEventListeners )
+    {
+        if ( type == event.mType )
+        {
+            listener->handleEvent( event );
+        }
+    }
+}
+
+void EventSystemAven::removeListener( EventType type, EventListenerAven * pEventListener )
+{
+    mEventListeners.remove( { type, pEventListener } );
+}

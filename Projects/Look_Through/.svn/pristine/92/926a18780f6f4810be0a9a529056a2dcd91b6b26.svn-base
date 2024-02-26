@@ -1,0 +1,54 @@
+#pragma once
+
+//#include "LevelManager.h"
+#include <Trackable.h>
+#include <vector>
+#include <Vector2D.h>
+#include <iostream>
+#include <fstream>
+
+#include "Animation.h"
+#include "Unit.h"
+#include "GraphicsSystem.h"
+
+const std::string LEVEL_ONE = "text\\level1.txt";
+const std::string LEVEL_TWO = "text\\level2.txt";
+const std::string LEVEL_THREE = "text\\level3.txt";
+
+class Level : public Trackable
+{
+	public:
+		friend class LevelManager;
+
+		Level();
+		~Level();
+
+		// Quincy Gomes-Cedeno helped me with this function
+		void loadWalls(Animation anim, GraphicsSystem* mpGraphics, GraphicsBuffer* buffer, int currentLevel);
+		void loadLevel(int currentLevel);
+
+		void cleanup();
+
+		void createAndAddUnit(Animation anim);
+		void draw(GraphicsSystem* graphSys);
+		bool collideWithWall(Unit* snakeHead);
+		bool isFoodOnWall(Vector2D pos);
+
+		Unit* getUnit();
+
+		int getSpeed() { return mSpeed; };
+		int getInitLength() { return mInitLength; };
+		int getEndLength() { return mEndLength; };
+		int getGainPoints() { return mGainPoints; };
+		int getPwrupFreq() { return mPwrupFreq; };
+		int getSpeedUp() { return mSpeedUp; };
+		int getSlowDown() { return mSlowDown; };
+		
+
+	private:
+		std::vector<Unit*> mpUnits;
+		// snake info
+		int mSpeed, mInitLength, mEndLength;
+		// points and power ups
+		int mGainPoints, mPwrupFreq, mSpeedUp, mSlowDown;
+};

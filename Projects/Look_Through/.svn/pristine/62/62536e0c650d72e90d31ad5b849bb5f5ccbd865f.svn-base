@@ -1,0 +1,22 @@
+speed 3000
+startlength 3
+startposition 6 6
+endlength 10
+point 2
+frequency 6
+speedchance 33
+slow 33
+pointchance 34
+walllocation
+1 1 1 1 1 1 1 1 1 1 1 1
+1 1 1 0 0 0 0 0 0 1 1 1
+1 1 1 0 0 0 0 0 0 1 1 1
+1 0 0 0 0 0 0 0 0 0 0 1
+1 0 0 0 0 0 0 0 0 0 0 1
+1 0 0 0 0 0 0 0 0 0 0 1
+1 0 0 0 0 0 0 0 0 0 0 1
+1 0 0 0 0 0 0 0 0 0 0 1
+1 0 0 0 0 0 0 0 0 0 0 1
+1 1 1 0 0 0 0 0 0 1 1 1
+1 1 1 0 0 0 0 0 0 1 1 1
+1 1 1 1 1 1 1 1 1 1 1 1

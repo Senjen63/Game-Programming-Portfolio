@@ -1,0 +1,52 @@
+#include "GraphicsBuffer.h"
+#include <string>
+#include <fstream>
+#include "Color.h"
+
+using namespace std;
+
+SDL_Surface* GraphicsBuffer::getSurface()
+{
+	return mpSurface;
+}
+
+GraphicsBuffer::GraphicsBuffer(int bitmapWidth, int bitmapHeight)
+{
+	ifstream inputDiff("../GalahadAssets/data/" + FILE_PATH);
+	if (inputDiff.good())
+	{
+		string key;
+
+		while (!inputDiff.eof())
+		{
+			inputDiff >> key;
+
+			if (key == "base")
+			{
+				inputDiff >> mInt1;
+			}
+			else if (key == "two")
+			{
+				inputDiff >> mInt2;
+			}
+		}
+	}
+
+	this->mpSurface = SDL_CreateRGBSurface(mInt1, bitmapWidth, bitmapHeight, mInt2, mInt1, mInt1, mInt1, mInt1);
+};
+
+GraphicsBuffer::GraphicsBuffer(string fileName)
+{
+	string filePath = ASSET_PATH + fileName;
+	this->mpSurface = SDL_LoadBMP(filePath.c_str());
+	if (!mpSurface)
+	{
+		cout << "LoadBMP Error: " << SDL_GetError() << endl;
+	}
+};
+
+
+GraphicsBuffer::~GraphicsBuffer()
+{
+	SDL_FreeSurface(mpSurface);
+};

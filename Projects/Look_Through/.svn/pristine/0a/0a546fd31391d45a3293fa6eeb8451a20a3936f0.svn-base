@@ -1,0 +1,40 @@
+#pragma once
+
+#include <SDL.h>
+#include <SDL_mixer.h>
+#include "Trackable.h"
+#include <unordered_map>
+
+using namespace std;
+
+class SoundEffect;
+
+typedef string SoundEffectKey;
+
+class SoundEffectManager : public Trackable
+{
+private:
+	const string FILE_PATH = "sound_man_data.txt";
+
+	unordered_map<SoundEffectKey, SoundEffect*> mSoundEffectMap;
+
+	int mFreq;
+	int mChannel;
+	int mChunk;
+	int mNull;
+	int mRev;
+
+public:
+	SoundEffectManager();
+	~SoundEffectManager();
+
+	void init();
+
+	void createAndAddSoundEffect(const SoundEffectKey& key, string fileName);
+	void deleteSoundEffect(const SoundEffectKey& key);
+	void clearSoundEffects();
+
+	void playSound(const SoundEffectKey& key, int loops);
+
+	SoundEffect* getSoundEffect(const SoundEffectKey& key);
+};

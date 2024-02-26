@@ -1,0 +1,96 @@
+#include "Game.h"
+Game* Game::mpsGameInstance = NULL;
+
+Game::Game()
+{
+	mpGraphSystem = new GraphicsSystem();
+	mInputSystem.Init();
+}
+
+
+Game* Game::GetInstance()
+{
+	if (mpsGameInstance == NULL) 
+	{
+		mpsGameInstance = new Game;
+	}
+	return mpsGameInstance;
+}
+
+
+Game::~Game() 
+{
+	CleanUp();
+}
+
+
+void Game::Init() 
+{
+	mBufferManager.CreateBuffer(BACKGROUND_FILENAME, ASSET_PATH + BACKGROUND_FILENAME);
+	mBufferManager.CreateBuffer(SMURF_FILENAME, ASSET_PATH + SMURF_FILENAME);
+	mBufferManager.CreateBuffer(DEAN_FILENAME, ASSET_PATH + DEAN_FILENAME);
+}
+
+
+void Game::DoLoop() 
+{
+	Timer time;
+	PerformanceTracker* pTracker = new PerformanceTracker();
+	float deltaTime = 0;
+	//using this here to have a correct default value to draw the sprite, in the center of the screen
+	while (!leave)
+	{
+		pTracker->clearTracker("loop");
+		pTracker->startTracking("loop");
+		time.start();
+		deltaTime = time.getElapsedTime();
+
+		mUnitManager.Update(deltaTime);
+		mpGraphSystem->draw(mBufferManager.GetBuffer(BACKGROUND_FILENAME), Vector2D(), 0.5f);
+		mUnitManager.Draw(mpGraphSystem);
+		mpGraphSystem->flip();
+		//input time
+		if (mInputSystem.GetMouseDown(1))
+		{
+			mUnitManager.CreateUnit();
+			mUnitManager.SetUnitPos(mInputSystem.GetMousePosition());
+		}
+		if (mInputSystem.GetMouseDown(2))
+		{
+			mUnitManager.DestroyUnits(mInputSystem.GetMousePosition());
+		}
+		if (mInputSystem.GetKey(ALLEGRO_KEY_SPACE))
+		{
+			mUnitManager.DoAnimation();
+		}
+		if (mInputSystem.GetKey(ALLEGRO_KEY_ENTER))
+		{
+			mUnitManager.SetLastUnit();
+		}
+		if (mInputSystem.GetKey(ALLEGRO_KEY_ESCAPE))
+		{
+			leave = true;
+		}
+		time.sleepUntilElapsed(SLEEP_MS);
+		//the game lags if I don't output the FPS, dunno why
+		cout << pTracker->getElapsedTime("loop") << endl;
+		pTracker->stopTracking("loop");
+	}
+	delete pTracker;
+}
+
+
+GraphicsBuffer* Game::GetBuffer(string index)
+{
+	return mBufferManager.GetBuffer(index);
+}
+
+
+void Game::CleanUp()
+{
+	mpGraphSystem->CleanUp();
+	mBufferManager.CleanUp();
+	mUnitManager.CleanUp();
+
+	delete mpGraphSystem;
+}

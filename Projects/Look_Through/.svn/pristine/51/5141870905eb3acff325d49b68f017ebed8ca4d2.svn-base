@@ -1,0 +1,55 @@
+#pragma once
+#include <Trackable.h>
+#include "GraphicsSystem.h"
+#include "GraphicsBufferManager.h"
+#include "Animation.h"
+#include "Unit.h"
+#include <vector>
+using namespace std;
+
+const int SMURF_HALF_PIXELS = 30;
+
+class Unit;
+
+class UnitManager : public Trackable
+{
+private:
+	//stl vector of units
+	vector<Unit*> mpUnits; //manages units
+
+public: 
+
+	UnitManager();
+	~UnitManager() { cleanup(); };
+
+	//get a particular unit
+	Unit* getUnit(int index);
+	int getSize();
+
+	//Clear: stop memory leaks
+	void cleanup();
+
+	//add unit
+	void createAndAddUnit(Animation aniSprite);
+	void createAndAddUnit(Animation aniSprite, Vector2D location);
+
+	//UpdateAll: call update on all units
+	void update(double dt);//call Unit update(dt)
+
+	//DrawAll: draw units to screen
+	void draw(GraphicsSystem* graphicsSystem);
+	void setLocation(Vector2D location);
+
+	void deleteUnitOnClick(Vector2D pos);//delete on right click
+
+	//delete unit
+	void destroyUnit(Unit* pUnit);//detect
+
+	//is point on unit function see if mouse position matches sprite position
+	//iterate through and delete the one
+
+	void pauseAllUnits();
+
+	
+	void SnakeMovement(int direction);
+};

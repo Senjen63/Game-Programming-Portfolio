@@ -1,0 +1,38 @@
+#pragma once
+
+#include <vector>
+#include "Trackable.h"
+#include "Sprite.h"
+
+class Vector2D;
+class Sprite;
+class Timer;
+class GraphicsBuffer;
+
+class Animation : public Trackable
+{
+private:
+
+	std::vector<Sprite> mSprites;
+
+	int mCurrentSprite = 0;
+	int mLastSprite = 0;
+
+	double mAnimTime = 0.0f;
+	double mFramesPerSecond = 0.0f;
+
+	bool mIsLooping;
+
+public:
+
+	Animation(bool isLooping, double animTime);
+	~Animation();
+
+	void addSprite(Sprite spriteToAdd);
+	void update(double animTime);
+	void changeAnimSpeed(float speedMultiplier);
+
+	Sprite getCurrentSprite() { return mSprites[mCurrentSprite]; }
+
+	std::vector<Sprite> getAllSprites() { return mSprites; }
+};

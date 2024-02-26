@@ -1,0 +1,165 @@
+#include <allegro5/allegro.h>
+#include <allegro5/allegro_font.h>
+#include <allegro5/allegro_ttf.h>
+#include <allegro5/allegro_audio.h>
+#include <allegro5/allegro_acodec.h>
+#include <allegro5/allegro_image.h>
+#include <allegro5/allegro_primitives.h>
+
+#include <iostream>
+#include <cassert>
+#include <string>
+
+#include <PerformanceTracker.h>
+#include <MemoryTracker.h>
+#include <Vector2D.h>
+#include <Timer.h>
+
+#include "GraphicsSystem.h"
+#include "GraphicsBuffer.h"
+#include "Color.h"
+#include "Sprite.h"
+#include "Font.h"
+
+#include "Game.h"
+#include "Animation.h"
+#include "InputSystem.h"
+#include "Unit.h"
+
+#include <random>
+#include <time.h>
+
+using namespace std;
+
+int main()
+{
+	//Initialize Performance Tracker
+	PerformanceTracker* pPerformanceTracker = new PerformanceTracker;
+
+	//Create game
+	gpGame = new Game();
+
+	//Intialize game
+	gpGame->Init();
+
+	//Begin the game loop
+	gpGame->doLoop();
+
+	delete gpGame;
+
+	delete pPerformanceTracker;
+	MemoryTracker::getInstance()->reportAllocations(cout);
+
+	system("pause");
+	return 0;
+}
+
+/*
+PerformanceTracker* pPerformanceTracker = new PerformanceTracker;
+	Timer timer;
+
+	srand(time(NULL));
+
+	const string ASSET_PATH = "..\\..\\common\\assets\\";
+	const string BACKGROUND_FILE = "steps.png";
+	const string QUIMBY_FILE = "Mayor_Quimby.png";
+	const string SMURFS_FILE = "smurf_sprites.png";
+	const string COUR_FILENAME = "cour.ttf";
+	const int FONT_SIZE = 44;
+
+	const int DISP_WIDTH = 800;
+	const int DISP_HEIGHT = 600;
+
+	const float MID = 0.5;
+	const float OUTSIDE = 0.1667;
+	const float INSIDE = 0.6667;
+
+	Color redColor = Color(255, 0, 0);
+	Color blackColor = Color(0, 0, 0);
+
+	int xCoord = 0;
+	int yCoord = 0;
+
+	const int NUM_SMURFS_ROW = 4;
+	const int SMURF_SIZE = 60;
+	float randX;
+	float randY;
+	Vector2D smurfPos;
+
+	//Create display and initialize allegro
+	GraphicsSystem* display = new GraphicsSystem(DISP_HEIGHT, DISP_WIDTH);
+	display->init();
+
+	//Load buffers
+	GraphicsBuffer* pBackgroundBuffer = new GraphicsBuffer(ASSET_PATH + BACKGROUND_FILE);
+	GraphicsBuffer* pSmurfsBuffer = new GraphicsBuffer(ASSET_PATH + SMURFS_FILE);
+	GraphicsBuffer* pQuimbyBuffer = new GraphicsBuffer(ASSET_PATH + QUIMBY_FILE);
+	GraphicsBuffer* pRedBackBuffer = new GraphicsBuffer(DISP_WIDTH, DISP_HEIGHT);
+
+	//Create Font
+	Font* pCour = new Font(ASSET_PATH + COUR_FILENAME, FONT_SIZE);
+
+	//Make Quimby Sprite
+	Sprite* quimbySprite = new Sprite(pQuimbyBuffer);
+
+	//Draw Quimby and Red backing
+	display->clearToColor(*pRedBackBuffer, redColor);
+	display->drawTarget(*pRedBackBuffer, Vector2D(), *quimbySprite, 1.0);
+
+	//Draw text
+	display->writeText(pRedBackBuffer, xCoord, yCoord, pCour, blackColor, "Curse You Papa Smurf!");
+
+	//Save buffer to file
+	display->saveBuffer(*pRedBackBuffer, "redBackBuffer.png");
+
+	//Draw onto background
+	display->drawCurrent(Vector2D(), Sprite(pBackgroundBuffer), MID);
+
+	//Draw redbox buffer in center of background
+	Vector2D* center = new Vector2D(DISP_WIDTH * OUTSIDE, DISP_HEIGHT * OUTSIDE);
+	display->drawCurrent(*center, Sprite(pRedBackBuffer), INSIDE);
+	delete center;
+
+	//Smurfs
+	for (int i = 0; i < NUM_SMURFS_ROW; i++)
+	{
+		for (int j = 0; j < NUM_SMURFS_ROW; j++)
+		{
+			//Creates new smurf sprite going down the columns and rows
+			smurfPos.setX(i * 60);
+			smurfPos.setY(j * 60);
+			Sprite* pSmurfs = new Sprite(pSmurfsBuffer, smurfPos, SMURF_SIZE, SMURF_SIZE);
+
+			//Randomizes position smurf is drawn
+			randX = rand() % (DISP_WIDTH - pSmurfs->getWidth());
+			randY = rand() % (DISP_HEIGHT - pSmurfs->getHeight());
+
+			display->drawPart(smurfPos, pSmurfs, randX, randY);
+
+			delete pSmurfs;
+		}
+	}
+
+	//Save everything
+	display->saveBuffer(*pRedBackBuffer, "redbackbuffer.png");
+	display->saveBuffer(*(display->getBackBuffer()), "backbuffer.png");
+
+	//Flip
+	display->flipDisplay();
+
+	timer.sleep(2000.0);
+
+	//Delete pointers
+	delete pBackgroundBuffer;
+	delete pSmurfsBuffer;
+	delete pQuimbyBuffer;
+	delete pRedBackBuffer;
+	delete quimbySprite;
+	delete pCour;
+
+	delete display;
+
+	//Get performance
+	delete pPerformanceTracker;
+	MemoryTracker::getInstance()->reportAllocations(cout);
+*/

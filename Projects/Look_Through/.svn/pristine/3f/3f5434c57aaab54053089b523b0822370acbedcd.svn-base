@@ -1,0 +1,34 @@
+#pragma once
+
+#include "UnitManager.h"
+#include "Unit.h"
+#include "WaveManager.h"
+
+// Have this store level assets once UnitManager dependencies are cleaned up.
+// Also have this handle draw and update all stuff alongside MenuManager
+
+class Player;
+class Enemy;
+
+class SceneManager : public UnitManager
+{
+public:
+	SceneManager();
+	~SceneManager();
+
+	virtual void updateAll(float deltaTime);
+
+	void loadScene(std::string sceneDataFilePath);
+	void unloadScene();
+
+	void addEnemy(Enemy* newEnemy);
+
+	WaveManager* getWaveManager() { return mpWaveManager; }
+	std::string getCurrentScene() { return mCurrentScene; }
+	Player* getPlayer();
+
+private:
+	bool mIsEnabled = false;
+	std::string mCurrentScene = "none";
+	WaveManager* mpWaveManager;
+};

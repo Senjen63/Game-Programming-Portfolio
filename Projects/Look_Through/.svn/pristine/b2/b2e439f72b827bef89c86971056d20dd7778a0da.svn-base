@@ -1,0 +1,231 @@
+#include "Snake.h"
+#include "GameEvent.h"
+#include "Game.h"
+
+Animation Snake::sSegmentAnimation;
+
+const float START_WAIT_TIME = 1.5 * 1000;
+
+Snake::Snake(const Animation& segmentAnimation, int length, int gridSize, Vector2D startingPos, float timeToMove, Direction direction) :
+    mpEntityManager(Game::getInstance()->getEntityManager()), mGridSize(gridSize), mTimeToMove(timeToMove), mDirection(direction), mTimeSinceLastMove(0)
+{
+    // Create the starting entities 
+    for (int i = 0; i < length; i++)
+    {
+        float maxSide = max(segmentAnimation.getMaxSize().getX(), segmentAnimation.getMaxSize().getY());
+        Entity* temp = mpEntityManager->addEntity(startingPos, segmentAnimation, (float)gridSize / maxSide);
+        temp->addCollider(CollisionType::SNAKE);
+        mSegments.push(temp);
+    }
+}
+
+Snake::Snake(int length, int gridSize, Vector2D startingPos, float timeToMove, Direction direction) :
+    Snake(Snake::sSegmentAnimation, length, gridSize, startingPos, timeToMove, direction)
+{}
+
+Snake::~Snake()
+{
+    while (!mSegments.empty())
+    {
+        mpEntityManager->deleteEntity(mSegments.front());
+        mSegments.pop();
+    }
+    while (!mGrowQueue.empty())
+    {
+        mpEntityManager->deleteEntity(mGrowQueue.front());
+        mGrowQueue.pop();
+    }
+}
+
+void Snake::init()
+{
+    EventSystem::getInstance()->addListener((EventType)EVENT_SNAKE_CHANGE_DIRECTION, static_cast<EventListener*>(this));
+    EventSystem::getInstance()->addListener((EventType)EVENT_SNAKE_GROW, static_cast<EventListener*>(this));
+    EventSystem::getInstance()->addListener((EventType)EVENT_SNAKE_SPEED, static_cast<EventListener*>(this));
+}
+
+void Snake::cleanUp()
+{
+    EventSystem::getInstance()->removeListener((EventType)EVENT_SNAKE_CHANGE_DIRECTION, static_cast<EventListener*>(this));
+    EventSystem::getInstance()->removeListener((EventType)EVENT_SNAKE_GROW, static_cast<EventListener*>(this));
+    EventSystem::getInstance()->removeListener((EventType)EVENT_SNAKE_SPEED, static_cast<EventListener*>(this));
+}
+
+void Snake::update(double deltaTime)
+{
+    mTimeSinceStart += deltaTime;
+
+    if (mTimeSinceStart <= START_WAIT_TIME)
+        return;
+
+    mTimeSinceLastMove += deltaTime;
+
+    if (mTimeSinceLastMove >= mTimeToMove)
+    {
+        mTimeSinceLastMove -= mTimeToMove;
+        moveSnake();
+    }
+}
+
+void Snake::setDirection(Direction dir)
+{
+    if (isBehind(dir))
+        return;
+
+    mTargetDir = dir;
+}
+
+void Snake::handleEvent(const Event& theEvent)
+{
+    switch (theEvent.getType())
+    {
+    case GameEventType::EVENT_SNAKE_CHANGE_DIRECTION:
+    {
+        const ChangeDirectionEvent& subEvent = static_cast<const ChangeDirectionEvent&>(theEvent);
+        setDirection(subEvent.getDirection());
+        break;
+    }
+
+    case GameEventType::EVENT_SNAKE_GROW:
+    {
+        const GrowEvent& subEvent = static_cast<const GrowEvent&>(theEvent);
+        growSnake(subEvent.getGrowAmount());
+        break;
+    }
+
+    case GameEventType::EVENT_SNAKE_SPEED:
+    {
+        const SpeedEvent& subEvent = static_cast<const SpeedEvent&>(theEvent);
+        mTimeToMove += subEvent.getDeltaTime();
+        max(mTimeToMove, 0);
+        break;
+    }
+    }
+}
+
+bool Snake::isBehind(Direction dir) const
+{
+    switch (mDirection)
+    {
+    case Direction::UP:
+        if (dir == Direction::DOWN)
+            return true;
+        break;
+    case Direction::DOWN:
+        if (dir == Direction::UP)
+            return true;
+        break;
+
+    case Direction::LEFT:
+        if (dir == Direction::RIGHT)
+            return true;
+        break;
+    case Direction::RIGHT:
+        if (dir == Direction::LEFT)
+            return true;
+        break;
+    }
+
+    return false;
+}
+
+bool Snake::pointIsOnSnake(const Vector2D& pos) const
+{
+    std::queue<Entity*> tempSegments = std::queue<Entity*>(mSegments);
+    while (!tempSegments.empty())
+    {
+        // Check for collision for each segment 
+        auto currSeg = tempSegments.front();
+
+        if (currSeg->overlapsPosition(pos))
+            return true;
+
+        tempSegments.pop();
+    }
+
+    return false;
+}
+
+void Snake::moveSnake()
+{
+    mDirection = mTargetDir;
+
+    Vector2D deltaPos;
+    switch (mDirection)
+    {
+    case Direction::UP:
+        deltaPos = Vector2D(0, -1);
+        break;
+    case Direction::DOWN:
+        deltaPos = Vector2D(0, 1);
+        break;
+    case Direction::LEFT:
+        deltaPos = Vector2D(-1, 0);
+        break;
+    case Direction::RIGHT:
+        deltaPos = Vector2D(1, 0);
+        break;
+    }
+    deltaPos *= mGridSize;
+
+    // Get tail (first try to get from the grow queue) 
+    Entity* tail = nullptr;
+    if (!mGrowQueue.empty())
+    {
+        tail = mGrowQueue.front();
+        mGrowQueue.pop();
+    }
+    else
+    {
+        tail = mSegments.front();
+        mSegments.pop();
+    }
+
+    const Entity* head = mSegments.back();
+
+    // Check for collision 
+    Bounds bounds = head->getCollider()->getBounds();
+    bounds.setPos(bounds.getPos() + deltaPos);
+    handleCollisions(bounds);
+
+    EventSystem::getInstance()->fireEvent(MoveEvent(head->getPosition() + deltaPos));
+
+    // Make the tail into the head 
+    tail->setPosition(head->getPosition() + deltaPos);
+    mSegments.push(tail);
+}
+
+void Snake::growSnake(int addedLength)
+{
+    const Entity* tail = mSegments.front();
+
+    for (int i = 0; i < addedLength; i++)
+    {
+        Entity* temp = mpEntityManager->addEntity(tail->getPosition(), *tail);
+        temp->addCollider(CollisionType::SNAKE);
+        mGrowQueue.push(temp);
+    }
+}
+
+void Snake::handleCollisions(Bounds newHeadBounds)
+{
+    const Collider* col = Collider::checkForCollision(newHeadBounds);
+
+    if (!col)
+        return;
+
+    switch (col->getCollisionType())
+    {
+    case CollisionType::SNAKE:
+    case CollisionType::WALL:
+    {
+        EventSystem::getInstance()->fireEvent(GameOverEvent());
+        //EventSystem::getInstance()->fireEvent(CloseGameEvent());
+        break;
+    }
+    case CollisionType::POWERUP:
+    {
+        break;
+    }
+    }
+}

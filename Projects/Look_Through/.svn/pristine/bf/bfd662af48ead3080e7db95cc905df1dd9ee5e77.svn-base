@@ -1,0 +1,21 @@
+#pragma once
+#include "Trackable.h"
+#include "GraphicsBuffer.h"
+
+#include <map>
+
+class GraphicsBufferManager : public Trackable 
+{
+public:
+	GraphicsBufferManager();
+	~GraphicsBufferManager();
+	void createNewBuffer(string filepath, string name);
+	void createNewBuffer(ALLEGRO_BITMAP* pBmp, string name);
+	void createNewBuffer(Color col, int xLength, int yLength, string name);
+	void addBuffer(GraphicsBuffer* buffer, string name);
+	void deleteBuffer(string name);
+	GraphicsBuffer* getBuffer(string name);
+	void clearBuffs();
+private:
+	map<string, GraphicsBuffer*> mpGraphicsBufferList;
+};

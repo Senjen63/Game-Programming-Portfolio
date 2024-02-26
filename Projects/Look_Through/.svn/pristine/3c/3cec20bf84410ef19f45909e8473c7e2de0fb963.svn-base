@@ -1,0 +1,60 @@
+#pragma once
+
+#include "Trackable.h"
+#include <vector>
+#include "Vector2D.h"
+#include <assert.h>
+#include "Animation.h"
+
+class GraphicsSystem;
+class InputSystem;
+class Timer;
+class UnitManager;
+class GraphicsBufferManager;
+class PerformanceTracker;
+class Animation;
+class Sprite;
+
+using namespace std;
+
+class Game : public Trackable
+{
+	private:
+		static Game* mpGameInstance;
+
+		GraphicsSystem* mpGraphicsSystem;
+
+		InputSystem* mpInputSystem;
+
+		UnitManager* mpUnitManager;
+
+		GraphicsBufferManager* mpGraphicsBufferManager;
+
+		Animation mSmurfAnimation;
+		Animation mDeanAnimation;
+		Sprite* mpWoodsSprite;
+
+		bool mGameContinue;
+
+		Timer* mpGameTimer;
+
+		double mGamePauseTime;
+
+		PerformanceTracker* mpPerformanceTracker;
+
+		Game();
+		~Game();
+	public:
+		static Game* getInstance() { assert(mpGameInstance != nullptr); return mpGameInstance; };
+		static void initInstance() { mpGameInstance = new Game; };
+		static void cleanUpInstance() { delete mpGameInstance; };
+
+		void init();
+		void cleanUp();
+
+		void doLoop();
+
+		GraphicsSystem* getGraphicsSystem() { return mpGraphicsSystem; }
+		UnitManager* getUnitManager() { return mpUnitManager; }
+		GraphicsBufferManager* getGraphicsBufferManager() { return mpGraphicsBufferManager; }
+};

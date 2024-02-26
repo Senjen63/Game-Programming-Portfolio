@@ -1,0 +1,80 @@
+#pragma once
+
+#include <Trackable.h>
+#include <EventListener.h>
+#include "GraphicsSystem.h"
+#include "InputSystem.h"
+#include "InputTranslator.h"
+#include "EntityManager.h"
+#include "GraphicsBufferManager.h"
+#include "LevelManager.h"
+#include "Hud.h"
+
+enum class GameState
+{
+    INVALID = -1,
+    START,
+    PLAY,
+    LOST,
+    WON,
+    MAX
+};
+
+class Game : public EventListener
+{
+public:
+    Game() = delete;
+    Game(const Game&) = delete;
+    void operator=(const Game&) = delete;
+
+    static void createInstance(int screenWidth, int screenHeight, float frameRate);
+    static void destoryInstance();
+    static Game* getInstance();
+
+    GraphicsSystem* getGraphicsSystem() { return mpGraphicsSystem; }
+    InputSystem* getInputSystem() { return mpInputSystem; }
+    EntityManager* getEntityManager() { return mpEntityManager; }
+    GraphicsBufferManager* getGraphicsBufferManager() { return mpGraphicsBufferManager; }
+
+    void init();
+    void cleanUp();
+
+    void doLoop();
+
+    void handleEvent(const Event& theEvent);
+
+    void setGameState(GameState state) { mState = state; }
+
+private:
+    // Game Specific 
+    void gameSpecificCreatation();
+    void gameSpecificDestruction();
+    void gameSpecificUpdate(double deltaTime);
+    void gameSpecificDraw(GraphicsSystem& sys);
+    void startGame();
+
+    Game(int screenWidth, int screenHeight, float frameRate);
+    ~Game();
+
+    static Game* smpInst;
+
+    double mFrameTargetTime;
+    bool mIsInitted = false;
+    bool mShouldRun = true;
+
+    GraphicsSystem* mpGraphicsSystem = nullptr;
+    InputSystem* mpInputSystem = nullptr;
+    EntityManager* mpEntityManager = nullptr;
+    GraphicsBufferManager* mpGraphicsBufferManager = nullptr;
+
+    InputTranslator mInputTranslator; // Just needs to be created at some point 
+
+    // Snake Specific 
+    LevelManager mLevelManager;
+    Hud mHud;
+    GameState mState = GameState::START;
+    Font* mMenuFont = nullptr;
+    bool mShouldUnload = false;
+};
+
+const std::string LOOP_TRACKER_NAME = "Loop";

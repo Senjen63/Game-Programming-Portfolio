@@ -1,0 +1,112 @@
+//BP
+#include "Game.h"
+#include "Unit.h"
+
+Unit::Unit()
+{
+    mLocation = Vector2D(X_POS, Y_POS);
+    mFps = FPS;
+    mUnitType = GENERIC_UNIT;
+}
+
+Unit::Unit(Vector2D location, int fps)
+{
+    mFps = fps;
+    mLocation = location;
+    mUnitType = GENERIC_UNIT;
+}
+
+Unit::Unit(Vector2D location, GraphicsBuffer* newBuff, int fps, bool loop, int type)
+{
+    mLocation = location;
+    mFps = fps;
+    addNewAnimation(newBuff, fps, loop);
+    mUnitType = type;
+}
+
+Unit::~Unit()
+{
+    //Unused Destructor
+}
+
+void Unit::draw()
+{
+    if (mAnimations.size() > 0)
+    {
+
+        Vector2D point = Vector2D(mAnimations[mAnimationIndex].getThisSprite().getHeightAndWidth()) / 2;
+        Vector2D location = mLocation - point;
+        Game::getGameInstance()->getGraphicsSystem()->draw(location.getX(),
+            location.getY(),
+            mAnimations[mAnimationIndex].getThisSprite(),
+            1, 1);
+
+    }
+}
+
+Vector2D Unit::getDimensions()
+{
+    return mAnimations[mAnimationIndex].getThisSprite().getHeightAndWidth();
+}
+
+void Unit::setFramerate(int framerate)
+{
+    mFps = framerate;
+    if (mAnimations.size() > 0)
+    {
+
+        mAnimations[mAnimationIndex].changeSpriteSpeed(framerate);
+
+    }
+}
+
+void Unit::setAnimation(int index)
+{
+    mAnimations[index].synchronizeSprites(mAnimations[mAnimationIndex]);
+    mAnimationIndex = index;
+    setFramerate(mFps);
+}
+
+void Unit::update(float timePassed)
+{
+    unitUpdate(timePassed);
+    if (mAnimations.size() > 0 && mIsPlaying)
+    {
+
+        mAnimations[mAnimationIndex].updateSprite(timePassed);
+
+    }
+
+}
+
+void Unit::unitUpdate(float timePassed)
+{
+}
+
+void Unit::addNewAnimation(GraphicsBuffer* buff)
+{
+    Animation newAnimation = Animation(buff,
+        mFps, LOOP_CONDITION);
+    mAnimations.push_back(newAnimation);
+}
+
+bool Unit::detectMouseHover(Vector2D mouseLocation)
+{
+    float horiDistance = abs(mLocation.getX() - mouseLocation.getX());
+    float horiRadius = getDimensions().getX() / 2;
+    float vertDistance = abs(mLocation.getY() - mouseLocation.getY());
+    float vertRadius = getDimensions().getY() / 2;
+    if (vertDistance <= vertRadius && horiDistance <= horiRadius)
+    {
+
+        return true;
+
+    }
+    return false;
+}
+
+void Unit::addNewAnimation(GraphicsBuffer* buff, int fps, bool loop)
+{
+    Animation newAnimation = Animation(buff, fps, loop);
+    mAnimations.push_back(newAnimation);
+}

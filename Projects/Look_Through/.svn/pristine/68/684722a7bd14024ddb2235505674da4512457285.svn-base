@@ -1,0 +1,22 @@
+#pragma once
+#include "Unit.h"
+
+class UnitManager : public Trackable
+{
+public:
+	UnitManager();
+	~UnitManager();
+	void addUnit(int x, int y, Animation* smurf, Animation* dean);
+	void removeUnit();
+	Unit* getUnit(int unitSpot);
+	void clearAll();
+	void updateAll(float removeTime);
+	void drawAll(GraphicsSystem* display);
+
+
+private:
+	
+	vector<Unit*> mUnitList;
+	int mSize;
+
+};

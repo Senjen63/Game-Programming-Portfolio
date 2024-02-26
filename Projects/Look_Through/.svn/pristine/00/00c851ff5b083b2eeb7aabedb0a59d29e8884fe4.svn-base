@@ -1,0 +1,57 @@
+#include "UnitManager.h"
+
+using namespace std;
+
+UnitManager::UnitManager()
+{
+	mUnits = {};
+}
+
+UnitManager::~UnitManager()
+{
+	cleanup();
+}
+
+void UnitManager::cleanup()
+{
+	for (size_t i = 0; i < mUnits.size(); i++) { delete mUnits[i]; }
+
+	mUnits.clear();
+}
+
+void UnitManager::addUnit(Unit* toAdd) 
+{
+	mUnits.push_back(toAdd);
+}
+
+void UnitManager::removeUnit(int pos)
+{
+	if (pos < (int)mUnits.size()) 
+	{ 
+		delete mUnits[pos];
+		mUnits.erase(mUnits.begin() + pos);
+	}
+}
+
+Unit* UnitManager::getUnit(int pos)
+{
+	if (pos < (int)mUnits.size()) { return mUnits[pos]; }
+
+	else { return nullptr; }
+}
+
+void UnitManager::updateAll(float elapsedTime)
+{
+	for (size_t i = 0; i < mUnits.size(); i++)
+	{
+		mUnits[i]->update(elapsedTime);
+	}
+}
+
+void UnitManager::drawAll()
+{
+	for (size_t i = 0; i < mUnits.size(); i++)
+	{
+		mUnits[i]->draw();
+	}
+}

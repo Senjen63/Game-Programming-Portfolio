@@ -1,0 +1,13 @@
+asspth assets\\
+bkgrnd background.png
+sprite player.png
+food food.png
+ptspng points.png
+wallpng wall.png
+speedpow speedUp.png
+slowpow slowDown.png
+1spd 40
+str 1
+end 10
+pts 100
+pow 20

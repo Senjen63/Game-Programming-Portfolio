@@ -1,0 +1,536 @@
+#include "Game.h"
+#include <cstdlib> 
+#include <ctime> 
+#include <fstream>
+
+Game* Game::mpsInstance = nullptr;
+
+Game* Game::getGameInstance()
+{
+	//assert(mpsInstance);
+	return mpsInstance;
+}
+
+void Game::destroyGameInstance()
+{
+	delete mpsInstance;
+	mpsInstance = nullptr;
+};
+
+Game* Game::createGameInstance()
+{
+	if (mpsInstance == nullptr)
+	{
+		mpsInstance = new Game;
+	}
+	return mpsInstance;
+}
+
+Game::Game()
+{
+	const int DISP_WIDTH = 1536;
+	const int DISP_HEIGHT = 768;
+
+	EventSystem* pEventSystem = EventSystem::getInstance();
+	pEventSystem->addListener((EventType)INPUT_EVENT, this);
+	pEventSystem->addListener((EventType)COLLISION_EVENT, this);
+	//pEventSystem->addListener((EventType)LEVEL_CHANGE_EVENT, this);
+
+	mpLevelManager = new LevelManager();
+	mpGraphicsBuffManager = new GraphicsBufferManager();
+	mpUnitManager = new UnitManager();
+	mpGraphicsSystem = new GraphicsSystem(DISP_WIDTH, DISP_HEIGHT);
+	mpInputSystem = new InputSystem();
+	mpSaveData = new SaveData();
+}
+
+Game::~Game()
+{
+	delete mpLevelManager;
+	delete mpGraphicsBuffManager;
+	delete mpUnitManager;
+	delete mpGraphicsSystem;
+	delete mpInputSystem;
+	delete mpSaveData;
+	mpLevelManager = nullptr;
+	mpGraphicsBuffManager = nullptr;
+	mpUnitManager = nullptr;
+	mpGraphicsSystem = nullptr;
+	mpInputSystem = nullptr;
+	mpSaveData = nullptr;
+}
+
+bool Game::init()
+{
+	if (!mpGraphicsSystem->init())
+	{
+		std::cout << "Issues with Graphics system." << std::endl;
+		system("pause");
+		return false;
+	}
+	if (!mpInputSystem->init())
+	{
+		std::cout << "Issues with Input system." << std::endl;
+		system("pause");
+		return false;
+	}
+	if (!mpLevelManager->init())
+	{
+		std::cout << "Issues with Level system." << std::endl;
+		system("pause");
+		return false;
+	}
+	return true;
+}
+
+void Game::cleanUp()
+{
+	mpGraphicsSystem->cleanup();
+	mpLevelManager->cleanup();
+}
+
+void Game::doLoop()
+{
+	int snakeSpeed = 0;
+	int snakeSegments = 0;
+	int endLength = 0;
+	int foodPoints = 0;
+	int powerupPower = 0;
+	int powerUpFrequency = 0;
+
+	ifstream input;
+	input.open("input.txt");
+	if (input.good())
+	{
+		string key;
+
+		while (!input.eof())
+		{
+			input >> key;
+
+			if (key == "speed")
+			{
+				input >> snakeSpeed;
+
+			}
+			else if (key == "segments")
+			{
+				input >> snakeSegments;
+			}
+			else if (key == "length")
+			{
+				input >> endLength;
+			}
+			else if (key == "food")
+			{
+				input >> foodPoints;
+			}
+			else if (key == "frequency")
+			{
+				input >> powerUpFrequency;
+			}
+			else if (key == "powerup")
+			{
+				input >> powerupPower;
+			}
+		}
+	}
+	else
+	{
+		return;
+	}
+
+	//Time in milliseconds.
+	double targetTime = 16.7;
+	const string LEVEL0_FILENAME = "Level0.txt";
+	const string LEVEL1_FILENAME = "Level1.txt";
+	const string LEVEL2_FILENAME = "Level2.txt";
+	const string CYCLE_FILENAME = "bluelightcycle.png";
+	const string TRAIL_FILENAME = "bluelightcycletrail.png";
+	const string BACKGROUND_FILENAME = "gridarenabackground.png";
+	const string WALL_FILENAME = "arenawall.png";
+	const string POWERUP_FILENAME = "Bonus.png";
+	const string FOOD_FILENAME = "Onion.png";
+	string menu = "TRON  |  Press The Spacebar To Begin!  | Settings - P |  Exit - ESC";
+	int spriteNum = 4;
+	double fps = 30;
+
+	const int BACKGROUND_SIZE_X = 1536;
+	const int BACKGROUND_SIZE_Y = 768;
+	const int WALL_SIZE = 64;
+	const int SNAKE_SIZE = 64;
+	Color red = Color(255, 0, 0);
+	Color green = Color(0, 255, 0);
+	Color blue = Color(0, 0, 255);
+	Color black = Color(0, 0, 0);
+
+	mpGraphicsBuffManager->createBuffer("backgroundImg", BACKGROUND_FILENAME, mpGraphicsSystem);
+	mpGraphicsBuffManager->createBuffer("wallImg", WALL_FILENAME, mpGraphicsSystem);
+	mpGraphicsBuffManager->createBuffer("snakeHeadImg", CYCLE_FILENAME, mpGraphicsSystem);
+	mpGraphicsBuffManager->createBuffer("snakeBodyImg", TRAIL_FILENAME, mpGraphicsSystem);
+	mpGraphicsBuffManager->createBuffer("foodImg", FOOD_FILENAME, mpGraphicsSystem);
+	mpGraphicsBuffManager->createBuffer("powerupImg", POWERUP_FILENAME, mpGraphicsSystem);
+
+	mpLevelManager->loadLevel(LEVEL0_FILENAME, mpGraphicsBuffManager->getBuffer("wallImg"));
+	mpLevelManager->loadLevel(LEVEL1_FILENAME, mpGraphicsBuffManager->getBuffer("wallImg"));
+	mpLevelManager->loadLevel(LEVEL2_FILENAME, mpGraphicsBuffManager->getBuffer("wallImg"));
+
+	int testLevelNum1, testnum2;
+
+	mpSaveData->LoadData();
+	testLevelNum1 = mpSaveData->GetPlayerOneScore();
+	testnum2 = mpSaveData->GetPlayerTwoScore();
+	cout << testLevelNum1 << endl << testnum2 <<endl;
+
+	mpLevelManager->instantiateLevel(1, mpUnitManager, mpGraphicsBuffManager->getBuffer("wallImg"));
+
+	//Create snake
+	Snake* snake = new Snake(256, 256, mpUnitManager, mpGraphicsBuffManager, snakeSegments);
+	Snake* snake2 = new Snake(BACKGROUND_SIZE_X - 256, BACKGROUND_SIZE_Y - 256, mpUnitManager, mpGraphicsBuffManager, snakeSegments);
+	int numSegments = snakeSegments;
+	int numSegments2 = snakeSegments;
+
+	//Level data
+	Level* currentLevel = mpLevelManager->getCurrentLevel();
+
+	//Create food
+	createConsumable(currentLevel, snake, true);
+	bool didWin = false;
+
+	while (mShouldContinue && !gameStart)
+	{
+		mpInputSystem->update();
+		//mpGraphicsSystem->draw(mpGraphicsBuffManager->getBuffer("backgroundImg"), 0, 0, 1, 1);
+		mpGraphicsSystem->displayMessage(mpGraphicsSystem->
+			getWidth() / 2, mpGraphicsSystem->getHeight() / 2,
+			"TRON  |  Press The Spacebar To Begin!  | Settings - P |  Exit - ESC",
+			Color(255, 255, 255),
+			mpFont);
+		mpGraphicsSystem->flip();
+	}
+
+	int numLoops = 0;
+	while (mShouldContinue && gameStart)
+	{
+		Timer theTimer;
+		theTimer.start();
+
+		//Moves the snake.
+		if (numLoops % snakeSpeed == 0 && mDirection != 0)
+		{
+			vector<Unit*> snakePieces = snake->getSnakePieces();
+			Unit* head = snakePieces[0];
+			vector<Vector2D> snakeLocations;
+
+			for (int i = 0; i < snakePieces.size(); i++)
+			{
+				snakeLocations.push_back(snakePieces[i]->getLocation());
+			}
+
+			Vector2D headLocation = head->getLocation();
+
+			switch (mDirection)
+			{
+			case 1:
+				head->setLocation(Vector2D(headLocation.getX(), headLocation.getY() - SNAKE_SIZE));
+				break;
+			case 2:
+				head->setLocation(Vector2D(headLocation.getX(), headLocation.getY() + SNAKE_SIZE));
+				break;
+			case 3:
+				head->setLocation(Vector2D(headLocation.getX() - SNAKE_SIZE, headLocation.getY()));
+				break;
+			case 4:
+				head->setLocation(Vector2D(headLocation.getX() + SNAKE_SIZE, headLocation.getY()));
+				break;
+			default:
+				//Do nothing
+				break;
+			}
+
+			for (int i = 1; i < snakePieces.size(); i++)
+			{
+				snakePieces[i]->setLocation(snakeLocations[i - 1]);
+			}
+				snake->addSnakePiece(snakeLocations[snakeLocations.size() - 1]);
+
+			snakeLocations.clear();
+		}
+
+		//Move snake 2
+		if (numLoops % snakeSpeed == 0 && mDirection2 != 0)
+		{
+			vector<Unit*> snakePieces2 = snake2->getSnakePieces();
+			Unit* head2 = snakePieces2[0];
+			vector<Vector2D> snakeLocations2;
+
+			for (int i = 0; i < snakePieces2.size(); i++)
+			{
+				snakeLocations2.push_back(snakePieces2[i]->getLocation());
+			}
+
+			Vector2D headLocation2 = head2->getLocation();
+
+			switch (mDirection2)
+			{
+			case 5:
+				head2->setLocation(Vector2D(headLocation2.getX(), headLocation2.getY() - SNAKE_SIZE));
+				break;
+			case 6:
+				head2->setLocation(Vector2D(headLocation2.getX(), headLocation2.getY() + SNAKE_SIZE));
+				break;
+			case 7:
+				head2->setLocation(Vector2D(headLocation2.getX() - SNAKE_SIZE, headLocation2.getY()));
+				break;
+			case 8:
+				head2->setLocation(Vector2D(headLocation2.getX() + SNAKE_SIZE, headLocation2.getY()));
+				break;
+			default:
+				//Do nothing
+				break;
+			}
+
+			for (int i = 1; i < snakePieces2.size(); i++)
+			{
+				snakePieces2[i]->setLocation(snakeLocations2[i - 1]);
+			}
+
+			snake2->addSnakePiece(snakeLocations2[snakeLocations2.size() - 1]);
+			
+			snakeLocations2.clear();
+		}
+
+		if (numLoops % powerUpFrequency == 0)
+		{
+			//createConsumable(currentLevel, snake, false);
+		}
+		if (mIsPoweredUp)
+		{
+			snakeSpeed += powerupPower;
+			mIsPoweredUp = false;
+		}
+		if (mScored)
+		{
+			//mpHUD->addScore(foodPoints);
+			mScored = false;
+		}
+
+		mpInputSystem->update();
+
+		mpGraphicsSystem->draw(mpGraphicsBuffManager->getBuffer("backgroundImg"), 0, 0, 1, 1);
+
+		mpUnitManager->updateAll(targetTime);
+		mpUnitManager->collisionCheck();
+		mpUnitManager->drawAll();
+
+		mpGraphicsSystem->flip();
+
+		if (numSegments >= endLength)
+		{
+			if (mpLevelManager->getCurrentLevelNum() == 2)
+			{
+				didWin = true;
+				break;
+			}
+
+			numSegments = snakeSegments;
+			int numLevel = mpLevelManager->nextLevel();
+			mpLevelManager->instantiateLevel(numLevel, mpUnitManager, mpGraphicsBuffManager->getBuffer("wallImg"));
+			currentLevel = mpLevelManager->getCurrentLevel();
+
+			delete snake;
+			snake = new Snake(mpUnitManager, mpGraphicsBuffManager, snakeSegments);
+			delete snake2;
+			snake2 = new  Snake(mpUnitManager, mpGraphicsBuffManager, snakeSegments);
+			mDirection = 0;
+			mDirection2 = 0;
+			mIsThereFood = false;
+		}
+
+		theTimer.sleepUntilElapsed(targetTime);
+		numLoops++;
+	}
+
+	testLevelNum1++;
+	mpSaveData->SaveTheData(testLevelNum1, testnum2);
+	//Add Save Here
+
+	mpGraphicsBuffManager->removeAllBuffers();
+	delete snake;
+	delete snake2;
+	snake2 = nullptr;
+	snake = nullptr;
+
+	if (didWin)
+	{
+		cout << "Won" << endl;
+		//Do this later
+	}
+	else
+	{
+		cout << "Lost" << endl;
+	}
+}
+
+void Game::handleEvent(const Event& theEvent)
+{
+
+	if (theEvent.getType() == COLLISION_EVENT)
+	{
+		const CollisionEvent& collisionEvent = static_cast<const CollisionEvent&>(theEvent);
+		Unit* firstUnit = collisionEvent.getThisUnit();
+		Unit* secondUnit = collisionEvent.getCollidingUnit();
+		string firstTag = firstUnit->getTag();
+		string secondTag = secondUnit->getTag();
+
+		if (firstTag == "Wall" && secondTag == "Snake" || firstTag == "Snake" && secondTag == "Wall")
+		{
+			mShouldContinue = false;
+		}
+
+		if (firstTag == "Snake" && secondTag == "Snake")
+		{
+			mShouldContinue = false;
+		}
+
+		Level* level = mpLevelManager->getCurrentLevel();
+
+		if (firstTag == "Food" && secondTag == "Snake")
+		{
+			Vector2D vec = firstUnit->getLocation();
+			level->addEmptyLocation(vec);
+
+			mpUnitManager->delUnit(firstUnit);
+			mIsThereFood = false;
+		}
+		if (firstTag == "Snake" && secondTag == "Food")
+		{
+			Vector2D vec = secondUnit->getLocation();
+			level->addEmptyLocation(vec);
+
+			mpUnitManager->delUnit(secondUnit);
+			mScored = true;
+			mIsThereFood = false;
+		}
+
+		if (firstTag == "Powerup" && secondTag == "Snake")
+		{
+			Vector2D vec = firstUnit->getLocation();
+			level->addEmptyLocation(vec);
+
+			mpUnitManager->delUnit(firstUnit);
+			mIsPoweredUp = true;
+		}
+		if (firstTag == "Snake" && secondTag == "Powerup")
+		{
+			Vector2D vec = secondUnit->getLocation();
+			level->addEmptyLocation(vec);
+
+			mpUnitManager->delUnit(secondUnit);
+			mIsPoweredUp = true;
+		}
+	}
+	else if (theEvent.getType() == INPUT_EVENT)
+	{
+		const InputEvent& inputEvent = static_cast<const InputEvent&>(theEvent);
+		int key = inputEvent.getInput();
+
+		switch (key)
+		{
+		case 1:
+			//W
+			if (mDirection != 2)
+				mDirection = key;
+			break;
+		case 2:
+			//S
+			if (mDirection != 1)
+				mDirection = key;
+			break;
+		case 3:
+			//A
+			if (mDirection != 4)
+				mDirection = key;
+			break;
+		case 4:
+			//D
+			if (mDirection != 3)
+				mDirection = key;
+			break;
+		case 5:
+			//W
+			if (mDirection2 != 2)
+				mDirection2 = key;
+			break;
+		case 6:
+			//S
+			if (mDirection2 != 1)
+				mDirection2 = key;
+			break;
+		case 7:
+			//A
+			if (mDirection2 != 4)
+				mDirection2 = key;
+			break;
+		case 8:
+			//D
+			if (mDirection2 != 3)
+				mDirection2 = key;
+			break;
+		case 9:
+			mShouldContinue = false;
+			break;
+		default:
+			break;
+		}
+	}
+}
+
+void Game::createConsumable(Level* level, Snake* snake, bool food)
+{
+	std::srand(static_cast<unsigned int>(std::time(0)));
+
+	vector<Vector2D> levelSpaces = level->getEmptyLocations();
+	vector<Unit*> snakeSpaces = snake->getSnakePieces();
+	vector<Vector2D> snakeLocations;
+
+	for (int i = 0; i < snakeSpaces.size(); i++)
+	{
+		snakeLocations.push_back(snakeSpaces[i]->getLocation());
+	}
+
+	for (int i = 0; i < levelSpaces.size(); i++)
+	{
+		for (int j = 0; j < snakeLocations.size(); j++)
+		{
+			if (snakeLocations[j] == levelSpaces[i])
+			{
+				levelSpaces.erase(levelSpaces.begin() + i);
+				break;
+			}
+		}
+	}
+
+	int spawnIter = rand() % levelSpaces.size() + 0;
+	Vector2D spawnLoc = levelSpaces[spawnIter];
+	level->removeEmptyLocation(spawnLoc);
+	int fps = 10;
+
+	if (food)
+	{
+		mpUnitManager->addUnit(spawnLoc.getX(), spawnLoc.getY(), 1, 1, "Food");
+		Unit* head = mpUnitManager->getLastUnit();
+		Animation* anim = new Animation;
+		anim->addSprite(mpGraphicsBuffManager->getBuffer("foodImg"), 2, 2, fps, true);
+		head->setAnimation(anim);
+		mIsThereFood = true;
+	}
+	else
+	{
+		mpUnitManager->addUnit(spawnLoc.getX(), spawnLoc.getY(), 1, 1, "Powerup");
+		Unit* head = mpUnitManager->getLastUnit();
+		Animation* anim = new Animation;
+		anim->addSprite(mpGraphicsBuffManager->getBuffer("powerupImg"), 2, 2, fps, true);
+		head->setAnimation(anim);
+	}
+}

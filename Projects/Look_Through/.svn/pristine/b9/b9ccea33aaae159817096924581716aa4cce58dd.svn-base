@@ -1,0 +1,9 @@
+#pragma once
+#include "Trackable.h"
+
+#include "Event.h"
+
+class EventSystem : public Trackable
+{
+
+};

@@ -1,0 +1,34 @@
+#pragma once
+
+#include <PerformanceTracker.h>
+#include <MemoryTracker.h>
+
+#include <Vector2D.h>
+#include "GraphicsBuffer.h"
+class Sprite : public Trackable
+{
+public:
+	Sprite();
+	Sprite(Vector2D location, int wide, int tall, GraphicsBuffer* graphicsBuffer);
+	Sprite(Vector2D location, GraphicsBuffer* graphicsBuffer);
+	Sprite(GraphicsBuffer* pBuffer);
+	Sprite(GraphicsBuffer* pBuff, Vector2D loc, int width, int height);
+
+	Vector2D getLocation();
+	int getWidth();
+	int getHeight();
+	GraphicsBuffer* getBuffer();
+
+	static Sprite* getSmurfs(GraphicsBuffer* pBuff, int width, int height, int numSprites);
+
+	~Sprite();
+
+private:
+	//location (upper left corner of sprite)
+	Vector2D spriteLocation;
+
+	int mWidth;
+	int mHeight;
+
+	GraphicsBuffer* mpGraphicsBuffer;
+};

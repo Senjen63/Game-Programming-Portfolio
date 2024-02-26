@@ -1,0 +1,46 @@
+#include "HUD.h"
+#include "Game.h"
+#include "GraphicsBuffer.h"
+#include "GraphicsBufferManager.h"
+#include "GraphicsSystem.h"
+#include "Level.h"
+#include "LevelManager.h"
+#include "Color.h"
+#include "Font.h"
+#include "Sprite.h"
+#include "GameEvent.h"
+#include "Vector2D.h"
+#include <Event.h>
+#include <EventSystem.h>
+#include <algorithm>
+
+HUD::HUD()
+{
+	mpFont = new Font(FONT_FILE, FONT_SIZE);
+}
+
+HUD::~HUD()
+{
+	delete mpFont;
+}
+
+void HUD::drawHUD()
+{
+	Game* pGame = Game::getGameInstance();
+
+	int currentLevel = pGame->getLevelManager()->getCurrentLevelIndex();
+	int score = pGame->getScore();
+	float fps = double(1000) / pGame->GAME_TICK;
+	Vector2D HUDLocation = Vector2D(pGame->ORIGIN_LOCATION.getX() + 64, pGame->ORIGIN_LOCATION.getY());
+
+	int time = pGame->getTime() / 1000;
+
+	mLevelText = "Level: " + to_string(pGame->getLevelManager()->getCurrentLevelIndex());
+	mScoreText = "Score: " + to_string(pGame->getScore());
+	mFPSText = "FPS: " + to_string(fps);
+	mTimeText = "Time: " + to_string(time);
+
+	string HUDText = mLevelText + "   " + mScoreText + "   " + mFPSText + "   " + mTimeText;
+
+	pGame->getGraphicsSystem()->writeText(HUDLocation, mpFont, mTextColor, HUDText, ALLEGRO_ALIGN_LEFT);
+}

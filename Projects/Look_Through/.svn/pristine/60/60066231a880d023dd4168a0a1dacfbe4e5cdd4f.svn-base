@@ -1,0 +1,30 @@
+#pragma once
+#include "AnimationFrames.h"
+
+#include <Trackable.h>
+
+#include <unordered_map>
+
+typedef string AnimKey;
+
+//Uses the same pattern as GraphicsBufferManager
+class AnimationManager : public Trackable
+{
+    private:
+        unordered_map<AnimKey, AnimationFrames*> mAnimations; //stores key pairs with vectors of sprite sheets
+
+    public:
+        AnimationManager();
+        ~AnimationManager();
+
+        void init();
+        void cleanup(); //calls clearAll()
+
+        AnimationFrames* getFrames(AnimKey key);
+
+        void addAnimation(AnimKey key, AnimationFrames* frames); //adds new key pair with AnimationFrames to mAnimations
+        void deleteFrames(AnimationFrames* frames); //deletes an AnimationFrames object by matching passed AnimationFrames object and deleting the one that matches
+        void deleteFrames(AnimKey key); //deletes an AnimationFrames object by key
+
+        void clearAll(); //deletes all AnimationFrames
+};

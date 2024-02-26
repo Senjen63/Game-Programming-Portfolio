@@ -1,0 +1,485 @@
+#include <allegro5/allegro.h>
+#include <allegro5/allegro_font.h>
+#include <allegro5/allegro_ttf.h>
+#include <allegro5/allegro_audio.h>
+#include <allegro5/allegro_acodec.h>
+#include <allegro5/allegro_image.h>
+#include <allegro5/allegro_primitives.h>
+
+#include <iostream>
+#include <cassert>
+#include <string>
+#include <fstream>
+
+#include <PerformanceTracker.h>
+#include <MemoryTracker.h>
+#include <Vector2D.h>
+#include <Timer.h>
+
+#include "Game.h"
+#include "Unit.h"
+#include "InputSystem.h"
+#include "MoveEvent.h"
+#include "MessageEvent.h"
+//#include "Buffer.h"
+using namespace std;
+
+
+//----------------------------------------Game----------------------------------------
+Game* Game::msGame = nullptr;
+
+Game::Game()
+{
+	gameWidth = 0;
+	gameHeight = 0;
+	gameFPS = 16.66f;
+	mpSceneManager = new SceneManager();
+}
+
+Game::~Game()
+{
+	mpGBManager = nullptr;
+	mpGSystem = nullptr;
+	mpISystem = nullptr;
+	delete mpGBManager;
+	delete mpGSystem;
+	delete mpISystem;
+
+	destroyInstance();
+}
+
+bool Game::init(unsigned int width, unsigned int height, float fps)
+{
+	mpGSystem = new GraphicsSystem(width, height);
+	mpISystem = new InputSystem();
+	mpISystem->init();
+	mpFont = new Font(mpSceneManager->getFontSize(), mpSceneManager->getFontFile());
+	
+	mpEventSystem = EventSystem::getInstance();
+	mpEventSystem->init();
+
+	mpEventSystem->addListener((EventType)MOVE_EVENT, this);
+	//mpEventSystem->getInstance()->addListener((EventType)GAMEPLAY_EVENT, this);
+
+	gameWidth = width;
+	gameHeight = height;
+	gameFPS = fps;
+
+	mpGui = new Gui(mpGSystem);
+	mpGui->init();
+
+	if (mpGSystem->setup() == 1)
+	{
+		return 1;
+	}
+
+	return 0;
+}
+
+void Game::cleanup()
+{
+	mpGSystem->cleanup();
+	mpISystem->cleanup();
+	mpGui;
+	delete mpSnakeAnim;
+	delete mpFont;
+	delete mpGui;
+}
+
+void Game::createInstance()
+{
+	if (msGame == nullptr)
+	{
+		msGame = new Game;
+	}
+}
+
+void Game::destroyInstance()
+{
+	msGame = nullptr;
+	delete msGame;
+}
+
+void Game::doLoop()
+{
+	const string UNIT_NAME = "Unit ";
+	const int SMURF_ROWS = 4;
+	const int SMURF_COLS = 4;
+	const int SMURF_SIZE = 64;
+	const float FRAME_SPEED = 1.50f;
+	bool isUnitOne = true;
+
+	
+	mpGBManager = new GraphicsBufferManager();
+
+	mpSceneManager->createLevel(LEVEL_1);
+	//cout << mpSceneManager->getDeanAssetPath() << endl;
+	GraphicsBuffer* backgroundBuffer = new GraphicsBuffer(mpSceneManager->getBackFile(), mpSceneManager->getAssetPath());
+
+	GraphicsBuffer* tileBuffer = new GraphicsBuffer(mpSceneManager->getTileFile(), mpSceneManager->getAssetPath());
+	GraphicsBuffer* snakeBuffer = new GraphicsBuffer(mpSceneManager->getSnakeFile(), mpSceneManager->getAssetPath());
+	GraphicsBuffer* foodBuffer = new GraphicsBuffer(mpSceneManager->getFoodFile(), mpSceneManager->getAssetPath());
+	GraphicsBuffer* powerupBuffer = new GraphicsBuffer(mpSceneManager->getPowerFile(), mpSceneManager->getAssetPath());
+	GraphicsBuffer* wallBuffer = new GraphicsBuffer(mpSceneManager->getWallFile(), mpSceneManager->getAssetPath());
+	GraphicsBuffer* Start = new GraphicsBuffer(800, 600, Color(0,0,0,225));
+	GraphicsBuffer* End = new GraphicsBuffer(800, 600, Color(0, 0, 0, 225));
+	mpGBManager->addGraphicsBuffer(snakeBuffer, "Snake");
+	mpGBManager->addGraphicsBuffer(foodBuffer, "Food");
+	mpGBManager->addGraphicsBuffer(powerupBuffer, "Power");
+	mpGBManager->addGraphicsBuffer(wallBuffer, "Wall");
+	mpGBManager->addGraphicsBuffer(tileBuffer, "Tile");
+	mpGBManager->addGraphicsBuffer(Start, "Start");
+	mpGBManager->addGraphicsBuffer(End, "End");
+
+
+	Sprite backgroundSprite = Sprite(backgroundBuffer->getWidth(), backgroundBuffer->getHeight(), 0, 0, backgroundBuffer);
+	Animation* uAnimSnake = new Animation(FRAME_SPEED, snakeBuffer, 1);
+	Animation* uAnimFood = new Animation(FRAME_SPEED, foodBuffer, 1);
+	Animation* uAnimPowerup = new Animation(FRAME_SPEED, powerupBuffer, 1);
+	Animation* uAnimWall = new Animation(FRAME_SPEED, wallBuffer, 1);
+	Animation* uAnimTile = new Animation(FRAME_SPEED, tileBuffer, 1);
+	mpSnakeAnim = uAnimSnake;
+	mpSceneManager->addAnimation(uAnimSnake, "snake");
+	mpSceneManager->addAnimation(uAnimFood, "food");
+	mpSceneManager->addAnimation(uAnimWall, "wall");
+	mpSceneManager->addAnimation(uAnimTile, "tile");
+	mpSceneManager->addAnimation(uAnimPowerup, "powerUp");
+
+	mpSceneManager->createLevel(LEVEL_1, mpGBManager);
+
+
+	PerformanceTracker* pPerformanceTracker = new PerformanceTracker;
+	
+
+	while (mLoop)
+	{
+		Timer timer;
+		timer.start();
+		pPerformanceTracker->clearTracker("loop");
+		pPerformanceTracker->startTracking("loop");
+
+		//--------------------Get user input--------------------
+		mpISystem->getKeyState();
+		
+		moveSnake(gameFPS);
+		collision();
+		//cout << "test" << endl;
+
+		//--------------------Update--------------------
+		mpEventSystem->fireEvent(ScoreEvent(mScore));
+		mpSceneManager->getUnitManager()->UpdateAll();
+		mpSceneManager->getItemManager()->UpdateAll();
+		mpSceneManager->getSnakeManager()->UpdateAll();
+
+		//--------------------Draw--------------------
+		mpGSystem->draw(0, 0, backgroundSprite, (mpGSystem->getWidth() / float(backgroundBuffer->getWidth())));
+		mpSceneManager->getUnitManager()->DrawAll();
+		mpSceneManager->getItemManager()->DrawAll();
+		mpSceneManager->getSnakeManager()->DrawAll();
+		
+		mpGui->display();
+		if (!mStartGame)
+		{
+			mpGBManager->getGraphicsBuffer("Start")->clearToColor(Color(0, 0, 0, 225));
+			mpGSystem->draw(mpGBManager->getGraphicsBuffer("Start"), 0, 0, 1);
+			mpGSystem->writeText(mpGBManager->getGraphicsBuffer("Start"), mpGBManager->getGraphicsBuffer("Start")->getWidth() / 2, mpGBManager->getGraphicsBuffer("Start")->getHeight() / 2, mpFont, Color(255, 255, 255, 255), "Welcome to Snake! Press SPACEBAR to start");
+		}
+		if (!mStartGame && !mLoop)
+		{
+			mpGBManager->getGraphicsBuffer("End")->clearToColor(Color(0, 0, 0, 225));
+			mpGSystem->draw(mpGBManager->getGraphicsBuffer("End"), 0, 0, 1);
+			mpGSystem->writeText(mpGBManager->getGraphicsBuffer("End"), mpGBManager->getGraphicsBuffer("End")->getWidth()/2, mpGBManager->getGraphicsBuffer("End")->getHeight()/2, mpFont, Color(255, 255, 255, 255), "Game Over! Press ESC to Quit, or ENTER to restart");
+		}
+		mpGSystem->flip();
+		
+		while (mContinueWait)
+		{
+			mpISystem->getKeyState();
+		}
+
+		//--------------------Wait--------------------
+		timer.sleepUntilElapsed(gameFPS);
+
+		guiEvents(timer.getElapsedTime());
+		//mElapsedTime += timer.getElapsedTime();
+		pPerformanceTracker->stopTracking("loop");
+		//cout << "Time to Process Frame:" << pPerformanceTracker->getElapsedTime("loop") << " ms" << endl;
+	}
+	
+	delete snakeBuffer;
+	delete foodBuffer;
+	delete powerupBuffer;
+	delete backgroundBuffer;
+	delete uAnimSnake;
+	delete uAnimFood;
+	delete uAnimPowerup;
+}
+
+void Game::moveSnake(float time)
+{
+	if (mStartGame)
+	{
+		mElapsedMoveTime += time;
+		if (mElapsedMoveTime > 200.0)
+		{
+			for (int i = mpSceneManager->getSnakeManager()->getSize() - 1; i > 0; i--)
+			{
+				mpSceneManager->getSnakeManager()->getUnit(i)->setPosition(mpSceneManager->getSnakeManager()->getUnit(i - 1)->getPosition());
+				//cout << mpSceneManager->getSnakeManager()->getUnit(i)->getPosition() << endl;
+				mElapsedMoveTime = 0;
+			}
+			mpSceneManager->getSnakeManager()->getUnit(0)->move(mMovePos);
+		}
+	}
+}
+
+void Game::collision()
+{
+	if (mpSceneManager->getSnakeManager()->getSize() != 0 && (mpSceneManager->getUnitManager()->checkCollision(mpSceneManager->getSnakeManager()->getUnit(0)->getPosition())))
+	{
+		if (mpSceneManager->getUnitManager()->getCollidedUnit()->getWallStatus())
+		{
+			//pause game and display game over
+			mContinueWait = true;
+			mStartGame = false;
+			mLoop = false;
+			mScore = 0;
+		}
+		else if (mpSceneManager->getUnitManager()->getCollidedUnit()->getFoodStatus())
+		{
+			mpSceneManager->getUnitManager()->getCollidedUnit()->toggleFood(false);
+			Vector2D temp = mpSceneManager->getUnitManager()->getCollidedUnit()->getPosition();
+			int tempNum = mpSceneManager->getUnitManager()->getCollidedUnitPos();
+			mpSceneManager->getUnitManager()->deleteUnit(tempNum-1);
+			Unit* tile = new Unit((int)temp.getX(), (int)temp.getY(), mpSceneManager->getAnimation("tile"));
+			mpSceneManager->getUnitManager()->addUnit(tile);
+			
+			mWaitPwr++;
+			mpSceneManager->increaseFood();
+			if (mWaitPwr == 2)
+			{
+				mWaitPwr = 0;
+				mpSceneManager->setPwrLoc();
+			}
+			mpSceneManager->setFoodLoc();
+
+			if (mpSceneManager->getNumFood() >= 8)
+			{
+				//load next level
+				
+				mActiveLevel++;
+				if (mActiveLevel >= 4)
+				{
+					mActiveLevel = 1;
+				}
+
+				while (mpSceneManager->getSnakeManager()->getSize() >= 2)
+				{
+					shrink(1);
+				}
+
+				mWaitPwr = 0;
+				mpSceneManager->deleteLevel();
+				
+				if (mActiveLevel == 1)
+				{
+					mpSceneManager->loadLevel(LEVEL_1, mpGBManager);
+				}
+				else if (mActiveLevel == 2)
+				{
+					mpSceneManager->loadLevel(LEVEL_2, mpGBManager);
+				}
+				else if (mActiveLevel == 3)
+				{
+					mpSceneManager->loadLevel(LEVEL_3, mpGBManager);
+				}
+				
+				mScore += 30;
+				//mLoop = false;
+			}
+			else 
+			{
+				mScore += 5;
+				grow(mpSnakeAnim);
+			}
+			cout << mpSceneManager->getNumFood() << endl;
+		}
+		else if (mpSceneManager->getSnakeManager()->getSize() != 0 && (mpSceneManager->getItemManager()->checkCollision(mpSceneManager->getSnakeManager()->getUnit(0)->getPosition())))
+		{
+			//decrease size
+			if (mpSceneManager->getSnakeManager()->getSize() <= 2)
+			{
+
+			}
+			else if (mpSceneManager->getItemManager()->getCollidedUnit()->getFoodStatus())
+			{
+				mpSceneManager->getItemManager()->getCollidedUnit()->toggleFood(false);
+				int tempNum = mpSceneManager->getItemManager()->getCollidedUnitPos();
+				mpSceneManager->getItemManager()->deleteUnit(tempNum - 1);
+
+				mWaitPwr++;
+				mpSceneManager->increaseFood();
+				if (mWaitPwr == 2)
+				{
+					mWaitPwr = 0;
+					mpSceneManager->setPwrLoc();
+				}
+				mpSceneManager->setFoodLoc();
+
+				if (mpSceneManager->getNumFood() >= 8)
+				{
+					//load next level
+
+					mActiveLevel++;
+					if (mActiveLevel >= 4)
+					{
+						mActiveLevel = 1;
+					}
+
+					while (mpSceneManager->getSnakeManager()->getSize() >= 2)
+					{
+						shrink(1);
+					}
+
+					mWaitPwr = 0;
+					mpSceneManager->deleteLevel();
+
+					if (mActiveLevel == 1)
+					{
+						mpSceneManager->loadLevel(LEVEL_1, mpGBManager);
+					}
+					else if (mActiveLevel == 2)
+					{
+						mpSceneManager->loadLevel(LEVEL_2, mpGBManager);
+					}
+					else if (mActiveLevel == 3)
+					{
+						mpSceneManager->loadLevel(LEVEL_3, mpGBManager);
+					}
+
+					mScore += 30;
+					//mLoop = false;
+				}
+				else
+				{
+					mScore += 5;
+					grow(mpSnakeAnim);
+				}
+				cout << mpSceneManager->getNumFood() << endl;
+			}
+			else
+			{
+				mpSceneManager->getItemManager()->getCollidedUnit()->togglePwr(false);
+				int tempNum = mpSceneManager->getItemManager()->getCollidedUnitPos();
+				mpSceneManager->getItemManager()->deleteUnit(tempNum - 1);
+
+				mpSceneManager->decreasePwr();
+				shrink(2);
+			}
+		}
+		
+		else if (mpSceneManager->getSnakeManager()->getSize() != 0 && (mpSceneManager->getSnakeManager()->checkSelfCollision(mpSceneManager->getSnakeManager()->getUnit(0)->getPosition())))
+		{
+		//int last = mpSceneManager->getSnakeManager()->getSize();
+		//int secondLast = mpSceneManager->getSnakeManager()->getSize()-1;
+			if (mpSceneManager->getSnakeManager()->getCollidedUnit() != mpSceneManager->getSnakeManager()->getUnit(1))
+			{
+				if (mpSceneManager->getSnakeManager()->getCollidedUnit() != mpSceneManager->getSnakeManager()->getUnit(2))
+				{
+
+					//pause game and display game over
+					mContinueWait = true;
+					mStartGame = false;
+					mLoop = false;
+				}
+			}
+		}
+	}
+}
+
+void Game::grow(Animation* anim)
+{
+	for (int i = 0; i < 2; i++) 
+	{
+		Unit* segment = new Unit(mpSceneManager->getSnakeManager()->getUnit(1)->getXPos(), mpSceneManager->getSnakeManager()->getUnit(1)->getYPos(), anim);
+		mpSceneManager->getSnakeManager()->addUnit(segment);
+	}
+}
+
+void Game::shrink(int size)
+{
+	for (int i = 0; i < size; i++)
+	{
+		mpSceneManager->getSnakeManager()->deleteUnit(mpSceneManager->getSnakeManager()->getSize() - 1);
+	}
+}
+
+void Game::guiEvents(float elapsedTime)
+{
+	mElapsedTime += elapsedTime / mTimeScale;
+	mpEventSystem->fireEvent(TimeEvent(mElapsedTime));
+
+	mFps = mTimeScale / elapsedTime;
+	mpEventSystem->fireEvent(FpsEvent(mFps));
+}
+
+
+
+void Game::handleEvent(const Event& theEvent)
+{
+	
+	if (theEvent.getType() == MOVE_EVENT)
+	{
+		const MoveEvent& moveEvent = static_cast<const MoveEvent&>(theEvent);
+
+		if (moveEvent.getKeyBind() == (int)KeyBindings::KEY_A || moveEvent.getKeyBind() == (int)KeyBindings::KEY_LEFT)
+		{
+			if (mpSceneManager->getSnakeManager()->checkCollision(Vector2D(mSPRITE_WIDTH, 0)) || mMovePos != Vector2D(-mSPRITE_WIDTH, 0))
+				mMovePos = Vector2D(-mSPRITE_WIDTH/2, 0);
+		}
+		else if (moveEvent.getKeyBind() == (int)KeyBindings::KEY_D || moveEvent.getKeyBind() == (int)KeyBindings::KEY_RIGHT)
+		{
+			if (mpSceneManager->getSnakeManager()->checkCollision(Vector2D(-mSPRITE_WIDTH, 0)) || mMovePos != Vector2D(mSPRITE_WIDTH, 0))
+				mMovePos = Vector2D(mSPRITE_WIDTH/2, 0);
+		}
+		else if (moveEvent.getKeyBind() == (int)KeyBindings::KEY_S || moveEvent.getKeyBind() == (int)KeyBindings::KEY_DOWN)
+		{
+			if (mpSceneManager->getSnakeManager()->checkCollision(Vector2D(0, -mSPRITE_HEIGHT)) || mMovePos != Vector2D(0, -mSPRITE_HEIGHT))
+				mMovePos = Vector2D(0, mSPRITE_HEIGHT/2);
+		}
+		else if (moveEvent.getKeyBind() == (int)KeyBindings::KEY_W || moveEvent.getKeyBind() == (int)KeyBindings::KEY_UP)
+		{
+			if (mpSceneManager->getSnakeManager()->checkCollision(Vector2D(0, mSPRITE_HEIGHT)) || mMovePos != Vector2D(0, mSPRITE_HEIGHT))
+				mMovePos = Vector2D(0, -mSPRITE_HEIGHT/2);
+		}
+		else if (moveEvent.getKeyBind() == (int)KeyBindings::KEY_ESC)
+		{
+			if (mContinueWait)
+			{
+				mContinueWait = false;
+			}
+			mLoop = false;
+		}
+		else if (moveEvent.getKeyBind() == (int)KeyBindings::KEY_SPACE)
+		{
+			mStartGame = true;
+
+		}
+		else if (moveEvent.getKeyBind() == (int)KeyBindings::KEY_ENTER)
+		{
+			if (mContinueWait)
+			{
+				mContinueWait = false;
+				mLoop = true;
+				mActiveLevel = 1;
+
+				while (mpSceneManager->getSnakeManager()->getSize() >= 2)
+				{
+					shrink(1);
+				}
+				mpSceneManager->deleteLevel();
+				mpSceneManager->loadLevel(LEVEL_1, mpGBManager);
+			}
+		}
+	}
+}

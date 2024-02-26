@@ -1,0 +1,145 @@
+#include "Game.h"
+
+Game::Game()
+{
+	mpGraphicsSystem = new GraphicsSystem();
+}
+
+Game::Game(Vector2D lengthXY)
+{
+	mlengthXY = lengthXY;
+}
+
+Game::~Game()
+{
+	cleaner();
+}
+
+void Game::loop()
+{
+	PerformanceTracker* pTrack = new PerformanceTracker;
+	mEscapeKeyDown = false;
+	GraphicsBuffer* pSmurfs = new GraphicsBuffer(ASSET_PATH + SMURFS_FILENAME);
+	GraphicsBuffer* pDeanSmurfs = new GraphicsBuffer(ASSET_PATH + DEAN_SMURFS_FILENAME);
+	GraphicsBuffer* pBackground = new GraphicsBuffer(ASSET_PATH + BACKGROUND_FILENAME);
+	Unit* pWalkingSmurf = new Unit(mFps, Vector2D(mpGraphicsSystem->getWidth() / 2, mpGraphicsSystem->getHeight() / 2));
+	pWalkingSmurf->addNewAnimation(4, 4, pSmurfs);
+	pWalkingSmurf->addNewAnimation(4, 4, pDeanSmurfs);
+	bool enterKeyDown = false;
+	bool fKeyDown = false;
+	bool sKeyDown = false;
+
+	while (!mEscapeKeyDown)
+	{
+		pTrack->clearTracker(LOOP_NAME);
+		pTrack->startTracking(LOOP_NAME);
+		Timer loopTimer;
+		loopTimer.start();
+		mpGraphicsSystem->draw(pBackground, 0, 0, mlengthXY.getX() / pBackground->getWidth(), mlengthXY.getY() / pBackground->getHeight());
+		Vector2D mouseStatus = mInputSystem.getMouse(LMB);
+
+		if (mouseStatus != Vector2D(-100, -100))
+		{
+			pWalkingSmurf->moveLocation(mouseStatus);
+		}
+		if (mInputSystem.getKeyPress(ESC))
+		{
+			std::cout << "Escape Key Pressed." << std::endl;
+			mEscapeKeyDown = true;
+		}
+		if (mInputSystem.getKeyPress(ENTER))
+		{
+			if (!enterKeyDown)
+			{
+				std::cout << "Enter Key Pressed." << std::endl;
+				enterKeyDown = true;
+				int next = pWalkingSmurf->getIndex() + 1;
+				if (next >= pWalkingSmurf->getAnimations())
+				{
+					next = 0;
+				}
+				pWalkingSmurf->setAnimation(next);
+			}
+		}
+		else
+		{
+			enterKeyDown = false;
+		}
+		if (mInputSystem.getKeyPress(F))
+		{
+			if (!fKeyDown)
+			{
+				std::cout << "F Key Pressed." << std::endl;
+				fKeyDown = true;
+				mFps += SPEED;
+				if (mFps > MAX_FPS)
+				{
+					mFps = MAX_FPS;
+				}
+				pWalkingSmurf->setFramerate(mFps);
+			}
+		}
+		else
+		{
+			fKeyDown = false;
+		}
+		if (mInputSystem.getKeyPress(S))
+		{
+			if (!sKeyDown)
+			{
+				std::cout << "S Key Pressed." << std::endl;
+				sKeyDown = true;
+				mFps -= SPEED;
+				if (mFps < MIN_FPS)
+				{
+					mFps = MIN_FPS;
+				}
+				pWalkingSmurf->setFramerate(mFps);
+			}
+		}
+		else
+		{
+			sKeyDown = false;
+		}
+
+		pWalkingSmurf->update(loopTimer.getElapsedTime() * TIME_SCALE);
+		pWalkingSmurf->draw(mpGraphicsSystem);
+		mpGraphicsSystem->flip();
+		loopTimer.sleepUntilElapsed(mFrameTime);
+		pTrack->stopTracking(LOOP_NAME);
+		std::cout << pTrack->getElapsedTime(LOOP_NAME) << std::endl;
+	}
+	delete pWalkingSmurf;
+	delete pSmurfs;
+	delete pDeanSmurfs;
+	delete pBackground;
+	delete pTrack;
+}
+
+void Game::cleaner()
+{
+	if (!mIsClean)
+	{
+		std::cout << "Cleaned!" << std::endl;
+		delete mpGraphicsSystem;
+		mIsClean = true;
+	}
+}
+
+void Game::init()
+{
+	if (!mIsInit)
+	{
+		mpGraphicsSystem->init();
+		mInputSystem.init();
+		mpGraphicsSystem = new GraphicsSystem(mlengthXY.getX(), mlengthXY.getY());
+		mInputSystem = InputSystem();
+		mIsInit = true;
+	}
+	else
+	{
+		std::cout << "Could not initialize Graphics and/or Input Systems. Please try again." << std::endl;
+	}
+}
+
+Game* gpGame = nullptr;

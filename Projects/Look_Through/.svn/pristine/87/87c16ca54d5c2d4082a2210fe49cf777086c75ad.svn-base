@@ -1,0 +1,19 @@
+#pragma once
+#include <SDL_ttf.h>
+#include <Trackable.h>
+
+class Font : public Trackable
+{
+public:
+	friend class GraphicsSystem;
+
+	Font(std::string name, int size);
+	~Font();
+
+	int getSize() { return mSize; }
+	TTF_Font* getFont() { return mpFont; }
+
+private:
+	int mSize;
+	TTF_Font* mpFont = NULL;
+};

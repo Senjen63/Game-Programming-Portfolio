@@ -1,0 +1,19 @@
+#include "InputEvent.h"
+
+InputEvent::InputEvent(int keyCode) : GameEvent((GameEventType)INPUT_EVENT)
+{
+    mKeyCode = keyCode;
+}
+
+
+InputEvent::~InputEvent()
+{
+
+}
+
+int InputEvent::GetKeyCode() const 
+{ 
+    return mKeyCode; 
+}
+
+

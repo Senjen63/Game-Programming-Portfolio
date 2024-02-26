@@ -1,0 +1,123 @@
+#include <iostream>
+#include <cassert>
+#include <string>
+#include <stdlib.h>
+#include <time.h>
+
+#include <PerformanceTracker.h>
+#include <MemoryTracker.h>
+#include <Vector2D.h>
+#include <Timer.h>
+
+#include "GraphicsSystem.h"
+#include "GraphicsBuffer.h"
+#include "Sprite.h"
+#include "Font.h"
+#include "Color.h"
+
+//#define USE_NUMBERED_SPRITES
+#define PREVENT_SMURF_CLIPPING
+
+int main()
+{
+	// Define constant values and initialize resources
+
+	// Define asset paths
+	const string ASSET_PATH = "..\\..\\common\\assets\\";
+	const string STEPS_PATH = "steps.png";
+
+#ifdef USE_NUMBERED_SPRITES
+	const string SMURFS_PATH = "smurf_sprites_numbered.png";
+#else
+	const string SMURFS_PATH = "smurf_sprites.png";
+#endif
+
+	const string QUIMBY_PATH = "Mayor_Quimby.png";
+	const string FONT_PATH = "cour.ttf";
+
+	// Define output files
+	const string OUTPUT_PATH = ".\\";
+	const string BACKBUFF_OUTPUT = "backbuffer.jpg";
+	const string REDBUFF_OUTPUT = "redbuffer.jpg";
+
+	// Define display dimensions and font size
+	const int DISP_HEIGHT = 600;
+	const int DISP_WIDTH = 800;
+	const int FONT_SIZE = 48;
+
+	// Graphics values
+	const Vector2D DEFAULT_POS = Vector2D(0, 0); // Top left corner.
+	const Vector2D TEXT_POS = Vector2D(400, 300);
+	const string QUIMBY_TEXT = "Curse you Papa Smurf!";
+	const float QUIMBY_SCALE = 0.66;
+
+	const int RED_PADX = 133;
+	const int RED_PADY = 100;
+
+	// Smurf sprite dimensions
+	const int SMURF_HEIGHT = 60;
+	const int SMURF_WIDTH = 60;
+	const int SMURFSHEET_SIZE = 240;
+
+	// Initialize graphics system
+	GraphicsSystem screen = GraphicsSystem(DISP_HEIGHT, DISP_WIDTH);
+	if (!screen.init())
+	{
+		return 1;
+	}
+
+	// Define colors
+	const Color RED = Color(255, 0, 0);
+	const Color BLACK = Color(0, 0, 0);
+
+	Font* cour = new Font(ASSET_PATH + FONT_PATH, FONT_SIZE);
+
+	GraphicsBuffer* stepsBuffer = new GraphicsBuffer(ASSET_PATH + STEPS_PATH);
+	GraphicsBuffer* smurfBuffer = new GraphicsBuffer(ASSET_PATH + SMURFS_PATH);
+	GraphicsBuffer* quimbyBuffer = new GraphicsBuffer(ASSET_PATH + QUIMBY_PATH);
+#ifdef USE_NUMBERED_SPRITES
+	GraphicsBuffer* redBuffer = new GraphicsBuffer(BLACK, DISP_HEIGHT, DISP_WIDTH);
+#else
+	GraphicsBuffer* redBuffer = new GraphicsBuffer(RED, DISP_HEIGHT, DISP_WIDTH);
+#endif
+
+	screen.draw(redBuffer, DEFAULT_POS, quimbyBuffer);
+#ifdef USE_NUMBERED_SPRITES
+	screen.writeText(redBuffer, TEXT_POS, cour, RED, QUIMBY_TEXT);
+#else
+	screen.writeText(redBuffer, TEXT_POS, cour, BLACK, QUIMBY_TEXT);
+#endif
+
+	screen.draw(DEFAULT_POS, stepsBuffer);
+	screen.draw(Vector2D(RED_PADX, RED_PADY), redBuffer, QUIMBY_SCALE, QUIMBY_SCALE);
+
+	Sprite* pSmurf = new Sprite(ASSET_PATH + SMURFS_PATH, DEFAULT_POS, SMURF_HEIGHT, SMURF_WIDTH);
+
+	for (int i = 0; i < 16; i++)
+	{
+#ifdef PREVENT_SMURF_CLIPPING
+		screen.draw(Vector2D(rand() % (DISP_WIDTH - SMURF_WIDTH) + 1, rand() % (DISP_HEIGHT - SMURF_HEIGHT) + 1), pSmurf);
+#else
+		screen.draw(Vector2D(rand() % DISP_WIDTH + 1, rand() % DISP_HEIGHT + 1), pSmurf);
+#endif
+
+		pSmurf->setAnchor(Vector2D(60 * (i / 4), 60 * (i % 4)));
+	}
+
+	delete pSmurf;
+
+	screen.flip();
+
+	screen.saveBuffer(BACKBUFF_OUTPUT);
+	screen.saveBuffer(redBuffer, REDBUFF_OUTPUT);
+
+	delete cour;
+	delete stepsBuffer;
+	delete smurfBuffer;
+	delete quimbyBuffer;
+	delete redBuffer;
+
+	screen.deinit();
+	MemoryTracker::getInstance()->reportAllocations(cout);
+	system("PAUSE");
+}

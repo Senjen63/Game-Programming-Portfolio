@@ -1,0 +1,73 @@
+#include "Unit.h"
+
+Unit::Unit()
+{
+	mLocationX = 0;
+	mLocationY = 0;
+}
+
+Unit::Unit(int x, int y)
+{
+	mLocationX = x;
+	mLocationY = y;
+}
+
+Unit::~Unit()
+{
+	//delete mpAnimations;
+}
+
+void Unit::update(double dt)
+{
+	mAnimations.front().update(dt);
+}
+
+void Unit::draw(int scale)
+{
+	Vector2D sourceLoc(currentAnimation().getCurrentSprite().getLoc().getX(), currentAnimation().getCurrentSprite().getLoc().getY());
+
+	Vector2D sourceDim(currentAnimation().getCurrentSprite().getWidth(), currentAnimation().getCurrentSprite().getHeight());
+
+	Vector2D desLoc(mLocationX, mLocationY);
+
+	Vector2D desDim(currentAnimation().getCurrentSprite().getWidth() * scale, currentAnimation().getCurrentSprite().getHeight() * scale);
+
+	al_draw_scaled_bitmap(mAnimations.front().getCurrentSprite().getBitmap()->getBuffer(), sourceLoc.getX(), sourceLoc.getY(), sourceDim.getX(), sourceDim.getY(), desLoc.getX(), desLoc.getY(), desDim.getX(), desDim.getY(), 1);
+}
+
+Animation& Unit::currentAnimation()
+{
+	return mAnimations.front();
+}
+
+void Unit::addAnimation(Animation animation)
+{
+	mAnimations.push(animation);
+}
+
+void Unit::setAnimation()
+{
+	Animation lastInQueue = mAnimations.front();
+	mAnimations.pop();
+	mAnimations.push(lastInQueue);
+}
+
+int Unit::getLocationX()
+{
+	return mLocationX;
+}
+
+int Unit::getLocationY()
+{
+	return mLocationY;
+}
+
+void Unit::setLocationX(int &x)
+{
+	mLocationX = x;
+}
+
+void Unit::setLocationY(int &y)
+{
+	mLocationY = y;
+}

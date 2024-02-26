@@ -1,0 +1,64 @@
+#pragma once
+
+#include <cmath>
+#include <Trackable.h>
+#include <EventSystem.h>
+#include "UnitManager.h"
+#include "ScoreEvent.h"
+#include "TurnEvent.h"
+#include "SpawnSnakeEvent.h"
+#include "CollisionEvent.h"
+#include "SnakeUnit.h"
+
+class Snake : public EventListener
+{
+	public:
+		Snake();
+		Snake(Vector2D, Vector2D, GraphicsBuffer*, GraphicsBuffer*, int);
+		~Snake();
+
+		void init();
+		void cleanup();
+
+		float getSnakeSpeed() { return mSnakeSpeed; }
+		unsigned int getStartSegmentNum() { return mStartSegmentNum; }
+		unsigned int getEndSegmentNum() { return mEndSegmentNum; }
+		int getPlayerNum() { return mPlayerNum; }
+		SnakeUnit* getSnakeHead();
+		SnakeUnit* getSnakeTail();
+		bool isDead() { return mDead; };
+
+		void setSnakeSpeed(float);
+		void setStartSegmentNum(unsigned int startSegments) { mStartSegmentNum = startSegments; }
+		void setEndSegmentNum(unsigned int endSegments) { mEndSegmentNum = endSegments; }
+
+		virtual void handleEvent(const Event& currentEvent);
+
+		void updateSnake(float);
+		void addSegments(unsigned int, bool);
+		void addPoints(unsigned int);
+		void clearSnake();
+		void resetSnake();
+		void startNewLevel(float, unsigned int, unsigned int, int);
+private:
+	vector<SnakeUnit*> mSnakeBodyStorage;
+
+	EventSystem* mpEventSystem = nullptr;
+
+	GraphicsBuffer* mpSnakeHeadBuffer = nullptr;
+	GraphicsBuffer* mpSnakeBodyBuffer = nullptr;
+
+	float mBaseSpeed = 0;
+	float mSnakeSpeed = 0;
+	unsigned int mStartSegmentNum = 0;
+	unsigned int mScore = 0;
+	unsigned int mEndSegmentNum = 0;
+	int mFoodValue = 0;
+	int mPlayerNum;
+
+	bool mDead = false;
+
+	Vector2D mInitialSpawnLocation = Vector2D(0, 0);
+
+	Vector2D mInitialDirection = Vector2D(1, 0);
+};

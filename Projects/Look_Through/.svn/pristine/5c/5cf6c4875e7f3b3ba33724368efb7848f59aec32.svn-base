@@ -1,0 +1,153 @@
+#include "Game.h"
+
+Game* Game::mpGameInstance = nullptr;
+
+Game::Game(int width, int height)
+{
+	mpGameInstance;
+	mpGraphicsBufferManager = new GraphicsBufferManager;
+	mpUnitManager = new UnitManager;
+
+	// initialize the member GraphicsSystem object
+	mpGraphics = new GraphicsSystem;
+	assert(mpGraphics);
+	mpGraphics->init(height, width);
+
+	// initialize the member InputSystem object
+	mpInput = new InputSystem;
+	assert(mpInput);
+}
+
+Game::~Game()
+{
+	cleanup();
+
+	mpInput = nullptr;
+	mpGraphics = nullptr;
+}
+
+void Game::init()
+{
+	// initialize 3 GraphicsBuffers - woods.png, smurf_sprites.png, and dean_sprites.png
+	mpGraphicsBufferManager->createAndAddGraphicsBuffer(WOOD_GB, (ASSET_PATH + BACKGROUND_FILENAME).c_str());
+	mpGraphicsBufferManager->createAndAddGraphicsBuffer(DEAN_GB, (ASSET_PATH + DEAN_FILENAME).c_str());
+	mpGraphicsBufferManager->createAndAddGraphicsBuffer(SMURF_GB, (ASSET_PATH + SMURFS_FILENAME).c_str());
+
+	// initialize 2 Animations - smurf_sprites and dean_sprites
+	mSmurfAnimation.addSprite(mpGraphicsBufferManager->getGraphicsBuffer(DEAN_GB), ORIGIN_X, ORIGIN_Y,
+								mpGraphicsBufferManager->getGraphicsBuffer(DEAN_GB)->getHeight(),
+								mpGraphicsBufferManager->getGraphicsBuffer(DEAN_GB)->getWidth());
+	mDeanAnimation.addSprite(mpGraphicsBufferManager->getGraphicsBuffer(SMURF_GB), ORIGIN_X, ORIGIN_Y,
+								mpGraphicsBufferManager->getGraphicsBuffer(SMURF_GB)->getHeight(),
+								mpGraphicsBufferManager->getGraphicsBuffer(SMURF_GB)->getWidth());
+}
+
+void Game::cleanup()
+{
+	// clean up the program
+	delete mpGraphicsBufferManager;
+	delete mpUnitManager;
+
+	delete mpGraphics;
+	delete mpInput;
+}
+
+void Game::doLoop()
+{
+	bool shouldContinue = true;
+	double FPS = 60;
+	double targetTime = 1000.0 / FPS;
+	bool playAnimation = true;
+
+	PerformanceTracker* pPerformanceTracker = new PerformanceTracker;
+	Timer loopTimer;
+
+	while (shouldContinue)
+	{
+
+		std::string currentAnimation = "smurf";
+		pPerformanceTracker->clearTracker("loop");
+		pPerformanceTracker->startTracking("loop");
+
+		loopTimer.start();
+
+		// update the input system during every loop
+		mpInput->update();
+
+		// update the animation
+		mpUnitManager->update(targetTime, playAnimation);
+
+		// close the application
+		shouldContinue = !mpInput->getKeyState(MyKeyCode::ESCAPE);
+
+		// create new units
+		if (mpInput->isMouseDown(MyMouseCode::LEFT))
+		{
+			// std::cout << "Left mouse is down" << std::endl;
+			Vector2D pos = mpInput->getMouseState();
+
+			// initialize the Unit
+			mpUnitManager->createAndAddUnit(mSmurfAnimation, mDeanAnimation);
+			mpUnitManager->getUnit()->setLocation(pos);
+		}
+
+		// delete sprite that is clicked on
+		if (mpInput->isMouseDown(MyMouseCode::RIGHT))
+		{
+			// std::cout << "Right mouse is down" << std::endl;
+
+			Vector2D pos = mpInput->getMouseState();
+			mpUnitManager->isPointOnUnit(pos);
+		}
+
+		// pause and play animation
+		if (mpInput->getKeyState(MyKeyCode::SPACE))
+		{
+			if (playAnimation)
+				playAnimation = false;
+			else
+				playAnimation = true;
+		}
+
+		//// speed up animation
+		//if (mpInput->getKeyState(MyKeyCode::F_KEY))
+		//{
+		//	// std::cout << "F is down" << std::endl;
+		//	mpUnit->setAnimationSpeed(0);
+		//}
+				
+		//// slow down animation
+		//if (mpInput->getKeyState(MyKeyCode::S_KEY))
+		//{
+		//	// std::cout << "S is down" << std::endl;
+		//	mpUnit->setAnimationSpeed(1);
+		//}
+		
+		// switch between the two animations
+		if (mpInput->getKeyState(MyKeyCode::ENTER) && !mHoldDown)
+		{
+			// std::cout << "Enter is down" << std::endl;
+			mpUnitManager->getUnit()->setAnimation();
+			mHoldDown = true;
+		}
+		else
+		{
+			mHoldDown = false;
+		}
+
+		// draw the woods buffer to the back buffer
+		mpGraphics->draw(mpGraphicsBufferManager->getGraphicsBuffer(WOOD_GB), ORIGIN_X, ORIGIN_Y, 1);
+
+		// draw the animation
+		mpUnitManager->draw(mpGraphics);
+
+		// flip the screen
+		mpGraphics->flip();
+
+		loopTimer.sleepUntilElapsed(targetTime);
+		pPerformanceTracker->stopTracking("loop");
+		std::cout << pPerformanceTracker->getElapsedTime("loop") << std::endl;
+	}
+
+	delete pPerformanceTracker;
+}

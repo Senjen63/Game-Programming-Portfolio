@@ -1,0 +1,26 @@
+#pragma once
+
+#include <string>
+#include <SDL.h>
+
+// Stores an image as a SDL_Surface object
+// Might get converted to a texture while being drawn by the GraphicsSystem
+
+class GraphicsBuffer
+{
+public:
+	friend class GraphicsSystem;
+
+	// Image
+	GraphicsBuffer(std::string imageFilePath);
+	// Surface
+	GraphicsBuffer(SDL_Surface* surfaceParam);
+	// Insert other primitive surface constructor stuff here
+	~GraphicsBuffer();
+
+	int getSurfaceHeight() { return mpSurface->h; }
+	int getSurfaceWidth() { return mpSurface->w; }
+
+private:
+	SDL_Surface* mpSurface;
+};

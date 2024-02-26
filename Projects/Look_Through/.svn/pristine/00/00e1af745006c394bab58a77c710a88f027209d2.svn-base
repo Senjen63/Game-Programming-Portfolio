@@ -1,0 +1,10 @@
+#pragma once
+
+class GraphicsSystem
+{
+public:
+	GraphicsSystem() {};
+
+private:
+	
+};

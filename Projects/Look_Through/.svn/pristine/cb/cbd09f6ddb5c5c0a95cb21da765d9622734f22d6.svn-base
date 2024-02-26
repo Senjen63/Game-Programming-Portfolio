@@ -1,0 +1,92 @@
+#pragma once
+#include "EventSystem.h"
+#include "EventListener.h"
+
+#include "GraphicsSystem.h"
+#include "InputSystem.h"
+#include "GraphicsBufferManager.h"
+#include "UnitManager.h"
+#include "LevelManager.h"
+#include "HUD.h"
+
+#include <fstream>
+
+const string SPRITE_TXT_FILENAME = "Sprites.txt";
+const string FONT_FILENAME = "cour.ttf";
+const string DEAN_PATH = "..\\..\\common\\assets\\";
+const string SPRITE_PATH = "..\\..\\griffin.andrew\\Midterm\\Assets\\";
+
+//keys for buffers
+const string WALL_KEY = "Wall";
+const string SNAKE_KEY = "Snake";
+const string FOOD_KEY = "Food";
+const string POINTS_KEY = "Points";
+const string SPEEDUP_KEY = "SpeedUp";
+const string SPEEDDOWN_KEY = "SpeedDown";
+
+const float SLEEP_MS = 16.7;
+const float TIMER_CHANGE = .001;
+const float DISTANCE = 20;
+const float HIT_DISTANCE = 10;
+
+
+class Game : public EventListener
+{
+private:
+	static Game* mpsInstance;
+
+	GraphicsSystem* mpDisplay = nullptr;
+	InputSystem mInputSystem;
+	HUD mHUD;
+
+	GraphicsBufferManager mBufferManager;
+	LevelManager mLevelManager;
+	UnitManager mSnakeManager;
+
+	Font* mpFont = nullptr;
+
+	EventSystem* mpEventSystem;
+
+	//Local variables to handle game
+	bool mKeepGoing = true, mStartGame = false, mFailGame = false;
+	Direction mDir = Direction::RIGHT;
+	int mCurrentLevel = 1;
+	int mWinLength = 0;//need to check somewhere, and do hud/screens
+	int mPointsToAdd = 0, mPoints = 0;
+	float mFPS = 0, mTime = 0;
+
+	string mWallFile = "", mSnakeFile = "", mFoodFile = "",
+		mPointsFile = "", mUpFile = "", mDownFile = "";
+
+	//Private functions
+	void handleEvent(const Event& event);
+	
+	Game();
+	~Game();
+	void init(int width, int height);
+	void cleanup();
+
+	void readData();
+	void readSprites();
+
+	void collisions();
+
+	void menuScreen();
+	void checkWinState();
+	void resetData();
+	void failGame();
+
+	void hudData(float time);
+public:
+	static void createInstance(int width, int height);
+	static void destroyInstance();
+	static Game* getGame();
+	
+	void doLoop();
+	
+	int getPoints() { return mPoints; };
+	float getFPS()  { return mFPS;    };
+	float getTime() { return mTime;   };
+
+	GraphicsBufferManager* getBufferManager() { return &mBufferManager; };
+};

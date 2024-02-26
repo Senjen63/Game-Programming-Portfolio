@@ -1,0 +1,36 @@
+#pragma once
+#include "Component.h"
+#include "EventSystem.h"
+#include "EventListener.h"
+#include "ICollisionHandler.h"
+#include "Game.h"
+
+class LogComponent : public Component, public EventListener, public ICollisionHandler
+{
+	Vector2D mCurrentDirection;
+	Vector2D mPrevDirection = Vector2D(0, 0);
+	Vector2D mPrevPosition = Vector2D(0, 0);
+	int mSpeed;
+	float mElapTime, mTargetTime;
+
+public:
+	void moveLog();
+
+	LogComponent(int speed, Vector2D startDirection = Vector2D(0, 0));
+	~LogComponent() { /*EventSystem::getInstance()->removeListenerFromAllEvents(this);*/ }
+
+	void init();
+
+	void update(float dt) override;
+	void draw(GraphicsSystem* gSys) override;
+
+	void handleEvent(const Event& theEvent) override;
+
+	std::string getIdentifier() override;
+	Vector2D getCurDir() { return mCurrentDirection; };
+
+	void checkInLevel();
+	void onCollision(Unit* unit, CollisionLayer layer) override;
+	bool checkCollision(CollisionLayer layer) override;
+
+};

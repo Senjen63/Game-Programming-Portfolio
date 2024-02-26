@@ -1,0 +1,11 @@
+//BP
+#include "Movement.h"
+
+Movement::Movement(Vector2D position) : GameEvents((GameEventVariations)MOVE)
+{
+    mPosition = position;
+}
+
+Movement::~Movement()
+{
+}

@@ -1,0 +1,121 @@
+#pragma once
+
+#include <PerformanceTracker.h>
+#include <MemoryTracker.h>
+#include <Timer.h>
+
+#include "GraphicsSystem.h"
+#include "Animation.h"
+#include "InputSystem.h"
+#include "UnitManager.h"
+#include "LevelManager.h"
+#include "GraphicsBufferManager.h"
+#include "Unit.h"
+#include "Hud.h"
+
+#include "EventSystem.h"
+#include "EventListener.h"
+#include "InputEvent.h"
+#include "GameplayEvent.h"
+
+#include "HudEvent.h"
+#include "FpsEvent.h"
+#include "ScoreEvent.h"
+#include "TimeEvent.h"
+
+#include <stdlib.h>
+#include <fstream>
+
+const string LEVEL_DATA = "LevelData.txt";
+const string ASSET_DATA = "AssetData.txt";
+
+const string BACKGROUND = "Background";
+
+const double SLEEP_MS = 16.7;
+
+class Game : public EventListener
+{
+private:
+	static Game* mpsGameSystem;
+	bool mExit = false;
+
+	GraphicsSystem* mpSystem;
+	InputSystem mInputSystem;
+
+	GraphicsBufferManager mBufferManager;
+	UnitManager mSnakeManager;
+
+	LevelManager mLevelManager;
+	UnitManager mWallManager;
+
+	UnitManager mSpeedUps;
+	UnitManager mSlowDowns;
+	UnitManager mFood;
+	UnitManager mScoreUnit;
+
+	EventSystem* mpEventSystem;
+	
+	Hud* mpHud;
+	Font* mpFont;
+
+	Vector2D mMovePt;
+
+	Color mBackgroundCol;
+
+	string mAssetPath = "", mWallFile = "", mSnakeFile = "", mFoodFile = "",
+		mSpeedUpFile = "", mSlowDownFile = "", mScoreFile = "",
+		mFontPath = "";
+
+	int mSpriteWidth = 0, mSpriteHeight = 0, mNumFrames = 0, mFontSize = 0;
+
+	int mDefaultSpeed = 0,
+		mFastSpeed = 0,
+		mSlowSpeed = 0;
+
+	float mTimeScale = 1000.0;
+	float mElapsedTime = 0.0;
+	float mFps = 0.0;
+	int mScore = 0;
+
+	int mCurrentLevel = 0;
+	bool mHidLevel = false;
+	bool mContinueGame = false;
+	bool mFinishGame = false;
+
+	Game();
+	~Game();
+
+public:
+	static Game* getInstance();
+	static void createInstance();
+	static void destroyInstance();
+
+	void init();
+	void cleanup();
+
+	void doLoop();
+	void loadAssets();
+	void loadLevels();
+	void unloadLevel();
+	void nextLevel();
+	void createItem();
+	void growSnake();
+	void collisions();
+	void draw();
+
+	GraphicsBuffer* getGraphicsBuffer(string index);
+	int getDefaultTiming();
+	int getFastTiming();
+	int getSlowTiming();
+
+	string getWallFile();
+	string getSnakeFile();
+	int getSpriteWidth();
+	int getSpriteHeight();
+
+	void hudEvents(float elapsedTime);
+
+	virtual void handleEvent(const Event& event);
+
+
+};

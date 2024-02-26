@@ -1,0 +1,192 @@
+#include "Level.h"
+
+Level::Level()
+{
+    mSpeed = 0;
+    mInitLength = 0;
+    mEndLength = 0;
+    mGainPoints = 0;
+    mPwrupFreq = 0;
+    mSpeedUp = 0;
+    mSlowDown = 0;
+}
+
+Level::~Level()
+{
+    cleanup();
+}
+
+void Level::cleanup()
+{
+    for (int i = 0; i < mpUnits.size(); i++)
+    {
+        Unit* pUnit = mpUnits[i];
+        delete pUnit;
+    }
+
+    mpUnits.clear();
+}
+
+// draw walls using a file
+void Level::loadWalls(Animation anim, GraphicsSystem* mpGraphics, GraphicsBuffer* buffer, int currentLevel)
+{
+    std::string fileName = "";
+
+    switch (currentLevel)
+    {
+        case 0: fileName = LEVEL_ONE; break;
+        case 1: fileName = LEVEL_TWO; break;
+        case 2: fileName = LEVEL_THREE; break;
+    }
+
+    int width = buffer->getWidth();
+    int height = buffer->getHeight();
+
+    std::ifstream input;
+
+    input.open(fileName);
+    std::string key;
+
+    if (input.good())
+    {
+
+        while (!input.eof())
+        {
+            input >> key;
+
+            if (key == "wall")
+            {
+                // down
+                for (int i = 0; i < 18; i++)
+                {
+                    // across
+                    for (int j = 0; j < 19; j++)
+                    {
+                        input >> key;
+
+                        if (key == "1")
+                        {
+                            //Vector2D pos = Vector2D(-2 + (width * j), 88 + (height * i));
+                            //Vector2D pos = Vector2D(-18 + (width * j), 100 + (height * i));
+                            Vector2D pos = Vector2D(0 + (width * j), 96 + (height * i));
+
+                            createAndAddUnit(anim);
+                            getUnit()->setLocation(pos);
+
+                        }
+                            
+                    }
+                }
+            }
+        }
+    }
+
+    input.close();
+}
+
+void Level::loadLevel(int currentLevel)
+{
+    std::string fileName = "";
+    std::string key = "";
+
+    switch (currentLevel)
+    {
+        case 0: fileName = LEVEL_ONE; break;
+        case 1: fileName = LEVEL_TWO; break;
+        case 2: fileName = LEVEL_THREE; break;
+    }
+
+    std::ifstream input;
+    input.open(fileName);
+
+    if (input.good())
+    {
+        while (!input.eof())
+        {
+            input >> key;
+
+            if (key == "speed")
+                input >> mSpeed;
+            else if (key == "initlength")
+                input >> mInitLength;
+            else if (key == "endlength")
+                input >> mEndLength;
+            else if (key == "endlength")
+                input >> mEndLength;
+            else if (key == "pts")
+                input >> mGainPoints;
+            else if (key == "pwrup")
+                input >> mPwrupFreq;
+            else if (key == "speedup")
+                input >> mSpeedUp;
+            else if (key == "slowdown")
+                input >> mSlowDown;
+        }
+    }
+
+    input.close();
+}
+
+void Level::createAndAddUnit(Animation anim)
+{
+    // create unit
+    Unit* pUnit = new Unit(anim);
+
+    // manage the unit
+    mpUnits.push_back(pUnit);
+}
+
+void Level::draw(GraphicsSystem* graphSys)
+{
+    for (int i = 0; i < mpUnits.size(); i++)
+    {
+        Unit* pUnit = mpUnits[i];
+        pUnit->draw(graphSys);
+    }
+}
+
+Unit* Level::getUnit()
+{
+    if (mpUnits.size() > 0)
+        return mpUnits[(mpUnits.size() - 1)];
+    else
+        return nullptr;
+}
+
+bool Level::collideWithWall(Unit* snakeHead)
+{
+    for (int i = 0; i < mpUnits.size(); i++)
+    {
+        Unit* pUnit = mpUnits[i];
+        Vector2D wallLocation = pUnit->getLocation();
+
+        Vector2D snakeLocation = snakeHead->getLocation();
+
+        float dist = wallLocation.getDistanceBetween(wallLocation, snakeLocation);
+
+        if (dist < 32)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool Level::isFoodOnWall(Vector2D pos)
+{
+    for (int i = 0; i < mpUnits.size(); i++)
+    {
+        Unit* pUnit = mpUnits[i];
+        Vector2D wallLocation = pUnit->getLocation();
+
+        float dist = wallLocation.getDistanceBetween(wallLocation, pos);
+
+        if (dist < 32)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}

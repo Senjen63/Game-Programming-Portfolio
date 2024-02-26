@@ -1,0 +1,36 @@
+﻿//     -------------------------------------------------------------------------
+//     Final Project
+//         Game.hpp
+//     
+//             Created:
+//                 12-04-2022
+//             Author(s):
+//                 Aven Presseisen
+//     -------------------------------------------------------------------------
+
+#pragma once
+
+#include "AssetManager.hpp"
+#include "InputTranslator.hpp"
+#include "World.hpp"
+
+class Game
+{
+    std::shared_ptr< Time > mpTime;
+    std::shared_ptr< AssetManager > mpAssetManager;
+    std::shared_ptr< InputTranslator > mpInputTranslator;
+    
+    std::vector< std::shared_ptr< World > > mWorlds;
+
+    GraphicsSystem * mpGraphicsSystem;
+
+public:
+    Game();
+    ~Game();
+
+    void createGame( const char * name, int width, int height, const char * pIconPath = nullptr ) const;
+    [[nodiscard]] std::shared_ptr< World > createWorld();
+    void startGame() const;
+
+    void createAsset( Asset * pAsset ) const;
+};

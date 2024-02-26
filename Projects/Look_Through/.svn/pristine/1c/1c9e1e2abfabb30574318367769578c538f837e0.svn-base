@@ -1,0 +1,14 @@
+#include "Font.h"
+
+using namespace std;
+
+Font::Font(string filename) 
+{
+	mFont = new sf::Font();
+	mFont->loadFromFile(filename);
+}
+
+Font::~Font() 
+{
+	delete mFont;
+}

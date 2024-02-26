@@ -1,0 +1,27 @@
+#include "Font.h"
+
+Font::Font()
+{
+	mpFont = nullptr;
+	mSize = DEFAULT_FONT_SIZE;
+}
+
+
+Font::Font(string& filename, int size)
+{
+	mpFont = al_load_ttf_font(filename.c_str(), size, DEFAULT_FONT_FLAGS);
+	mSize = size;
+}
+
+
+Font::~Font()
+{
+	al_destroy_font(mpFont);
+	mpFont = nullptr;
+}
+
+
+int Font::getSize() const
+{
+	return mSize;
+}

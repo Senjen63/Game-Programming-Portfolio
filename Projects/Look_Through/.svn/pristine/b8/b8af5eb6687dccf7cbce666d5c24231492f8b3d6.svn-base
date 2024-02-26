@@ -1,0 +1,33 @@
+#pragma once
+
+#include <Trackable.h>
+#include <allegro5/keyboard.h>
+#include <allegro5/mouse.h>
+
+#include "Vector2D.h"
+#include "Keycode.h"
+#include "Mousecode.h"
+#include "EventSystem.h"
+#include "KeyPressEvent.h"
+
+
+class InputSystem : public Trackable
+{
+	ALLEGRO_EVENT_QUEUE* mpQueue;
+
+public:
+	InputSystem();
+	~InputSystem();
+
+	int init();
+	void cleanup();
+
+	void update(float dt);
+	void handleInputQueue();
+
+	bool getKeyState(Keycode keycode);
+	bool getMouseButtonState(Mousecode mouseCode);
+	Vector2D getMousePos();
+
+};
+

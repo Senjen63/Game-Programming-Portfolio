@@ -1,0 +1,65 @@
+#include "Animation.h"
+
+#include "Sprite.h"
+#include "GraphicsBuffer.h"
+
+
+Animation::Animation(GraphicsBuffer* sprites, int sheetWidth, int sheetHeight, int spriteWidth, int spriteHeight,float frameRate, bool doesLoop)
+{
+	int frameCount = -1;
+
+	for (int i = 0; i < sheetHeight; i++)
+	{
+		for (int j = 0; j < sheetWidth; j++)
+		{
+			Vector2D spriteLocation = Vector2D(j * spriteWidth, i * spriteHeight);
+			mvpAnimSprites.push_back(Sprite(sprites, spriteLocation, spriteWidth, spriteHeight));
+			frameCount++;
+		}
+	}
+
+	mNumFrames = frameCount;
+	mTimePerFrameinMS = (1.0 / (double)frameRate) * 1000;
+	mDoesLoop = doesLoop;
+}
+Animation::~Animation()
+{
+	mvpAnimSprites.erase(mvpAnimSprites.begin(), mvpAnimSprites.end());
+}
+
+void Animation::update(double dt)
+{
+	mTimeRemaing -= dt;
+
+	if (mTimeRemaing < 0)
+	{
+		mCurrentFrame++;
+		mTimeRemaing = mTimePerFrameinMS;
+
+		// End of animiation checks
+		if (mCurrentFrame > mNumFrames)
+		{
+			if (mDoesLoop)
+			{
+				mCurrentFrame = 0;
+			}
+			else
+			{
+				mCurrentFrame = mNumFrames;
+			}
+		}
+	}	
+}
+
+Sprite* Animation::getCurrentSprite()
+{
+	return &mvpAnimSprites[mCurrentFrame];
+}
+void Animation::speedUp()
+{  
+	mTimePerFrameinMS -= SPEED_FACTOR;
+}
+void Animation::slowDown()
+{
+	mTimePerFrameinMS += SPEED_FACTOR;
+}

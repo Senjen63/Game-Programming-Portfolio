@@ -1,0 +1,51 @@
+#include "Unit.h"
+
+
+Unit::Unit(const UnitParameters params)
+{
+	mPosition = params.startPos;
+	mAnimations = params.animations;
+
+	mpCurrentAnimation = nullptr;
+
+	if (params.startAnimName != "")
+	{
+		setCurrentAnimation(params.startAnimName);
+	}
+}
+
+
+void Unit::addAnimation(std::string animName, Animation& newAnim)
+{
+	mAnimations[animName] = newAnim;
+}
+
+
+Animation& Unit::getAnimation(std::string animName)
+{
+	assert(mAnimations.find(animName) != mAnimations.end());
+	return mAnimations[animName];
+}
+
+
+void Unit::setCurrentAnimation(std::string animName)
+{
+	assert(mAnimations.find(animName) != mAnimations.end());
+	mpCurrentAnimation = &mAnimations[animName];
+	mCurrentAnimationName = animName;
+}
+
+
+void Unit::update(float dt)
+{
+	mpCurrentAnimation->update(dt);
+}
+
+
+void Unit::draw(GraphicsSystem* gSys)
+{
+	if (mpCurrentAnimation != nullptr)
+	{
+		gSys->draw(mPosition, mpCurrentAnimation->getCurrentFrame());
+	}
+}

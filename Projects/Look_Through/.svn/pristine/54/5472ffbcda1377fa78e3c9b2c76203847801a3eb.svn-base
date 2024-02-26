@@ -1,0 +1,34 @@
+#pragma once
+#include <vector>
+#include <string>
+
+#include "UnitManager.h"
+#include "EventListener.h"
+
+// Load starting menu assets on start.
+// Menu data or scene data will be loaded from text files.
+// Buttons pressed will contain strings for both text and the respective menus/scenes they will load
+// How they will manage values and such I'm unsure of. Maybe have seperate buttons for changing option values and changing menus/scenes?
+// When a button calls to load a menu/scene, the previous menu will be unloaded.
+// The menu manager will handle input and check each button object if the mouse is hovering over it when receiving a mouse click event
+
+// Try to only rely on MenuManager and SceneManager from now on. Remove references to a general UnitManager as to avoid any clutter.
+
+class Unit;
+
+class MenuManager : public UnitManager, public EventListener
+{
+public:
+	MenuManager();
+	~MenuManager();
+
+	void loadMenu(std::string menuNameDataFilePath);
+	void unloadMenu();
+
+	virtual void handleEvent(const Event& theEvent);
+
+private:
+	// Consider having button be a seperate class from unit
+	// Might be too much work though
+	//std::vector<Unit*> mUnitVector;
+};

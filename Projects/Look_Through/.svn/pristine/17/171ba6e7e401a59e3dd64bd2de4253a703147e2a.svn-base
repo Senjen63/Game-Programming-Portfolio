@@ -1,0 +1,80 @@
+#pragma once
+
+#include "Trackable.h"
+#include "Vector2D.h"
+#include "Animation.h"
+#include <vector>
+#include <string>
+
+class Vector2D;
+class InputSystem;
+class GraphicsSystem;
+class GraphicsBufferManager;
+class Sprite;
+class Animation;
+class UnitManager;
+class Timer;
+class PerformanceTracker;
+
+class Game : public Trackable
+{
+	const int DISP_WIDTH = 800;
+	const int DISP_HEIGHT = 600;
+	const int ROW = 4;
+	const int COLUMN = 4;
+	const int SMURF_SIZE = 60;
+
+	const double ANIM_TICK = 16.7;
+	const double BACKGROUND_SCALE = 0.5f;
+
+	const std::string WOODS_IMAGE = "Woods.png";
+	const std::string WOODS_KEY = "woods";
+	const std::string DEAN_IMAGE = "dean_sprites.png";
+	const std::string DEAN_KEY = "dean";
+	const std::string SMURF_IMAGE = "smurf_sprites.png";
+	const std::string SMURF_KEY = "smurf";
+	const std::string LOOP = "loop";
+
+	const Vector2D ORIGIN_LOCATION = Vector2D(0, 0);
+	const Vector2D CENTER_LOCATION = Vector2D(DISP_WIDTH / 2, DISP_HEIGHT / 2);
+
+private:
+	
+	static Game* gpGame;
+
+	bool mIsGameContinuing;
+
+	InputSystem* mpInputSystem;
+
+	GraphicsSystem* mpGraphicsSystem;
+
+	GraphicsBufferManager* mpBufferManager;
+
+	UnitManager* mpUnitManager;
+
+	Sprite* mpWoodsSprite;
+
+	Animation mSmurfAnimation;
+	Animation mDeanAnimation;
+
+	Timer* mpTimer;
+
+	PerformanceTracker* mpPerformanceTracker;
+
+	Game();
+	~Game();
+
+public:
+
+	static Game* getGameInstance() { assert(gpGame != nullptr); return gpGame; }
+	static void createGameInstance() { gpGame = new Game; }
+	static void cleanupGameInstance() { delete gpGame; }
+
+	void init();
+	void cleanup();
+	void gameLoop();
+
+	GraphicsSystem* getGraphicsSystem() { return mpGraphicsSystem; }
+	GraphicsBufferManager* getBufferManager() { return mpBufferManager; }
+	UnitManager* getUnitManager() { return mpUnitManager; }
+};

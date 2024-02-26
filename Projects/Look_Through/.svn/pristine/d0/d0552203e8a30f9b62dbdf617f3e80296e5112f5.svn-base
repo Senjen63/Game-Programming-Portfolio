@@ -1,0 +1,126 @@
+#include "Level.h"
+
+Level::Level()
+{
+	for (int i = 0; i < 266; i++)
+	{
+			mWallPos[i] = Vector2D();
+	}
+	mScore = 0;
+	mFoodPoints = 1;
+	mSnakeFrames = 0;
+	mSnakeStartLength = 0;
+	mSnakeEndLength = 0;
+	mPUPOdds = 0;
+	mPointsOdds = 0;
+	mFastOdds = 0;
+	mSlowOdds = 0;
+}
+
+Level::~Level()
+{
+
+}
+
+void Level::setWallPos(Vector2D wallPos[266])
+{
+	for (int i = 0; i < 266; i++)
+	{
+			mWallPos[i] = wallPos[i];
+	}
+}
+
+Vector2D Level::getWallPos(int pos)
+{
+	return mWallPos[pos];
+}
+
+void Level::setScore(int change)
+{
+	mScore = change;
+}
+
+int Level::getScore()
+{
+	return mScore;
+}
+
+void Level::setPoints(int points)
+{
+	mFoodPoints = points;
+}
+
+int Level::getPoints()
+{
+	return mFoodPoints;
+}
+
+void Level::setSnakeFrames(int frames)
+{
+	mSnakeFrames = frames;
+}
+
+int Level::getSnakeFrames()
+{
+	return mSnakeFrames;
+}
+
+void Level::setSnakeStartLength(int length)
+{
+	mSnakeStartLength = length;
+}
+
+int Level::getSnakeStartLength()
+{
+	return mSnakeStartLength;
+}
+
+void Level::setSnakeEndLength(int length)
+{
+	mSnakeEndLength = length;
+}
+
+int Level::getSnakeEndLength()
+{
+	return mSnakeEndLength;
+}
+
+void Level::setPUPOdds(int odds)
+{
+	mPUPOdds = odds;
+}
+
+int Level::getPUPOdds()
+{
+	return mPUPOdds;
+}
+
+void Level::setPointsOdds(int odds)
+{
+	mPointsOdds = odds;
+}
+
+int Level::getPointsOdds()
+{
+	return mPointsOdds;
+}
+
+void Level::setFastOdds(int odds)
+{
+	mFastOdds = odds;
+}
+
+int Level::getFastOdds()
+{
+	return mFastOdds;
+}
+
+void Level::setSlowOdds(int odds)
+{
+	mSlowOdds = odds;
+}
+
+int Level::getSlowOdds()
+{
+	return mSlowOdds;
+}

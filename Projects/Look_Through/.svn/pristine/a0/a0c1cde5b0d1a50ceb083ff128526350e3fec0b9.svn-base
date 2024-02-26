@@ -1,0 +1,24 @@
+#pragma once
+
+#include "Trackable.h"
+#include <allegro5/allegro.h>
+#include <allegro5/allegro_font.h>
+
+class Font : public Trackable
+{
+	friend class GraphicsSystem;
+
+	const std::string ASSET_PATH = "..\\..\\roji.merle\\assets\\";
+
+private:
+
+	ALLEGRO_FONT* mpFont;
+	int mFontSize;
+
+public:
+
+	Font(std::string filename, int newFontSize);
+	~Font() { al_destroy_font(mpFont); };
+
+	int getFontSize() { return mFontSize; }
+};

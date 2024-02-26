@@ -1,0 +1,16 @@
+#pragma once
+#include <allegro5/allegro.h>
+#include "Trackable.h"
+
+class Color : public Trackable
+{
+	friend class GraphicsSystem;
+	friend class GraphicsBuffer;
+
+public:
+	Color();
+	Color(int r, int g, int b);
+	Color(int r, int g, int b, int a);
+private:
+	ALLEGRO_COLOR mColor;
+};

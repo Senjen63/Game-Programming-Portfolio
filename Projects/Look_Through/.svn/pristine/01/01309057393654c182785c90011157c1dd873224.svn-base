@@ -1,0 +1,139 @@
+#include "Animation.h"
+
+Animation::Animation()
+{
+	mpSprite = nullptr;
+
+	mCurrentFrame = 0;
+
+	mLoopAnim = DEFAULT_LOOP_MODE;
+	mUpdated = false;
+	mUpdateBlocked = false;
+
+	mLag = 0.0;
+	mDuration = 0.0;
+}
+
+
+Animation::Animation(GraphicsBuffer* pSpriteSheet, Vector2D spriteDimensions, float duration, bool loop)
+{
+	mpSprite = new Sprite(pSpriteSheet); // We'll define the other sprite parameter later.
+
+	mLoopAnim = loop;
+	mUpdated = false;
+	mUpdateBlocked = false;
+
+	mLag = 0.0;
+	mDuration = duration;
+
+	int spriteWidth = spriteDimensions.getX();
+	int spriteHeight = spriteDimensions.getY();
+
+	int sheetWidth = pSpriteSheet->getWidth();
+	int sheetHeight = pSpriteSheet->getHeight();
+
+	// Construct animation frames using the spriteDimensions.
+	for (int i = 0; i <= sheetHeight - spriteHeight; i += spriteHeight)
+	{
+		for (int j = 0; j <= sheetWidth - spriteWidth; j += spriteWidth)
+		{
+			mSpriteAnchors.push_back(Vector2D(j, i));
+		}
+	}
+
+	mpSprite->setHeight(spriteHeight);
+	mpSprite->setWidth(spriteWidth);
+
+	mCurrentFrame = 0;
+}
+
+
+Animation::~Animation()
+{
+	delete mpSprite;
+	mpSprite = nullptr;
+}
+
+
+float Animation::getDuration()
+{
+	return mDuration;
+}
+
+
+Sprite* Animation::getCurrentSprite()
+{
+	return mpSprite;
+}
+
+
+void Animation::setDuration(float duration)
+{
+	mDuration = duration;
+}
+
+
+// Be careful with this, make sure that the new spritesheet has the same dimensions as the spritesheet you're replacing
+// otherwise unspecified bad things may happen.
+void Animation::setSpriteSheet(GraphicsBuffer* pSpriteSheet)
+{
+	mpSprite->setBuffer(pSpriteSheet);
+}
+
+
+void Animation::clearUpdate()
+{
+	mUpdated = false;
+}
+
+
+void Animation::blockUpdate()
+{
+	mUpdateBlocked = true;
+}
+
+
+void Animation::unblockUpdate()
+{
+	mUpdateBlocked = false;
+}
+
+
+void Animation::clearLag()
+{
+	mLag = 0.0;
+}
+
+
+void Animation::update(float dt)
+{
+	if (!mUpdated && !mUpdateBlocked)
+	{
+		mLag += dt;
+		int advanceBy = mLag / mDuration; // Integer conversion is fine here because we want to discard the remainder anyways.
+		mLag -= float(advanceBy) * mDuration;
+
+		if (advanceBy > 0)
+		{
+			if (mLoopAnim)
+			{
+				mCurrentFrame = (mCurrentFrame + advanceBy) % mSpriteAnchors.size();
+			}
+			else
+			{
+				if (mCurrentFrame + advanceBy < mSpriteAnchors.size())
+				{
+					mCurrentFrame += advanceBy;
+				}
+				else
+				{
+					mCurrentFrame = mSpriteAnchors.size() - 1;
+				}
+			}
+		}
+
+		mpSprite->setAnchor(mSpriteAnchors[mCurrentFrame]);
+		
+		mUpdated = true;
+	}
+}

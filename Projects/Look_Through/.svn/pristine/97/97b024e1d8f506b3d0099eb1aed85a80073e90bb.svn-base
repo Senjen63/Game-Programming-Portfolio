@@ -1,0 +1,46 @@
+//BP
+#pragma once
+#include "InputSystem.h"
+#include "GameActions.h"
+#include <EventSystem.h>
+#include <EventListener.h>
+
+const enum KeyCodes
+{
+    A = 1,
+    D = 4,
+    F = 6,
+    S = 19,
+    W = 23,
+    ESC = 59,
+    ENTER = 67,
+    SPACE = 75,
+    LEFT = 82,
+    RIGHT = 83,
+    UP = 84,
+    DOWN = 85,
+    LMB = 1,
+    RMB = 2
+};
+
+enum Keys
+{
+    LEFT_TURN = 100,
+    RIGHT_TURN,
+    UP_TURN,
+    DOWN_TURN,
+    GAME_START,
+    GAME_QUIT,
+    NUM_KEYBIND_EVENTS
+};
+
+class InputTranslator : public EventListener
+{
+private:
+    EventSystem* mpEventSystem;
+public:
+    InputTranslator();
+    ~InputTranslator();
+    void init();
+    virtual void handleEvent(const Event& thisEvent);
+};

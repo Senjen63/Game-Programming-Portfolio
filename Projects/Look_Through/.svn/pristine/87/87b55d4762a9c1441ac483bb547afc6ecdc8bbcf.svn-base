@@ -1,0 +1,52 @@
+#include "GraphicsBuffer.h"
+
+
+GraphicsBuffer::GraphicsBuffer(string file)
+{
+	mWillDestroy = false;
+	mBitMap = al_load_bitmap(file.c_str());
+
+}
+
+GraphicsBuffer::GraphicsBuffer(GraphicsBuffer* buff)
+{
+	mWillDestroy = false;
+	mBitMap = buff->mBitMap;
+}
+
+GraphicsBuffer::GraphicsBuffer(Color color, int height, int width)
+{
+	mWillDestroy = false;
+	mBitMap = al_create_bitmap(width, height);
+
+	ALLEGRO_BITMAP* replaced = al_get_target_bitmap();
+	al_set_target_bitmap(mBitMap);
+	al_clear_to_color(al_map_rgba(color.getR(), color.getG(), color.getB(), color.getA()));
+	al_set_target_bitmap(replaced);
+
+}
+
+GraphicsBuffer::GraphicsBuffer(ALLEGRO_BITMAP* buff)
+{
+	mWillDestroy = false;
+	mBitMap = buff;
+}
+
+GraphicsBuffer::~GraphicsBuffer() {
+
+	if (mWillDestroy) 
+	{
+		al_destroy_bitmap(mBitMap);
+	}
+
+}
+
+int GraphicsBuffer::getHeight()
+{
+	return al_get_bitmap_height(mBitMap);
+}
+
+int GraphicsBuffer::getWidth()
+{
+	return al_get_bitmap_width(mBitMap);
+}

@@ -1,0 +1,282 @@
+#include "Menu.h"
+
+#include "Game.h"
+#include "PlayerInfo.h"
+
+const int BUFFER = 24;
+const int START_VALUE = 8;
+
+
+void Menu::init(Font* font)
+{
+    EventSystem::getInstance()->addListener((EventType)KEY_DOWN, static_cast<EventListener*>(this)); //menu navigation
+    mpFont = font;
+}
+
+void Menu::cleanUp()
+{
+    EventSystem::getInstance()->removeListener((EventType)KEY_DOWN, static_cast<EventListener*>(this)); //menu navigation
+}
+
+Menu::~Menu()
+{
+
+}
+
+void Menu::readFile(string file)
+{
+	ifstream fin(file);
+
+	while (!fin.eof())
+	{
+		string textLine, segment;
+		int language, type;
+		getline(fin, textLine); //gets the line from the file
+		stringstream tempStream(textLine);
+
+		//getting language
+		getline(tempStream, segment, ',');
+		language = getEnum(segment);
+
+		//getting purpose
+		getline(tempStream, segment, ',');
+		type = getEnum(segment);
+
+		//adding to vector
+		getline(tempStream, segment);
+		mScriptArray[language][type] = segment;
+
+	}
+
+	fin.close();
+}
+
+string Menu::getScript(int type, int language)
+{
+	return mScriptArray[language][type];
+}
+
+int Menu::getEnum(string temp)
+{
+	//brute force, not sure if there is a more efficient way
+	if (temp == "English")
+	{
+		return (int)Language::ENGLISH;
+	}
+	if (temp == "French")
+	{
+		return (int)Language::FRENCH;
+	}
+	if (temp == "Spanish")
+	{
+		return (int)Language::SPANISH;
+	}
+	if (temp == "Start")
+	{
+		return (int)ScriptType::START;
+	}
+	if (temp == "Menu")
+	{
+		return (int)ScriptType::MENU;
+	}
+	if (temp == "Options")
+	{
+		return (int)ScriptType::OPTIONS;
+	}
+	if (temp == "Quit")
+	{
+		return (int)ScriptType::QUIT;
+	}
+	if (temp == "Load")
+	{
+		return (int)ScriptType::LOAD;
+	}
+	if (temp == "Sound")
+	{
+		return (int)ScriptType::SOUND;
+	}
+    if (temp == "EnglishText")
+    {
+        return (int)ScriptType::ENGLISH;
+    }
+    if (temp == "SpanishText")
+    {
+        return (int)ScriptType::SPANISH;
+    }
+    if (temp == "FrenchText")
+    {
+        return (int)ScriptType::FRENCH;
+    }
+    if (temp == "Player1Text")
+    {
+        return (int)ScriptType::PLAYER_ONE_SCORE;
+    }
+    if (temp == "Player2Text")
+    {
+        return (int)ScriptType::PLAYER_TWO_SCORE;
+    }
+    if (temp == "DifficultyText")
+    {
+        return (int)ScriptType::DIFFICULTY;
+    }
+    if (temp == "VictoryText")
+    {
+        return (int)ScriptType::VICTORY;
+    }
+    else
+    {
+        return 0;
+    }
+}
+
+string Menu::getP1Score()
+{
+    return mScriptArray[mLanguage][(int)ScriptType::PLAYER_ONE_SCORE] + to_string(Game::getInstance()->getPlayer1Score());
+}
+string Menu::getP2Score()
+{
+    return mScriptArray[mLanguage][(int)ScriptType::PLAYER_TWO_SCORE] + to_string(Game::getInstance()->getPlayer2Score());
+}
+
+void Menu::checkWin()
+{
+    if (Game::getInstance()->getPlayer1Score() == VICTORY_NUM)
+    {
+        playerWon(1);
+    }
+    if (Game::getInstance()->getPlayer2Score() == VICTORY_NUM)
+    {
+        playerWon(2);
+    }
+}
+
+void Menu::playerWon(int victor)
+{
+    Game::getInstance()->getLevelManager()->unloadActiveLevel();
+
+    mInMenu = true;
+    mPlayerWon = victor;
+    mInEnd = true;
+}
+
+
+
+void Menu::drawMenu()
+{
+    if (!mInEnd)
+    {
+        if (!mInMenu)
+        {
+            return; //should not be drawing if it is not in menu
+        }
+        if (mMainMenu)
+        {
+            int  count = 0;
+            for (int i = (int)ScriptType::MAIN_MENU_FIRST; i <= (int)ScriptType::MAIN_MENU_LAST; i++)
+            {
+                Game::getInstance()->getGraphicsSystem()->drawText(Vector2D(0, START_VALUE + (BUFFER * count)), *mpFont, mScriptArray[mLanguage][i], COLOR_WHITE);
+                count++;
+            }
+        }
+        else
+        {
+            int count = 0;
+            for (int i = (int)ScriptType::OPTIONS_MENU_FIRST; i <= (int)ScriptType::OPTIONS_MENU_LAST; i++)
+            {
+                if (i == (int)ScriptType::DIFFICULTY)
+                {
+                    Game::getInstance()->getGraphicsSystem()->drawText(Vector2D(0, START_VALUE + (BUFFER * count)), *mpFont, (mScriptArray[mLanguage][i] + to_string(Game::getInstance()->getLevelManager()->getSpeedIndex())), COLOR_WHITE);
+                }
+                else
+                {
+                    Game::getInstance()->getGraphicsSystem()->drawText(Vector2D(0, START_VALUE + (BUFFER * count)), *mpFont, mScriptArray[mLanguage][i], COLOR_WHITE);
+                }
+                count++;
+            }
+    
+        }
+    }
+    else
+    {
+        Game::getInstance()->getGraphicsSystem()->drawText(Vector2D(0, TEST_SCREEN_HEIGHT / 2), *mpFont, mScriptArray[mLanguage][(int)ScriptType::VICTORY] + to_string(mPlayerWon), COLOR_WHITE);
+    }
+}
+
+void Menu::handleEvent(const Event& theEvent)
+{
+    switch (theEvent.getType())
+    {
+    case KEY_DOWN:
+    {
+        const KeyboardEvent& keyEvent = static_cast<const KeyboardEvent&>(theEvent);
+
+        switch (keyEvent.getKeyCode())
+        {
+        case KeyCode::ZERO:
+            if (mMainMenu)
+            {
+                mInMenu = false;
+                Game::getInstance()->getLevelManager()->loadRandomLevel();
+            }
+            //play the game
+            break;
+        case KeyCode::ONE:
+            mMainMenu = !mMainMenu;
+            //option toggle
+            break;
+        case KeyCode::TWO:
+            if (mMainMenu)
+            {
+                mInMenu = false;
+                Game::getInstance()->getLevelManager()->loadSaveData();
+            }
+            break;
+        case KeyCode::THREE:
+            if (!mMainMenu)
+            {
+                mSoundOn = !mSoundOn;
+                Game::getInstance()->getAudioManager()->setMuteEffects(mSoundOn);
+                Game::getInstance()->getAudioManager()->setMuteMusic(mSoundOn);
+            }
+            //toggle sound
+            break;
+        case KeyCode::FOUR:
+            if (!mMainMenu)
+            {
+                mLanguage = (int)Language::ENGLISH;
+            }
+            //language - english
+            break;
+        case KeyCode::FIVE:
+            if (!mMainMenu)
+            {
+                mLanguage = (int)Language::SPANISH;
+            }
+            //language - spanish
+            break;
+        case KeyCode::SIX:
+            if (!mMainMenu)
+            {
+                mLanguage = (int)Language::FRENCH;
+            }
+            //language - french
+            break;
+        case KeyCode::SEVEN:
+            if (!mMainMenu)
+            {
+                int temp = Game::getInstance()->getLevelManager()->getSpeedIndex();
+                temp++;
+                if (temp >= MAX_NUM_SPEEDS)
+                {
+                    temp = 0;
+                }
+                Game::getInstance()->getLevelManager()->setSpeedIndex(temp);
+                //toggle difficulty
+            }
+            break;
+        }
+    }
+    }
+
+
+}

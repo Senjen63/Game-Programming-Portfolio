@@ -1,0 +1,37 @@
+#pragma once
+#include <vector>
+
+#include "Segment.h"
+
+class SnakeManager : public Trackable
+{
+public:
+	SnakeManager();
+	~SnakeManager();
+
+	void cleanup();
+
+	void addSegment(Segment* toAdd);
+	void removeSegment();
+
+	int getSpeed() { return mSpeed; }
+	void setSpeed(double newSpeed);
+	Segment* getSegment(int pos);
+	int getNumSegments() { return mSegments.size(); }
+
+	void changeDir(int newDir);
+	void setupSnake(int speed, int numSegments, Animation* headAnims[], Animation* bodyAnims[]);
+	void updateAll(float elapsedTime);
+	void drawAll();
+
+	const static int SEGMENT_DISTANCE = 32;
+	const static int BASE_DIR = 180;
+private:
+	std::vector<Segment*> mSegments;
+	int mSpeed; //NOTE: higher speed = slower snake
+	double mTimeToJump;
+	int mDir; //directional; values are 0, 90, 180, 270
+
+	int mStartX;
+	int mStartY;
+};

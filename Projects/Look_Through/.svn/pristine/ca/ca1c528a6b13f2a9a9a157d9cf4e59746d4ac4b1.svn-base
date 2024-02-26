@@ -1,0 +1,59 @@
+#include "Sound.h"
+
+Sound::Sound()
+{
+	SDL_Init(SDL_INIT_AUDIO);
+
+	int soundRate = 22050;
+	Uint16 soundFormat = AUDIO_S16SYS;
+	int soundChannels = 2;
+	int soundBuffers = 4096;
+
+	if(Mix_OpenAudio(soundRate, soundFormat, soundChannels, soundBuffers) != 0)
+	{
+		SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Error init sound: ", Mix_GetError());
+		exit(-1);
+	}
+}
+
+Sound::~Sound()
+{
+	Mix_Quit();
+
+	SDL_Quit();
+	Mix_CloseAudio();
+
+	for (unsigned int i = 0; i < mpSounds.size(); i++)
+	{
+		Mix_FreeChunk(mpSounds[i]);
+	}
+
+	mpSounds.clear();
+}
+
+void Sound::addSound(const char* path)
+{
+	Mix_Chunk* tmp = Mix_LoadWAV(path);
+
+	if(tmp != nullptr)
+	{
+		mpSounds.push_back(tmp);
+	}
+}
+
+void Sound::playSound(const int sound) const
+{
+	if(mCanPlay)
+		Mix_PlayChannel(-1, mpSounds[sound], 0);
+}
+
+void Sound::playSound(const int sound, int loop) const
+{
+	if(mCanPlay)
+		Mix_PlayChannel(-1, mpSounds[sound], loop);
+}
+
+void Sound::stopSound()
+{
+	Mix_HaltChannel(-1);
+}

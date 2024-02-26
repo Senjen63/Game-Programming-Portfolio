@@ -1,0 +1,303 @@
+#include "LevelManager.h"
+#include "UnitManager.h"
+#include "Game.h"
+
+
+/*
+switch case template
+
+switch (type)
+	{
+	case UnitTypes::WALL:
+
+	case UnitTypes::POWERUP:
+
+	case UnitTypes::POINTOBJECT:
+
+	case UnitTypes::SPEEDUP:
+
+	case UnitTypes::SLOWDOWN:
+
+	}
+
+*/
+
+LevelManager::LevelManager()
+{
+	srand(time(NULL));
+	mPoints = 0;
+	mPointSpawnChance = 0;
+	mSpeedUpSpawnChance = 0; 
+	mSlowDownSpawnChance = 0;
+}
+
+LevelManager::~LevelManager()
+{
+	clear();
+}
+
+void LevelManager::clear()
+{
+	for (unsigned int i = 0; i < mWalls.size(); i++)
+	{
+		delete mWalls[i];
+	}
+	mWalls.clear();
+
+	
+	for (unsigned int i = 0; i < mPowerUps.size(); i++)
+	{
+		delete mPowerUps[i];
+	}
+	mPowerUps.clear();
+
+	for (unsigned int i = 0; i < mPointsVector.size(); i++)
+	{
+		delete mPointsVector[i];
+	}
+	mPointsVector.clear();
+
+	for (unsigned int i = 0; i < mSpeedUp.size(); i++)
+	{
+		delete mSpeedUp[i];
+	}
+	mSpeedUp.clear();
+
+	for (unsigned int i = 0; i < mSlowDown.size(); i++)
+	{
+		delete mSlowDown[i];
+	}
+	mSlowDown.clear();
+}
+
+void LevelManager::removeObject(Unit* destroy, UnitTypes type)
+{
+	switch (type)
+	{
+	case UnitTypes::WALL:
+		for (unsigned int i = 0; i < mWalls.size(); i++)
+		{
+			Unit* temp = mWalls[i];
+			if (temp == destroy)
+			{
+				delete temp;
+				mWalls.erase(mWalls.begin() + i);
+			}
+		}
+		break;
+	case UnitTypes::POWERUP:
+		for (unsigned int i = 0; i < mPowerUps.size(); i++)
+		{
+			Unit* temp = mPowerUps[i];
+			if (temp == destroy)
+			{
+				delete temp;
+				mPowerUps.erase(mPowerUps.begin() + i);
+			}
+		}
+		break;
+	case UnitTypes::POINTOBJECT:
+		for (unsigned int i = 0; i < mPointsVector.size(); i++)
+		{
+			Unit* temp = mPointsVector[i];
+			if (temp == destroy)
+			{
+				delete temp;
+				mPointsVector.erase(mPointsVector.begin() + i);
+			}
+		}
+		break;
+	case UnitTypes::SPEEDUP:
+		for (unsigned int i = 0; i < mSpeedUp.size(); i++)
+		{
+			Unit* temp = mSpeedUp[i];
+			if (temp == destroy)
+			{
+				delete temp;
+				mSpeedUp.erase(mSpeedUp.begin() + i);
+			}
+		}
+		break;
+	case UnitTypes::SLOWDOWN:
+		for (unsigned int i = 0; i < mSlowDown.size(); i++)
+		{
+			Unit* temp = mSlowDown[i];
+			if (temp == destroy)
+			{
+				delete temp;
+				mSlowDown.erase(mSlowDown.begin() + i);
+			}
+		}
+		break;
+	}
+}
+
+void LevelManager::addObject(Unit* newObj, UnitTypes type)
+{
+	switch (type)
+	{
+	case UnitTypes::WALL:
+		mWalls.push_back(newObj);
+	case UnitTypes::POWERUP:
+		mPowerUps.push_back(newObj);
+	case UnitTypes::POINTOBJECT:
+		mPointsVector.push_back(newObj);
+	case UnitTypes::SPEEDUP:
+		mSpeedUp.push_back(newObj);
+	case UnitTypes::SLOWDOWN:
+		mWalls.push_back(newObj);
+	}
+}
+
+Unit* LevelManager::getObject(int index, UnitTypes type)
+{
+	switch (type)
+	{
+	case UnitTypes::WALL:
+		return mWalls[index];
+	case UnitTypes::POWERUP:
+		return mPowerUps[index];
+	case UnitTypes::POINTOBJECT:
+		return mPointsVector[index];
+	case UnitTypes::SPEEDUP:
+		return mSpeedUp[index];
+	case UnitTypes::SLOWDOWN:
+		return mSlowDown[index];
+	}
+}
+
+int LevelManager::getObjectSize(UnitTypes type)
+{
+	switch (type)
+	{
+	case UnitTypes::WALL:
+		return mWalls.size();
+	case UnitTypes::POWERUP:
+		return mPowerUps.size();
+	case UnitTypes::POINTOBJECT:
+		return mPointsVector.size();
+	case UnitTypes::SPEEDUP:
+		return mSpeedUp.size();
+	case UnitTypes::SLOWDOWN:
+		return mSlowDown.size();
+	}
+}
+
+void LevelManager::DrawAll(GraphicsSystem* display)
+{
+	for (unsigned int i = 0; i < mWalls.size(); i++)
+	{
+		mWalls[i]->Draw(display); //fine
+	}
+	for (unsigned int i = 0; i < mPowerUps.size(); i++)
+	{
+		mPowerUps[i]->Draw(display); //i think fine?
+	}
+	for (unsigned int i = 0; i < mPointsVector.size(); i++)
+	{
+		mPointsVector[i]->Draw(display);
+	}
+	for (unsigned int i = 0; i < mSpeedUp.size(); i++)
+	{
+		mSpeedUp[i]->Draw(display); //fine
+	}
+	for (unsigned int i = 0; i < mSlowDown.size(); i++)
+	{
+		mSlowDown[i]->Draw(display); //fine
+	}
+}
+
+void LevelManager::checkIntersection(Vector2D pos, bool& returnBool)
+{
+	mObjectList = { mWalls, mPowerUps, mPointsVector, mSpeedUp, mSlowDown };
+	for (unsigned int j = 0; j < mObjectList.size(); j++)
+	{
+		for (unsigned int i = 0; i < mObjectList[j].size(); i++)
+		{
+			if (mObjectList[j][i]->getPos() == pos)
+			{
+				returnBool = true;
+			}
+		}
+	}
+}
+
+void LevelManager::checkSpawns(UnitManager& snake)
+{
+
+	if ((rand() % 1000) + 1 < mPointSpawnChance)
+	{
+		spawnItem(POINTS_KEY, snake);
+	}
+	if ((rand() % 1000) + 1 < mSpeedUpSpawnChance)
+	{
+		spawnItem(SPEEDUP_KEY, snake);
+	}
+	if ((rand() % 1000) + 1 < mSlowDownSpawnChance)
+	{
+		spawnItem(SPEEDDOWN_KEY, snake);
+	}
+}
+
+void LevelManager::spawnItem(string key, UnitManager& snake)
+{
+	bool intersect = false;
+	
+	do
+	{
+		intersect = false;
+		Vector2D newPos = Vector2D(((rand() % 16) * 50) + 25, ((rand() % 12) * 50) + 25);
+
+
+		for (int i = 0; i < snake.getSize(); i++)
+		{
+			if (snake.getUnit(i)->getPos() == newPos)
+				intersect = true;
+		}
+
+		checkIntersection(newPos, intersect);
+
+
+		if (!intersect)
+		{
+			Unit* newUnit = new Unit(key, newPos, 2, 2); //causing issues // Animation(string, vector2d, int, int
+			if(key == POWERUP_KEY)
+				addPowerUp(newUnit);
+			if (key == POINTS_KEY)
+				addPointItem(newUnit);
+			if (key == SPEEDUP_KEY)
+				addSpeedUp(newUnit);
+			if (key == SPEEDDOWN_KEY)
+				addSlowDown(newUnit);
+		}
+
+	} while (intersect);
+}
+
+void LevelManager::UpdateAll(double dt, UnitManager& snake)
+{
+	mCurrentTime += dt;
+	if (mCurrentTime > mUpdateSpeed)
+	{
+		for (unsigned int i = 0; i < mPowerUps.size(); i++)
+		{
+			mPowerUps[i]->Update(dt);
+		}
+		for (unsigned int i = 0; i < mPointsVector.size(); i++)
+		{
+			mPointsVector[i]->Update(dt);
+		}
+		for (unsigned int i = 0; i < mSpeedUp.size(); i++)
+		{
+			mSpeedUp[i]->Update(dt);
+		}
+		for (unsigned int i = 0; i < mSlowDown.size(); i++)
+		{
+			mSlowDown[i]->Update(dt);
+		}
+
+		checkSpawns(snake);
+
+		mCurrentTime = 0;
+	}
+}

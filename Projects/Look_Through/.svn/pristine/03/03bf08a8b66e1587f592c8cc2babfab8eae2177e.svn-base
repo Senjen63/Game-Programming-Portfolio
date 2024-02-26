@@ -1,0 +1,10 @@
+#include "SpawnEvent.h"
+
+SpawnEvent::SpawnEvent(SpawnEventType type) : GameEvent((GameEventType)type)
+{
+
+}
+SpawnEvent::~SpawnEvent()
+{
+
+}

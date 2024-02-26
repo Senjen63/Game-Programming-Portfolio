@@ -1,0 +1,364 @@
+#include <vector>
+
+#include "Game.h"
+#include "GraphicsSystem.h"
+#include "InputSystem.h"
+#include "GraphicsBuffer.h"
+#include "Sprite.h"
+#include "Vector2D.h"
+#include "Animation.h"
+#include "Unit.h"
+#include "Timer.h"
+#include <PerformanceTracker.h>
+#include "GraphicsBufferManager.h"
+#include "UnitManager.h"
+#include <fstream>
+#include "Color.h"
+#include "LevelManager.h"
+#include "Level.h"
+#include "HUD.h"
+#include "InputEvent.h"
+#include <EventSystem.h>
+#include "GameEvent.h"
+#include "LevelEvent.h"
+#include "Font.h"
+#include "StartScreen.h"
+#include "DeathScreen.h"
+#include "Snake.h"
+#include "DeadEvent.h"
+#include "PowerUpEvent.h"
+#include "WinScreen.h"
+#include "NextLevelScreen.h"
+#include "PowerUps.h"
+#include "Walls.h"
+#include "Background.h"
+
+
+using namespace std;
+
+Game* Game::mpGameInstance = nullptr;
+
+Game::Game() 
+{
+	this->mpGraphicsSystem = nullptr;
+	this->mpInputSystem = nullptr;
+	this->mpGameTimer = nullptr;
+	this->mpPerformanceTracker = nullptr;
+	this->mpUnitManager = nullptr;
+	this->mpGraphicsBufferManager = nullptr;
+	this->mGamePauseTime = 16.7;
+	this->mActualTime = 16.7;
+	this->mGameContinue = true;
+	this->mpLevelManager = nullptr;
+
+	this->mCurrentScore = 0;
+	
+	this->mpBackground = nullptr;
+	this->mpHud = nullptr;
+	this->mpStartScreen = nullptr;
+	this->mpDeathScreen = nullptr;
+	this->mpWinScreen = nullptr;
+	this->mpSnake = nullptr;
+	this->mpNextLevelScreen = nullptr;
+	this->mpPowerUps = nullptr;
+	this->mpWalls = nullptr;
+
+	this->mIsStart = true;
+	this->mIsTimeRun = true;
+	this->mIsDead = false;
+	this->mIsWin = false;
+	this->mIsNextLevel = false;
+
+	EventSystem::getInstance()->addListener((EventType)INPUT_EVENT, this);
+	EventSystem::getInstance()->addListener((EventType)DEAD_EVENT, this);
+	EventSystem::getInstance()->addListener((EventType)POWER_UP_EVENT, this);
+}
+
+Game::~Game()
+{
+	cleanUp();
+}
+
+void Game::init()
+{
+	mpGraphicsSystem = new GraphicsSystem;
+	mpInputSystem = new InputSystem;
+	mpGraphicsBufferManager = new GraphicsBufferManager;
+	mpUnitManager = new UnitManager;
+
+	int x = 0;
+	int y = 0;
+
+	ifstream input("./data_files/game_data.txt");
+	if (input.good()) 
+	{
+		string key;
+
+		while (!input.eof()) 
+		{
+			input >> key;
+			if (key == "display_size") 
+			{
+				input >> x >> y;
+				this->mDisplaySize = Vector2D(x, y);
+			}
+			else if (key == "grid_size")
+			{
+				input >> x >> y;
+				this->mGridSize = Vector2D(x, y);
+			}
+			else if (key == "grid_slot_size")
+			{
+				input >> x >> y;
+				this->mGridSlotSize = Vector2D(x, y);
+			}
+		}
+	}
+	input.close();
+
+	mpLevelManager = new LevelManager;
+
+	mpGraphicsSystem->init(mDisplaySize.getX(), mDisplaySize.getY());
+	
+	mpBackground = new Background(mDisplaySize.getX(), mDisplaySize.getY());
+
+	mpHud = new HUD();
+
+	mpWalls = new Walls();
+
+	mpStartScreen = new StartScreen();
+
+	mpDeathScreen = new DeathScreen();
+
+	mpWinScreen = new WinScreen();
+
+	mpNextLevelScreen = new NextLevelScreen();
+
+	mpSnake = new Snake();
+
+	mpPowerUps = new PowerUps();
+
+	mpInputSystem->init();
+
+	mpGameTimer = new Timer;
+
+	mpPerformanceTracker = new PerformanceTracker;
+}
+
+void Game::cleanUp()
+{
+	delete mpPerformanceTracker;
+	delete mpGameTimer;
+
+	delete mpBackground;
+	delete mpHud;
+	delete mpStartScreen;
+	delete mpDeathScreen;
+	delete mpSnake;
+	delete mpNextLevelScreen;
+	delete mpWinScreen;
+	delete mpPowerUps;
+	delete mpWalls;
+
+	delete mpLevelManager;
+	delete mpUnitManager;
+	delete mpGraphicsBufferManager;
+	delete mpInputSystem;
+	delete mpGraphicsSystem;	
+}
+
+void Game::doLoop()
+{
+	while (mGameContinue)
+	{
+		mpPerformanceTracker->clearTracker("loop");
+		mpPerformanceTracker->startTracking("loop");
+		mpGameTimer->start();
+
+		mpInputSystem->update();
+
+		mpUnitManager->drawAll();
+
+		mpSnake->snakeMovement(mGamePauseTime);
+
+		mpGraphicsSystem->flip();
+
+		mpUnitManager->updateAll(mGamePauseTime);
+
+		drawScreen(mGamePauseTime, mActualTime);
+
+		mpGameTimer->sleepUntilElapsed(mGamePauseTime);
+
+		mpPerformanceTracker->stopTracking("loop");
+
+		mActualTime = mpGameTimer->getElapsedTime();
+	}
+}
+
+void Game::handleEvent(const Event& theEvent)
+{
+	if (theEvent.getType() == INPUT_EVENT)
+	{
+		const InputEvent& inputEvent = static_cast<const InputEvent&>(theEvent);
+		if (inputEvent.getKey() == mpInputSystem->ESCAPE_KEY_E && inputEvent.getReleaseState() == "up") // escape
+		{
+			mGameContinue = false;
+		}
+		else if (inputEvent.getKey() == mpInputSystem->ENTER_KEY_E && inputEvent.getReleaseState() == "up") // enter
+		{
+			if (mIsStart)
+			{
+				mIsStart = false;
+				mpPowerUps->drawPowerUps();
+			}
+		}
+		else if (inputEvent.getKey() == mpInputSystem->N_KEY_E && inputEvent.getReleaseState() == "up") //N
+		{
+			if (mIsDead || mIsWin || mIsNextLevel)
+			{
+				mGameContinue = false;
+			}
+		}
+		else if (inputEvent.getKey() == mpInputSystem->Y_KEY_E && inputEvent.getReleaseState() == "up") // Y
+		{
+			if (mIsDead || mIsWin)
+			{
+				mIsDead = false;
+				mIsWin = false;
+				mpLevelManager->resetCurrentLevel();
+				resetScore();
+				resetTime();
+				startTime();
+				mpSnake->resetSnakeSpeed();
+				mpSnake->resetSnakeDirection();
+				mpSnake->initSnake();
+				mpPowerUps->drawPowerUps();
+			}
+			else if (mIsNextLevel) {
+				mIsNextLevel = false;
+				mpLevelManager->increaseCurrentLevel();
+				resetTime();
+				startTime();
+				mpSnake->resetSnakeSpeed();
+				mpSnake->resetSnakeDirection();
+				mpSnake->initSnake();
+				mpPowerUps->drawPowerUps();
+			}
+		}
+		else if (inputEvent.getKey() == mpInputSystem->UP_KEY_E && inputEvent.getReleaseState() == "up") // up
+		{
+			mpSnake->setSnakeDirection("up");
+		}
+		else if (inputEvent.getKey() == mpInputSystem->DOWN_KEY_E && inputEvent.getReleaseState() == "up") // down
+		{
+			mpSnake->setSnakeDirection("down");
+		}
+		else if (inputEvent.getKey() == mpInputSystem->LEFT_KEY_E && inputEvent.getReleaseState() == "up") // left
+		{
+			mpSnake->setSnakeDirection("left");
+		}
+		else if (inputEvent.getKey() == mpInputSystem->RIGHT_KEY_E && inputEvent.getReleaseState() == "up") // right
+		{
+			mpSnake->setSnakeDirection("right");
+		}
+	}
+	else if (theEvent.getType() == DEAD_EVENT)
+	{
+		mIsDead = true;
+		mpSnake->clearSnake();
+		mpUnitManager->clearUnits();
+	}
+	else if (theEvent.getType() == POWER_UP_EVENT)
+	{
+		const PowerUpEvent& powerUpEvent = static_cast<const PowerUpEvent&>(theEvent);
+		if (powerUpEvent.getInputString() == "food")
+		{
+			mCurrentScore += mpLevelManager->getLevels()[mpLevelManager->getCurrentLevel() - 1]->getFoodPoints();
+
+			mpSnake->growSnake();
+
+			mpUnitManager->clearUnits();
+
+			mpSnake->resetSnakeSpeed();
+
+			if (mpSnake->getSnakeSize() >= mpLevelManager->getLevels()[mpLevelManager->getCurrentLevel() - 1]->getSnakeEndSegements())
+			{
+
+				if (mpLevelManager->getCurrentLevel() == 3)
+				{
+					endTime();
+					mIsWin = true;
+					mpSnake->clearSnake();
+					mpUnitManager->clearUnits();
+				}
+				else
+				{
+					endTime();
+					mIsNextLevel = true;
+					mpSnake->clearSnake();
+					mpUnitManager->clearUnits();
+				}
+			}
+			else
+			{
+				mpPowerUps->drawPowerUps();
+			}
+		}
+		else if (powerUpEvent.getInputString() == "bonusPoint")
+		{
+			mpUnitManager->deleteUnit(mpPowerUps->getBonusPointLocation());
+
+			mCurrentScore += mpLevelManager->getLevels()[mpLevelManager->getCurrentLevel() - 1]->getBonusPoints();
+		}
+		else if (powerUpEvent.getInputString() == "slow")
+		{
+			mpUnitManager->deleteUnit(mpPowerUps->getSlowSpeedLocation());
+
+			mpSnake->slowDownSnake();
+		}
+		else if (powerUpEvent.getInputString() == "speed")
+		{
+			mpUnitManager->deleteUnit(mpPowerUps->getSlowSpeedLocation());
+
+			mpSnake->speedUpSnake();
+		}
+	}
+}
+
+void Game::drawScreen(double dt, double actualElaspedTime)
+{
+	if (mIsStart)
+	{
+		mpStartScreen->drawStartScreen();
+	}
+	else 
+	{
+		mpBackground->drawBackground();
+
+		mpWalls->drawAllWalls();
+
+		mpHud->drawHud(actualElaspedTime);
+
+		if (mIsDead)
+		{
+			mpDeathScreen->drawDeathScreen();
+		}
+		else if (mIsWin)
+		{
+			mpWinScreen->drawWinScreen();
+			mpSnake->clearSnake();
+		}
+		else if (mIsNextLevel)
+		{
+			mpNextLevelScreen->drawNextLevelScreen();
+			mpSnake->clearSnake();
+		}
+
+		mpSnake->drawSnake(dt);
+	}
+}
+
+void Game::addTime(double dt)
+{
+	mTime += dt;
+}

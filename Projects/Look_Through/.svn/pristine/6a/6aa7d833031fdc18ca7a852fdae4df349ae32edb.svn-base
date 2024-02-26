@@ -1,0 +1,56 @@
+#pragma once
+
+#include "Animation.h"
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <map>
+
+#include <vector>
+/*
+Reminder to make the text file itself more readable and have the loading functionality ignore any unnccessary characters
+ 
+Animation Data File is structure as follows:
+
+Animation Name
+Number of Sprites
+Animation Frames
+Should Loop
+Unique Sprite Order
+
+Sprite n Source X
+Sprite n Source Y
+Sprite n Width
+Sprite n Height
+
+Sprite 1
+Sprite 2
+Sprite 3
+
+...
+
+Animation Name
+
+...
+
+*/
+
+class AnimationManager
+{
+public:
+	AnimationManager(std::string animationDataFilePath);
+	~AnimationManager();
+
+	void changeAnimation(std::string animationName);
+	void update(float deltaTime);
+
+	Animation* getCurrentAnimation() { return mpCurrentAnimation; }
+	std::string getCurrentAnimationName() { return mCurrentAnimationName; }
+
+private:
+	GraphicsBuffer* mpAnimationBuffer;
+	std::map<std::string, Animation*> mAnimations;
+	std::vector<Animation*> tempPointerVec;
+	Animation* mpCurrentAnimation;
+	std::string mCurrentAnimationName = "none";
+};

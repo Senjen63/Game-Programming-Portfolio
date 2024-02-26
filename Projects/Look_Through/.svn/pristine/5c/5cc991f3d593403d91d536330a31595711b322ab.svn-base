@@ -1,0 +1,10 @@
+#include "SpawnFoodEvent.h"
+
+SpawnFoodEvent::SpawnFoodEvent() : SpawnEvent((SpawnEventType)SPAWN_FOOD_EVENT)
+{
+    
+}
+SpawnFoodEvent::~SpawnFoodEvent()
+{
+
+}

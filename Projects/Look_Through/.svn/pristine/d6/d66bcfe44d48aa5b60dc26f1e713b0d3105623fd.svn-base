@@ -1,0 +1,34 @@
+#pragma once
+#include <vector>
+
+#include "GraphicsSystem.h"
+#include "InputSystem.h"
+#include "GraphicsBufferManager.h"
+
+class Game : public Trackable
+{
+public:
+	static void createGame(int width, int height, double fps);
+	static void deleteGame();
+	static Game* instance();
+
+	bool init();
+	void cleanup();
+
+	GraphicsSystem* getGraphics() { return mGraphics; }
+	InputSystem* getInputs() { return mInputs; }
+	GraphicsBufferManager* getBuffers() { return mBuffers; }
+
+	void doLoop();
+private:
+	Game(int width, int height, double fps);
+	~Game();
+
+	GraphicsSystem* mGraphics;
+	InputSystem* mInputs;
+	GraphicsBufferManager* mBuffers;
+
+	double mFPS;
+	static Game* mpsInstance;
+	bool mInitted = false;
+};

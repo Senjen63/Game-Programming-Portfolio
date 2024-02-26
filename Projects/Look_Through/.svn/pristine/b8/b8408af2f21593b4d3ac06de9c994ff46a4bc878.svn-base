@@ -1,0 +1,75 @@
+#pragma once
+
+#include <PerformanceTracker.h>
+#include <MemoryTracker.h>
+#include <vector>
+#include <string>
+
+#include "Unit.h"
+#include "GraphicsBufferManager.h"
+
+const int NORMAL_SPEED = 2;
+const int FAST_SPEED = 1;
+const int SLOW_SPEED = 3;
+enum class Direction
+{
+	LEFT,
+	RIGHT,
+	UP,
+	DOWN
+};
+
+const int MOVEMENT_DISTANCE = 50;
+const float DEFAULT_SPEED = 5;
+
+class UnitManager : public Trackable
+{
+public:
+	UnitManager();
+	~UnitManager();
+	void clear();
+	void cleanUp();
+	void removeUnit(Unit* destroy);
+
+	void makeUnit();
+	void makeUnit(Vector2D loc, GraphicsBuffer* pBuffer);
+
+	void addUnit(Unit* newUnit) { mpUnitVector.push_back(newUnit); };
+	Unit* getUnit(int index) { return mpUnitVector[index]; };
+	Unit* getHead() { return mpUnitVector[0]; };
+
+	void setDirection(Direction dir) { mCurrentDir = dir; };
+	void updateSnake(Direction dir, float time);
+	void drawAll(GraphicsSystem* display);
+
+	int getSize() { return mpUnitVector.size(); };
+
+	void changeSpeed(int speed) { mSpeed = speed; };
+
+	void setNormalSpeed(int normal) { mNormalSpeed = normal; };
+	void setSlowSpeed(int slow) { mSlowSpeed = slow; };
+	void setFastSpeed(int fast) { mFastSpeed = fast; };
+	void setPowerUpTIme(int time) { mPowerUpTime = time; };
+
+	int getNormalSpeed() { return mNormalSpeed; };
+	int getSlowSpeed() { return mSlowSpeed; };
+	int getFastSpeed() { return mFastSpeed; };
+
+	int getCurrentSpeed() { return mSpeed; };
+
+private:
+	vector<Unit*> mpUnitVector;
+	Direction mCurrentDir;
+	float mCurrentTime;
+	float mPowerCurrentTime;
+	float mSpeed;
+
+	int mNormalSpeed;
+	int mFastSpeed;
+	int mSlowSpeed;
+	int mPowerUpTime;
+	bool canTurn;
+
+	void updateSnakeBody();
+	void setDirection(Direction dir, Vector2D& pos);
+};

@@ -1,0 +1,17 @@
+/*******************************************************
+* Author: Aven Presseisen
+* Class: GPR-250-02
+* Assignment: Assignment 1
+* Certification of Authenticity:
+* I certify that this assignment is entirely my own work.
+************/
+
+#pragma once
+
+#include <allegro5/color.h>
+#include <Trackable.h>
+
+struct Color : public Trackable
+{
+	static ALLEGRO_COLOR createColor( unsigned char r, unsigned char g, unsigned char b, unsigned char a = 255 );
+};

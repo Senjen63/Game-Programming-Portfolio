@@ -1,0 +1,62 @@
+#pragma once
+
+#include <iostream>
+#include <string>
+#include <Trackable.h>
+#include <Vector2D.h>
+#include "FoodManager.h"
+#include "Snake.h"
+
+class Level : public Trackable
+{
+public:
+    Level();
+    Level(const std::string& filePath);
+    ~Level() = default;
+
+    void load();
+    void cleanUp();
+
+    void update(double deltaTime);
+
+    Vector2D getGridPos(int x, int y) const;
+    Vector2D getLevelCenter() const;
+    Vector2D getRandEmptyPos() const;
+
+    int getLevelGridSize() const { return mLevelGridSize; }
+    int getLevelWidth() const { return mLevelWidth; }
+    int getLevelHeight() const { return mLevelHeight; }
+
+    bool getIsLoaded() const { return mIsLoaded; }
+    bool getIsDone() const { return mIsDone; }
+
+    float getSnakeMoveTime() const { return mSnakeMoveTime; }
+    int getSnakeStartLength() const { return mSnakeStartLength; }
+    int getLengthRequirement() const { return mLengthRequirement; }
+
+    void updateFoodManagerRef();
+
+    friend std::istream& operator>>(std::istream& istream, Level& level);
+
+private:
+    bool mIsLoaded = false;
+
+    bool mIsDone = false;
+
+    int mLevelGridSize;
+    int mLevelWidth = 0;
+    int mLevelHeight = 0;
+
+    float mSnakeMoveTime;
+    int mSnakeStartLength;
+    int mLengthRequirement;
+
+    Snake* mpSnake = nullptr;
+
+    FoodManager mFoodManager;
+
+    Color mWallColor = COLOR_GRAY;
+    std::vector<Vector2D> mWallPositions;
+    std::vector<Entity*> mWalls;
+    std::string mFilePath;
+};

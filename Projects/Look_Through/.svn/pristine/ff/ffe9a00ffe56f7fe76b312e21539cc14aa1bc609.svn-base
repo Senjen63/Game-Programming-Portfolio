@@ -1,0 +1,11 @@
+#include "NextLevelEvent.h"
+
+NextLevelEvent::NextLevelEvent(int newLevel)
+	:LevelEvent(NEXT_LEVEL_EVENT)
+	, mLevel(newLevel)
+{
+}
+
+NextLevelEvent::~NextLevelEvent()
+{
+}

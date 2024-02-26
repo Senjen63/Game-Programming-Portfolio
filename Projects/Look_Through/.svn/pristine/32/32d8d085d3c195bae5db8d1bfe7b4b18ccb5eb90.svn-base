@@ -1,0 +1,91 @@
+#include "GraphicsSystem.h"
+#include "Sprite.h"
+#include "Font.h"
+#include "Color.h"
+
+#include <iostream>
+#include <cassert>
+#include <string>
+#include <random>
+
+#include <PerformanceTracker.h>
+#include <MemoryTracker.h>
+#include <Vector2D.h>
+#include <Timer.h>
+
+using namespace std;
+
+int main()
+{
+	PerformanceTracker* pPerformanceTracker = new PerformanceTracker;
+
+	const Vector2D DISP_SIZE = Vector2D(800, 600);
+
+	const string ASSET_PATH = "..\\..\\common\\assets\\";
+	const string QUIMBY_FILENAME = "mayor_quimby.png";
+	const string STAIRS_FILENAME = "steps.png";
+	const string SMURF_FILENAME = "smurf_sprites_numbered.png";
+	const Vector2D SMURF_SPRITE_SIZE = Vector2D(60, 60);
+	const Vector2D NUM_SMURFS = Vector2D(4, 4);
+	const string FONT_FILENAME = "cour.ttf";
+	const int FONT_SIZE = 24;
+	const int SLEEP_TIME = 5000;
+
+	Timer timer;
+
+	GraphicsSystem* gSys = new GraphicsSystem(DISP_SIZE.getX(), DISP_SIZE.getY());
+
+	GraphicsBuffer* smurfSheet = new GraphicsBuffer(ASSET_PATH + SMURF_FILENAME);
+
+	Sprite* steps = new Sprite(ASSET_PATH + STAIRS_FILENAME);
+	Sprite* quimby = new Sprite(ASSET_PATH + QUIMBY_FILENAME);
+	Sprite* red = new Sprite(Color(255, 0, 0, 255), DISP_SIZE);
+	Sprite* smurf = new Sprite(smurfSheet, Vector2D(0, 0), SMURF_SPRITE_SIZE);
+
+	Font* font = new Font(ASSET_PATH + FONT_FILENAME, FONT_SIZE);
+
+	gSys->draw(red->getBuffer(), Vector2D(0, 0), quimby);
+	gSys->writeText(red->getBuffer(), Vector2D(0, 0), font, Color(0, 0, 0), "Curse you Papa Smurf!!");
+
+	gSys->draw(Vector2D(0, 0), steps);
+	gSys->draw(DISP_SIZE / 3, red, Vector2D(1.0f / 3.0f, 1.0f / 3.0f));
+
+	srand(time(NULL));
+
+	for (int y = 0; y < NUM_SMURFS.getY(); y++)
+	{
+		for (int x = 0; x < NUM_SMURFS.getX(); x++)
+		{
+			Vector2D smurfPos = Vector2D(rand() % (int)DISP_SIZE.getX(), rand() % (int)DISP_SIZE.getY());
+			smurf->setSourcePos(Vector2D(x * SMURF_SPRITE_SIZE.getX(), y * SMURF_SPRITE_SIZE.getY()));
+			gSys->draw(smurfPos, smurf);
+		}
+	}
+
+	gSys->saveBuffer(gSys->getBackBuffer(), "backbuffer.jpg");
+	gSys->saveBuffer(red->getBuffer(), "redbuffer.jpg");
+
+	gSys->flip();
+
+	timer.sleep(SLEEP_TIME);
+
+
+	delete font;
+	delete smurf;
+	delete red;
+	delete quimby;
+	delete steps;
+	delete smurfSheet;
+	delete gSys;
+
+
+	pPerformanceTracker->stopTracking("loop");
+
+	pPerformanceTracker->clearTracker("loop");
+
+	delete pPerformanceTracker;
+	MemoryTracker::getInstance()->reportAllocations(cout);
+
+	system("pause");
+	return 0;
+}

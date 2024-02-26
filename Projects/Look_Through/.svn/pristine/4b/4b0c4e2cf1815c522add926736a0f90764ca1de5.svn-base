@@ -1,0 +1,32 @@
+#pragma once
+
+#include <allegro5/allegro_font.h>
+#include <allegro5/allegro_ttf.h>
+#include <string>
+#include <MemoryTracker.h>
+#include <Trackable.h>
+
+using namespace std;
+
+class Font : public Trackable
+{
+
+	friend class GraphicsSystem;
+	friend class Game;
+
+private: 
+	ALLEGRO_FONT* mpFont;
+
+	float mFontSize;
+
+	ALLEGRO_FONT*& getFont();
+
+public:
+	Font();
+
+	Font(string assetPath, string filename, float fontSize, int flags);
+
+	~Font();
+
+	float getFontSize();
+};

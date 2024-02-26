@@ -1,0 +1,54 @@
+#include "SoundBufferManager.h"
+
+
+bool SoundBufferManager::doesBufferExist(std::string name)
+{
+	return mBuffers.find(name) != mBuffers.end();
+}
+
+
+void SoundBufferManager::cleanup()
+{
+	for (auto it : mBuffers)
+	{
+		if (it.second != nullptr)
+		{
+			SoundBuffer* buf = it.second;
+			delete buf;
+			it.second = nullptr;
+		}
+	}
+
+	mBuffers.clear();
+}
+
+
+SoundBuffer& SoundBufferManager::addSoundBuffer(std::string name, std::string fullPath)
+{
+	deleteSoundBuffer(name);
+	SoundBuffer* buffer = new SoundBuffer(fullPath);
+	mBuffers.insert({ name, buffer });
+	return *buffer;
+}
+
+
+bool SoundBufferManager::deleteSoundBuffer(std::string name)
+{
+	if (doesBufferExist(name) == true)
+	{
+		SoundBuffer* buffer = mBuffers[name];
+		mBuffers.erase(name);
+		delete buffer;
+
+		return true;
+	}
+
+	return false;
+}
+
+
+SoundBuffer& SoundBufferManager::getSoundBuffer(std::string name)
+{
+	return *mBuffers[name];
+}
+

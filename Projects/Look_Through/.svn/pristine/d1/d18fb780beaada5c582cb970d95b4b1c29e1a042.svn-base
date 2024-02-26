@@ -1,0 +1,234 @@
+#include "GraphicsSystem.h"
+
+GraphicsSystem::GraphicsSystem()
+{
+	mpDisplay = nullptr;
+	mpBackBuffer = nullptr;
+	mBufferSize = Vector2D(0, 0);
+	mTitle = "";
+}
+
+GraphicsSystem::GraphicsSystem( int width, int height, string title )
+{
+	mpDisplay = nullptr;
+	mpBackBuffer = nullptr;
+	mBufferSize = Vector2D(width, height);
+	mTitle = title;
+}
+
+
+GraphicsSystem::~GraphicsSystem()
+{
+	cleanup();
+}
+
+bool GraphicsSystem::init()
+{
+	mpDisplay = new sf::RenderWindow();
+	mpDisplay->create(sf::VideoMode(mBufferSize.getX(), mBufferSize.getY()), mTitle);
+
+	mpBackBuffer = new GraphicsBuffer(mBufferSize.getX(), mBufferSize.getY());
+	mpBackBuffer->mpBuffer->update(*mpDisplay); //convert window to texture and store it
+
+	return true;
+}
+
+
+void GraphicsSystem::cleanup()
+{
+	delete mpBackBuffer;
+	delete mpDisplay;
+}
+
+
+int GraphicsSystem::getWidth()
+{
+	return mpDisplay->getSize().x;
+}
+
+
+int GraphicsSystem::getHeight()
+{
+	return mpDisplay->getSize().y;
+}
+
+
+GraphicsBuffer* GraphicsSystem::getBackBuffer()
+{
+	mpBackBuffer->mpBuffer->update(*mpDisplay); //convert window to texture and store it
+
+	return mpBackBuffer;
+}
+
+
+void GraphicsSystem::setTitle(string newTitle)
+{
+	mTitle = newTitle;
+	mpDisplay->setTitle(newTitle);
+}
+
+
+void GraphicsSystem::clear()
+{
+	mpDisplay->clear();
+}
+
+
+void GraphicsSystem::flip()
+{
+	mpDisplay->display();
+}
+
+
+void GraphicsSystem::draw( int xPos, int yPos, Sprite sprite, float xScale, float yScale, float angle)
+{
+	Vector2D sourcePos = sprite.getSourcePos(); //top left corner sprite starts sampling texture from
+	Vector2D sourceWH = sprite.getWidthHeight();
+
+	//create temporary SFML sprite
+	sf::Sprite tempSprite = sf::Sprite();
+
+	tempSprite.setTexture(*sprite.getSpriteGraphicsBuffer()->mpBuffer, false); //set texture
+	tempSprite.setTextureRect(sf::IntRect(sourcePos.getX(), sourcePos.getY(), sourceWH.getX(), sourceWH.getY())); //choose correct frame from sprite sheet (if it is a sprite sheet)
+	tempSprite.setPosition(xPos, yPos);
+	tempSprite.setScale(xScale, yScale);
+	tempSprite.setOrigin(tempSprite.getLocalBounds().width / 2, tempSprite.getLocalBounds().height / 2);
+	tempSprite.setRotation(angle);
+
+	mpDisplay->draw(tempSprite);
+}
+
+
+void GraphicsSystem::draw( GraphicsBuffer* pBackBuffer, int xPos, int yPos, float xScale, float yScale, float angle)
+{
+	Vector2D sourceWH = Vector2D(pBackBuffer->getWidth(), pBackBuffer->getHeight());
+
+	//create temporary SFML sprite
+	sf::Sprite tempSprite = sf::Sprite();
+
+	tempSprite.setTexture(*pBackBuffer->mpBuffer, false); //set texture
+	tempSprite.setPosition(xPos, yPos);
+	tempSprite.setScale(xScale, yScale);
+	tempSprite.setRotation(angle);
+
+	mpDisplay->draw(tempSprite); //draw to render window
+}
+
+
+/*void GraphicsSystem::draw(GraphicsBuffer* pBackBuffer, int xCenter, int yCenter, int xPos, int yPos, float xScale, float yScale, float angle)
+{
+	al_draw_scaled_rotated_bitmap(pBackBuffer->mpBuffer, xCenter, yCenter, xPos, yPos, xScale, yScale, angle, 0);
+}*/
+
+
+void GraphicsSystem::draw( GraphicsBuffer* pBackBuffer, int xPos, int yPos, Sprite sprite, float xScale, float yScale, float angle)
+{
+	Vector2D sourcePos = sprite.getSourcePos(); //top left corner sprite starts sampling texture from
+	Vector2D sourceWH = sprite.getWidthHeight();
+
+	//create sf::Sprite of old texture
+	sf::Sprite oldSprite = sf::Sprite();
+	oldSprite.setTexture(*pBackBuffer->mpBuffer, true);
+	
+	//create render texture with dimensions of old graphics buffer and draw old graphics buffer to it
+	sf::RenderTexture render;
+	render.create(pBackBuffer->getWidth(), pBackBuffer->getHeight());
+	render.draw(oldSprite);
+
+	//create temporary SFML sprite and set proper attributes
+	sf::Sprite tempSprite = sf::Sprite();
+	tempSprite.setTexture(*sprite.getSpriteGraphicsBuffer()->mpBuffer, false); //set texture
+	tempSprite.setTextureRect(sf::IntRect(sourcePos.getX(), sourcePos.getY(), sourceWH.getX(), sourceWH.getY())); //choose correct frame from sprite sheet (if it is a sprite sheet)
+	tempSprite.setPosition(xPos, yPos);
+	tempSprite.setScale(xScale, yScale);
+	tempSprite.setRotation(angle);
+
+	render.draw(tempSprite); //draw to render texture, not display
+	render.display(); //register changes on render texture
+
+	*pBackBuffer->mpBuffer = render.getTexture(); //set passed buffer to new texture with passed sprite drawn on it
+}
+
+
+void GraphicsSystem::writeText( int xPos, int yPos, Font* font, Color color, string text )
+{
+	sf::Color fontColor = sf::Color(color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha());
+
+	sf::Text tempText = sf::Text();
+	
+	tempText.setFont(*font->mpFont);
+	tempText.setCharacterSize(font->mFontSize);
+	tempText.setFillColor(fontColor);
+	tempText.setString(text);
+	
+	alignText(xPos, yPos, font, tempText.getLocalBounds().width, tempText.getLocalBounds().height);
+
+	tempText.setPosition(xPos, yPos);
+
+	mpDisplay->draw(tempText);
+}
+
+
+void GraphicsSystem::writeText( GraphicsBuffer* pBackBuffer, int xPos, int yPos, Font* font, Color color, string text )
+{
+	sf::Color fontColor = sf::Color(color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha());
+
+	//create sf::Sprite of old texture
+	sf::Sprite oldSprite = sf::Sprite();
+	oldSprite.setTexture(*pBackBuffer->mpBuffer, true);
+
+	//create render texture and draw old sprite to it
+	sf::RenderTexture render;
+	render.create(pBackBuffer->getWidth(), pBackBuffer->getHeight());
+	render.draw(oldSprite);
+
+	//creates text with passed font and text
+	sf::Text tempText = sf::Text();
+	tempText.setFont(*font->mpFont);
+	tempText.setCharacterSize(font->mFontSize);
+	tempText.setFillColor(fontColor);
+	tempText.setString(text);
+
+	alignText(xPos, yPos, font, tempText.getLocalBounds().width, tempText.getLocalBounds().height);
+
+	tempText.setPosition(xPos, yPos);
+
+	render.draw(tempText); //draw text to render texture, not window
+	render.display(); //register changes on render texture
+
+	*pBackBuffer->mpBuffer = render.getTexture(); //set passed buffer to new texture with text drawn on it
+}
+
+
+bool GraphicsSystem::saveBuffer( GraphicsBuffer* saveBuffer, string fileName )
+{
+	sf::Image saveImage = sf::Image();
+	saveImage = saveBuffer->mpBuffer->copyToImage();
+
+	if ( !saveImage.saveToFile(fileName) ) 
+	{
+		cout << "ERROR - Save Failed" << endl;
+		return false;
+	}
+
+	return true;
+}
+
+
+void GraphicsSystem::alignText(int& xPos, int& yPos, Font* font, int width, int height)
+{
+	if (font->getAlignment() == ALIGN_RIGHT)
+	{
+		xPos -= width;
+	}
+	else if (font->getAlignment() == ALIGN_CENTER)
+	{
+		xPos -= width / 2;
+	}
+	else
+	{
+		//do nothing, text starts in correct place
+	}
+
+	yPos -= height;
+}

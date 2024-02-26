@@ -1,0 +1,25 @@
+#pragma once
+#include <Trackable.h>
+#include "SDL_FILES.h"
+
+using namespace std;
+
+class GraphicsBuffer : public Trackable
+{
+	friend class GraphicsSystem;
+public:
+	GraphicsBuffer(int width, int height);
+	GraphicsBuffer(const string& assetPath);
+	~GraphicsBuffer();
+
+	int getWidth();
+	int getHeight();
+
+private:
+	SDL_Surface* getBuffer();
+	GraphicsBuffer(SDL_Surface* bitMap);
+	SDL_Surface* mpBuffer = nullptr;
+	bool mOwnsBuffer;
+
+	friend class GraphicsBufferManager;
+};

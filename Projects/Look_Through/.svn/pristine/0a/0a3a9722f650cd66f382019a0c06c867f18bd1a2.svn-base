@@ -1,0 +1,11 @@
+#include "PowerUp.h"
+
+PowerUp::PowerUp(std::pair<float, float>location, Animation* currentAnimation, int powerUpType) : Unit(location, currentAnimation)
+{
+	mPowerUpType = powerUpType;
+}
+
+PowerUp::~PowerUp()
+{
+
+}

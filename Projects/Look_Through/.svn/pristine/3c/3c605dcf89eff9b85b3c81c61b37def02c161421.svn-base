@@ -1,0 +1,48 @@
+#pragma once
+#include <PerformanceTracker.h>
+#include <MemoryTracker.h>
+#include <allegro5/allegro.h>
+#include <allegro5/allegro_font.h>
+#include <allegro5/allegro_ttf.h>
+#include <allegro5/allegro_audio.h>
+#include <allegro5/allegro_acodec.h>
+#include <allegro5/allegro_image.h>
+#include <allegro5/allegro_primitives.h>
+#include <Trackable.h>
+#include "Color.h"
+#include "Sprite.h"
+#include "Font.h"
+#include <string>
+#include <Vector2D.h>
+#include <iostream>
+
+using namespace std;
+
+const int DISP_WIDTH = 800;
+const int DISP_HEIGHT = 600;
+
+class GraphicsSystem : public Trackable
+{
+public:
+	GraphicsSystem();
+	GraphicsSystem(int width, int height);
+	~GraphicsSystem();
+
+	int init();
+	void cleanup();
+	void flip();
+	GraphicsBuffer* getBackBuffer();
+	int getWidth();
+	int getHeight();
+
+	void draw(int spriteX, int spriteY, Sprite* pSprite, float scaleX, float scaleY);
+	void draw(GraphicsBuffer* pBuffer, int spriteX, int spriteY, float scaleX, float scaleY);
+	void draw(GraphicsBuffer* pBuffer, Sprite* pSprite, int spriteX, int spriteY, float scaleX, float scaleY);
+	void writeText(int fontX, int fontY, Font* pFont, Color color, string text);
+	void writeText(GraphicsBuffer* pBuffer, int fontX, int fontY, Font* pFont, Color color, string text);
+
+	void saveBuffer(string filePath, GraphicsBuffer* pBuffer);
+private:
+	GraphicsBuffer* mpBackBuffer;
+	ALLEGRO_DISPLAY* mpDisplay;
+};

@@ -1,0 +1,75 @@
+#pragma once
+
+#include <stdlib.h>
+#include <time.h>
+
+#include <PerformanceTracker.h>
+#include <MemoryTracker.h>
+#include <Vector2D.h>
+#include <Timer.h>
+#include <vector>
+
+#include "Unit.h"
+
+class UnitManager;
+
+
+enum UnitTypes
+{
+	WALL = 0, POWERUP = 1, POINTOBJECT = 2, SPEEDUP = 3, SLOWDOWN = 4
+};
+
+class LevelManager : public Trackable
+{
+public:
+	LevelManager();
+	~LevelManager();
+
+	void clear();
+	
+
+	void removeObject(Unit* destroy, UnitTypes type);
+
+	void addObject(Unit* newObj, UnitTypes type); //doesn't work for some reason
+
+	void addWall(Unit* newWall) { mWalls.push_back(newWall);      };
+	void addPowerUp(Unit* newFood) { mPowerUps.push_back(newFood);      };
+	void addPointItem(Unit* newPoint) { mPointsVector.push_back(newPoint);   };
+	void addSpeedUp(Unit* newSUp) { mSpeedUp.push_back(newSUp);    };
+	void addSlowDown(Unit* newDown)	{ mSlowDown.push_back(newDown); };
+
+	Unit* getObject(int index, UnitTypes type);
+	int getObjectSize(UnitTypes type);
+
+	void UpdateAll(double dt, UnitManager& snake);
+
+
+	int getPoints(){ return mPoints; };
+	void addPoints(int points) { mPoints += points; };
+
+	void setPointChance(int chance) { mPointSpawnChance = chance;      };
+	void setSpeedUpChance(int chance)   { mSpeedUpSpawnChance = chance;    };
+	void setSlowDownChance(int chance) { mSlowDownSpawnChance = chance;  };
+
+	void spawnItem(string key, UnitManager& snake);
+
+	void DrawAll(GraphicsSystem* display);
+
+private:
+	vector<Unit*> mWalls;
+	vector<Unit*> mPowerUps;
+	vector<Unit*> mPointsVector;
+	vector<Unit*> mSpeedUp;
+	vector<Unit*> mSlowDown;
+	vector< vector<Unit*>> mObjectList;
+
+	float mUpdateSpeed = 300;
+	float mCurrentTime = 0;
+
+	int mPointSpawnChance;
+	int mSpeedUpSpawnChance;
+	int mSlowDownSpawnChance;
+	int mPoints;
+	void checkIntersection(Vector2D pos, bool& returnBool);
+	void checkSpawns(UnitManager& snake);
+};

@@ -1,0 +1,22 @@
+#include "Texture.h"
+#include <assert.h>
+
+using namespace std;
+
+Texture::Texture(int width, int height)
+{
+	mTexture = new sf::Texture();
+	mTexture->create(width,height);
+}
+
+Texture::Texture(string filename)
+{
+	mTexture = new sf::Texture();
+
+	assert(mTexture->loadFromFile(filename));
+}
+
+Texture::~Texture()
+{
+	delete mTexture;
+}

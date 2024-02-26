@@ -1,0 +1,32 @@
+#pragma once
+
+#include "Unit.h"
+
+// A unit instance representing a segment of the snake.
+// This serves as a way of handling the direction at which a segment will move
+// and storing said direction so segments after any given instance will know
+// what direction to move in.
+
+class SnakeSegment:public Unit
+{
+public:
+	SnakeSegment(std::pair<float, float>location, Animation* currentAnimation, std::pair<int, int>startDirection, bool head);
+	~SnakeSegment() {};
+
+	// Be sure to add a float relating to the size of each "grid" cell
+	// It needs to move by a specific amount to simulate a grid.
+	// Maybe have that value be constant in the game loop, then
+	// pass it into SnakeManager, then into here.
+	void moveSegment(std::pair<int, int> newDirection, float cellSize);
+	void updateDirection(std::pair<int, int> newDirection) { mForwardDirection = newDirection; }
+
+	std::pair<int, int> getForwardDirection() { return mForwardDirection; }
+
+private:
+	// Up/Right: 1
+	// Down/Left: -1
+	// Only one of two values should be 0.
+	// If multiple are 1/-1, it should move diagonally, which shouldn't happen.
+	std::pair<int, int> mForwardDirection = std::make_pair(0, 0);
+	bool mHead;
+};

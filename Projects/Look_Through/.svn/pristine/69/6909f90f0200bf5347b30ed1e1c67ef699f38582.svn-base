@@ -1,0 +1,120 @@
+#include "Unit.h"
+#include "Game.h"
+
+Unit::Unit()
+{
+    mPos = Vector2D(DEFAULT_X, DEFAULT_Y);
+    mFps = DEFAULT_FPS;
+}
+
+
+Unit::Unit(Vector2D pos, int fps)
+{
+    mFps = fps;
+    mPos = pos;
+}
+
+
+Unit::~Unit()
+{
+
+}
+
+
+int Unit::getAnimCount()
+{
+    return mAnims.size();
+}
+
+
+int Unit::getCurrentIndex() 
+{
+    return mCurrentIndex;
+}
+
+
+bool Unit::getIsPlaying()
+{
+    return mPlay;
+}
+
+
+Vector2D Unit::getPosition()
+{
+    return mPos;
+}
+
+
+Vector2D Unit::getDimensions()
+{
+    return mAnims[mCurrentIndex].getCurrentSprite().getWidthHeight();
+}
+
+
+void Unit::update(float timeElapsed)
+{
+    if (mAnims.size() > 0 && mPlay)
+    {
+        mAnims[mCurrentIndex].update(timeElapsed);
+    }
+}
+
+
+void Unit::draw()
+{
+    Vector2D offset = Vector2D(mAnims[mCurrentIndex].getCurrentSprite().getWidthHeight()) / 2;
+    Vector2D pos = mPos - offset;
+    Game::getGame()->getGraphicsSystem()->draw(pos.getX(), pos.getY(), mAnims[mCurrentIndex].getCurrentSprite(), 1, 1);
+}
+
+
+void Unit::changePosition(Vector2D newPos)
+{
+    mPos = newPos;
+}
+
+
+void Unit::addAnimation(GraphicsBuffer* graphicsBuffer, int xSections, int ySections)
+{
+    Animation newAnim = Animation(graphicsBuffer, xSections, ySections, mFps, true);
+    mAnims.push_back(newAnim);
+}
+
+
+void Unit::setAnimation(int index)
+{
+    mAnims[index].sync(mAnims[mCurrentIndex]);
+    mCurrentIndex = index;
+    setFps(mFps);
+    
+}
+
+
+void Unit::setFps(int fps)
+{
+    mFps = fps;
+    mAnims[mCurrentIndex].changeSpeed(fps);
+}
+
+
+void Unit::togglePlay(bool play)
+{
+    mPlay = play;
+}
+
+
+bool Unit::isMouseOver(Vector2D mousePos)
+{
+    float xDist = abs(mPos.getX() - mousePos.getX());
+    float yDist = abs(mPos.getY() - mousePos.getY());
+
+    float xRadius = getDimensions().getX() / 2;
+    float yRadius = getDimensions().getY() / 2;
+
+    if (xDist <= xRadius && yDist <= yRadius)
+    {
+        return true;
+    }
+
+    return false;
+}

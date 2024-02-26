@@ -1,0 +1,29 @@
+//BP
+#pragma once
+#include <vector>
+#include <Trackable.h>
+#include "GraphicsSystem.h"
+
+class Animation : public Trackable
+{
+public:
+    //Might want to change the order of the params for the two below
+    Animation(int fps, bool loopCondition);
+    Animation(GraphicsBuffer* frames, int fps, bool loopCondition);
+    ~Animation();
+    void changeSpriteSpeed(int speed);
+    void updateSprite(float timePassed);
+    int getThisFrame() const { return mSpriteIndex; }
+    void synchronizeSprites(const Animation& previous);
+    int getFrames() const { return mSpriteList.size(); }
+    Sprite getThisSprite() { return mSpriteList[mSpriteIndex]; }
+    void addNewSprite(Sprite sprite) { mSpriteList.push_back(sprite); }
+private:
+    int mFramerate;
+    float mRemainingTime;
+    bool mKeepLooping = true;
+    float oneSecond = 1000.0;
+    vector<Sprite> mSpriteList;
+    unsigned int mSpriteIndex = 0;
+    float mSpriteTiming = oneSecond / mFramerate;
+};

@@ -1,0 +1,76 @@
+#pragma once
+#include "EventListener.h"
+#include "HUDText.h"
+
+#include <vector>
+
+/*
+This should only manage spawning enemies and not store the enemies it spawns.
+Spawned enemies will be held in the game's SceneManager.
+
+Updates pertaining to the enemy's death will be handled through events fired
+when an enemy is killed. This only includes increasing the enemy death count.
+
+Other events involving enemy death include updating the score and player stats.
+
+When an enemy is killed, a check is performed to see if the current wave kill
+count is greater than or equal to the requirements to progress. If so, the
+current wave is increased, the current kill count is reset to 0, and the
+required kills to progress is increased.
+
+With each wave, enemy health and damage is increased. This is applied by taking
+the base enemy stats and increasing it by a multiplier dependent on the wave
+before an enemy is created.
+
+Enemies are spawned at random between different locations. These locations are
+stored in a list of float pairs and an index in the list is randomly chosen from
+when an enemy is called to be spawned. Same goes for choosing what enemy type
+needs to be spawned.
+
+This will be created and stored in the SceneManager.
+*/
+
+class WaveManager : public EventListener
+{
+public:
+	WaveManager(std::vector<std::pair<float, float>> spawnLocations);
+	virtual ~WaveManager();
+
+	void update(float deltaTime);
+	void updateSpawnLocations(std::vector<std::pair<float, float>> spawnLocations);
+
+	void createEnemy();
+
+	int getCurrentWave() { return mCurrentWave; }
+	int getEndWave() { return mLastWave; }
+	int getWaveProgress() { return mWaveProgress; }
+	int getWaveGoal() { return mWaveGoal; }
+
+	void updateUI();
+
+	void updateCurrentWave(int currentWave) { mCurrentWave = currentWave; }
+	void updateLastWave(int lastWave) { mLastWave = lastWave; }
+	void updateWaveProgress(int waveProgress) { mWaveProgress = waveProgress; }
+	void updateWaveGoal(int waveGoal) { mWaveGoal = waveGoal; }
+
+	virtual void handleEvent(const Event& theEvent);
+
+private:
+	int mCurrentWave = 1;
+	int mWaveProgress = -1;
+	int mWaveGoal = 5;
+	int mLastWave = 3;
+
+	HUDText* mpWaveProgressText;
+	HUDText* mpCurrentWaveText;
+
+	std::vector<std::pair<float, float>> mSpawnLocations;
+
+	float mCurrentTime = 0;
+	float mTimeBeforeNextSpawn = 4000;
+
+	const float BASE_ENEMY_DAMAGE = 5;
+	const float BASE_ENEMY_HEALTH = 5;
+	const float BASE_ENEMY_SPEED = 5;
+	const float BASE_ENEMY_TIME_BEFORE_UPDATE = 500;
+};

@@ -1,0 +1,78 @@
+#include "GraphcisBufferManager.h"
+
+GraphicsBufferManager::GraphicsBufferManager()
+{
+
+}
+
+
+GraphicsBufferManager::~GraphicsBufferManager()
+{
+    cleanup();
+}
+
+
+void GraphicsBufferManager::cleanup()
+{
+    clearAll();
+}
+
+
+void GraphicsBufferManager::addBuffer(GBKey key, GraphicsBuffer* newGB)
+{
+    if (mGraphicsBuffers.find(key) == mGraphicsBuffers.end())
+    {
+        mGraphicsBuffers[key] = newGB;
+    }
+}
+
+
+void GraphicsBufferManager::deleteBuffer(GraphicsBuffer* newGB)
+{
+    for (auto item : mGraphicsBuffers)
+    {
+        if (item.second == newGB)
+        {
+            delete item.second;
+            mGraphicsBuffers.erase(item.first);
+            break;
+        }
+    }
+}
+
+
+void GraphicsBufferManager::deleteBuffer(GBKey key)
+{
+    auto target =  mGraphicsBuffers.find(key);
+
+    if (target != mGraphicsBuffers.end())
+    {
+        delete target->second;
+        mGraphicsBuffers.erase(target);
+    }
+}
+
+
+GraphicsBuffer* GraphicsBufferManager::getBuffer(GBKey key)
+{
+    if (mGraphicsBuffers.find(key) != mGraphicsBuffers.end())
+    {
+        return mGraphicsBuffers[key];
+    }
+    else
+    {
+        return NULL;
+    }
+    
+}
+
+
+void GraphicsBufferManager::clearAll()
+{
+    for (auto item : mGraphicsBuffers)
+    {
+        delete item.second;
+    }
+
+    mGraphicsBuffers.clear();
+}

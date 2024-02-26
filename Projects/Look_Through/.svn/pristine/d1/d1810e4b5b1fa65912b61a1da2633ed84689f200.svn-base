@@ -1,0 +1,17 @@
+#pragma once
+#include <Vector2D.h>
+
+#include "Unit.h"
+#include "SpawnEvent.h"
+
+class SpawnFoodEvent : public SpawnEvent
+{
+    private:
+        //Unit* mpUnit = nullptr;
+
+    public:
+        SpawnFoodEvent(/*Unit* unit*/);
+        ~SpawnFoodEvent();
+
+        //Unit* getUnit() const { return mpUnit; }
+};

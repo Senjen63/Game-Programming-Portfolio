@@ -1,0 +1,48 @@
+#include <allegro5/allegro.h>
+#include <allegro5/allegro_font.h>
+#include <allegro5/allegro_ttf.h>
+#include <allegro5/allegro_audio.h>
+#include <allegro5/allegro_acodec.h>
+#include <allegro5/allegro_image.h>
+#include <allegro5/allegro_primitives.h>
+
+#include <iostream>
+#include <cassert>
+#include <string>
+
+#include <PerformanceTracker.h>
+#include <MemoryTracker.h>
+#include <Vector2D.h>
+#include <Timer.h>
+
+#include "Game.h"
+
+using namespace std;
+
+int main()
+{
+	//variables
+	const int DISP_WIDTH = 800;
+	const int DISP_HEIGHT = 600;
+	const float FPS = 16.66f;
+	const int PAUSE_TIME = 1000; //one second
+
+	game = new Game(DISP_WIDTH, DISP_HEIGHT, FPS);
+	Timer timer;
+	
+	if (game->init() == 1)
+	{
+		return 1;
+	}
+
+	game->doLoop();
+
+	timer.sleep(PAUSE_TIME);
+
+	//cleanup
+	delete game;
+	MemoryTracker::getInstance()->reportAllocations(cout);
+
+	//system("pause");
+	return 0;
+}

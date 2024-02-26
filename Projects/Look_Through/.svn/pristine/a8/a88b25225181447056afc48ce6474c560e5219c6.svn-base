@@ -1,0 +1,30 @@
+#pragma once
+#include <MemoryTracker.h>
+#include <Vector2D.h>
+
+#include "Animation.h"
+
+using namespace std;
+
+const Vector2D DEFAULT_UNIT_POS = Vector2D(0, 0);
+
+class Unit : public Trackable
+{
+private:
+	Animation* mpAnim;
+	Vector2D mPosition;
+
+public:
+	Unit();
+	Unit(Animation* pAnim, Vector2D location = DEFAULT_UNIT_POS);
+	~Unit();
+
+	Vector2D getPosition();
+	Animation* getAnimation();
+
+	void setPosition(Vector2D position);
+	void setAnimation(Animation* pAnim);
+
+	void update(float dt);
+	void draw();
+};

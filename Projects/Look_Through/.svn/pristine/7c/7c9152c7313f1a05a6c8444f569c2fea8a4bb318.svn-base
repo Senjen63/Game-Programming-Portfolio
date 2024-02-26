@@ -1,0 +1,60 @@
+#include <string>
+#include "GraphicsSystem.h"
+#include <fstream>
+#include <iostream>
+
+// all of this is a struct that i created. it is returned by the
+// function that splices the .getline()
+// it returns the key and the word/phrase
+struct greaterSmaller {
+	std::string key, word;
+};
+
+// declaring this as a variable
+typedef struct greaterSmaller menuString;
+
+const std::string ENGLISH = "English.txt";
+const std::string SPANISH = "Spanish.txt";
+const std::string FRENCH = "French.txt";
+
+class Menu
+{
+public:
+	Menu(Font* font);
+	~Menu();
+
+	// right now these are only cout files that display the menu
+	// i think it's best if you call writeText and create the menu
+	// with that
+	void initializeMenuSystemFiles(int num);
+	void displayMainMenu(GraphicsSystem* graphicSystem);
+	void displayOptions(GraphicsSystem* graphicSystem);
+	void displayDifficulty(GraphicsSystem* graphicSystem);
+	void displayLanguages(GraphicsSystem* graphicSystem);
+
+	void setSound(bool sound);
+
+	std::string getLevelHUDLanguage(int choice);
+
+private:
+
+	Font* mpFont;
+	Color mWhite = Color(255, 255, 255, 255);
+	Color mBlack = Color(0, 0, 0, 0);
+	Color mClearColor = Color(68, 236, 108, 255);
+
+	//GraphicsSystem mGraphicsSystem;
+	int midX = 320;
+	int midY = 320;
+	int spacing = 64;
+	// strings you read from a file and put into the writeText
+	// function to create the menu
+
+	bool soundSwitch = true;
+
+	std::string menu, options, play, load, quit;
+	std::string backMain, difficulty, soundOn, soundOff, languages, backOpt;
+	std::string easy, medium, hard, english, spanish, french;
+	std::string timeElap, sadFri, happyFri, mehFri;
+
+};

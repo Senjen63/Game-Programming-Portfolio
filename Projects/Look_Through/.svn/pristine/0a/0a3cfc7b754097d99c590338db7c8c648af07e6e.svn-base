@@ -1,0 +1,48 @@
+#pragma once
+
+#include <fstream>
+#include <string>
+#include <EventSystem.h>
+#include <Trackable.h>
+#include "Level.h"
+#include "UnitManager.h"
+
+using namespace std;
+
+const string SNAKE_SPEED_TAG = "SnakeSpeed:";
+const string START_SEGMENTS_TAG = "StartSegmentNum:";
+const string END_SEGMENTS_TAG = "EndSegmentNum:";
+const string FOOD_POINTS_TAG = "FoodPoints:";
+const string POWER_UP_BASE_FREQUENCY_TAG = "PowerUpBaseFrequency:";
+const string POWER_UP_RANDOM_RANGE_TAG = "PowerUpRandomRange:";
+const string BONUS_CHANCE_TAG = "BonusChance:";
+const string FAST_CHANCE_TAG = "FastChance:";
+const string SLOW_CHANCE_TAG = "SlowChance:";
+const string WALL_LOCATIONS_TAG = "WallLocations:";
+
+class LevelManager : public Trackable
+{
+    public:
+        LevelManager();
+        ~LevelManager();
+
+        void init();
+        void cleanup();
+
+        Level* getCurrentLevel();
+        Level* getLevelByIndex(unsigned int);
+        int getCurrentLevelIndex();
+        int getLastLevelIndex();
+
+        void setLevelIndex(int);
+
+        Level* loadLevel(string, GraphicsBuffer*, Vector2D);
+        void deleteAllLevels();
+
+        void printLevelInfo(unsigned int);
+private:
+    EventSystem* mpEventSystem = nullptr;
+
+    vector<Level*> mLevels;
+    int mCurrentLevel = 0;
+};

@@ -1,0 +1,136 @@
+#include "InputSystem.h"
+
+InputSystem::InputSystem()
+{
+	mpKeyboardState = nullptr;
+	mpMouseState = nullptr;
+
+	mIsActive = false;
+}
+
+
+InputSystem::~InputSystem()
+{
+	delete mpKeyboardState;
+	mpKeyboardState = nullptr;
+	
+	delete mpMouseState;
+	mpMouseState = nullptr;
+
+	if (mIsActive)
+	{
+		deinit();
+	}
+}
+
+
+bool InputSystem::init()
+{
+	bool success = false; // Default to false so if we somehow don't end up marking it we know something's wrong.
+
+	PerformanceTracker inputInitTracker = PerformanceTracker();
+
+	inputInitTracker.startTracking(INPUT_INIT_TRACKER_NAME);
+
+	assert(al_is_system_installed()); // Don't proceed if allegro isn't initialized.
+
+	if (mIsActive)
+	{
+		// Mark as successful if we're already initialized.
+		success = true;
+	}
+	else
+	{
+		if (!al_install_keyboard())
+		{
+			cout << "Failed to initialize keyboard\n";
+			success = false;
+		}
+		else if (!al_install_mouse())
+		{
+			cout << "Failed to initialize mouse\n";
+			success = false;
+		}
+		else
+		{
+			mpKeyboardState = new ALLEGRO_KEYBOARD_STATE;
+			mpMouseState = new ALLEGRO_MOUSE_STATE;
+
+			mIsActive = true;
+
+			success = true;
+		}
+	}
+
+	inputInitTracker.stopTracking(INPUT_INIT_TRACKER_NAME);
+
+	cout << "Initializing input system took: " << inputInitTracker.getElapsedTime(INPUT_INIT_TRACKER_NAME) << " ms\n";
+	inputInitTracker.clearTracker(INPUT_INIT_TRACKER_NAME);
+
+	return success;
+
+	if (mIsActive)
+	{
+		// Mark as successful if we're already initialized.
+		success = true;
+	}
+	else
+	{
+		if (!al_install_keyboard())
+		{
+			cout << "Failed to initialize keyboard\n";
+			return false;
+			success = false;
+		}
+
+		if (!al_install_mouse())
+		{
+			cout << "Failed to initialize mouse\n";
+			return false;
+		}
+
+		mpKeyboardState = new ALLEGRO_KEYBOARD_STATE;
+		mpMouseState = new ALLEGRO_MOUSE_STATE;
+
+		mIsActive = true;
+		return true;
+	}
+}
+
+
+void InputSystem::deinit()
+{
+	al_uninstall_keyboard();
+	al_uninstall_mouse();
+
+	mIsActive = false;
+}
+
+
+bool InputSystem::getKeyState(int keyCode)
+{
+	assert(mIsActive);
+	return al_key_down(mpKeyboardState, keyCode);
+}
+
+
+bool InputSystem::getMouseButtonState(int mouseCode)
+{
+	assert(mIsActive);
+	return al_mouse_button_down(mpMouseState, mouseCode);
+}
+
+
+Vector2D InputSystem::getMousePosition()
+{
+	assert(mIsActive);
+	return Vector2D(mpMouseState->x, mpMouseState->y);
+}
+
+
+void InputSystem::update()
+{
+	assert(mIsActive);
+	al_get_keyboard_state(mpKeyboardState);
+	al_get_mouse_state(mpMouseState);
+}

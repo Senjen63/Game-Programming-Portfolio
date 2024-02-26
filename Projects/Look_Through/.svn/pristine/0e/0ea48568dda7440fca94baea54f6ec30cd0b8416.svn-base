@@ -1,0 +1,29 @@
+#pragma once
+#include "Sprite.h"
+#include <vector>
+
+class Animation : public Trackable
+{
+public:
+	Animation(double speed, bool isLooping);
+	~Animation();
+
+	void update();
+	void addSprite(Sprite toAdd) { mSpritesToUse.push_back(toAdd); }
+	Sprite getCurrentSprite() { return mSpritesToUse[mCurrentFrame]; }
+	void speedUp() { mSpeed *= 2; }
+	void slowDown() { mSpeed /= 2; }
+private:
+	/*A NOTE ABOUT SPEED:
+	 - the "speed" variable is based on the framerate
+	 - a speed of 1 means the animation updates every frame
+	 - a speed <1 means the animation runs slower than the game's fps (this will probably be used most commonly)
+	 - a speed of >1 means the animation runs faster than the game's fps, and will skip frames
+	 */
+
+	std::vector<Sprite> mSpritesToUse;
+	double mSpeed;
+	int mCurrentFrame;
+	double mTimeInFrame;
+	bool mIsLooping;
+};

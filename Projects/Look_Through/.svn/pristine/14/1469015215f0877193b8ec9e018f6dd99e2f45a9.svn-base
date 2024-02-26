@@ -1,0 +1,55 @@
+#pragma once
+
+#include "Vector2D.h"
+#include "Animation.h"
+#include "Sprite.h"
+#include "GraphicsBuffer.h"
+#include <vector>
+#include <Trackable.h>
+
+class Sprite;
+class Color;
+class GraphicsBuffer;
+
+class Level : public Trackable
+{
+private:
+
+	int mPlayerSpeed = 0;
+	int mStartingSegments = 0;
+	int mSegmentsToWin = 0;
+	int mFoodPointValue = 0;
+	int mBonusPointValue = 0;
+	int mBonusPointsPowerUpFrequency = 0;
+	int mSpeedUpPowerUpFrequency = 0;
+	int mSlowDownPowerUpFrequency = 0;
+	int mPlayerGrowth = 0;
+	double mPowerUpTick = 0;
+	Vector2D mPlayerSpawnPoint;
+	std::vector<int> mWallLocations;
+	std::vector<Vector2D> mWallCoordinates;
+	std::vector<Vector2D> mEmptyCoordinates;
+
+public:
+
+	Level(std::string filename);
+	~Level() {};
+
+	void initWalls();
+
+	int getPlayerSpeed() const { return mPlayerSpeed; };
+	int getStartingSegments() const { return mStartingSegments; };
+	int getSegmentsToWin() const { return mSegmentsToWin; };
+	int getFoodPointValue() const { return mFoodPointValue; };
+	int getBonusPointValue() const { return mBonusPointValue; };
+	int getBonusPointsPowerUpFrequency() const { return mBonusPointsPowerUpFrequency; };
+	int getSpeedUpPowerUpFrequency() const { return mSpeedUpPowerUpFrequency; };
+	int getSlowDownPowerUpFrequency() const { return mSlowDownPowerUpFrequency; };
+	int getPlayerGrowth() const { return mPlayerGrowth; };
+	double getPowerUpTick() const { return mPowerUpTick; };
+	Vector2D getPlayerSpawnPoint() const { return mPlayerSpawnPoint; };
+
+	std::vector<int> getWallLocations() const { return mWallLocations; };
+	std::vector<Vector2D> getWallCoordinates() const { return mWallCoordinates; };
+	std::vector<Vector2D> getEmptyWallCoordinates() const { return mEmptyCoordinates; };
+};

@@ -1,0 +1,36 @@
+/*
+ *  Author: Joseph Romanowski 
+ *  Class: GPR-250-01
+ *  Assignment: Midterm
+ *  Certification of Authenticity: 
+ *      I certify that this assignment is entirely my own work. 
+ */
+
+#include <iostream>
+#include <PerformanceTracker.h>
+#include <Timer.h>
+#include <MemoryTracker.h>
+
+#include "Game.h"
+
+using namespace std;
+
+int main()
+{
+    const int WIDTH = 800;
+    const int HEIGHT = 600;
+    const float FRAME_RATE = 60;
+
+    PerformanceTracker* pPerformanceTracker = new PerformanceTracker;
+
+    Game::createInstance(WIDTH, HEIGHT, FRAME_RATE);
+    Game::getInstance()->init();
+
+    Game::getInstance()->doLoop();
+
+    Game::destoryInstance();
+
+    delete pPerformanceTracker;
+    MemoryTracker::getInstance()->reportAllocations(std::cout);
+    system("pause");
+}
