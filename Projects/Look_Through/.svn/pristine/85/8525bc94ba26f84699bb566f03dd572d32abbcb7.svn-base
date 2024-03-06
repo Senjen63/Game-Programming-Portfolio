@@ -1,9 +1,0 @@
-#include "CollideEvent.h"
-
-CollideEvent::CollideEvent(Unit* col, int anim) : GameEvent(COLLIDE_EVENT), mCollider(col), currentAnim(anim)
-{
-}
-
-CollideEvent::~CollideEvent()
-{
-}

@@ -1,5 +1,0 @@
-Player: Player.png
-
-Enemy:Enemy.png
-
-bullet: Color_Bullet.jpg

@@ -1,9 +1,0 @@
-#pragma once
-
-#include "Trackable.h"
-#include "Animation.h"
-
-class AnimationManager : public Trackable
-{
-
-};

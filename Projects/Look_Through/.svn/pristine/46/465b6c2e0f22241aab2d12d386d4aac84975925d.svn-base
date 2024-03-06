@@ -1,6 +1,0 @@
-ship SnakeHead.png
-bullet SpeedUp.png
-enemy Food.png
-enemybullet SlowDown.png
-font ..\\..\\common\\assets\\cour.ttf 24
-color 200 200 200

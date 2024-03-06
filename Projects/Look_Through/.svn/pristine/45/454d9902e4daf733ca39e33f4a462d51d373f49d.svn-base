@@ -1,9 +1,0 @@
-#include "MoveEvent.h"
-
-MoveEvent::MoveEvent(const string& dir) : GameEvent(MOVE_EVENT), mDirection(dir)
-{
-}
-
-MoveEvent::~MoveEvent()
-{
-}

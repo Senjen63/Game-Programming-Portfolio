@@ -1,6 +1,0 @@
-Sprite: SnakeHead.png
-created with red Buffer
-
-
-Sprite: SnakeBody.png
-created with green Buffer

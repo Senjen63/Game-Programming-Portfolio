@@ -1,7 +1,0 @@
-//Evan Norzow, Nicolas Delbue, and Brandon Perry
-#include "InputEvent.h"
-
-InputEvent::InputEvent(const int& inputCode) : GameEvent(INPUT_EVENT)
-{
-	mInputCode = inputCode;
-}

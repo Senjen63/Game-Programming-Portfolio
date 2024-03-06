@@ -1,7 +1,0 @@
-//Evan Norzow, Nicolas Delbue, and Brandon Perry
-#include "GameEvent.h"
-
-GameEvent::GameEvent(GameEventType type)
-	:Event((EventType)type)
-{
-}

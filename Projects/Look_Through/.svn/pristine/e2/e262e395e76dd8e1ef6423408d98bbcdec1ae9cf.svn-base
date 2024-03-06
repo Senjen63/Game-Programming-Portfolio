@@ -1,9 +1,0 @@
-#include "CollideEvent.h"
-
-CollideEvent::CollideEvent(const string& col) : GameEvent(COLLIDE_EVENT), mCollider(col)
-{
-}
-
-CollideEvent::~CollideEvent()
-{
-}

@@ -1,9 +1,0 @@
-#pragma once
-
-
-struct Conversion
-{
-	static float secToMil(float seconds); // Converts seconds to milliseconds
-	static float milToSec(float milliseconds); // Converts milliseconds to seconds
-};
-

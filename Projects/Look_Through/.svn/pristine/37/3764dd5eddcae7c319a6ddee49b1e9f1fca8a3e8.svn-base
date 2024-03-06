@@ -1,9 +1,0 @@
-#pragma once
-
-enum class ScreenType
-{
-	LOSE_SCREEN,
-	LEVEL_WIN_SCREEN,
-	GAME_WIN_SCREEN,
-	START_SCREEN
-};

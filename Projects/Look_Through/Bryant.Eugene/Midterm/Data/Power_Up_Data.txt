@@ -1,3 +1,0 @@
-Sprite: Power.png
-
-both Speed up and Slow down power ups have the same sprite to create confusion

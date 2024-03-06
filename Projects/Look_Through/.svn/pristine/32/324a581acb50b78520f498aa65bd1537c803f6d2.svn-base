@@ -1,4 +1,0 @@
-#include "SpeedPowerUpComponent.h"
-
-
-const std::string SpeedPowerUpComponent::SPEED_POWER_UP_COMPONENT_NAME = "SpeedPowerUpComponent";

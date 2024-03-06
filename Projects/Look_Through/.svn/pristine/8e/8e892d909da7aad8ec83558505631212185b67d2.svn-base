@@ -1,7 +1,0 @@
-#pragma once
-#include "Trackable.h"
-
-class Event : public Trackable
-{
-
-};

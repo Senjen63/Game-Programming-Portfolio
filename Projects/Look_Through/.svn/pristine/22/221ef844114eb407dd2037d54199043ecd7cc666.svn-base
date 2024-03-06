@@ -1,9 +1,0 @@
-﻿#include "include/Color.hpp"
-
-Color::Color( const int r, const int g, const int b, const int a ) : r( static_cast< unsigned char >(r) ), g( static_cast< unsigned char >(g) ), b( static_cast< unsigned char >(b) ), a( static_cast< unsigned char >(a) )
-{
-}
-
-Color::Color( const unsigned char r, const unsigned char g, const unsigned char b, const unsigned char a ) : r( r ), g( g ), b( b ), a( a )
-{
-}

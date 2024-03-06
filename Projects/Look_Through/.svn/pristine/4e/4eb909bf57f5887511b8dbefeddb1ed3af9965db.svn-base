@@ -1,9 +1,0 @@
-#include "ClickEvent.h"
-
-ClickEvent::ClickEvent(float x, float y) : GameEvent(CLICK_EVENT), mX(x), mY(y)
-{
-}
-
-ClickEvent::~ClickEvent()
-{
-}
