@@ -4,7 +4,7 @@
 #include "Vector2D.h"
 #include "World.h"
 #include "Renderer.h"
-#include "GameMode.h"
+//#include "GameMode.h"
 #include <Windows.h>
 
 void setCursorPosition(int x, int y)
