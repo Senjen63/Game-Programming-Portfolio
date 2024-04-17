@@ -41,6 +41,9 @@ body {
   background-color: #474e5d;
   font-family: Helvetica, sans-serif;
 }
+.tab1 {
+  tab-size: 2;
+}
         </style>
     </head>
     <body style="background-color: rgb(68, 99, 0); background-size: cover;">
@@ -50,8 +53,22 @@ body {
       </p>
       <br>
       <br>
-      <p style="color: white;">
-        Direction:
+      <h3 align="center">Controls</h3>
+      <p align="center" style="color: white;">
+        1: Decrease cohesion radius<br>
+        2: Increase cohesion radius<br>
+        3: Decrease cohesion priority<br>
+        4: Increase cohesion priority<br>
+        A: Decrease alignment radius<br>
+        D: Increase alignment priority<br>
+        S: Decrease alignment priority<br>
+        W: Increase alignment priority<br>
+        Left Arrow: Decrease separation radius<br>
+        Right Arrow: Increase separation radius<br>
+        Down Arrow: Decrease separation priority<br>
+        Up Arrow: Increase separation priority<br>
+        O: Turns Repulsive Force On/Off<br>
+        T: Changes behaviour
       </p>
       <br>
       <br>
@@ -84,6 +101,7 @@ body {
         <img src="Projects/Solo Projects/images/Boids/Boids(Separation).gif" alt="Separation" style="width: 30%;">
         <br>
         <br>
+        This behaviours makes the boids try and move apart from each other
       </p>
       <br>
       <br>
@@ -94,6 +112,8 @@ body {
         <img src="Projects/Solo Projects/images/Boids/Boids(Repulsive).gif" alt="Repulsive" style="width: 30%;">
         <br>
         <br>
+        This behaviours is similar to the Separation behaviour, but<br>
+        it only applies to one boids and it makes the other boids run away.
       </p>
     </body>
 </html>
